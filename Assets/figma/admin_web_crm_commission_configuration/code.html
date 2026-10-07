@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"on-surface-variant":"#444653","on-tertiary":"#ffffff","on-tertiary-fixed":"#25005a","outline":"#757684","secondary-fixed-dim":"#68dba9","error-container":"#ffdad6","on-primary-fixed":"#001453","surface-variant":"#dae2fd","tertiary-fixed":"#eaddff","surface":"#faf8ff","on-error":"#ffffff","tertiary-fixed-dim":"#d2bbff","surface-tint":"#3755c3","error":"#ba1a1a","on-primary-container":"#a8b8ff","on-secondary-fixed-variant":"#005137","on-tertiary-container":"#c9aeff","surface-container-lowest":"#ffffff","surface-container-low":"#f2f3ff","primary-fixed-dim":"#b8c4ff","secondary-container":"#82f5c1","on-background":"#131b2e","inverse-surface":"#283044","background":"#faf8ff","tertiary-container":"#5f00d1","on-primary":"#ffffff","secondary":"#006c4a","surface-bright":"#faf8ff","on-surface":"#131b2e","tertiary":"#440098","on-error-container":"#93000a","surface-container-high":"#e2e7ff","on-secondary":"#ffffff","on-tertiary-fixed-variant":"#5a00c6","surface-dim":"#d2d9f4","on-secondary-container":"#00714e","primary":"#00288e","primary-container":"#1e40af","surface-container":"#eaedff","inverse-primary":"#b8c4ff","on-secondary-fixed":"#002114","surface-container-highest":"#dae2fd","outline-variant":"#c4c5d5","primary-fixed":"#dde1ff","inverse-on-surface":"#eef0ff","on-primary-fixed-variant":"#173bab","secondary-fixed":"#85f8c4"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"space-sm":"0.5rem","gutter-mobile":"0.75rem","margin-mobile":"1rem","gutter":"1rem","space-xl":"2rem","space-lg":"1.25rem","margin":"1.5rem","space-md":"0.75rem","space-xs":"0.25rem"},"fontFamily":{"headline-xl-mobile":["Inter"],"body-lg":["Inter"],"label-lg":["Inter"],"headline-sm":["Inter"],"headline-xl":["Inter"],"label-md":["Inter"],"headline-md":["Inter"],"headline-lg":["Inter"],"body-sm":["Inter"],"label-sm":["Inter"],"body-md":["Inter"]},"fontSize":{"headline-xl-mobile":["28px",{"lineHeight":"36px","fontWeight":"700"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"label-lg":["14px",{"lineHeight":"20px","fontWeight":"600"}],"headline-sm":["16px",{"lineHeight":"24px","fontWeight":"600"}],"headline-xl":["36px",{"lineHeight":"44px","fontWeight":"700"}],"label-md":["12px",{"lineHeight":"16px","fontWeight":"500"}],"headline-md":["20px",{"lineHeight":"28px","fontWeight":"600"}],"headline-lg":["24px",{"lineHeight":"32px","fontWeight":"600"}],"body-sm":["12px",{"lineHeight":"16px","fontWeight":"400"}],"label-sm":["11px",{"lineHeight":"14px","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}]}}}}</script></head><body class="bg-surface font-body-md text-on-surface min-h-screen"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between"><div class="flex flex-col flex-1 overflow-y-auto"><div class="h-16 px-margin flex items-center gap-space-md border-b border-surface-container"><div class="w-9 h-9 rounded-xl bg-tertiary-container flex items-center justify-center text-on-tertiary shadow-sm"><span class="material-symbols-outlined text-[20px]">bolt</span></div><div class="flex flex-col"><span class="font-label-lg text-label-lg text-on-surface tracking-tight leading-none">ElectriCare</span><span class="font-label-sm text-label-sm text-tertiary font-semibold uppercase tracking-wider mt-space-xs">Admin / Owner</span></div></div><div class="px-margin pt-space-lg pb-space-xs"><span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Platform Governance</span></div><nav class="flex-1 px-space-md py-space-xs flex flex-col gap-space-xs" data-active-classes="bg-tertiary-container text-on-tertiary shadow-sm font-semibold rounded-xl"><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="dashboard" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">dashboard</span><span class="font-label-lg text-label-lg">Dashboard</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="manage-partners" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">handshake</span><span class="font-label-lg text-label-lg">Manage Partners</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="manage-technicians" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">engineering</span><span class="font-label-lg text-label-lg">Manage Technicians</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="manage-customers" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">group</span><span class="font-label-lg text-label-lg">Manage Customers</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="finance-commission" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">payments</span><span class="font-label-lg text-label-lg">Finance / Commission</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="subscription-modules" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">verified_user</span><span class="font-label-lg text-label-lg">Subscription Modules</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="system-settings" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">tune</span><span class="font-label-lg text-label-lg">System Settings</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="support" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">headset_mic</span><span class="font-label-lg text-label-lg">Support</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="audit-logs" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">receipt_long</span><span class="font-label-lg text-label-lg">Audit Logs</span></a></nav></div><div class="p-space-md border-t border-surface-container bg-surface-container-lowest"><div class="bg-surface-container-low rounded-xl p-space-sm mb-space-sm flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="relative"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-secondary border border-surface-container-lowest"></span></div><div class="flex flex-col min-w-0"><span class="font-label-md text-label-md text-on-surface font-semibold truncate">Super Admin</span><span class="font-body-sm text-body-sm text-on-surface-variant truncate">admin@electricare.in</span></div></div><span class="flex h-2 w-2 relative"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span></span></div><a class="flex items-center justify-between w-full px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-all group" data-path="login" href="#"><span class="flex items-center gap-space-sm font-label-md text-label-md"><span class="material-symbols-outlined text-[18px] text-outline group-hover:text-on-error-container">logout</span>Sign Out</span><span class="font-label-sm text-label-sm text-outline group-hover:text-on-error-container">v2.4.0</span></a></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] border-b border-surface-container z-40 flex items-center justify-between px-margin"><div class="flex items-center gap-space-lg flex-1 max-w-2xl"><div class="relative w-full"><span class="material-symbols-outlined absolute left-space-md top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span><input class="w-full h-9 pl-10 pr-space-md bg-surface-container-low border border-surface-container rounded-lg text-on-surface placeholder:text-outline font-body-sm text-body-sm focus:outline-none focus:border-tertiary focus:bg-surface-container-lowest transition-all" placeholder="Search partners, technicians, customers, orders, tickets..." type="text"/></div><div class="hidden lg:flex items-center gap-space-xs px-space-sm py-1 bg-surface-container rounded-lg border border-surface-container-high whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span><span class="font-label-sm text-label-sm text-tertiary font-semibold uppercase tracking-wider">Scope: Platform-wide / All India</span></div></div><div class="flex items-center gap-space-md"><button class="relative w-9 h-9 flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"></span></button><div class="h-5 w-px bg-surface-container"></div><div class="flex items-center gap-space-sm pl-space-xs cursor-pointer group"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><div class="hidden sm:flex flex-col text-left"><span class="font-label-sm text-label-sm text-on-surface font-semibold group-hover:text-tertiary transition-colors">Super Admin</span><span class="font-body-sm text-body-sm text-on-surface-variant text-[11px] leading-tight">National Control</span></div><span class="material-symbols-outlined text-outline text-[18px] group-hover:text-on-surface transition-colors">expand_more</span></div></div></header><main class="relative pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- Interactive script to update active nav state in shell & handle real-time allocation math -->
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Highlight "Finance / Commission" in global sidebar
+      const navLinks = document.querySelectorAll("nav a[data-path]");
+      navLinks.forEach((link) => {
+        if (link.getAttribute("data-path") === "finance-commission") {
+          link.classList.remove("text-on-surface-variant", "hover:bg-surface-container-high");
+          link.classList.add("bg-tertiary-container", "text-on-tertiary", "shadow-sm", "font-semibold");
+          const icon = link.querySelector(".material-symbols-outlined");
+          if (icon) {
+            icon.classList.remove("text-outline");
+            icon.classList.add("text-on-tertiary");
+          }
+        }
+      });
+    });
+
+    function adjustAllocation(component, delta) {
+      const input = document.getElementById(`input-${component}`);
+      if (!input) return;
+      let val = parseFloat(input.value) || 0;
+      val = Math.max(0, Math.min(100, Math.round((val + delta) * 10) / 10));
+      input.value = val.toFixed(1);
+      updateTotalGauge();
+    }
+
+    function updateTotalGauge() {
+      const pTech = parseFloat(document.getElementById("input-tech")?.value) || 0;
+      const pPartner = parseFloat(document.getElementById("input-partner")?.value) || 0;
+      const pPlatform = parseFloat(document.getElementById("input-platform")?.value) || 0;
+
+      const sum = Math.round((pTech + pPartner + pPlatform) * 10) / 10;
+      const gaugeTotalText = document.getElementById("gauge-total-display");
+      const gaugeAlert = document.getElementById("gauge-validation-alert");
+      const saveBtn = document.getElementById("confirm-save-btn");
+      const pendingChangesNote = document.getElementById("pending-changes-note");
+
+      // Update segment widths
+      const segTech = document.getElementById("gauge-seg-tech");
+      const segPartner = document.getElementById("gauge-seg-partner");
+      const segPlatform = document.getElementById("gauge-seg-platform");
+
+      if (segTech) segTech.style.width = `${Math.min(100, Math.max(0, pTech))}%`;
+      if (segPartner) segPartner.style.width = `${Math.min(100, Math.max(0, pPartner))}%`;
+      if (segPlatform) segPlatform.style.width = `${Math.min(100, Math.max(0, pPlatform))}%`;
+
+      if (gaugeTotalText) {
+        gaugeTotalText.textContent = `${sum.toFixed(1)}%`;
+      }
+
+      const isOriginal = (pTech === 70.0 && pPartner === 15.0 && pPlatform === 15.0);
+      if (pendingChangesNote) {
+        if (!isOriginal && sum === 100.0) {
+          pendingChangesNote.innerHTML = `<span class="inline-flex items-center gap-1 font-label-md text-label-md text-primary font-semibold"><span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>Pending Revision: Technician (${pTech}%) / Partner (${pPartner}%) / Platform (${pPlatform}%)</span>`;
+        } else if (!isOriginal && sum !== 100.0) {
+          pendingChangesNote.innerHTML = `<span class="inline-flex items-center gap-1 font-label-md text-label-md text-error font-semibold"><span class="material-symbols-outlined text-[16px]">error</span>Sum is ${sum.toFixed(1)}%. Rebalance parameters to precisely 100.0% before applying.</span>`;
+        } else {
+          pendingChangesNote.innerHTML = `<span class="text-on-surface-variant font-body-sm text-body-sm">No unsaved parameter changes currently pending.</span>`;
+        }
+      }
+
+      if (gaugeAlert) {
+        if (Math.abs(sum - 100.0) < 0.01) {
+          gaugeAlert.className = "flex items-center gap-space-xs px-space-md py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm";
+          gaugeAlert.innerHTML = `<span class="material-symbols-outlined text-[16px]">check_circle</span> Total Allocation: 100.0% (Balanced &amp; Validated)`;
+          if (saveBtn) saveBtn.removeAttribute("disabled");
+        } else {
+          gaugeAlert.className = "flex items-center gap-space-xs px-space-md py-1 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm";
+          gaugeAlert.innerHTML = `<span class="material-symbols-outlined text-[16px]">warning</span> Total Allocation: ${sum.toFixed(1)}% (Deviation of ${(sum - 100.0 > 0 ? '+' : '') + (sum - 100.0).toFixed(1)}%)`;
+          if (saveBtn) saveBtn.setAttribute("disabled", "true");
+        }
+      }
+    }
+
+    function resetToDefaults() {
+      const pTech = document.getElementById("input-tech");
+      const pPartner = document.getElementById("input-partner");
+      const pPlatform = document.getElementById("input-platform");
+      if (pTech) pTech.value = "70.0";
+      if (pPartner) pPartner.value = "15.0";
+      if (pPlatform) pPlatform.value = "15.0";
+      updateTotalGauge();
+    }
+  </script>
+<!-- Main Canvas Container -->
+<div class="px-margin py-space-lg flex flex-col gap-space-lg max-w-[1600px] mx-auto w-full">
+<!-- Top Breadcrumb & Status Pill Bar -->
+<div class="flex flex-wrap items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-xs font-label-md text-label-md text-on-surface-variant">
+<span>Platform Governance</span>
+<span class="material-symbols-outlined text-[16px] text-outline">chevron_right</span>
+<span>Financial Operations</span>
+<span class="material-symbols-outlined text-[16px] text-outline">chevron_right</span>
+<span class="text-tertiary font-semibold">Commission &amp; Settlement Configuration</span>
+</div>
+<div class="flex items-center gap-space-xs px-space-md py-1 rounded-full bg-surface-container-high shadow-sm">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold tracking-wide">
+          Active Policy v2.4 — In Effect Since 01 Aug 2026
+        </span>
+</div>
+</div>
+<!-- Header Section with Title, Subtitle, and Administrative Quick Actions -->
+<div class="flex flex-col lg:flex-row lg:items-end justify-between gap-space-md bg-surface-container-lowest p-space-lg rounded-xl shadow-sm">
+<div class="flex flex-col max-w-3xl">
+<div class="flex items-center gap-space-xs mb-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-tertiary font-semibold">National Statutory Scheme</span>
+<span class="text-outline text-body-sm">•</span>
+<span class="font-label-sm text-label-sm text-outline">Section 12.A Master Franchise Master Deed</span>
+</div>
+<h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Commission &amp; Revenue Share Configuration</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-xs">
+          Configure and review platform-wide revenue distribution rules, regional franchise partner commission structures, and technician service payout allocations.
+        </p>
+</div>
+<div class="flex items-center gap-space-sm shrink-0">
+<button class="h-9 px-space-md rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md flex items-center gap-space-xs shadow-sm transition-all" onclick="resetToDefaults()" type="button">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">restart_alt</span>
+          Restore Defaults
+        </button>
+<button class="h-9 px-space-md rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-md text-label-md flex items-center gap-space-xs shadow-sm transition-all" type="button">
+<span class="material-symbols-outlined text-[18px] text-tertiary">history</span>
+          Audit Configuration History
+        </button>
+</div>
+</div>
+<!-- 4-Step Administrative Workflow Ribbon -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-space-md">
+<!-- Step 1: Active -->
+<div class="flex items-center gap-space-sm p-space-sm rounded-lg bg-tertiary-container text-on-tertiary">
+<div class="w-7 h-7 rounded-full bg-on-tertiary text-tertiary-container font-label-md text-label-md font-bold flex items-center justify-center shrink-0">
+            1
+          </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md font-semibold truncate leading-tight">Edit Parameters</span>
+<span class="font-label-sm text-label-sm opacity-90 truncate leading-tight">Stage 1: Active In Workspace</span>
+</div>
+<span class="material-symbols-outlined text-[18px] ml-auto">edit</span>
+</div>
+<!-- Step 2: Review Changes -->
+<div class="flex items-center gap-space-sm p-space-sm rounded-lg bg-surface-container text-on-surface-variant">
+<div class="w-7 h-7 rounded-full bg-surface-container-highest text-on-surface font-label-md text-label-md font-semibold flex items-center justify-center shrink-0">
+            2
+          </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md font-semibold text-on-surface truncate leading-tight">Review Changes</span>
+<span class="font-label-sm text-label-sm text-outline truncate leading-tight">Validation &amp; State Impact</span>
+</div>
+<span class="material-symbols-outlined text-[18px] text-outline ml-auto">visibility</span>
+</div>
+<!-- Step 3: Super Admin Authorization -->
+<div class="flex items-center gap-space-sm p-space-sm rounded-lg bg-surface-container text-on-surface-variant">
+<div class="w-7 h-7 rounded-full bg-surface-container-highest text-on-surface font-label-md text-label-md font-semibold flex items-center justify-center shrink-0">
+            3
+          </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md font-semibold text-on-surface truncate leading-tight">Super Admin Authorization</span>
+<span class="font-label-sm text-label-sm text-outline truncate leading-tight">2FA OTP / Digital Signature</span>
+</div>
+<span class="material-symbols-outlined text-[18px] text-outline ml-auto">lock</span>
+</div>
+<!-- Step 4: Policy Deployed -->
+<div class="flex items-center gap-space-sm p-space-sm rounded-lg bg-surface-container text-on-surface-variant">
+<div class="w-7 h-7 rounded-full bg-surface-container-highest text-on-surface font-label-md text-label-md font-semibold flex items-center justify-center shrink-0">
+            4
+          </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md font-semibold text-on-surface truncate leading-tight">Policy Deployed</span>
+<span class="font-label-sm text-label-sm text-outline truncate leading-tight">Next Cycle Auto-Settlement</span>
+</div>
+<span class="material-symbols-outlined text-[18px] text-outline ml-auto">verified</span>
+</div>
+</div>
+</div>
+<!-- Primary Configuration Card (Current Effective Parameters) -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col gap-space-lg">
+<div class="flex flex-wrap items-center justify-between gap-space-md pb-space-sm">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase font-semibold text-primary tracking-wider">Primary Statutory Distribution</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Standard Work-Order Revenue Components</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Live mathematical apportionment for standard scheduled high-voltage &amp; residential maintenance tickets.</p>
+</div>
+<div class="flex items-center gap-space-xs px-space-md py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold shadow-xs" id="gauge-validation-alert">
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+          Total Allocation: 100.0% (Balanced &amp; Validated)
+        </div>
+</div>
+<!-- Segmented Allocation Bar Visualization -->
+<div class="flex flex-col gap-space-xs bg-surface-container-low p-space-md rounded-xl">
+<div class="flex items-center justify-between font-label-md text-label-md">
+<span class="text-on-surface font-semibold flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px] text-tertiary">pie_chart</span>
+            Live Revenue Allocation Gauge
+          </span>
+<span class="text-on-surface font-bold">Sum: <span class="text-primary font-mono" id="gauge-total-display">100.0%</span></span>
+</div>
+<!-- Track & Segments -->
+<div class="h-6 w-full bg-surface-container rounded-lg flex overflow-hidden shadow-inner">
+<!-- Tech Labor Segment (70%) -->
+<div class="h-full bg-secondary transition-all duration-300 flex items-center justify-center text-on-secondary font-label-sm text-label-sm font-bold" id="gauge-seg-tech" style="width: 70%;">
+            70% Tech
+          </div>
+<!-- Partner Margin Segment (15%) -->
+<div class="h-full bg-primary-container transition-all duration-300 flex items-center justify-center text-on-primary font-label-sm text-label-sm font-bold" id="gauge-seg-partner" style="width: 15%;">
+            15% Franchise
+          </div>
+<!-- Platform Fee Segment (15%) -->
+<div class="h-full bg-tertiary-container transition-all duration-300 flex items-center justify-center text-on-tertiary font-label-sm text-label-sm font-bold" id="gauge-seg-platform" style="width: 15%;">
+            15% Platform
+          </div>
+</div>
+<!-- Legend -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm pt-space-xs font-label-sm text-label-sm text-on-surface-variant">
+<div class="flex items-center gap-space-xs">
+<span class="w-3 h-3 rounded-sm bg-secondary"></span>
+<span>Technician Labor Payout (Base: ₹700 per ₹1,000 billed)</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-3 h-3 rounded-sm bg-primary-container"></span>
+<span>Franchise Partner Territory Share (Base: ₹150)</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-3 h-3 rounded-sm bg-tertiary-container"></span>
+<span>ElectriCare Platform Fee (Base: ₹150)</span>
+</div>
+</div>
+</div>
+<!-- 3 Revenue Component Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<!-- Component A: Platform Retained Fee -->
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-md transition-all hover:shadow-md">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase font-semibold text-tertiary">Component A</span>
+<span class="material-symbols-outlined text-[20px] text-tertiary">cloud_sync</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Platform Retained Fee</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+              ElectriCare platform cloud infrastructure, customer mobile app, customer support SLA, and gateway charges.
+            </p>
+</div>
+<div class="bg-surface-container-lowest p-space-md rounded-lg flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">Target Percent</span>
+<span class="font-headline-md text-headline-md font-bold text-tertiary">15.0%</span>
+</div>
+<!-- Stepper Box -->
+<div class="flex items-center gap-1 bg-surface-container rounded-lg p-1">
+<button class="w-7 h-7 rounded bg-surface-container-lowest hover:bg-surface-variant text-on-surface flex items-center justify-center font-bold text-[16px] shadow-xs active:scale-95 transition-all" onclick="adjustAllocation('platform', -0.5)" type="button">-</button>
+<div class="relative w-16 text-center">
+<input class="w-full text-center bg-transparent font-headline-sm text-headline-sm font-bold text-on-surface focus:outline-none" id="input-platform" max="100" min="0" oninput="updateTotalGauge()" step="0.1" type="number" value="15.0"/>
+</div>
+<span class="font-label-md text-label-md text-outline pr-1">%</span>
+<button class="w-7 h-7 rounded bg-surface-container-lowest hover:bg-surface-variant text-on-surface flex items-center justify-center font-bold text-[16px] shadow-xs active:scale-95 transition-all" onclick="adjustAllocation('platform', 0.5)" type="button">+</button>
+</div>
+</div>
+</div>
+<!-- Component B: Regional Partner Franchise Commission -->
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-md transition-all hover:shadow-md">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase font-semibold text-primary">Component B</span>
+<span class="material-symbols-outlined text-[20px] text-primary">storefront</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Regional Partner Franchise Commission</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+              State partner territory dispatch management, warehouse tools depot, technician supervision, and local customer dispute resolution.
+            </p>
+</div>
+<div class="bg-surface-container-lowest p-space-md rounded-lg flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">Target Percent</span>
+<span class="font-headline-md text-headline-md font-bold text-primary">15.0%</span>
+</div>
+<!-- Stepper Box -->
+<div class="flex items-center gap-1 bg-surface-container rounded-lg p-1">
+<button class="w-7 h-7 rounded bg-surface-container-lowest hover:bg-surface-variant text-on-surface flex items-center justify-center font-bold text-[16px] shadow-xs active:scale-95 transition-all" onclick="adjustAllocation('partner', -0.5)" type="button">-</button>
+<div class="relative w-16 text-center">
+<input class="w-full text-center bg-transparent font-headline-sm text-headline-sm font-bold text-on-surface focus:outline-none" id="input-partner" max="100" min="0" oninput="updateTotalGauge()" step="0.1" type="number" value="15.0"/>
+</div>
+<span class="font-label-md text-label-md text-outline pr-1">%</span>
+<button class="w-7 h-7 rounded bg-surface-container-lowest hover:bg-surface-variant text-on-surface flex items-center justify-center font-bold text-[16px] shadow-xs active:scale-95 transition-all" onclick="adjustAllocation('partner', 0.5)" type="button">+</button>
+</div>
+</div>
+</div>
+<!-- Component C: Technician Service Labor Payout -->
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-md transition-all hover:shadow-md">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase font-semibold text-secondary">Component C</span>
+<span class="material-symbols-outlined text-[20px] text-secondary">handyman</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Technician Service Labor Payout</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+              Direct payout credited to certified wireman upon successful customer OTP validation and work order completion.
+            </p>
+</div>
+<div class="bg-surface-container-lowest p-space-md rounded-lg flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">Target Percent</span>
+<span class="font-headline-md text-headline-md font-bold text-secondary">70.0%</span>
+</div>
+<!-- Stepper Box -->
+<div class="flex items-center gap-1 bg-surface-container rounded-lg p-1">
+<button class="w-7 h-7 rounded bg-surface-container-lowest hover:bg-surface-variant text-on-surface flex items-center justify-center font-bold text-[16px] shadow-xs active:scale-95 transition-all" onclick="adjustAllocation('tech', -0.5)" type="button">-</button>
+<div class="relative w-16 text-center">
+<input class="w-full text-center bg-transparent font-headline-sm text-headline-sm font-bold text-on-surface focus:outline-none" id="input-tech" max="100" min="0" oninput="updateTotalGauge()" step="0.1" type="number" value="70.0"/>
+</div>
+<span class="font-label-md text-label-md text-outline pr-1">%</span>
+<button class="w-7 h-7 rounded bg-surface-container-lowest hover:bg-surface-variant text-on-surface flex items-center justify-center font-bold text-[16px] shadow-xs active:scale-95 transition-all" onclick="adjustAllocation('tech', 0.5)" type="button">+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Two Configuration Sub-panels (State Overrides & Special Surcharges) -->
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-space-lg">
+<!-- Panel 1: State-Level Commission Override Rules -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[20px] text-tertiary">map</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">State-Level Commission Override Rules</h3>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Active regional variations approved by regulatory council.</span>
+</div>
+<button class="h-8 px-space-sm rounded-lg bg-surface-container hover:bg-surface-container-high text-tertiary font-label-sm text-label-sm font-semibold flex items-center gap-1 shadow-xs transition-all" type="button">
+<span class="material-symbols-outlined text-[16px]">add</span> Add State Override
+            </button>
+</div>
+<div class="overflow-x-auto mt-space-sm">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm">
+<th class="py-space-sm px-space-md rounded-l-lg">State Territory / Hub</th>
+<th class="py-space-sm px-space-sm text-center">Partner</th>
+<th class="py-space-sm px-space-sm text-center">Technician</th>
+<th class="py-space-sm px-space-sm text-center">Admin</th>
+<th class="py-space-sm px-space-md text-right rounded-r-lg">Contract Clause</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-low">
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-md px-space-md font-label-md text-label-md text-on-surface">
+<div class="flex items-center gap-space-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                      Maharashtra Metro (Tier-1)
+                    </div>
+</td>
+<td class="py-space-md px-space-sm text-center font-mono font-semibold text-primary">15.0%</td>
+<td class="py-space-md px-space-sm text-center font-mono font-semibold text-secondary">70.0%</td>
+<td class="py-space-md px-space-sm text-center font-mono font-semibold text-tertiary">15.0%</td>
+<td class="py-space-md px-space-md text-right">
+<span class="px-space-xs py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant font-semibold">Standard</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-md px-space-md font-label-md text-label-md text-on-surface">
+<div class="flex items-center gap-space-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                      Gujarat Industrial Hub
+                    </div>
+</td>
+<td class="py-space-md px-space-sm text-center font-mono font-semibold text-primary">15.0%</td>
+<td class="py-space-md px-space-sm text-center font-mono font-semibold text-secondary">70.0%</td>
+<td class="py-space-md px-space-sm text-center font-mono font-semibold text-tertiary">15.0%</td>
+<td class="py-space-md px-space-md text-right">
+<span class="px-space-xs py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant font-semibold">Standard</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-md px-space-md font-label-md text-label-md text-on-surface">
+<div class="flex items-center gap-space-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                      Karnataka Corridor
+                    </div>
+</td>
+<td class="py-space-md px-space-sm text-center font-mono font-semibold text-primary">15.0%</td>
+<td class="py-space-md px-space-sm text-center font-mono font-semibold text-secondary">70.0%</td>
+<td class="py-space-md px-space-sm text-center font-mono font-semibold text-tertiary">15.0%</td>
+<td class="py-space-md px-space-md text-right">
+<span class="px-space-xs py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant font-semibold">Standard</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors bg-surface-container/30">
+<td class="py-space-md px-space-md font-label-md text-label-md text-on-surface">
+<div class="flex items-center gap-space-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                      Telangana Expansion Hub
+                    </div>
+</td>
+<td class="py-space-md px-space-sm text-center font-mono font-semibold text-primary">12.0%</td>
+<td class="py-space-md px-space-sm text-center font-mono font-semibold text-secondary">73.0%</td>
+<td class="py-space-md px-space-sm text-center font-mono font-semibold text-tertiary">15.0%</td>
+<td class="py-space-md px-space-md text-right">
+<span class="px-space-xs py-0.5 rounded bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm font-semibold">Promotional 90-day incentive</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm flex items-center justify-between text-on-surface-variant font-body-sm text-body-sm">
+<span>Active regional treaties: 4 / 28 territories</span>
+<span class="text-tertiary font-label-sm text-label-sm font-semibold cursor-pointer hover:underline">Download Master Policy Annexure (.PDF)</span>
+</div>
+</div>
+<!-- Panel 2: Emergency & High-Voltage Surcharge Distribution -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[20px] text-error">bolt</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Emergency &amp; High-Voltage Surcharge Distribution</h3>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Specialized billing rules applied on top of standard base work-orders.</span>
+</div>
+<span class="px-space-sm py-0.5 rounded bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">Statutory Locked</span>
+</div>
+<!-- Surcharge Item 1 -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px] text-on-surface">nightlight</span>
+<span class="font-label-md text-label-md font-semibold text-on-surface">Night &amp; 24/7 Emergency Dispatch Surcharge</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-on-surface bg-surface-container-lowest px-space-sm py-0.5 rounded shadow-xs">+₹250 flat</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Applied automatically to emergency work orders created between 21:00 and 06:00 IST or marked priority grid risk.</p>
+<div class="grid grid-cols-3 gap-space-xs text-center font-label-sm text-label-sm pt-space-xs">
+<div class="p-space-xs rounded bg-surface-container-lowest">
+<span class="text-secondary font-bold font-mono">80% (₹200)</span>
+<span class="block text-outline text-[10px]">Technician Hazard Payout</span>
+</div>
+<div class="p-space-xs rounded bg-surface-container-lowest">
+<span class="text-primary font-bold font-mono">10% (₹25)</span>
+<span class="block text-outline text-[10px]">Partner Standby Share</span>
+</div>
+<div class="p-space-xs rounded bg-surface-container-lowest">
+<span class="text-tertiary font-bold font-mono">10% (₹25)</span>
+<span class="block text-outline text-[10px]">Platform Night Dispatch</span>
+</div>
+</div>
+</div>
+<!-- Surcharge Item 2 -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px] text-error">cancel</span>
+<span class="font-label-md text-label-md font-semibold text-on-surface">Customer Cancellation Fee (&lt; 15 mins post-dispatch)</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-on-surface bg-surface-container-lowest px-space-sm py-0.5 rounded shadow-xs">₹150 flat</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Triggered if customer cancels work-order after technician confirms GPS departure.</p>
+<div class="p-space-xs rounded bg-surface-container-lowest flex items-center justify-between font-label-sm text-label-sm px-space-md">
+<span class="text-on-surface font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">check_circle</span>
+                Credited 100% to Technician transit compensation (₹150)
+              </span>
+<span class="text-outline font-mono">0% Platform / 0% Partner</span>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm flex items-center justify-between text-on-surface-variant font-body-sm text-body-sm">
+<span>Escalation Protocol: Tier-3 Disputed Settlement</span>
+<span class="text-primary font-label-sm text-label-sm font-semibold">National Grievance Matrix v1.9</span>
+</div>
+</div>
+</div>
+<!-- Interactive 'Review Changes Before Saving' Container -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md flex flex-col gap-space-md">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md pb-space-sm">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-xl bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]">verified_user</span>
+</div>
+<div class="flex flex-col">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Pending Administrative Review</h3>
+<div id="pending-changes-note">
+<span class="text-on-surface-variant font-body-sm text-body-sm">No unsaved parameter changes currently pending.</span>
+</div>
+</div>
+</div>
+<!-- Effective Date Selector -->
+<div class="flex items-center gap-space-sm bg-surface-container-low p-space-xs px-space-md rounded-lg">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-semibold">Target Effective Date:</span>
+<div class="flex items-center gap-1 font-label-md text-label-md text-on-surface font-semibold">
+<span class="material-symbols-outlined text-[18px] text-primary">calendar_month</span>
+<span>01 Nov 2026 (Next Billing Cycle)</span>
+</div>
+</div>
+</div>
+<!-- Statutory Acknowledgement & Action Bar -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md pt-space-sm">
+<label class="flex items-start gap-space-sm cursor-pointer select-none max-w-2xl">
+<input class="mt-1 w-4 h-4 rounded text-tertiary focus:ring-tertiary bg-surface-container" id="auth-checkbox" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+            I certify that this commission revision has been reviewed in accordance with State Franchise Agreements and statutory electricity worker minimum-wage safeguards under National Directive 2026.
+          </span>
+</label>
+<div class="flex items-center gap-space-sm shrink-0">
+<button class="h-10 px-space-lg rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-all" onclick="resetToDefaults()" type="button">
+            Discard Changes
+          </button>
+<!-- Primary Deep Purple #7c3aed button -->
+<button class="h-10 px-space-xl rounded-lg bg-tertiary-container hover:opacity-95 text-on-tertiary font-label-md text-label-md font-semibold shadow-sm flex items-center gap-space-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed" id="confirm-save-btn" type="button">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+            Review &amp; Confirm Changes
+          </button>
+</div>
+</div>
+</div>
+<!-- Administrative Versioning History at Bottom -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[20px] text-outline">history_toggle_off</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Administrative Versioning &amp; Audit Trail</h3>
+</div>
+<span class="font-label-sm text-label-sm text-outline">Immutable ledger of platform commission schedule revisions</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm">
+<th class="py-space-sm px-space-md rounded-l-lg">Policy Version</th>
+<th class="py-space-sm px-space-md">Effective Date</th>
+<th class="py-space-sm px-space-md">Authorized By</th>
+<th class="py-space-sm px-space-md">Summary of Modifications</th>
+<th class="py-space-sm px-space-md text-right rounded-r-lg">Deployment Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-low">
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-md px-space-md font-label-md text-label-md font-bold text-on-surface">
+                v2.4
+              </td>
+<td class="py-space-md px-space-md text-on-surface font-mono">01 Aug 2026</td>
+<td class="py-space-md px-space-md">
+<div class="flex items-center gap-space-xs">
+<div class="w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center text-[12px] font-bold">SA</div>
+<span class="text-on-surface font-label-sm text-label-sm">Super Admin <span class="text-outline font-normal">(admin@electricare.in)</span></span>
+</div>
+</td>
+<td class="py-space-md px-space-md text-on-surface-variant">
+                Adjusted technician payout floor from 68% to 70% to improve retention in tier-1 metro clusters.
+              </td>
+<td class="py-space-md px-space-md text-right">
+<span class="inline-flex items-center gap-1 px-space-sm py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Current Active
+                </span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-md px-space-md font-label-md text-label-md font-semibold text-outline">
+                v2.3
+              </td>
+<td class="py-space-md px-space-md text-outline font-mono">15 Jan 2026</td>
+<td class="py-space-md px-space-md">
+<div class="flex items-center gap-space-xs text-outline">
+<div class="w-6 h-6 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center text-[12px] font-bold">SA</div>
+<span class="font-label-sm text-label-sm">Super Admin <span class="font-normal">(admin@electricare.in)</span></span>
+</div>
+</td>
+<td class="py-space-md px-space-md text-outline">
+                Initial national franchise commission rollout across Maharashtra, Gujarat, and Karnataka.
+              </td>
+<td class="py-space-md px-space-md text-right">
+<span class="inline-flex items-center px-space-sm py-0.5 rounded-full bg-surface-container text-outline font-label-sm text-label-sm font-semibold">
+                  Superseded
+                </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div></main></div></body></html>

@@ -1,0 +1,140 @@
+@import "tailwindcss";
+
+:root {
+  /* ==========================================================================
+     ElectriCare Master Color Palette — Exact gts.drawio.pdf Specification
+     Extracted directly from Vector Stream Data in D:\ZEX\Ghar tak\Assets\gts.drawio.pdf
+     ========================================================================== */
+
+  /* 👤 ROLE 1: USER / CUSTOMER THEME (Electric Deep Blue) */
+  --color-user-primary: #0D47A1;
+  --color-user-secondary: #1565C0;
+  --color-user-accent: #2196F3;
+  --color-user-tint: #E3F2FD;
+  --color-user-surface: #BBDEFB;
+
+  /* 🏢 ROLE 2: PARTNER THEME (State Operations / Maharashtra Hub Emerald Green) */
+  --color-partner-primary: #1B5E20;
+  --color-partner-secondary: #2E7D32;
+  --color-partner-accent: #4CAF50;
+  --color-partner-dark: #0D3B0D;
+  --color-partner-tint: #E8F5E9;
+  --color-partner-surface: #C8E6C9;
+
+  /* 👑 ROLE 3: ADMIN / OWNER THEME (Web CRM - Full Access Royal Violet/Purple) */
+  --color-admin-primary: #4A148C;
+  --color-admin-secondary: #7B1FA2;
+  --color-admin-accent: #CE93D8;
+  --color-admin-dark: #2A0A4A;
+  --color-admin-tint: #F3E5F5;
+  --color-admin-surface: #E1BEE7;
+
+  /* 🔧 ROLE 4: TECHNICIAN THEME (Mobile Field Operative Safety Amber/Orange) */
+  --color-tech-primary: #E65100;
+  --color-tech-secondary: #FF9800;
+  --color-tech-accent: #FF5722;
+  --color-tech-tint: #FFF3E0;
+  --color-tech-surface: #FFE0B2;
+
+  /* ⚡ STATUS / SYSTEM OPERATION CODES (From gts.drawio.pdf Flow Legend) */
+  --color-status-start-end: #0D47A1;
+  --color-status-action: #1565C0;
+  --color-status-decision: #F57F17;
+  --color-status-warning: #FF9800;
+  --color-status-warning-tint: #FFF9C4;
+  --color-status-success: #2E7D32;
+  --color-status-success-light: #4CAF50;
+  --color-status-success-tint: #E8F5E9;
+  --color-status-escalation: #BF360C;
+  --color-status-error: #C62828;
+  --color-status-error-tint: #FFCDD2;
+
+  /* Master System Aliases */
+  --color-primary-deep: var(--color-user-primary);
+  --color-primary-container: var(--color-user-secondary);
+  --color-secondary-emerald: var(--color-partner-primary);
+  --color-tertiary-purple: var(--color-admin-primary);
+  --color-safety-orange: var(--color-tech-primary);
+  --color-error-urgent: var(--color-status-escalation);
+  --color-surface-bright: #FAF8FF;
+  
+  /* Neutral Slate Foundation */
+  --color-slate-950: #020617;
+  --color-slate-900: #0F172A;
+  --color-slate-800: #1E293B;
+  --color-slate-700: #334155;
+  --color-slate-500: #64748B;
+  --color-slate-400: #94A3B8;
+  --color-slate-200: #E2E8F0;
+  --color-slate-100: #F1F5F9;
+  --color-slate-50: #F8FAFC;
+
+  --background: #FFFFFF;
+  --foreground: #0F172A;
+}
+
+@theme inline {
+  --color-user-primary: var(--color-user-primary);
+  --color-user-secondary: var(--color-user-secondary);
+  --color-user-accent: var(--color-user-accent);
+  --color-user-tint: var(--color-user-tint);
+  --color-user-surface: var(--color-user-surface);
+
+  --color-partner-primary: var(--color-partner-primary);
+  --color-partner-secondary: var(--color-partner-secondary);
+  --color-partner-accent: var(--color-partner-accent);
+  --color-partner-dark: var(--color-partner-dark);
+  --color-partner-tint: var(--color-partner-tint);
+  --color-partner-surface: var(--color-partner-surface);
+
+  --color-admin-primary: var(--color-admin-primary);
+  --color-admin-secondary: var(--color-admin-secondary);
+  --color-admin-accent: var(--color-admin-accent);
+  --color-admin-dark: var(--color-admin-dark);
+  --color-admin-tint: var(--color-admin-tint);
+  --color-admin-surface: var(--color-admin-surface);
+
+  --color-tech-primary: var(--color-tech-primary);
+  --color-tech-secondary: var(--color-tech-secondary);
+  --color-tech-accent: var(--color-tech-accent);
+  --color-tech-tint: var(--color-tech-tint);
+  --color-tech-surface: var(--color-tech-surface);
+
+  --color-status-start-end: var(--color-status-start-end);
+  --color-status-action: var(--color-status-action);
+  --color-status-decision: var(--color-status-decision);
+  --color-status-warning: var(--color-status-warning);
+  --color-status-warning-tint: var(--color-status-warning-tint);
+  --color-status-success: var(--color-status-success);
+  --color-status-success-light: var(--color-status-success-light);
+  --color-status-success-tint: var(--color-status-success-tint);
+  --color-status-escalation: var(--color-status-escalation);
+  --color-status-error: var(--color-status-error);
+  --color-status-error-tint: var(--color-status-error-tint);
+
+  --color-primary-deep: var(--color-primary-deep);
+  --color-primary-container: var(--color-primary-container);
+  --color-secondary-emerald: var(--color-secondary-emerald);
+  --color-tertiary-purple: var(--color-tertiary-purple);
+  --color-safety-orange: var(--color-safety-orange);
+  --color-error-urgent: var(--color-error-urgent);
+  --color-surface-bright: var(--color-surface-bright);
+
+  --color-slate-950: var(--color-slate-950);
+  --color-slate-900: var(--color-slate-900);
+  --color-slate-800: var(--color-slate-800);
+  --color-slate-700: var(--color-slate-700);
+  --color-slate-500: var(--color-slate-500);
+  --color-slate-400: var(--color-slate-400);
+  --color-slate-200: var(--color-slate-200);
+  --color-slate-100: var(--color-slate-100);
+  --color-slate-50: var(--color-slate-50);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

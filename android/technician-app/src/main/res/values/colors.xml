@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand Palette for Technician Fleet App (as per gts.drawio.pdf #E65100) -->
+    <color name="technician_primary">#E65100</color>
+    <color name="technician_primary_dark">#BF360C</color>
+    <color name="technician_accent">#FFA000</color>
+    <color name="technician_emerald">#1B5E20</color>
+    <color name="background_light">#F8FAFC</color>
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#64748B</color>
+</resources>

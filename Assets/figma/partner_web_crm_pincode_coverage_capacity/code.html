@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ElectriCare - Partner Web CRM (Maharashtra Team)</title>
+<!-- Inter Google Font -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            },
+            surface: {
+              bg: '#f8fafc',
+              border: '#e2e8f0',
+              sidebar: '#ffffff'
+            }
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom CSS -->
+<style data-purpose="custom-enhancements">
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .chart-donut-ring {
+      stroke-dasharray: 440;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+      transition: stroke-dashoffset 0.5s ease;
+    }
+  </style>
+<!-- END: Custom CSS -->
+<meta content="web_dashboard" name="shell-type"/></head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 text-[13px]">
+<!-- BEGIN: TopBarBanner -->
+<!-- Context indicator for Regional Operations -->
+<div class="bg-brand-900 text-brand-100 text-xs px-6 py-1.5 flex items-center justify-between border-b border-brand-800">
+<div class="flex items-center space-x-2 font-medium">
+<span class="inline-flex items-center justify-center w-4 h-4 bg-emerald-500 text-white rounded-full text-[10px] font-bold">11</span>
+<span class="tracking-wide font-semibold text-white">Partner Web CRM</span>
+<span class="text-emerald-300">(Maharashtra Team)</span>
+</div>
+<div class="flex items-center space-x-4 text-[11px] text-emerald-200">
+<span>Regional Operations</span>
+<span class="text-emerald-500">•</span>
+<span>Manage Technicians</span>
+<span class="text-emerald-500">•</span>
+<span>Jobs</span>
+<span class="text-emerald-500">•</span>
+<span>Pincodes</span>
+<span class="text-emerald-500">•</span>
+<span>Finance</span>
+<span class="text-emerald-500">•</span>
+<span>Support</span>
+</div>
+</div>
+<!-- END: TopBarBanner -->
+<!-- BEGIN: MainLayoutWrapper -->
+<div class="flex flex-1 min-h-[calc(100vh-28px)]">
+<!-- BEGIN: LeftSidebar -->
+<aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 select-none">
+<div>
+<!-- Logo Section -->
+<div class="h-16 flex items-center px-6 border-b border-slate-100 gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-sm shadow-emerald-500/30">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<path d="M13 2L3 14h8v8l10-12h-8l0-8z"></path>
+</svg>
+</div>
+<div>
+<span class="text-base font-bold text-slate-900 tracking-tight flex items-center gap-1">
+              ElectriCare
+            </span>
+<span class="block text-[10px] font-medium uppercase tracking-wider text-emerald-600 -mt-1">Partner Portal</span>
+</div>
+</div>
+<!-- Navigation Menu -->
+<nav aria-label="Main Navigation" class="p-3 space-y-1">
+<!-- Dashboard - Active Item -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg bg-emerald-600 text-white font-medium shadow-sm shadow-emerald-600/20 transition-colors" href="#">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="9" rx="1" width="7" x="3" y="3"></rect>
+<rect height="5" rx="1" width="7" x="14" y="3"></rect>
+<rect height="9" rx="1" width="7" x="14" y="12"></rect>
+<rect height="5" rx="1" width="7" x="3" y="16"></rect>
+</svg>
+<span>Dashboard</span>
+</a>
+<!-- Technicians -->
+<a class="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<div class="flex items-center gap-3">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+<circle cx="9" cy="7" r="4"></circle>
+<path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+</svg>
+<span>Technicians</span>
+</div>
+<span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">24</span>
+</a>
+<!-- Job Management -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="14" rx="2" ry="2" width="20" x="2" y="7"></rect>
+<path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+</svg>
+<span>Job Management</span>
+</a>
+<!-- Pincode Coverage -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path>
+<circle cx="12" cy="10" r="3"></circle>
+</svg>
+<span>Pincode Coverage</span>
+</a>
+<!-- Finance / Payouts -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<line x1="12" x2="12" y1="1" y2="23"></line>
+<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+</svg>
+<span>Finance / Payouts</span>
+</a>
+<!-- Profile / Settings -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="3"></circle>
+<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+</svg>
+<span>Profile / Settings</span>
+</a>
+<!-- Support -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+<line x1="12" x2="12.01" y1="17" y2="17"></line>
+</svg>
+<span>Support</span>
+</a>
+</nav>
+</div>
+<!-- Partner Unit Card in Sidebar Footer -->
+<div class="p-3 border-t border-slate-100 bg-slate-50/50 m-2 rounded-xl">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 border border-emerald-300">
+            MT
+          </div>
+<div class="truncate">
+<p class="font-semibold text-slate-800 text-xs truncate leading-tight">Maharashtra Team</p>
+<span class="inline-flex items-center text-[10px] text-emerald-600 font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span> Partner Active
+            </span>
+</div>
+</div>
+</div>
+</aside>
+<!-- END: LeftSidebar -->
+<!-- BEGIN: MainContentArea -->
+<div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+<!-- BEGIN: HeaderNav -->
+<header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-20">
+<!-- Search bar input -->
+<div class="relative w-80">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="11" cy="11" r="8"></circle>
+<line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+</svg>
+</span>
+<input class="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 placeholder-slate-400 transition" placeholder="Search dashboard, jobs, technicians..." type="text"/>
+</div>
+<!-- Top Right Actions & User Profile -->
+<div class="flex items-center gap-3.5">
+<!-- Quick Status Pill -->
+<div class="hidden md:flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs px-2.5 py-1 rounded-full">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span class="font-medium text-[11px]">Region: MH Operations</span>
+</div>
+<!-- Notification Bell -->
+<button aria-label="Notifications" class="p-2 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100 relative" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+<path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+</svg>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+</button>
+<div class="h-5 w-px bg-slate-200"></div>
+<!-- Profile Badge -->
+<div class="flex items-center gap-2.5 pl-1 cursor-pointer">
+<div class="w-8 h-8 rounded-full bg-slate-800 text-white font-semibold flex items-center justify-center text-xs">
+              MH
+            </div>
+<div class="hidden sm:block text-left">
+<span class="block text-xs font-semibold text-slate-700 leading-tight">Maharashtra Ops</span>
+<span class="text-[10px] text-slate-400">admin-mh@electricare.in</span>
+</div>
+<svg class="w-3.5 h-3.5 text-slate-400 ml-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</div>
+</div>
+</header>
+<!-- END: HeaderNav -->
+<!-- Main Body Container -->
+<main class="p-6 space-y-6"><div class="flex flex-col w-full space-y-6">
+<!-- Operational Header with Actions -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface-container-lowest p-5 rounded-xl shadow-sm">
+<div class="space-y-1">
+<div class="flex items-center gap-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-label-sm font-label-sm uppercase tracking-wider bg-secondary-container text-on-secondary-fixed-variant">
+          Live Dispatch Grid
+        </span>
+<span class="text-label-sm font-label-sm text-outline">• Zone Telemetry v2.4</span>
+</div>
+<h1 class="text-headline-lg font-headline-lg text-on-surface tracking-tight">Pincode Coverage &amp; Fleet Capacity</h1>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Monitor zone densities, active dispatch capacity, and coverage perimeter across Maharashtra region.</p>
+</div>
+<div class="flex items-center gap-3 shrink-0">
+<button class="inline-flex items-center gap-2 px-3.5 py-2 text-label-md font-label-md text-on-surface bg-surface-container rounded-lg hover:bg-surface-container-high transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px] text-outline">file_download</span>
+        Export Zone Audit (CSV)
+      </button>
+<button class="inline-flex items-center gap-2 px-4 py-2 text-label-md font-label-md text-on-secondary bg-secondary hover:bg-on-secondary-container rounded-lg transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">add_location_alt</span>
+        + Request Pincode Expansion
+      </button>
+</div>
+</div>
+<!-- Top KPI Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm space-y-3">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-outline uppercase tracking-wider">Assigned Perimeter</span>
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">pin_drop</span>
+</div>
+</div>
+<div>
+<div class="text-headline-lg font-headline-lg text-on-surface">18 Pincodes</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant flex items-center gap-1.5 mt-0.5">
+<span class="inline-block w-2 h-2 rounded-full bg-secondary"></span>
+          14 Mumbai Metro • 4 Pune Div
+        </p>
+</div>
+<div class="w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 78%;"></div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm space-y-3">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-outline uppercase tracking-wider">Field Personnel</span>
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[18px]">engineering</span>
+</div>
+</div>
+<div>
+<div class="text-headline-lg font-headline-lg text-on-surface">42 Technicians</div>
+<p class="text-body-sm font-body-sm text-secondary flex items-center gap-1 font-label-md mt-0.5">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+          88% on-duty active roster
+        </p>
+</div>
+<div class="w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 88%;"></div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm space-y-3">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-outline uppercase tracking-wider">Work Orders Active</span>
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[18px]">electric_bolt</span>
+</div>
+</div>
+<div>
+<div class="text-headline-lg font-headline-lg text-on-surface">86 Active Jobs</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant flex items-center gap-1.5 mt-0.5">
+<span class="inline-block w-2 h-2 rounded-full bg-primary-container"></span>
+          54 In-Transit • 32 On-Site
+        </p>
+</div>
+<div class="w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
+<div class="bg-primary-container h-full rounded-full" style="width: 74%;"></div>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm space-y-3">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-outline uppercase tracking-wider">Operational Risk</span>
+<div class="w-8 h-8 rounded-lg bg-error-container flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-[18px]">warning</span>
+</div>
+</div>
+<div>
+<div class="text-headline-lg font-headline-lg text-error">3 Coverage Gaps</div>
+<p class="text-body-sm font-body-sm text-error flex items-center gap-1 font-label-md mt-0.5">
+<span class="material-symbols-outlined text-[16px]">priority_high</span>
+          Requires instant tech dispatch
+        </p>
+</div>
+<div class="w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
+<div class="bg-error h-full rounded-full" style="width: 35%;"></div>
+</div>
+</div>
+</div>
+<!-- Operational Filter Strip -->
+<div class="bg-surface-container-lowest p-3.5 rounded-xl shadow-sm flex flex-col lg:flex-row items-center justify-between gap-3">
+<div class="relative w-full lg:w-96">
+<span class="material-symbols-outlined absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-outline text-[18px]">search</span>
+<input class="w-full pl-9 pr-4 py-1.5 bg-surface-container-low text-body-sm font-body-sm rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest focus:ring-1 focus:ring-secondary transition-all" id="pincodeSearch" placeholder="Search pincode, ward, area, city..." type="text"/>
+</div>
+<div class="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
+<!-- State Dropdown -->
+<div class="flex items-center gap-1.5 bg-surface-container-low px-3 py-1.5 rounded-lg text-label-md font-label-md text-on-surface">
+<span class="text-outline text-label-sm font-label-sm uppercase">State:</span>
+<select class="bg-transparent text-label-md font-label-md font-semibold text-on-surface focus:outline-none cursor-pointer">
+<option value="MH">Maharashtra</option>
+</select>
+</div>
+<!-- City Dropdown -->
+<div class="flex items-center gap-1.5 bg-surface-container-low px-3 py-1.5 rounded-lg text-label-md font-label-md text-on-surface">
+<span class="text-outline text-label-sm font-label-sm uppercase">City:</span>
+<select class="bg-transparent text-label-md font-label-md font-semibold text-on-surface focus:outline-none cursor-pointer" id="cityFilter">
+<option value="ALL">All Cities (2)</option>
+<option value="Mumbai">Mumbai Metro</option>
+<option value="Pune">Pune Division</option>
+</select>
+</div>
+<!-- Area Dropdown -->
+<div class="flex items-center gap-1.5 bg-surface-container-low px-3 py-1.5 rounded-lg text-label-md font-label-md text-on-surface">
+<span class="text-outline text-label-sm font-label-sm uppercase">Area:</span>
+<select class="bg-transparent text-label-md font-label-md font-semibold text-on-surface focus:outline-none cursor-pointer">
+<option value="ALL">All Areas (18)</option>
+<option value="South">South Mumbai</option>
+<option value="Western">Western Suburbs</option>
+<option value="PuneCentral">Pune East &amp; Central</option>
+</select>
+</div>
+<!-- Status Dropdown -->
+<div class="flex items-center gap-1.5 bg-surface-container-low px-3 py-1.5 rounded-lg text-label-md font-label-md text-on-surface">
+<span class="text-outline text-label-sm font-label-sm uppercase">Capacity:</span>
+<select class="bg-transparent text-label-md font-label-md font-semibold text-on-surface focus:outline-none cursor-pointer" id="statusFilter">
+<option value="ALL">All Statuses</option>
+<option value="Active">Active Coverage</option>
+<option value="Limited">Limited Capacity</option>
+<option value="Gap">Coverage Gap</option>
+</select>
+</div>
+</div>
+</div>
+<!-- Main 2-Column Grid (65% Table / 35% Geographic Map & Zone Health) -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+<!-- Left Column: Pincode Data Table (7 of 12 = ~58-60%, styled to 62% in wide monitors) -->
+<div class="xl:col-span-8 bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<div class="p-4 flex items-center justify-between bg-surface-container-lowest">
+<div class="flex items-center gap-2">
+<h2 class="text-headline-sm font-headline-sm text-on-surface">Coverage Directory &amp; Utilization</h2>
+<span class="px-2 py-0.5 rounded-full text-label-sm font-label-sm bg-surface-container text-on-surface-variant font-semibold">7 Zones Filtered</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-1.5 text-outline hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors">
+<span class="material-symbols-outlined text-[18px]">refresh</span>
+</button>
+<button class="p-1.5 text-outline hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-outline text-label-sm font-label-sm uppercase tracking-wider">
+<th class="py-2.5 px-4 font-semibold">Pincode &amp; Area</th>
+<th class="py-2.5 px-3 font-semibold">City</th>
+<th class="py-2.5 px-3 font-semibold">Active Roster</th>
+<th class="py-2.5 px-3 font-semibold">Live Jobs</th>
+<th class="py-2.5 px-3 font-semibold min-w-[150px]">Capacity Load</th>
+<th class="py-2.5 px-3 font-semibold">Status</th>
+<th class="py-2.5 px-4 font-semibold text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-body-sm font-body-sm text-on-surface">
+<!-- Row 1: 400001 Colaba -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-3 px-4">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary font-headline-sm text-xs font-bold">
+                    01
+                  </div>
+<div>
+<span class="font-headline-sm text-label-lg text-on-surface block">400001</span>
+<span class="text-body-sm font-body-sm text-on-surface-variant">Colaba, South Mumbai</span>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-label-sm font-label-sm bg-surface-container text-on-surface">Mumbai</span>
+</td>
+<td class="py-3 px-3">
+<div class="flex items-center gap-1.5">
+<div class="flex -space-x-1.5 overflow-hidden">
+<img class="inline-block h-6 w-6 rounded-full object-cover shadow-sm" data-alt="Portrait photo of Indian electrical technician wearing safety gear in crisp light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCH68vtRVqzFF_nlA9PSfU_LKpFf7c02NRAx5fEOOiIV9ldYF80V1djCKHXkSMg-dPmDyNtoKX-KXsh86jTZfEUBdF2UU0VGykEf1BmER6_g03TbgOQS8R41fBH9Pb8xjjSahxCX967sdG219dRD1xZEnVXaTYFxhYLulnAUdOYwcbV5kTOy87FsOJesICIQJbIEYD2qa-QQdMjmUB8dsifCzCUi_ZazKQjAQamRs34JovCEX3eVSu9Ng"/>
+<img class="inline-block h-6 w-6 rounded-full object-cover shadow-sm" data-alt="Portrait photo of an experienced Indian male technician with hardhat against clean background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4cXgChee2xn98QQidN0q5aH9DTyFc8o4MBY6OU_sAq_Q4mp-_fbrQk7G3jvaPXEjDf--XqMjz2o_KQMaLwjc87EKj0RtFKOy1J3g_FJYJRdL7mBIPQtlqvB6k1_aRQ72jeMdxpuVVErG2zhkj2-njAluannCHcT-KgT2oyAyDdPeICzbRIZdLcQAfy_h4ToQ1WRR0eynWiVLm6DAnNJ0oQm9-9i2S3wrfo8nQKXC2p8UonKaqp89U2g"/>
+<span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-secondary-container text-on-secondary-fixed-variant text-[10px] font-bold">+3</span>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant ml-1 font-semibold">5 Techs</span>
+</div>
+</td>
+<td class="py-3 px-3 font-label-md font-semibold text-on-surface">
+                12 Jobs
+              </td>
+<td class="py-3 px-3">
+<div class="space-y-1">
+<div class="flex justify-between text-label-sm font-label-sm">
+<span class="font-semibold text-secondary">80% Load</span>
+<span class="text-outline">Normal</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 80%;"></div>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-label-sm font-label-sm uppercase tracking-wider bg-secondary-container text-on-secondary-fixed-variant font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Active
+                </span>
+</td>
+<td class="py-3 px-4 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="px-2.5 py-1 text-label-sm font-label-sm rounded bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors font-medium">Details</button>
+<button class="p-1 rounded text-outline hover:text-on-surface hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[16px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2: 400002 Fort -->
+<tr class="hover:bg-surface-container-low transition-colors bg-surface-bright/50 group">
+<td class="py-3 px-4">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary font-headline-sm text-xs font-bold">
+                    02
+                  </div>
+<div>
+<span class="font-headline-sm text-label-lg text-on-surface block">400002</span>
+<span class="text-body-sm font-body-sm text-on-surface-variant">Fort, Commercial Dist</span>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-label-sm font-label-sm bg-surface-container text-on-surface">Mumbai</span>
+</td>
+<td class="py-3 px-3">
+<div class="flex items-center gap-1.5">
+<div class="flex -space-x-1.5 overflow-hidden">
+<img class="inline-block h-6 w-6 rounded-full object-cover shadow-sm" data-alt="Indian female electrical field engineer headshot with safety uniform" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSy6xnblvnyqJsxDyKFbI2bjv3tMfecwhXeHTh0aHhgubpDtaSpTIJXWsjZRudpyHSbbg-tJ1yEFKo3NKUrOepn_NMz4rAUFwK2jBMQjWcLbhPb9a_rj-An-fRdpJKjLgmTyofYOG6lhhPFdRa4o4NDCHM3CiiMkRT8JrLVg48xNQErDvM9fsxXqRqrnPqQ44_VYH-f5zZTWlu4WgJasccr_0XuqPc-vXE8m8h6BmErNRXNJnpTtHfpg"/>
+<span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-secondary-container text-on-secondary-fixed-variant text-[10px] font-bold">+3</span>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant ml-1 font-semibold">4 Techs</span>
+</div>
+</td>
+<td class="py-3 px-3 font-label-md font-semibold text-on-surface">
+                8 Jobs
+              </td>
+<td class="py-3 px-3">
+<div class="space-y-1">
+<div class="flex justify-between text-label-sm font-label-sm">
+<span class="font-semibold text-secondary">65% Load</span>
+<span class="text-outline">Optimal</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 65%;"></div>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-label-sm font-label-sm uppercase tracking-wider bg-secondary-container text-on-secondary-fixed-variant font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Active
+                </span>
+</td>
+<td class="py-3 px-4 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="px-2.5 py-1 text-label-sm font-label-sm rounded bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors font-medium">Details</button>
+<button class="p-1 rounded text-outline hover:text-on-surface hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[16px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3: 400050 Bandra West -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-3 px-4">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary font-headline-sm text-xs font-bold">
+                    50
+                  </div>
+<div>
+<span class="font-headline-sm text-label-lg text-on-surface block">400050</span>
+<span class="text-body-sm font-body-sm text-on-surface-variant">Bandra West • Hill Rd</span>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-label-sm font-label-sm bg-surface-container text-on-surface">Mumbai</span>
+</td>
+<td class="py-3 px-3">
+<div class="flex items-center gap-1.5">
+<div class="flex -space-x-1.5 overflow-hidden">
+<img class="inline-block h-6 w-6 rounded-full object-cover shadow-sm" data-alt="Indian male senior technician with badge smiling" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHN2uwTEdP3G5vHAoVqK947VJv4ARdiZC_HX14ezzJc8nqPBbRRkcTjqrZCNVGywsym7rmt5qMtAvyyQKr-qvc-5u5u7zLTqKNXxLwb63C-WG5hLO1O-v0_I8rx_CNI_A5QSuBC9R9H-qdT5fS_28fyEPWfYR4H36FDJ-LaHBoSoIBTwQrOfQq3MfYg0ufQ884Pc7q7hnizCB98f2m9v79CUx0Y43SJd-DZ2Vc8WTrGwubOmVSJSkk1A"/>
+<span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-secondary-container text-on-secondary-fixed-variant text-[10px] font-bold">+5</span>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant ml-1 font-semibold">6 Techs</span>
+</div>
+</td>
+<td class="py-3 px-3 font-label-md font-semibold text-on-surface">
+                10 Jobs
+              </td>
+<td class="py-3 px-3">
+<div class="space-y-1">
+<div class="flex justify-between text-label-sm font-label-sm">
+<span class="font-semibold text-secondary">72% Load</span>
+<span class="text-outline">Normal</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 72%;"></div>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-label-sm font-label-sm uppercase tracking-wider bg-secondary-container text-on-secondary-fixed-variant font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Active
+                </span>
+</td>
+<td class="py-3 px-4 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="px-2.5 py-1 text-label-sm font-label-sm rounded bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors font-medium">Details</button>
+<button class="p-1 rounded text-outline hover:text-on-surface hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[16px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4: 400051 Bandra East -->
+<tr class="hover:bg-surface-container-low transition-colors bg-surface-bright/50 group">
+<td class="py-3 px-4">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary font-headline-sm text-xs font-bold">
+                    51
+                  </div>
+<div>
+<span class="font-headline-sm text-label-lg text-on-surface block">400051</span>
+<span class="text-body-sm font-body-sm text-on-surface-variant">Bandra East • BKC Hub</span>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-label-sm font-label-sm bg-surface-container text-on-surface">Mumbai</span>
+</td>
+<td class="py-3 px-3">
+<div class="flex items-center gap-1.5">
+<div class="flex -space-x-1.5 overflow-hidden">
+<span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-surface-container text-on-surface text-[10px] font-bold">4T</span>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant ml-1 font-semibold">4 Techs</span>
+</div>
+</td>
+<td class="py-3 px-3 font-label-md font-semibold text-on-surface">
+                9 Jobs
+              </td>
+<td class="py-3 px-3">
+<div class="space-y-1">
+<div class="flex justify-between text-label-sm font-label-sm">
+<span class="font-semibold text-secondary">78% Load</span>
+<span class="text-outline">Normal</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 78%;"></div>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-label-sm font-label-sm uppercase tracking-wider bg-secondary-container text-on-secondary-fixed-variant font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Active
+                </span>
+</td>
+<td class="py-3 px-4 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="px-2.5 py-1 text-label-sm font-label-sm rounded bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors font-medium">Details</button>
+<button class="p-1 rounded text-outline hover:text-on-surface hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[16px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 5: 411001 Pune Central (Limited Capacity) -->
+<tr class="hover:bg-surface-container-low transition-colors group bg-amber-500/5">
+<td class="py-3 px-4">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-700 font-headline-sm text-xs font-bold">
+                    P1
+                  </div>
+<div>
+<span class="font-headline-sm text-label-lg text-on-surface block">411001</span>
+<span class="text-body-sm font-body-sm text-on-surface-variant">Pune Central • Camp / Deccan</span>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-label-sm font-label-sm bg-surface-container text-on-surface font-semibold">Pune</span>
+</td>
+<td class="py-3 px-3">
+<div class="flex items-center gap-1.5">
+<div class="flex -space-x-1.5 overflow-hidden">
+<span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">3T</span>
+</div>
+<span class="text-label-sm font-label-sm text-amber-700 ml-1 font-semibold">3 Techs</span>
+</div>
+</td>
+<td class="py-3 px-3 font-label-md font-semibold text-on-surface">
+                14 Jobs
+              </td>
+<td class="py-3 px-3">
+<div class="space-y-1">
+<div class="flex justify-between text-label-sm font-label-sm">
+<span class="font-semibold text-amber-700">94% Load</span>
+<span class="text-amber-600 font-semibold">Strained</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
+<div class="bg-amber-500 h-full rounded-full" style="width: 94%;"></div>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-label-sm font-label-sm uppercase tracking-wider bg-amber-100 text-amber-800 font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                  Limited Capacity
+                </span>
+</td>
+<td class="py-3 px-4 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="px-2.5 py-1 text-label-sm font-label-sm rounded bg-amber-600 text-white hover:bg-amber-700 transition-colors font-semibold">Rebalance</button>
+<button class="p-1 rounded text-outline hover:text-on-surface hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[16px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 6: 411005 Pune East (Coverage Gap) -->
+<tr class="hover:bg-surface-container-low transition-colors group bg-error-container/20">
+<td class="py-3 px-4">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-error-container flex items-center justify-center text-error font-headline-sm text-xs font-bold">
+                    P5
+                  </div>
+<div>
+<span class="font-headline-sm text-label-lg text-error block">411005</span>
+<span class="text-body-sm font-body-sm text-on-surface-variant">Pune East • Shivajinagar</span>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-label-sm font-label-sm bg-surface-container text-on-surface font-semibold">Pune</span>
+</td>
+<td class="py-3 px-3">
+<div class="flex items-center gap-1.5">
+<div class="flex -space-x-1.5 overflow-hidden">
+<span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-error-container text-error text-[10px] font-bold">2T</span>
+</div>
+<span class="text-label-sm font-label-sm text-error ml-1 font-semibold">2 Techs</span>
+</div>
+</td>
+<td class="py-3 px-3 font-label-md font-semibold text-error">
+                11 Jobs
+              </td>
+<td class="py-3 px-3">
+<div class="space-y-1">
+<div class="flex justify-between text-label-sm font-label-sm">
+<span class="font-semibold text-error">98% Load</span>
+<span class="text-error font-bold">Over Capacity</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
+<div class="bg-error h-full rounded-full" style="width: 98%;"></div>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-label-sm font-label-sm uppercase tracking-wider bg-error-container text-error font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span>
+                  Coverage Gap
+                </span>
+</td>
+<td class="py-3 px-4 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="px-2.5 py-1 text-label-sm font-label-sm rounded bg-error text-white hover:bg-on-error-container transition-colors font-bold shadow-sm">Assign Roster</button>
+<button class="p-1 rounded text-outline hover:text-on-surface hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[16px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 7: 400053 Andheri West -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-3 px-4">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary font-headline-sm text-xs font-bold">
+                    53
+                  </div>
+<div>
+<span class="font-headline-sm text-label-lg text-on-surface block">400053</span>
+<span class="text-body-sm font-body-sm text-on-surface-variant">Andheri West • Lokhandwala</span>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-label-sm font-label-sm bg-surface-container text-on-surface">Mumbai</span>
+</td>
+<td class="py-3 px-3">
+<div class="flex items-center gap-1.5">
+<div class="flex -space-x-1.5 overflow-hidden">
+<span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-secondary-container text-on-secondary-fixed-variant text-[10px] font-bold">8T</span>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant ml-1 font-semibold">8 Techs</span>
+</div>
+</td>
+<td class="py-3 px-3 font-label-md font-semibold text-on-surface">
+                18 Jobs
+              </td>
+<td class="py-3 px-3">
+<div class="space-y-1">
+<div class="flex justify-between text-label-sm font-label-sm">
+<span class="font-semibold text-secondary">84% Load</span>
+<span class="text-outline">Normal</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 84%;"></div>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-label-sm font-label-sm uppercase tracking-wider bg-secondary-container text-on-secondary-fixed-variant font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Active
+                </span>
+</td>
+<td class="py-3 px-4 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="px-2.5 py-1 text-label-sm font-label-sm rounded bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors font-medium">Details</button>
+<button class="p-1 rounded text-outline hover:text-on-surface hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[16px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Pagination Footer -->
+<div class="p-4 bg-surface-container-low flex flex-col sm:flex-row items-center justify-between gap-3 text-body-sm font-body-sm text-on-surface-variant">
+<span>Showing <strong class="text-on-surface">1 to 7</strong> of 18 assigned postal zones</span>
+<div class="flex items-center gap-1">
+<button class="px-3 py-1 bg-surface-container-lowest text-on-surface rounded font-semibold shadow-sm hover:bg-surface-container transition-colors">Previous</button>
+<button class="px-3 py-1 bg-secondary text-on-secondary rounded font-semibold shadow-sm">1</button>
+<button class="px-3 py-1 bg-surface-container-lowest text-on-surface rounded font-semibold shadow-sm hover:bg-surface-container transition-colors">2</button>
+<button class="px-3 py-1 bg-surface-container-lowest text-on-surface rounded font-semibold shadow-sm hover:bg-surface-container transition-colors">Next</button>
+</div>
+</div>
+</div>
+<!-- Right Column: Regional Geographic Coverage Geofence (4 of 12 = ~38%) -->
+<div class="xl:col-span-4 space-y-4">
+<!-- Interactive Geofence Map Card -->
+<div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm space-y-4">
+<div class="flex items-center justify-between">
+<div class="space-y-0.5">
+<h3 class="text-headline-sm font-headline-sm text-on-surface">Regional Coverage Geofence</h3>
+<p class="text-body-sm font-body-sm text-outline">Real-time telemetry • Maharashtra Corridor</p>
+</div>
+<span class="flex h-2.5 w-2.5 relative">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-secondary"></span>
+</span>
+</div>
+<!-- Vector Geofence Canvas Visual -->
+<div class="relative w-full h-64 bg-slate-900 rounded-xl overflow-hidden shadow-inner flex items-center justify-center p-2">
+<!-- Ambient Map Grid Lines (SVG) -->
+<svg class="absolute inset-0 w-full h-full opacity-20" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<pattern height="24" id="grid" patternunits="userSpaceOnUse" width="24">
+<path d="M 24 0 L 0 0 0 24" fill="none" stroke="#94a3b8" stroke-dasharray="2 2" stroke-width="0.75"></path>
+</pattern>
+</defs>
+<rect fill="url(#grid)" height="100%" width="100%"></rect>
+</svg>
+<!-- Stylized Geofence Map Contour & Nodes -->
+<svg class="relative w-full h-full" fill="none" viewbox="0 0 320 220" xmlns="http://www.w3.org/2000/svg">
+<!-- Maharashtra / Coastal contour hint -->
+<path d="M 40,30 Q 75,70 65,130 T 90,195 Q 140,180 180,190 T 260,170 Q 280,120 240,60 T 150,40 Z" fill="#006c4a" fill-opacity="0.12" stroke="#059669" stroke-dasharray="4 2" stroke-width="1.5"></path>
+<!-- Mumbai Western Coastal Cluster Geofence -->
+<polygon fill="#82f5c1" fill-opacity="0.25" points="50,60 70,45 85,75 75,115 52,105" stroke="#10b981" stroke-width="2"></polygon>
+<circle cx="68" cy="78" fill="#059669" fill-opacity="0.4" r="14"></circle>
+<circle cx="68" cy="78" fill="#85f8c4" r="4"></circle>
+<text fill="#ffffff" font-family="Inter" font-size="9" font-weight="bold" x="76" y="82">Mumbai (34 Techs)</text>
+<!-- Pune Inland Metropolitan Zone -->
+<polygon fill="#f59e0b" fill-opacity="0.2" points="175,120 220,110 235,145 190,165 165,140" stroke="#d97706" stroke-width="2"></polygon>
+<circle class="animate-pulse" cx="198" cy="138" fill="#d97706" fill-opacity="0.3" r="16"></circle>
+<circle cx="198" cy="138" fill="#fbbf24" r="4"></circle>
+<text fill="#fcd34d" font-family="Inter" font-size="9" font-weight="bold" x="145" y="128">Pune (8 Techs • Alert)</text>
+<!-- Express Corridor Connecting Vector -->
+<path d="M 75,95 C 110,105 140,115 190,135" stroke="#60a5fa" stroke-dasharray="3 3" stroke-linecap="round" stroke-width="2"></path>
+<text fill="#93c5fd" font-family="Inter" font-size="7" x="105" y="105">Mumbai-Pune Expressway</text>
+<!-- Radar sweeps & live markers -->
+<circle cx="70" cy="58" fill="#ffffff" r="2.5"></circle>
+<circle cx="58" cy="92" fill="#ffffff" r="2.5"></circle>
+<circle class="animate-ping" cx="215" cy="148" fill="#ef4444" r="3"></circle>
+<circle cx="215" cy="148" fill="#ef4444" r="2.5"></circle>
+</svg>
+<!-- Interactive Legend Pill inside Map -->
+<div class="absolute bottom-2.5 left-2.5 right-2.5 bg-slate-900/80 backdrop-blur-sm px-3 py-1.5 rounded-lg flex items-center justify-between text-[11px] text-slate-300">
+<span class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              Optimal Zone
+            </span>
+<span class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-amber-400"></span>
+              Strained Load
+            </span>
+<span class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-red-400"></span>
+              Capacity Gap
+            </span>
+</div>
+</div>
+<!-- Zone quick stats breakdown -->
+<div class="space-y-2.5 pt-1">
+<span class="text-label-sm font-label-sm text-outline uppercase tracking-wider block">Zone Dispatch Telemetry</span>
+<!-- Cluster Item 1 -->
+<div class="p-3 bg-surface-container-low rounded-lg flex items-center justify-between">
+<div class="space-y-0.5">
+<p class="text-label-md font-label-md text-on-surface">Mumbai South (Ward A/B)</p>
+<span class="text-body-sm font-body-sm text-on-surface-variant">16 Active Techs • 8 Pincodes</span>
+</div>
+<div class="text-right">
+<span class="text-headline-sm font-headline-sm text-secondary">92%</span>
+<span class="block text-label-sm font-label-sm text-outline">SLA Meet</span>
+</div>
+</div>
+<!-- Cluster Item 2 -->
+<div class="p-3 bg-surface-container-low rounded-lg flex items-center justify-between">
+<div class="space-y-0.5">
+<p class="text-label-md font-label-md text-on-surface">Mumbai Western Suburbs</p>
+<span class="text-body-sm font-body-sm text-on-surface-variant">18 Active Techs • 6 Pincodes</span>
+</div>
+<div class="text-right">
+<span class="text-headline-sm font-headline-sm text-secondary">88%</span>
+<span class="block text-label-sm font-label-sm text-outline">SLA Meet</span>
+</div>
+</div>
+<!-- Cluster Item 3 -->
+<div class="p-3 bg-error-container/20 rounded-lg flex items-center justify-between">
+<div class="space-y-0.5">
+<p class="text-label-md font-label-md text-error">Pune Municipal Zone</p>
+<span class="text-body-sm font-body-sm text-error font-medium">8 Techs • Understaffed (Alert)</span>
+</div>
+<div class="text-right">
+<span class="text-headline-sm font-headline-sm text-error">74%</span>
+<span class="block text-label-sm font-label-sm text-error">SLA Lag</span>
+</div>
+</div>
+</div>
+<!-- Quick Map Filters / Toggles -->
+<div class="pt-2 flex flex-col gap-2">
+<label class="flex items-center justify-between p-2.5 bg-surface-container rounded-lg cursor-pointer hover:bg-surface-container-high transition-colors">
+<span class="text-label-md font-label-md text-on-surface">Highlight High Demand Zones</span>
+<input checked="" class="rounded text-secondary focus:ring-secondary w-4 h-4 cursor-pointer" type="checkbox"/>
+</label>
+<label class="flex items-center justify-between p-2.5 bg-surface-container rounded-lg cursor-pointer hover:bg-surface-container-high transition-colors">
+<span class="text-label-md font-label-md text-on-surface">Show Live Fleet Heatmap</span>
+<input checked="" class="rounded text-secondary focus:ring-secondary w-4 h-4 cursor-pointer" type="checkbox"/>
+</label>
+</div>
+</div>
+<!-- Quick Escalation / SLA Notice Card -->
+<div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm flex items-start gap-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary shrink-0">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+</div>
+<div class="space-y-1">
+<h4 class="text-label-lg font-label-lg text-on-surface">Maharashtra Partner Tier: Platinum</h4>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Contractual response threshold requires 85% SLA adherence across all registered urban clusters.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  (function initPincodeFiltering() {
+    const searchInput = document.getElementById('pincodeSearch');
+    const citySelect = document.getElementById('cityFilter');
+    const statusSelect = document.getElementById('statusFilter');
+
+    function filterTable() {
+      const query = (searchInput?.value || '').toLowerCase().trim();
+      const city = citySelect?.value || 'ALL';
+      const status = statusSelect?.value || 'ALL';
+      const rows = document.querySelectorAll('tbody tr');
+
+      rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        const matchesQuery = !query || text.includes(query);
+        const matchesCity = city === 'ALL' || text.includes(city.toLowerCase());
+        
+        let matchesStatus = true;
+        if (status === 'Active') {
+          matchesStatus = text.includes('active') && !text.includes('limited') && !text.includes('gap');
+        } else if (status === 'Limited') {
+          matchesStatus = text.includes('limited capacity');
+        } else if (status === 'Gap') {
+          matchesStatus = text.includes('coverage gap');
+        }
+
+        if (matchesQuery && matchesCity && matchesStatus) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    searchInput?.addEventListener('input', filterTable);
+    citySelect?.addEventListener('change', filterTable);
+    statusSelect?.addEventListener('change', filterTable);
+  })();
+</script></main>
+<!-- END: Main Content Container -->
+<!-- Footer Info -->
+<footer class="mt-auto px-6 py-4 border-t border-slate-200 bg-white text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
+<p>© 2024 ElectriCare Inc. Regional Partner Portal. All rights reserved.</p>
+<div class="flex items-center gap-4 text-[11px] text-slate-500">
+<a class="hover:text-emerald-600" href="#">Privacy Policy</a>
+<a class="hover:text-emerald-600" href="#">Technician Guidelines</a>
+<a class="hover:text-emerald-600" href="#">Emergency Dispatch: 1800-202-099</a>
+</div>
+</footer>
+</div>
+<!-- END: MainContentArea -->
+</div>
+<!-- END: MainLayoutWrapper -->
+</body></html>

@@ -1,0 +1,428 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"><meta content="mobile_tab" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "on-background": "#0b1c30", "secondary-fixed-dim": "#ffb693", "primary-fixed": "#dae1ff", "tertiary-fixed": "#85f8c4", "inverse-primary": "#b3c5ff", "secondary": "#a04100", "on-tertiary-fixed": "#002114", "outline-variant": "#c2c6d8", "on-tertiary": "#ffffff", "primary-fixed-dim": "#b3c5ff", "surface-container-low": "#eff4ff", "on-primary-container": "#f8f7ff", "on-secondary": "#ffffff", "tertiary-fixed-dim": "#68dba9", "on-secondary-fixed-variant": "#7a3000", "primary-container": "#0066ff", "on-error": "#ffffff", "error-container": "#ffdad6", "on-secondary-container": "#572000", "outline": "#727687", "on-primary": "#ffffff", "surface-container-lowest": "#ffffff", "tertiary-container": "#00825a", "background": "#f8f9ff", "secondary-container": "#fe6b00", "surface-tint": "#0054d6", "inverse-surface": "#213145", "inverse-on-surface": "#eaf1ff", "on-error-container": "#93000a", "surface": "#f8f9ff", "secondary-fixed": "#ffdbcc", "surface-bright": "#f8f9ff", "on-secondary-fixed": "#351000", "surface-container-high": "#dce9ff", "error": "#ba1a1a", "on-tertiary-fixed-variant": "#005137", "surface-dim": "#cbdbf5", "surface-container-highest": "#d3e4fe", "on-tertiary-container": "#e1ffec", "on-primary-fixed-variant": "#003fa4", "on-surface-variant": "#424656", "surface-container": "#e5eeff", "surface-variant": "#d3e4fe", "primary": "#0050cb", "tertiary": "#006646", "on-primary-fixed": "#001849", "on-surface": "#0b1c30" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-sm": "0.5rem", "space-xl": "1.5rem", "space-md": "0.75rem", "gutter-compact": "0.75rem", "gutter": "1rem", "margin": "1rem", "space-lg": "1rem", "space-xs": "0.25rem", "margin-expanded": "1.25rem" }, fontFamily: { "body-md": ["Inter"], "display-lg-mobile": ["Plus Jakarta Sans"], "body-sm": ["Inter"], "headline-sm": ["Plus Jakarta Sans"], "display-lg": ["Plus Jakarta Sans"], "label-sm": ["Inter"], "currency-lg": ["Plus Jakarta Sans"], "currency-md": ["Plus Jakarta Sans"], "label-lg": ["Inter"], "label-md": ["Inter"], "headline-md": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "body-lg": ["Inter"] }, fontSize: { "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "display-lg-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "800" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "headline-sm": ["16px", { "lineHeight": "22px", "fontWeight": "600" }], "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800" }], "label-sm": ["10px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "700" }], "currency-lg": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "800" }], "currency-md": ["18px", { "lineHeight": "24px", "fontWeight": "700" }], "label-lg": ["14px", { "lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "600" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "600" }], "headline-md": ["20px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "headline-lg": ["24px", { "lineHeight": "30px", "letterSpacing": "-0.015em", "fontWeight": "700" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }] } } } };</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style></head><body class="bg-surface font-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-gutter flex items-center justify-between"><div class="flex items-center gap-space-sm"><img alt="Brand logo. - Primary color: #0066ff
+- Font: plusJakartaSans
+- Mode: light
+- Roundness: rounded-md
+" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XRC4Jn4OOk1H-GGrVFHE6YQ0rgOrQZbhaKnvPOJh_cvsgSZ-Cy8Eiad3Si2gTi94x6WOMYCC5PmXB6AFoa9RslzGcKvIjFM-_lBESnzxA-5SW7SF94xNcoVMiKqUgp-hyGyvc06N5mCy3T32Id6RScGmdQc8sHQoZACn7PPqtqd46F6FyqKEKXof1G0t3wZYqNkevFckkurrNDuyTI6nrp0SNy4-4PAE27ggR2hysDkmrO4qwgS7RyXtPh"><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span><span class="font-label-sm text-label-sm uppercase tracking-wider text-tertiary">MH Operations</span></div><span class="font-headline-sm text-headline-sm text-on-surface truncate max-w-[150px]">Maharashtra Team</span></div></div><div class="flex items-center gap-space-xs"><button aria-label="Notifications" class="w-11 h-11 flex items-center justify-center relative text-on-surface-variant hover:text-on-surface rounded-full transition-colors"><span class="material-symbols-outlined text-[24px]">notifications</span><span class="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-error ring-2 ring-surface"></span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 pb-24 bg-surface min-h-screen"><div class="flex flex-col w-full px-margin pb-28 pt-2">
+<!-- Top Section: Overview & Metrics -->
+<div class="flex flex-col gap-space-sm mb-space-lg">
+<div class="flex items-center justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider font-bold">Maharashtra Fleet</span>
+<h1 class="font-headline-md text-headline-md text-on-surface">Technician Fleet</h1>
+</div>
+<button class="flex items-center gap-space-xs bg-tertiary-container/15 text-tertiary px-3 py-1.5 rounded-full font-label-md text-label-md transition-all active:scale-95 hover:bg-tertiary-container/25" id="safetyBroadcastBtn">
+<span class="material-symbols-outlined text-[16px]">campaign</span>
+<span>Broadcast Notice</span>
+</button>
+</div>
+<!-- Fleet Status Quick Pill Metrics -->
+<div class="grid grid-cols-3 gap-space-sm mt-1">
+<div class="bg-surface-container-low rounded-xl p-space-sm flex flex-col justify-center shadow-sm">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Online</span>
+</div>
+<div class="flex items-baseline gap-1 mt-0.5">
+<span class="font-headline-md text-headline-md text-tertiary">18</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">/24</span>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-xl p-space-sm flex flex-col justify-center shadow-sm">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Offline</span>
+</div>
+<div class="flex items-baseline gap-1 mt-0.5">
+<span class="font-headline-md text-headline-md text-on-surface">4</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">techs</span>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-xl p-space-sm flex flex-col justify-center shadow-sm">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary-container"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Pending KYC</span>
+</div>
+<div class="flex items-baseline gap-1 mt-0.5">
+<span class="font-headline-md text-headline-md text-secondary">2</span>
+<span class="font-body-sm text-body-sm text-secondary-container font-semibold">Action</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Search Input Bar -->
+<div class="relative w-full mb-space-md">
+<span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
+<input class="w-full h-11 pl-10 pr-10 rounded-xl bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-outline shadow-sm focus:outline-none focus:ring-2 focus:ring-tertiary/40 transition-shadow" id="techSearchInput" placeholder="Search technician by name, phone, or license..." type="text">
+<button aria-label="Clear or filter" class="absolute right-3 top-1/2 -translate-y-1/2 text-outline-variant hover:text-on-surface">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+</div>
+<!-- Filter Pills Bar (Horizontal Scroll) -->
+<div class="flex items-center gap-space-xs overflow-x-auto pb-2 mb-space-md scrollbar-none -mx-margin px-margin">
+<button class="filter-pill shrink-0 px-3.5 py-1.5 rounded-full font-label-md text-label-md bg-surface-container-low text-on-surface-variant active:scale-95 transition-all" data-filter="all">
+      All (24)
+    </button>
+<button class="filter-pill shrink-0 px-3.5 py-1.5 rounded-full font-label-md text-label-md bg-tertiary text-on-tertiary active:scale-95 transition-all shadow-sm" data-filter="online">
+      Online (18)
+    </button>
+<button class="filter-pill shrink-0 px-3.5 py-1.5 rounded-full font-label-md text-label-md bg-surface-container-low text-on-surface-variant active:scale-95 transition-all" data-filter="offline">
+      Offline (4)
+    </button>
+<button class="filter-pill shrink-0 px-3.5 py-1.5 rounded-full font-label-md text-label-md bg-surface-container-low text-on-surface-variant active:scale-95 transition-all" data-filter="pending">
+      Pending KYC (2)
+    </button>
+<button class="filter-pill shrink-0 px-3.5 py-1.5 rounded-full font-label-md text-label-md bg-surface-container-low text-on-surface-variant active:scale-95 transition-all" data-filter="top">
+      Top Rated ★
+    </button>
+</div>
+<!-- Safety Dispatch Broadcast Notification Toast (Dismissible) -->
+<div class="hidden bg-secondary-fixed/50 p-space-md rounded-xl mb-space-md shadow-sm transition-all duration-300" id="broadcastBanner">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs text-on-secondary-fixed">
+<span class="material-symbols-outlined text-secondary text-[20px]">bolt</span>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-secondary-fixed leading-tight">Monsoon Protocol Active</span>
+<span class="font-body-sm text-body-sm text-on-secondary-fixed-variant mt-0.5">Heavy rains reported in South Mumbai. All 18 online technicians sent mandatory dielectric boot check.</span>
+</div>
+</div>
+<button class="text-on-secondary-fixed-variant hover:text-on-secondary-fixed p-1" onclick="document.getElementById('broadcastBanner').classList.add('hidden')">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+<!-- Technicians Directory Cards List -->
+<div class="flex flex-col gap-space-md" id="technicianCardList">
+<!-- Card 1: Rajesh Kumar (Pro L3 - On Duty) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md hover:shadow-md transition-shadow">
+<!-- Top Row: Avatar, Identity, Online Dot, Rating -->
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="relative shrink-0">
+<img class="w-13 h-13 rounded-full object-cover shadow-xs" data-alt="Close-up professional portrait of Rajesh Kumar, a skilled 34-year-old Indian electrical technician wearing a neat dark blue uniform shirt with safety collar, standing against an organized workshop background with soft ambient lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCC2icFD7RgAtXt5AcE3vX_02Dzr3jqw-sU-QbJOg71ZzvXZpw43Zn6az-mKVqeH-4c72kQ5PtMJ1SPq1yx0DBVKjz-A0tuuTL2jCr-XjgPEOYhANPUaXwurg6wY7zlTPkCS75XMy7rdwAoyeFm1B8aZ2L3h9tjQhJYARTAz-h6204hRmklvsO_ZVsE4uq2cxvjpQB1F_srHA-fKh3LYFhndNbK8L91n7StdJkdSBfb8zfptkKULWx3pw">
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-tertiary ring-2 ring-surface-container-lowest" title="Active Online"></span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="font-headline-sm text-headline-sm text-on-surface">Rajesh Kumar</span>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm px-2 py-0.5 rounded-full font-bold">Pro L3</span>
+</div>
+<div class="flex items-center gap-2 mt-0.5">
+<div class="flex items-center gap-0.5 text-secondary-container">
+<span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">4.8</span>
+<span class="font-body-sm text-body-sm text-outline">(128)</span>
+</div>
+<span class="text-outline-variant">•</span>
+<div class="flex items-center gap-0.5 text-tertiary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">verified</span>
+<span>KYC Verified</span>
+</div>
+</div>
+</div>
+</div>
+<span class="bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm px-2.5 py-1 rounded-full uppercase tracking-wider">
+          #MH-EL-2041
+        </span>
+</div>
+<!-- Current Status & Active Job Dispatch -->
+<div class="bg-surface-container-low rounded-lg p-space-sm flex items-center justify-between">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="w-2 h-2 rounded-full bg-secondary-container shrink-0"></span>
+<span class="font-label-md text-label-md text-on-surface truncate">On Duty • Job #J-1001 (Colaba)</span>
+</div>
+<span class="font-body-sm text-body-sm text-tertiary font-semibold shrink-0">ETA 12m</span>
+</div>
+<!-- Performance & Coverage Details -->
+<div class="grid grid-cols-3 gap-space-xs py-1">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">Assigned Pins</span>
+<span class="font-label-md text-label-md text-on-surface truncate">400001, 400002</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="font-label-sm text-label-sm text-outline">Today Completed</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">4 Jobs</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-sm text-label-sm text-outline">Safety Score</span>
+<span class="font-label-md text-label-md text-tertiary font-bold">100%</span>
+</div>
+</div>
+<!-- Action Footer -->
+<div class="flex items-center gap-space-sm pt-space-xs">
+<button class="flex-1 h-10 rounded-lg bg-surface-container text-on-surface font-label-md text-label-md flex items-center justify-center gap-1 active:scale-98 transition-all hover:bg-surface-container-high">
+<span>View Profile &amp; History</span>
+</button>
+<a aria-label="Call Rajesh Kumar" class="w-10 h-10 rounded-lg bg-tertiary/10 text-tertiary flex items-center justify-center hover:bg-tertiary/20 active:scale-95 transition-all" href="tel:+919876543210">
+<span class="material-symbols-outlined text-[20px]">call</span>
+</a>
+</div>
+</div>
+<!-- Card 2: Suresh Verma (Available for Dispatch) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md hover:shadow-md transition-shadow">
+<!-- Top Row -->
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="relative shrink-0">
+<img class="w-13 h-13 rounded-full object-cover shadow-xs" data-alt="Portrait of Suresh Verma, a friendly 29-year-old certified electrician with safety protective eyewear perched on forehead, smiling calmly in clean orange-accented work attire under bright natural sunlight." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSdWbSofymsZcmKtsQhJv3W_f4eY9MMr7xuTyYKGvYHp3FBqJNw1OAUpevGcGIUMm-ywENyWDw9T84Jz7w9wU2-E3t6-nmNjlCDDqVcuWD3Cpmio2fclxEJ69aR7oCEr6CuKO4SEBPwgrXV9o46ffIkaLIS0ds5ax9eFeZSa6uefx-WNolyxHcniVzais6mpVLqXZsyCEdaUPUvLmK7uvwUt5_anuhKZZpMqQfLV4bbevvn7HzfUwweA">
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-tertiary ring-2 ring-surface-container-lowest"></span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="font-headline-sm text-headline-sm text-on-surface">Suresh Verma</span>
+<span class="bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm px-2 py-0.5 rounded-full font-bold">Senior Tech</span>
+</div>
+<div class="flex items-center gap-2 mt-0.5">
+<div class="flex items-center gap-0.5 text-secondary-container">
+<span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">4.7</span>
+<span class="font-body-sm text-body-sm text-outline">(94)</span>
+</div>
+<span class="text-outline-variant">•</span>
+<div class="flex items-center gap-0.5 text-tertiary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">verified</span>
+<span>KYC Verified</span>
+</div>
+</div>
+</div>
+</div>
+<span class="bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm px-2.5 py-1 rounded-full uppercase tracking-wider">
+          #MH-EL-1893
+        </span>
+</div>
+<!-- Standby Status Banner -->
+<div class="bg-surface-container-low rounded-lg p-space-sm flex items-center justify-between">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="w-2 h-2 rounded-full bg-tertiary shrink-0"></span>
+<span class="font-label-md text-label-md text-tertiary font-semibold truncate">Available for Dispatch</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant shrink-0">Standby: Nariman Pt.</span>
+</div>
+<!-- Performance & Coverage Details -->
+<div class="grid grid-cols-3 gap-space-xs py-1">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">Assigned Pins</span>
+<span class="font-label-md text-label-md text-on-surface truncate">400001, 400005</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="font-label-sm text-label-sm text-outline">Today Completed</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">3 Jobs</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-sm text-label-sm text-outline">Safety Score</span>
+<span class="font-label-md text-label-md text-tertiary font-bold">98%</span>
+</div>
+</div>
+<!-- Action Footer with Direct Assignment CTA -->
+<div class="flex items-center gap-space-sm pt-space-xs">
+<button class="flex-1 h-10 rounded-lg bg-tertiary text-on-tertiary font-label-md text-label-md flex items-center justify-center gap-1.5 shadow-sm active:scale-98 transition-all hover:bg-tertiary-container">
+<span class="material-symbols-outlined text-[18px]">add_task</span>
+<span>Assign Urgent Job</span>
+</button>
+<button class="h-10 px-3.5 rounded-lg bg-surface-container text-on-surface font-label-md text-label-md active:scale-98 transition-all hover:bg-surface-container-high">
+          Profile
+        </button>
+</div>
+</div>
+<!-- Card 3: Mahesh Jadhav (Pending KYC Approval Alert) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md hover:shadow-md transition-shadow">
+<!-- Top Row -->
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="relative shrink-0">
+<img class="w-13 h-13 rounded-full object-cover shadow-xs" data-alt="Frontal ID badge style photograph of Mahesh Jadhav, a young Indian wireman technician in plain grey shirt posing calmly for credential verification against a neutral studio backdrop." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_WAUoL1HCAUygly004zrqtgq5Zyt4p5lEmMaR44iLncQTRFxlLdtY2lcHFLRyrNsC2yunZ_IdS6NZ6603xkVCntgN4r9iTKjBR90z9FzF2B9zkKMxB1ba7XdSV7XSn6bBtR7BH1Dxa-6hGQz_EUuY1V3ApXZsseN54GYcC-2JiivxZWWbALOJuMK93KsgqesIEZslzcDVv7DF5xElzRsCNsicDcdKjCxkHuRMa1lRjxcW82zJSvxZbw">
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-secondary-container ring-2 ring-surface-container-lowest"></span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="font-headline-sm text-headline-sm text-on-surface">Mahesh Jadhav</span>
+<span class="bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm px-2 py-0.5 rounded-full font-bold">New Applicant</span>
+</div>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span class="font-body-sm text-body-sm text-outline">Application ID:</span>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">#APP-9932</span>
+</div>
+</div>
+</div>
+<span class="bg-secondary-fixed/50 text-secondary font-label-sm text-label-sm px-2.5 py-1 rounded-full uppercase tracking-wider font-bold">
+          KYC Pending
+        </span>
+</div>
+<!-- High Priority Warning Box for Compliance -->
+<div class="bg-error-container/20 rounded-lg p-space-sm flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-secondary-container text-[18px] shrink-0 mt-0.5">pending_actions</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-secondary font-bold">KYC Documents Uploaded (2 hrs ago)</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Aadhaar card and Maharashtra PWD Wireman License need franchise operator sign-off before dispatching jobs.</span>
+</div>
+</div>
+<!-- Proposed Operating Sector -->
+<div class="flex items-center justify-between py-1">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-outline text-[16px]">location_on</span>
+<span class="font-label-sm text-label-sm text-outline">Target Sector:</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">400050 (Bandra West)</span>
+</div>
+<span class="font-body-sm text-body-sm text-secondary font-semibold">SLA: 4h left</span>
+</div>
+<!-- Action Footer: Direct Review CTA -->
+<div class="flex items-center gap-space-sm pt-space-xs">
+<button class="flex-1 h-10 rounded-lg bg-tertiary text-on-tertiary font-label-md text-label-md flex items-center justify-center gap-1.5 shadow-sm active:scale-98 transition-all hover:bg-tertiary-container">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+<span>Review KYC Documents</span>
+</button>
+<button class="h-10 px-3.5 rounded-lg bg-surface-container text-on-surface font-label-md text-label-md active:scale-98 transition-all hover:bg-surface-container-high">
+          Contact
+        </button>
+</div>
+</div>
+<!-- Card 4: Vikram Patel (Offline Tech) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md opacity-90 hover:opacity-100 hover:shadow-md transition-all">
+<!-- Top Row -->
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="relative shrink-0">
+<img class="w-13 h-13 rounded-full object-cover grayscale shadow-xs" data-alt="Headshot of Vikram Patel, a 31-year-old Indian maintenance electrician wearing safety polo shirt, calm expression, indoors in commercial building service lobby." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjcXrx1dWn0dLeQc2VRsakfhAqIRtDdRtLtKdVLeT4qUL5iokC_OYAhFR21aCjKbvt1lxot6Fh38zIsIr_u044hwSZ535b2ZfEDmwa72DLMuK3L5fnfaU-Hc5wHU0PSdcGrnTZ6MgKuYZEQLlegbscTZJM10rWgI8L0vWe1TKRW5w8G4zqMttedpMdLjUkLS96sbdkyFzbVySw7QZmM6CI_7RNJ-2xSyPnqLaNzDAuEtfqEEd2CkQJWg">
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-outline ring-2 ring-surface-container-lowest"></span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="font-headline-sm text-headline-sm text-on-surface">Vikram Patel</span>
+<span class="bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm px-2 py-0.5 rounded-full">Level 2</span>
+</div>
+<div class="flex items-center gap-2 mt-0.5">
+<div class="flex items-center gap-0.5 text-secondary-container">
+<span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">4.5</span>
+<span class="font-body-sm text-body-sm text-outline">(62)</span>
+</div>
+<span class="text-outline-variant">•</span>
+<div class="flex items-center gap-0.5 text-tertiary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">verified</span>
+<span>Verified</span>
+</div>
+</div>
+</div>
+</div>
+<span class="bg-surface-container-high text-outline font-label-sm text-label-sm px-2.5 py-1 rounded-full uppercase tracking-wider">
+          #MH-EL-0914
+        </span>
+</div>
+<!-- Offline Status Row -->
+<div class="bg-surface-container-low rounded-lg p-space-sm flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-outline text-[16px]">power_off</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Offline (Shift ended 2 hrs ago)</span>
+</div>
+<span class="font-body-sm text-body-sm text-outline">Next: 08:00 AM</span>
+</div>
+<!-- Pin and Action Details -->
+<div class="flex items-center justify-between pt-1">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">Assigned Hub</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">411001 (Pune Station Hub)</span>
+</div>
+<button class="h-9 px-4 rounded-lg bg-surface-container text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-colors">
+          View Logs
+        </button>
+</div>
+</div>
+</div>
+<!-- Empty Search Feedback Placeholder (Toggled via JS) -->
+<div class="hidden flex-col items-center justify-center p-space-xl text-center bg-surface-container-lowest rounded-2xl shadow-sm mt-space-md" id="noResultsBlock">
+<div class="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center text-outline mb-space-sm">
+<span class="material-symbols-outlined text-[28px]">search_off</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-on-surface">No technicians match search</span>
+<span class="font-body-sm text-body-sm text-outline mt-1 max-w-[240px]">Try searching by pin code (e.g. 400001) or technician name.</span>
+<button class="mt-space-md px-4 py-2 rounded-lg bg-tertiary text-on-tertiary font-label-md text-label-md" id="resetSearchBtn">
+      Reset Filters
+    </button>
+</div>
+<!-- Persistent Floating Onboarding CTA Dock (Above App Shell Bottom Bar) -->
+<div class="fixed bottom-20 left-0 right-0 px-margin flex items-center justify-center pointer-events-none z-40">
+<button class="pointer-events-auto flex items-center gap-2 bg-tertiary text-on-tertiary px-5 py-3.5 rounded-full shadow-lg active:scale-95 hover:bg-tertiary-container transition-all" id="onboardTechBtn">
+<span class="material-symbols-outlined text-[20px]">person_add</span>
+<span class="font-label-lg text-label-lg font-bold">Onboard New Technician</span>
+</button>
+</div>
+</div>
+<script>
+  // Filter pills interactive toggle & filtering logic
+  const filterPills = document.querySelectorAll('.filter-pill');
+  const searchInput = document.getElementById('techSearchInput');
+  const cards = document.querySelectorAll('#technicianCardList > div');
+  const noResultsBlock = document.getElementById('noResultsBlock');
+  const broadcastBanner = document.getElementById('broadcastBanner');
+  const safetyBroadcastBtn = document.getElementById('safetyBroadcastBtn');
+
+  // Toggle broadcast banner
+  safetyBroadcastBtn?.addEventListener('click', () => {
+    broadcastBanner.classList.remove('hidden');
+    broadcastBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+
+  // Pill active states
+  filterPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      filterPills.forEach(p => {
+        p.classList.remove('bg-tertiary', 'text-on-tertiary', 'shadow-sm');
+        p.classList.add('bg-surface-container-low', 'text-on-surface-variant');
+      });
+      pill.classList.remove('bg-surface-container-low', 'text-on-surface-variant');
+      pill.classList.add('bg-tertiary', 'text-on-tertiary', 'shadow-sm');
+
+      const filterType = pill.dataset.filter;
+      applyFiltering(filterType, searchInput.value.toLowerCase());
+    });
+  });
+
+  // Search filtering
+  searchInput?.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase();
+    const activePill = document.querySelector('.filter-pill.bg-tertiary');
+    const filterType = activePill ? activePill.dataset.filter : 'all';
+    applyFiltering(filterType, query);
+  });
+
+  function applyFiltering(filterType, query) {
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+      const text = card.textContent.toLowerCase();
+      let matchesFilter = true;
+
+      if (filterType === 'online') {
+        matchesFilter = text.includes('available for dispatch') || text.includes('on duty');
+      } else if (filterType === 'offline') {
+        matchesFilter = text.includes('offline');
+      } else if (filterType === 'pending') {
+        matchesFilter = text.includes('kyc pending') || text.includes('application id');
+      } else if (filterType === 'top') {
+        matchesFilter = text.includes('4.8') || text.includes('pro l3');
+      }
+
+      const matchesSearch = !query || text.includes(query);
+
+      if (matchesFilter && matchesSearch) {
+        card.style.display = 'flex';
+        visibleCount++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    if (visibleCount === 0) {
+      noResultsBlock.classList.remove('hidden');
+      noResultsBlock.classList.add('flex');
+    } else {
+      noResultsBlock.classList.add('hidden');
+      noResultsBlock.classList.remove('flex');
+    }
+  }
+
+  document.getElementById('resetSearchBtn')?.addEventListener('click', () => {
+    if (searchInput) searchInput.value = '';
+    filterPills[0]?.click();
+  });
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-4px_16px_rgba(0,0,0,0.05)]" data-active-classes="text-tertiary font-label-md"><div class="flex justify-around items-center h-16 px-gutter-compact"><a class="flex flex-col items-center justify-center gap-space-xs min-w-[56px] h-12 text-on-surface-variant hover:text-tertiary transition-colors" data-path="dashboard" href="#"><span class="material-symbols-outlined text-[22px]">dashboard</span><span class="font-label-sm text-label-sm">Dashboard</span></a><a aria-current="page" class="flex flex-col items-center justify-center gap-space-xs min-w-[56px] h-12 transition-colors text-tertiary font-label-md" data-path="technicians" href="#"><span class="material-symbols-outlined text-[22px]">group</span><span class="font-label-sm text-label-sm">Technicians</span></a><a class="flex flex-col items-center justify-center gap-space-xs min-w-[56px] h-12 text-on-surface-variant hover:text-tertiary relative transition-colors" data-path="jobs" href="#"><span class="relative flex items-center justify-center"><span class="material-symbols-outlined text-[22px]">assignment</span><span class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-secondary-container"></span></span><span class="font-label-sm text-label-sm">Jobs</span></a><a class="flex flex-col items-center justify-center gap-space-xs min-w-[56px] h-12 text-on-surface-variant hover:text-tertiary transition-colors" data-path="finance" href="#"><span class="material-symbols-outlined text-[22px]">account_balance_wallet</span><span class="font-label-sm text-label-sm">Finance</span></a><a class="flex flex-col items-center justify-center gap-space-xs min-w-[56px] h-12 text-on-surface-variant hover:text-tertiary transition-colors" data-path="profile" href="#"><span class="material-symbols-outlined text-[22px]">apartment</span><span class="font-label-sm text-label-sm">Profile</span></a></div></nav></body></html>

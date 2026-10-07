@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ElectriCare - Partner Web CRM (Maharashtra Team)</title>
+<!-- Inter Google Font -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            },
+            surface: {
+              bg: '#f8fafc',
+              border: '#e2e8f0',
+              sidebar: '#ffffff'
+            }
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom CSS -->
+<style data-purpose="custom-enhancements">
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .chart-donut-ring {
+      stroke-dasharray: 440;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+      transition: stroke-dashoffset 0.5s ease;
+    }
+  </style>
+<!-- END: Custom CSS -->
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 text-[13px]">
+<!-- BEGIN: TopBarBanner -->
+<!-- Context indicator for Regional Operations -->
+<div class="bg-brand-900 text-brand-100 text-xs px-6 py-1.5 flex items-center justify-between border-b border-brand-800">
+<div class="flex items-center space-x-2 font-medium">
+<span class="inline-flex items-center justify-center w-4 h-4 bg-emerald-500 text-white rounded-full text-[10px] font-bold">11</span>
+<span class="tracking-wide font-semibold text-white">Partner Web CRM</span>
+<span class="text-emerald-300">(Maharashtra Team)</span>
+</div>
+<div class="flex items-center space-x-4 text-[11px] text-emerald-200">
+<span>Regional Operations</span>
+<span class="text-emerald-500">•</span>
+<span>Manage Technicians</span>
+<span class="text-emerald-500">•</span>
+<span>Jobs</span>
+<span class="text-emerald-500">•</span>
+<span>Pincodes</span>
+<span class="text-emerald-500">•</span>
+<span>Finance</span>
+<span class="text-emerald-500">•</span>
+<span>Support</span>
+</div>
+</div>
+<!-- END: TopBarBanner -->
+<!-- BEGIN: MainLayoutWrapper -->
+<div class="flex flex-1 min-h-[calc(100vh-28px)]">
+<!-- BEGIN: LeftSidebar -->
+<aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 select-none">
+<div>
+<!-- Logo Section -->
+<div class="h-16 flex items-center px-6 border-b border-slate-100 gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-sm shadow-emerald-500/30">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<path d="M13 2L3 14h8v8l10-12h-8l0-8z"></path>
+</svg>
+</div>
+<div>
+<span class="text-base font-bold text-slate-900 tracking-tight flex items-center gap-1">
+              ElectriCare
+            </span>
+<span class="block text-[10px] font-medium uppercase tracking-wider text-emerald-600 -mt-1">Partner Portal</span>
+</div>
+</div>
+<!-- Navigation Menu -->
+<nav aria-label="Main Navigation" class="p-3 space-y-1">
+<!-- Dashboard - Active Item -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg bg-emerald-600 text-white font-medium shadow-sm shadow-emerald-600/20 transition-colors" href="#">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="9" rx="1" width="7" x="3" y="3"></rect>
+<rect height="5" rx="1" width="7" x="14" y="3"></rect>
+<rect height="9" rx="1" width="7" x="14" y="12"></rect>
+<rect height="5" rx="1" width="7" x="3" y="16"></rect>
+</svg>
+<span>Dashboard</span>
+</a>
+<!-- Technicians -->
+<a class="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<div class="flex items-center gap-3">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+<circle cx="9" cy="7" r="4"></circle>
+<path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+</svg>
+<span>Technicians</span>
+</div>
+<span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">24</span>
+</a>
+<!-- Job Management -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="14" rx="2" ry="2" width="20" x="2" y="7"></rect>
+<path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+</svg>
+<span>Job Management</span>
+</a>
+<!-- Pincode Coverage -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path>
+<circle cx="12" cy="10" r="3"></circle>
+</svg>
+<span>Pincode Coverage</span>
+</a>
+<!-- Finance / Payouts -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<line x1="12" x2="12" y1="1" y2="23"></line>
+<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+</svg>
+<span>Finance / Payouts</span>
+</a>
+<!-- Profile / Settings -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="3"></circle>
+<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+</svg>
+<span>Profile / Settings</span>
+</a>
+<!-- Support -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+<line x1="12" x2="12.01" y1="17" y2="17"></line>
+</svg>
+<span>Support</span>
+</a>
+</nav>
+</div>
+<!-- Partner Unit Card in Sidebar Footer -->
+<div class="p-3 border-t border-slate-100 bg-slate-50/50 m-2 rounded-xl">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 border border-emerald-300">
+            MT
+          </div>
+<div class="truncate">
+<p class="font-semibold text-slate-800 text-xs truncate leading-tight">Maharashtra Team</p>
+<span class="inline-flex items-center text-[10px] text-emerald-600 font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span> Partner Active
+            </span>
+</div>
+</div>
+</div>
+</aside>
+<!-- END: LeftSidebar -->
+<!-- BEGIN: MainContentArea -->
+<div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+<!-- BEGIN: HeaderNav -->
+<header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-20">
+<!-- Search bar input -->
+<div class="relative w-80">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="11" cy="11" r="8"></circle>
+<line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+</svg>
+</span>
+<input class="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 placeholder-slate-400 transition" placeholder="Search dashboard, jobs, technicians..." type="text"/>
+</div>
+<!-- Top Right Actions & User Profile -->
+<div class="flex items-center gap-3.5">
+<!-- Quick Status Pill -->
+<div class="hidden md:flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs px-2.5 py-1 rounded-full">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span class="font-medium text-[11px]">Region: MH Operations</span>
+</div>
+<!-- Notification Bell -->
+<button aria-label="Notifications" class="p-2 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100 relative" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+<path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+</svg>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+</button>
+<div class="h-5 w-px bg-slate-200"></div>
+<!-- Profile Badge -->
+<div class="flex items-center gap-2.5 pl-1 cursor-pointer">
+<div class="w-8 h-8 rounded-full bg-slate-800 text-white font-semibold flex items-center justify-center text-xs">
+              MH
+            </div>
+<div class="hidden sm:block text-left">
+<span class="block text-xs font-semibold text-slate-700 leading-tight">Maharashtra Ops</span>
+<span class="text-[10px] text-slate-400">admin-mh@electricare.in</span>
+</div>
+<svg class="w-3.5 h-3.5 text-slate-400 ml-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</div>
+</div>
+</header>
+<!-- END: HeaderNav -->
+<!-- Main Body Container -->
+<main class="p-6 space-y-6">
+<!-- BEGIN: PageTitleArea -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+<div>
+<h1 class="text-xl font-bold text-slate-900 tracking-tight">Welcome back, Maharashtra Team!</h1>
+<p class="text-xs text-slate-500 mt-0.5">Here is the real-time operational performance for your regional service network.</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-medium flex items-center gap-1.5 shadow-sm transition">
+<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="18" rx="2" ry="2" width="18" x="3" y="4"></rect>
+<line x1="16" x2="16" y1="2" y2="6"></line>
+<line x1="8" x2="8" y1="2" y2="6"></line>
+<line x1="3" x2="21" y1="10" y2="10"></line>
+</svg>
+<span>This Month: Aug 2024</span>
+</button>
+<button class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium flex items-center gap-1.5 shadow-sm shadow-emerald-600/30 transition">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<line x1="12" x2="12" y1="5" y2="19"></line>
+<line x1="5" x2="19" y1="12" y2="12"></line>
+</svg>
+<span>Assign Jobs</span>
+</button>
+</div>
+</div>
+<!-- END: PageTitleArea -->
+<!-- BEGIN: MetricCardsRow -->
+<!-- 4 Primary KPI metric cards: Total Jobs, Active Technicians, Revenue, Escalated Jobs -->
+<section aria-label="Key Performance Indicators" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- Metric 1: Total Jobs -->
+<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-slate-300 transition">
+<div class="flex items-center justify-between text-slate-500">
+<span class="text-xs font-medium">Total Jobs</span>
+<span class="p-1.5 rounded-lg bg-emerald-50 text-emerald-600">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+<polyline points="14 2 14 8 20 8"></polyline>
+</svg>
+</span>
+</div>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="text-2xl font-bold text-slate-900 tracking-tight">284</span>
+<span class="text-[11px] font-semibold text-emerald-600 flex items-center">
+<svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polyline points="18 15 12 9 6 15"></polyline>
+</svg>
+                +12%
+              </span>
+</div>
+<div class="mt-1 text-[11px] text-slate-400">vs. last month (253 jobs)</div>
+</div>
+<!-- Metric 2: Active Technicians -->
+<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-slate-300 transition">
+<div class="flex items-center justify-between text-slate-500">
+<span class="text-xs font-medium">Active Technicians</span>
+<span class="p-1.5 rounded-lg bg-blue-50 text-blue-600">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+<circle cx="8.5" cy="7" r="4"></circle>
+<polyline points="17 11 19 13 23 9"></polyline>
+</svg>
+</span>
+</div>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="text-2xl font-bold text-slate-900 tracking-tight">18</span>
+<span class="text-[11px] font-medium text-slate-500">/ 24 total</span>
+</div>
+<div class="mt-1 text-[11px] text-emerald-600 font-medium flex items-center">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>
+              75% operational capacity
+            </div>
+</div>
+<!-- Metric 3: Revenue (This Month) -->
+<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-slate-300 transition">
+<div class="flex items-center justify-between text-slate-500">
+<span class="text-xs font-medium">Revenue <span class="text-slate-400 font-normal">(This Month)</span></span>
+<span class="p-1.5 rounded-lg bg-indigo-50 text-indigo-600">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<line x1="12" x2="12" y1="1" y2="23"></line>
+<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+</svg>
+</span>
+</div>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="text-2xl font-bold text-slate-900 tracking-tight">₹4.2L</span>
+<span class="text-[11px] font-semibold text-emerald-600 flex items-center">
+<svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polyline points="18 15 12 9 6 15"></polyline>
+</svg>
+                +8.4%
+              </span>
+</div>
+<div class="mt-1 text-[11px] text-slate-400">Target ₹4.5L (93% achieved)</div>
+</div>
+<!-- Metric 4: Escalated Jobs -->
+<div class="bg-white p-4 rounded-xl border border-rose-200 bg-rose-50/20 shadow-sm flex flex-col justify-between hover:border-rose-300 transition">
+<div class="flex items-center justify-between text-rose-700">
+<span class="text-xs font-semibold">Escalated Jobs</span>
+<span class="p-1.5 rounded-lg bg-rose-100 text-rose-600">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+<line x1="12" x2="12" y1="9" y2="13"></line>
+<line x1="12" x2="12.01" y1="17" y2="17"></line>
+</svg>
+</span>
+</div>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="text-2xl font-bold text-rose-600 tracking-tight">3</span>
+<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-rose-100 text-rose-700">Action Req.</span>
+</div>
+<div class="mt-1 text-[11px] text-rose-500 font-medium">SLA breach risk in 2 tickets</div>
+</div>
+</section>
+<!-- END: MetricCardsRow -->
+<!-- BEGIN: ChartsRow -->
+<section aria-label="Analytics and Charts" class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+<!-- Job Status Overview (Donut Breakdown) -->
+<div class="lg:col-span-5 bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-2">
+<div>
+<h2 class="text-sm font-bold text-slate-800">Job Status Overview</h2>
+<p class="text-[11px] text-slate-400">Real-time status of 284 monthly dispatches</p>
+</div>
+<button class="text-slate-400 hover:text-slate-600 p-1">
+<svg class="w-4 h-4" fill="currentColor" viewbox="0 0 20 20">
+<path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path>
+</svg>
+</button>
+</div>
+<!-- Donut Visual + Legend Container -->
+<div class="flex flex-col sm:flex-row items-center justify-around py-4 gap-4">
+<!-- SVG Donut Chart with Center Count -->
+<div class="relative w-40 h-40 flex items-center justify-center">
+<svg class="w-36 h-36" viewbox="0 0 160 160">
+<!-- Background circle -->
+<circle cx="80" cy="80" fill="none" r="65" stroke="#f1f5f9" stroke-width="14"></circle>
+<!-- Completed: ~65% (Emerald) -->
+<circle class="chart-donut-ring" cx="80" cy="80" fill="none" r="65" stroke="#10b981" stroke-dasharray="408.4" stroke-dashoffset="142" stroke-linecap="round" stroke-width="14"></circle>
+<!-- In Progress: ~18% (Blue) -->
+<circle class="chart-donut-ring" cx="80" cy="80" fill="none" r="65" stroke="#3b82f6" stroke-dasharray="408.4" stroke-dashoffset="335" stroke-width="14" transform="rotate(145 80 80)"></circle>
+<!-- Pending: ~10% (Amber) -->
+<circle class="chart-donut-ring" cx="80" cy="80" fill="none" r="65" stroke="#f59e0b" stroke-dasharray="408.4" stroke-dashoffset="370" stroke-width="14" transform="rotate(220 80 80)"></circle>
+<!-- Escalated: ~4% (Rose) -->
+<circle class="chart-donut-ring" cx="80" cy="80" fill="none" r="65" stroke="#ef4444" stroke-dasharray="408.4" stroke-dashoffset="395" stroke-width="14" transform="rotate(270 80 80)"></circle>
+</svg>
+<!-- Central Stat -->
+<div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+<span class="text-2xl font-extrabold text-slate-800 leading-none">284</span>
+<span class="text-[10px] uppercase font-semibold text-slate-400 mt-1">Total Jobs</span>
+</div>
+</div>
+<!-- Status Legend Breakdown -->
+<div class="space-y-2 text-xs w-full max-w-[170px]">
+<div class="flex items-center justify-between">
+<span class="flex items-center gap-1.5 text-slate-600">
+<span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Completed
+                  </span>
+<span class="font-bold text-slate-800">186</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="flex items-center gap-1.5 text-slate-600">
+<span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> In Progress
+                  </span>
+<span class="font-bold text-slate-800">54</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="flex items-center gap-1.5 text-slate-600">
+<span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Pending
+                  </span>
+<span class="font-bold text-slate-800">32</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="flex items-center gap-1.5 text-slate-600">
+<span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Escalated
+                  </span>
+<span class="font-bold text-rose-600">3</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="flex items-center gap-1.5 text-slate-600">
+<span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span> Canceled
+                  </span>
+<span class="font-bold text-slate-500">9</span>
+</div>
+</div>
+</div>
+<div class="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+<span>Overall Completion Rate</span>
+<span class="font-semibold text-emerald-600">89.2% on target</span>
+</div>
+</div>
+<!-- Revenue Trend (Bi-weekly Bar Chart) -->
+<div class="lg:col-span-7 bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<div>
+<div class="flex items-center gap-2">
+<h2 class="text-sm font-bold text-slate-800">Revenue Trend</h2>
+<span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-semibold rounded-md border border-emerald-200">
+                    ₹4.2L Total
+                  </span>
+</div>
+<p class="text-[11px] text-slate-400 mt-0.5">Bi-weekly billing volume across Maharashtra territory</p>
+</div>
+<div class="flex items-center gap-3 text-xs">
+<div class="flex items-center gap-1 text-slate-600 text-[11px]">
+<span class="w-2 h-2 rounded bg-emerald-600"></span> Gross Revenue
+                </div>
+<button class="text-xs text-emerald-600 hover:text-emerald-700 font-medium">Download Report</button>
+</div>
+</div>
+<!-- Bar Chart Display Component -->
+<div class="mt-6 mb-2">
+<div class="h-44 flex items-end justify-between gap-3 sm:gap-6 px-2 border-b border-slate-200 pb-2">
+<!-- Aug 1 -->
+<div class="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
+<span class="text-[10px] font-medium text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">₹62k</span>
+<div class="w-full max-w-[42px] bg-slate-100 rounded-t h-[55%] flex items-end">
+<div class="w-full bg-emerald-500/80 hover:bg-emerald-600 rounded-t transition-all h-[75%]"></div>
+</div>
+<span class="text-[11px] text-slate-500 font-medium mt-1">Aug 1</span>
+</div>
+<!-- Aug 8 -->
+<div class="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
+<span class="text-[10px] font-medium text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">₹85k</span>
+<div class="w-full max-w-[42px] bg-slate-100 rounded-t h-[75%] flex items-end">
+<div class="w-full bg-emerald-500/80 hover:bg-emerald-600 rounded-t transition-all h-[82%]"></div>
+</div>
+<span class="text-[11px] text-slate-500 font-medium mt-1">Aug 8</span>
+</div>
+<!-- Aug 15 -->
+<div class="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
+<span class="text-[10px] font-medium text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">₹78k</span>
+<div class="w-full max-w-[42px] bg-slate-100 rounded-t h-[68%] flex items-end">
+<div class="w-full bg-emerald-500/80 hover:bg-emerald-600 rounded-t transition-all h-[78%]"></div>
+</div>
+<span class="text-[11px] text-slate-500 font-medium mt-1">Aug 15</span>
+</div>
+<!-- Aug 22 -->
+<div class="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
+<span class="text-[10px] font-medium text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">₹102k</span>
+<div class="w-full max-w-[42px] bg-slate-100 rounded-t h-[95%] flex items-end">
+<div class="w-full bg-emerald-600 hover:bg-emerald-700 rounded-t transition-all h-[95%] shadow-sm"></div>
+</div>
+<span class="text-[11px] text-slate-500 font-medium mt-1">Aug 22</span>
+</div>
+<!-- Aug 31 -->
+<div class="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
+<span class="text-[10px] font-medium text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">₹93k</span>
+<div class="w-full max-w-[42px] bg-slate-100 rounded-t h-[85%] flex items-end">
+<div class="w-full bg-emerald-500/80 hover:bg-emerald-600 rounded-t transition-all h-[88%]"></div>
+</div>
+<span class="text-[11px] text-slate-500 font-medium mt-1">Aug 31</span>
+</div>
+</div>
+</div>
+<!-- Footer summary of trend -->
+<div class="flex items-center justify-between text-[11px] text-slate-500 pt-2">
+<span class="flex items-center gap-1">
+<svg class="w-3.5 h-3.5 text-emerald-500" fill="currentColor" viewbox="0 0 20 20">
+<path clip-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 11.586 14.586 8H12z" fill-rule="evenodd"></path>
+</svg>
+                Peak collection occurred in week 4 (Aug 22)
+              </span>
+<span>Avg. Ticket: ₹1,120</span>
+</div>
+</div>
+</section>
+<!-- END: ChartsRow -->
+<!-- BEGIN: RecentJobsSection -->
+<section aria-label="Recent Jobs" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+<!-- Header and Filter Toolbar -->
+<div class="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+<div>
+<h2 class="text-sm font-bold text-slate-800">Recent Jobs</h2>
+<p class="text-[11px] text-slate-400">Live operational stream of technician tickets</p>
+</div>
+<div class="flex items-center gap-2">
+<!-- Filter Dropdowns -->
+<select class="text-xs bg-slate-50 border border-slate-200 text-slate-600 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+<option>All Services</option>
+<option>Fan Installation</option>
+<option>MCB Repair</option>
+<option>Switch &amp; Socket</option>
+<option>AC Isolator</option>
+</select>
+<select class="text-xs bg-slate-50 border border-slate-200 text-slate-600 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+<option>All Statuses</option>
+<option>En Route</option>
+<option>Completed</option>
+<option>Assigned</option>
+<option>Work Started</option>
+</select>
+<button class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition flex items-center gap-1">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+<polyline points="7 10 12 15 17 10"></polyline>
+<line x1="12" x2="12" y1="15" y2="3"></line>
+</svg>
+<span>Export</span>
+</button>
+</div>
+</div>
+<!-- Jobs Data Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50/80 text-[11px] font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200">
+<th class="py-3 px-4">Job ID</th>
+<th class="py-3 px-4">Customer</th>
+<th class="py-3 px-4">Service</th>
+<th class="py-3 px-4">Technician</th>
+<th class="py-3 px-4">Pincode</th>
+<th class="py-3 px-4">Status</th>
+<th class="py-3 px-4">Amount</th>
+<th class="py-3 px-4 text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 text-xs font-normal text-slate-700">
+<!-- Row 1: #J-1001 -->
+<tr class="hover:bg-slate-50/70 transition-colors">
+<td class="py-3 px-4 font-semibold text-emerald-700">#J-1001</td>
+<td class="py-3 px-4">
+<div class="font-medium text-slate-800">Amit Sharma</div>
+<div class="text-[10px] text-slate-400">+91 98192 XXXXX</div>
+</td>
+<td class="py-3 px-4">
+<span class="inline-flex items-center text-slate-700 font-medium">Fan Installation</span>
+</td>
+<td class="py-3 px-4">
+<div class="flex items-center gap-1.5">
+<div class="w-5 h-5 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[10px] font-bold">RK</div>
+<span>Rajesh Kumar</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="px-2 py-0.5 bg-slate-100 rounded text-slate-600 font-mono text-[11px]">400001</span>
+</td>
+<td class="py-3 px-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+<span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                      En Route
+                    </span>
+</td>
+<td class="py-3 px-4 font-semibold text-slate-900">₹1,250</td>
+<td class="py-3 px-4 text-right">
+<button class="px-2.5 py-1 text-xs font-medium text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 rounded border border-emerald-200 transition">
+                      View
+                    </button>
+</td>
+</tr>
+<!-- Row 2: #J-1002 -->
+<tr class="hover:bg-slate-50/70 transition-colors">
+<td class="py-3 px-4 font-semibold text-emerald-700">#J-1002</td>
+<td class="py-3 px-4">
+<div class="font-medium text-slate-800">Priya Mehta</div>
+<div class="text-[10px] text-slate-400">+91 98201 XXXXX</div>
+</td>
+<td class="py-3 px-4">
+<span class="inline-flex items-center text-slate-700 font-medium">MCB Repair</span>
+</td>
+<td class="py-3 px-4">
+<div class="flex items-center gap-1.5">
+<div class="w-5 h-5 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[10px] font-bold">SV</div>
+<span>Suresh Verma</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="px-2 py-0.5 bg-slate-100 rounded text-slate-600 font-mono text-[11px]">400002</span>
+</td>
+<td class="py-3 px-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+<svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polyline points="20 6 9 17 4 12"></polyline>
+</svg>
+                      Completed
+                    </span>
+</td>
+<td class="py-3 px-4 font-semibold text-slate-900">₹800</td>
+<td class="py-3 px-4 text-right">
+<button class="px-2.5 py-1 text-xs font-medium text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 rounded border border-emerald-200 transition">
+                      View
+                    </button>
+</td>
+</tr>
+<!-- Row 3: #J-1003 -->
+<tr class="hover:bg-slate-50/70 transition-colors">
+<td class="py-3 px-4 font-semibold text-emerald-700">#J-1003</td>
+<td class="py-3 px-4">
+<div class="font-medium text-slate-800">Neha Kumar</div>
+<div class="text-[10px] text-slate-400">+91 97693 XXXXX</div>
+</td>
+<td class="py-3 px-4">
+<span class="inline-flex items-center text-slate-700 font-medium">Switch &amp; Socket</span>
+</td>
+<td class="py-3 px-4">
+<div class="flex items-center gap-1.5">
+<div class="w-5 h-5 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[10px] font-bold">AS</div>
+<span>Ankit Singh</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="px-2 py-0.5 bg-slate-100 rounded text-slate-600 font-mono text-[11px]">400050</span>
+</td>
+<td class="py-3 px-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                      Assigned
+                    </span>
+</td>
+<td class="py-3 px-4 font-semibold text-slate-900">₹450</td>
+<td class="py-3 px-4 text-right">
+<button class="px-2.5 py-1 text-xs font-medium text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 rounded border border-emerald-200 transition">
+                      View
+                    </button>
+</td>
+</tr>
+<!-- Row 4: #J-1004 -->
+<tr class="hover:bg-slate-50/70 transition-colors">
+<td class="py-3 px-4 font-semibold text-emerald-700">#J-1004</td>
+<td class="py-3 px-4">
+<div class="font-medium text-slate-800">Vikram Rao</div>
+<div class="text-[10px] text-slate-400">+91 99304 XXXXX</div>
+</td>
+<td class="py-3 px-4">
+<span class="inline-flex items-center text-slate-700 font-medium">AC Isolator</span>
+</td>
+<td class="py-3 px-4">
+<div class="flex items-center gap-1.5">
+<div class="w-5 h-5 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[10px] font-bold">VP</div>
+<span>Vikram Patel</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="px-2 py-0.5 bg-slate-100 rounded text-slate-600 font-mono text-[11px]">400051</span>
+</td>
+<td class="py-3 px-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-purple-50 text-purple-700 border border-purple-200">
+<span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                      Work Started
+                    </span>
+</td>
+<td class="py-3 px-4 font-semibold text-slate-900">₹1,500</td>
+<td class="py-3 px-4 text-right">
+<button class="px-2.5 py-1 text-xs font-medium text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 rounded border border-emerald-200 transition">
+                      View
+                    </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Footer Pagination bar -->
+<div class="px-4 py-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 bg-slate-50/40">
+<span>Showing <span class="font-semibold text-slate-700">1 to 4</span> of 284 recent jobs</span>
+<div class="flex items-center space-x-1">
+<button class="px-2.5 py-1 bg-white border border-slate-200 rounded text-slate-500 hover:bg-slate-50 disabled:opacity-50" disabled="">Previous</button>
+<button class="px-2.5 py-1 bg-emerald-600 text-white rounded font-medium">1</button>
+<button class="px-2.5 py-1 bg-white border border-slate-200 rounded text-slate-600 hover:bg-slate-50">2</button>
+<button class="px-2.5 py-1 bg-white border border-slate-200 rounded text-slate-600 hover:bg-slate-50">3</button>
+<span class="px-1 text-slate-400">...</span>
+<button class="px-2.5 py-1 bg-white border border-slate-200 rounded text-slate-600 hover:bg-slate-50">71</button>
+<button class="px-2.5 py-1 bg-white border border-slate-200 rounded text-slate-600 hover:bg-slate-50">Next</button>
+</div>
+</div>
+</section>
+<!-- END: RecentJobsSection -->
+</main>
+<!-- END: Main Content Container -->
+<!-- Footer Info -->
+<footer class="mt-auto px-6 py-4 border-t border-slate-200 bg-white text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
+<p>© 2024 ElectriCare Inc. Regional Partner Portal. All rights reserved.</p>
+<div class="flex items-center gap-4 text-[11px] text-slate-500">
+<a class="hover:text-emerald-600" href="#">Privacy Policy</a>
+<a class="hover:text-emerald-600" href="#">Technician Guidelines</a>
+<a class="hover:text-emerald-600" href="#">Emergency Dispatch: 1800-202-099</a>
+</div>
+</footer>
+</div>
+<!-- END: MainContentArea -->
+</div>
+<!-- END: MainLayoutWrapper -->
+</body></html>

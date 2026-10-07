@@ -1,0 +1,425 @@
+// ==============================================================================
+// ElectriCare Mission-Critical Pan-India Multi-Tenant SaaS Platform
+// Prisma Schema Definition (Design System & Architectural Blueprint Release v2.4.0)
+// ==============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ------------------------------------------------------------------------------
+// ENUMS
+// ------------------------------------------------------------------------------
+
+enum UserRole {
+  SUPER_ADMIN
+  PARTNER
+  TECHNICIAN
+  CUSTOMER
+}
+
+enum PartnerStatus {
+  PENDING_APPROVAL
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+}
+
+enum KycStatus {
+  PENDING_REVIEW
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+enum DensityClassification {
+  URBAN_HIGH_DENSITY
+  METRO_STANDARD
+  SUBURBAN
+}
+
+enum JobStatus {
+  PENDING_DISPATCH
+  ASSIGNED
+  EN_ROUTE
+  ARRIVED
+  SAFETY_CHECKED
+  IN_PROGRESS
+  WORK_COMPLETED
+  PAYMENT_PENDING
+  SETTLED
+  CANCELLED
+  ESCALATED_SLA
+}
+
+enum JobPriority {
+  STANDARD
+  URGENT_SLA
+  EMERGENCY_SOS_247
+}
+
+enum InvoiceStatus {
+  ISSUED
+  PAID
+  REFUNDED
+  VOID
+}
+
+enum PaymentMethod {
+  UPI
+  CREDIT_DEBIT_CARD
+  NET_BANKING
+  CASH_ON_SERVICE
+}
+
+enum LedgerType {
+  CUSTOMER_PAYMENT
+  PLATFORM_FEE
+  PARTNER_COMMISSION
+  TECHNICIAN_PAYOUT
+  GST_RESERVE_18
+}
+
+enum DebitCredit {
+  DEBIT
+  CREDIT
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL_EMERGENCY
+}
+
+enum TicketStatus {
+  OPEN
+  IN_INVESTIGATION
+  RESOLVED
+  CLOSED
+}
+
+// ------------------------------------------------------------------------------
+// CORE IDENTITY & MULTI-TENANT PROFILES
+// ------------------------------------------------------------------------------
+
+model User {
+  id            String    @id @default(uuid())
+  phone         String    @unique
+  email         String?   @unique
+  fullName      String
+  role          UserRole  @default(CUSTOMER)
+  avatarUrl     String?
+  passwordHash  String?
+  isActive      Boolean   @default(true)
+  isVerified    Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  partnerProfile    Partner?
+  technicianProfile Technician?
+  customerProfile   CustomerProfile?
+  supportTickets    SupportTicket[]
+
+  @@index([phone])
+  @@index([role])
+}
+
+model Partner {
+  id                        String        @id @default(uuid())
+  userId                    String        @unique
+  user                      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entityName                String        // e.g. "Maharashtra Tier-1 Operations Hub"
+  companyRegistrationNumber String        // CIN or GSTIN
+  stateLicensed             String        // e.g. "Maharashtra"
+  maxPincodeQuota           Int           @default(50)
+  activeTechnicianQuota     Int           @default(100)
+  platformRevenueSharePct   Float         @default(15.0) // 15% platform cut, 85% regional pool
+  ifscCode                  String
+  bankAccountNumber         String
+  bankName                  String
+  bankAccountHolder         String
+  status                    PartnerStatus @default(ACTIVE)
+  createdAt                 DateTime      @default(now())
+  updatedAt                 DateTime      @updatedAt
+
+  technicians     Technician[]
+  pincodeCoverage PincodeCoverage[]
+  jobs            Job[]
+  invoices        Invoice[]
+  ledgerEntries   LedgerEntry[]
+  supportTickets  SupportTicket[]
+
+  @@index([stateLicensed])
+  @@index([status])
+}
+
+model PincodeCoverage {
+  id                  String                @id @default(uuid())
+  pincode             String                @unique // e.g. "400001"
+  areaName            String                // e.g. "Colaba, Mumbai Hub"
+  district            String                // e.g. "Mumbai City"
+  state               String                // e.g. "Maharashtra"
+  partnerId           String
+  partner             Partner               @relation(fields: [partnerId], references: [id])
+  isActive            Boolean               @default(true)
+  isExclusive         Boolean               @default(true)
+  density             DensityClassification @default(URBAN_HIGH_DENSITY)
+  targetEtaMinutes    Int                   @default(15) // Sub-30-minute target
+  activeCapacityCount Int                   @default(8)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
+  jobs Job[]
+
+  @@index([pincode])
+  @@index([partnerId])
+}
+
+model Technician {
+  id                        String    @id @default(uuid())
+  userId                    String    @unique
+  user                      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  partnerId                 String
+  partner                   Partner   @relation(fields: [partnerId], references: [id])
+  badgeNumber               String    @unique // e.g. "TECH-7821"
+  rating                    Float     @default(4.9)
+  totalJobsCompleted        Int       @default(0)
+  isOnline                  Boolean   @default(false)
+  currentLatitude           Float?
+  currentLongitude          Float?
+  assignedPincode           String    @default("400001")
+  kycStatus                 KycStatus @default(PENDING_REVIEW)
+  aadharNumberMasked        String?
+  aadharDocUrl              String?
+  panNumberMasked           String?
+  panDocUrl                 String?
+  electricalLicenseNumber   String?   // e.g. "EL-MH-2024-8849"
+  electricalLicenseDocUrl   String?
+  insulatedGlovesVerified   Boolean   @default(false) // 1000V Insulated Gloves Protocol
+  safetyKitSerial           String?   // e.g. "SK-1000V-992"
+  kycVerifiedAt             DateTime?
+  kycVerifiedById           String?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+
+  jobs          Job[]
+  ledgerEntries LedgerEntry[]
+
+  @@index([partnerId])
+  @@index([isOnline])
+  @@index([kycStatus])
+  @@index([assignedPincode])
+}
+
+model CustomerProfile {
+  id                     String    @id @default(uuid())
+  userId                 String    @unique
+  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  defaultAddressLine     String?
+  defaultPincode         String?
+  defaultLatitude        Float?
+  defaultLongitude       Float?
+  activeSubscriptionPlan String    @default("NONE") // e.g. "ZEX_SHIELD_1MO"
+  subscriptionExpiryDate DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  jobs     Job[]
+  invoices Invoice[]
+
+  @@index([defaultPincode])
+}
+
+// ------------------------------------------------------------------------------
+// SERVICE CATALOG & TAXONOMY
+// ------------------------------------------------------------------------------
+
+model ServiceCategory {
+  id           String           @id @default(uuid())
+  name         String           // e.g. "Electrical Repairs", "Appliance Installations", "Emergency SOS"
+  slug         String           @unique
+  description  String?
+  displayOrder Int              @default(0)
+  isActive     Boolean          @default(true)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  catalogServices ServiceCatalog[]
+}
+
+model ServiceCatalog {
+  id                       String          @id @default(uuid())
+  categoryId               String
+  category                 ServiceCategory @relation(fields: [categoryId], references: [id])
+  title                    String          // e.g. "Ceiling Fan Repair / Bearing Replacement"
+  code                     String          @unique // e.g. "SRV-FAN-01"
+  basePriceInr             Float           // e.g. 1059.32
+  gstRatePct               Float           @default(18.0) // 18% GST (9% CGST + 9% SGST)
+  estimatedDurationMinutes Int             @default(45)
+  isEmergencySosEligible   Boolean         @default(false)
+  description              String?
+  isActive                 Boolean         @default(true)
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+
+  jobs Job[]
+
+  @@index([categoryId])
+  @@index([code])
+}
+
+// ------------------------------------------------------------------------------
+// JOBS, WORK ORDERS & SAFETY INTERLOCKS
+// ------------------------------------------------------------------------------
+
+model Job {
+  id                       String          @id @default(uuid())
+  jobTicketNumber          String          @unique // e.g. "J-1001", "J-1005"
+  customerId               String
+  customer                 CustomerProfile @relation(fields: [customerId], references: [id])
+  partnerId                String
+  partner                  Partner         @relation(fields: [partnerId], references: [id])
+  technicianId             String?
+  technician               Technician?     @relation(fields: [technicianId], references: [id])
+  serviceId                String
+  service                  ServiceCatalog  @relation(fields: [serviceId], references: [id])
+  pincode                  String          // e.g. "400001"
+  pincodeRel               PincodeCoverage @relation(fields: [pincode], references: [pincode])
+  customerAddressText      String
+  customerLatitude         Float
+  customerLongitude        Float
+  status                   JobStatus       @default(PENDING_DISPATCH)
+  priority                 JobPriority     @default(STANDARD)
+  scheduledAt              DateTime        @default(now())
+  slaExpiryAt              DateTime        // 30-min SLA timer target
+  dispatchedAt             DateTime?
+  arrivedAt                DateTime?
+  startedAt                DateTime?
+  completedAt              DateTime?
+  beforePhotoUrl           String?         // Compulsory Pre-Job Visual Verification
+  afterPhotoUrl            String?         // Compulsory Post-Job Quality Verification
+  safetyGlovesConfirmed    Boolean         @default(false) // 1000V Insulated Gloves checkbox
+  safetyMcbSwitchConfirmed Boolean         @default(false) // Main MCB Off Interlock
+  handoverOtp              String          @default("4829") // 4-digit customer verification code
+  customerRating           Int?
+  customerFeedback         String?
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+
+  invoice        Invoice?
+  supportTickets SupportTicket[]
+
+  @@index([jobTicketNumber])
+  @@index([customerId])
+  @@index([partnerId])
+  @@index([technicianId])
+  @@index([status])
+  @@index([pincode])
+  @@index([priority])
+}
+
+// ------------------------------------------------------------------------------
+// FINANCE, TAX INVOICING & DOUBLE-ENTRY LEDGERS
+// ------------------------------------------------------------------------------
+
+model Invoice {
+  id                String        @id @default(uuid())
+  invoiceNumber     String        @unique // e.g. "INV-2026-001"
+  jobId             String        @unique
+  job               Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  customerId        String
+  customer          CustomerProfile @relation(fields: [customerId], references: [id])
+  partnerId         String
+  partner           Partner       @relation(fields: [partnerId], references: [id])
+  baseAmount        Float         // e.g. 1059.32
+  cgstAmount        Float         // e.g. 95.34 (9%)
+  sgstAmount        Float         // e.g. 95.34 (9%)
+  totalAmount       Float         // e.g. 1250.00
+  paymentStatus     InvoiceStatus @default(ISSUED)
+  paymentMethod     PaymentMethod @default(UPI)
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  pdfInvoiceUrl     String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  ledgerEntries LedgerEntry[]
+
+  @@index([invoiceNumber])
+  @@index([partnerId])
+  @@index([paymentStatus])
+}
+
+model LedgerEntry {
+  id                   String      @id @default(uuid())
+  transactionReference String      @unique // e.g. "TXN-2026-88129"
+  invoiceId            String?
+  invoice              Invoice?    @relation(fields: [invoiceId], references: [id])
+  partnerId            String?
+  partner              Partner?    @relation(fields: [partnerId], references: [id])
+  technicianId         String?
+  technician           Technician? @relation(fields: [technicianId], references: [id])
+  ledgerType           LedgerType
+  entryDirection       DebitCredit
+  amountInr            Float
+  runningBalanceInr    Float
+  narrative            String
+  createdAt            DateTime    @default(now())
+
+  @@index([transactionReference])
+  @@index([partnerId])
+  @@index([technicianId])
+  @@index([ledgerType])
+}
+
+// ------------------------------------------------------------------------------
+// SUPPORT DESK & WORM AUDIT TRAIL
+// ------------------------------------------------------------------------------
+
+model SupportTicket {
+  id                String         @id @default(uuid())
+  ticketNumber      String         @unique // e.g. "SUP-1024"
+  requesterUserId   String
+  requesterUser     User           @relation(fields: [requesterUserId], references: [id])
+  partnerId         String?
+  partner           Partner?       @relation(fields: [partnerId], references: [id])
+  jobId             String?
+  job               Job?           @relation(fields: [jobId], references: [id])
+  subject           String         // e.g. "Technician Delay Escalation - Colaba Hub"
+  priority          TicketPriority @default(MEDIUM)
+  status            TicketStatus   @default(OPEN)
+  description       String
+  resolutionSummary String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([ticketNumber])
+  @@index([status])
+  @@index([priority])
+}
+
+model AuditLog {
+  id              String   @id @default(uuid())
+  actorUserId     String   // Identifier of Super Admin or Partner actor
+  actorRole       String   // e.g. "SUPER_ADMIN"
+  action          String   // e.g. "APPROVE_TECHNICIAN_KYC", "OVERRIDE_DISPATCH"
+  targetEntity    String   // e.g. "Technician", "Job"
+  targetEntityId  String   // Entity ID
+  payloadBefore   String?  // JSON serialized pre-state
+  payloadAfter    String?  // JSON serialized post-state
+  ipAddress       String?
+  userAgent       String?
+  checksumSha256  String   // Cryptographic SHA-256 hash for WORM compliance
+  createdAt       DateTime @default(now()) // Append-only immutable record
+
+  @@index([actorUserId])
+  @@index([action])
+  @@index([targetEntity])
+  @@index([createdAt])
+}

@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ElectriCare - Partner Web CRM (Maharashtra Team)</title>
+<!-- Inter Google Font -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            },
+            surface: {
+              bg: '#f8fafc',
+              border: '#e2e8f0',
+              sidebar: '#ffffff'
+            }
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom CSS -->
+<style data-purpose="custom-enhancements">
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .chart-donut-ring {
+      stroke-dasharray: 440;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+      transition: stroke-dashoffset 0.5s ease;
+    }
+  </style>
+<!-- END: Custom CSS -->
+<meta content="web_dashboard" name="shell-type"/></head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 text-[13px]">
+<!-- BEGIN: TopBarBanner -->
+<!-- Context indicator for Regional Operations -->
+<div class="bg-brand-900 text-brand-100 text-xs px-6 py-1.5 flex items-center justify-between border-b border-brand-800">
+<div class="flex items-center space-x-2 font-medium">
+<span class="inline-flex items-center justify-center w-4 h-4 bg-emerald-500 text-white rounded-full text-[10px] font-bold">11</span>
+<span class="tracking-wide font-semibold text-white">Partner Web CRM</span>
+<span class="text-emerald-300">(Maharashtra Team)</span>
+</div>
+<div class="flex items-center space-x-4 text-[11px] text-emerald-200">
+<span>Regional Operations</span>
+<span class="text-emerald-500">•</span>
+<span>Manage Technicians</span>
+<span class="text-emerald-500">•</span>
+<span>Jobs</span>
+<span class="text-emerald-500">•</span>
+<span>Pincodes</span>
+<span class="text-emerald-500">•</span>
+<span>Finance</span>
+<span class="text-emerald-500">•</span>
+<span>Support</span>
+</div>
+</div>
+<!-- END: TopBarBanner -->
+<!-- BEGIN: MainLayoutWrapper -->
+<div class="flex flex-1 min-h-[calc(100vh-28px)]">
+<!-- BEGIN: LeftSidebar -->
+<aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 select-none">
+<div>
+<!-- Logo Section -->
+<div class="h-16 flex items-center px-6 border-b border-slate-100 gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-sm shadow-emerald-500/30">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<path d="M13 2L3 14h8v8l10-12h-8l0-8z"></path>
+</svg>
+</div>
+<div>
+<span class="text-base font-bold text-slate-900 tracking-tight flex items-center gap-1">
+              ElectriCare
+            </span>
+<span class="block text-[10px] font-medium uppercase tracking-wider text-emerald-600 -mt-1">Partner Portal</span>
+</div>
+</div>
+<!-- Navigation Menu -->
+<nav aria-label="Main Navigation" class="p-3 space-y-1">
+<!-- Dashboard - Active Item -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg bg-emerald-600 text-white font-medium shadow-sm shadow-emerald-600/20 transition-colors" href="#">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="9" rx="1" width="7" x="3" y="3"></rect>
+<rect height="5" rx="1" width="7" x="14" y="3"></rect>
+<rect height="9" rx="1" width="7" x="14" y="12"></rect>
+<rect height="5" rx="1" width="7" x="3" y="16"></rect>
+</svg>
+<span>Dashboard</span>
+</a>
+<!-- Technicians -->
+<a class="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<div class="flex items-center gap-3">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+<circle cx="9" cy="7" r="4"></circle>
+<path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+</svg>
+<span>Technicians</span>
+</div>
+<span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">24</span>
+</a>
+<!-- Job Management -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="14" rx="2" ry="2" width="20" x="2" y="7"></rect>
+<path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+</svg>
+<span>Job Management</span>
+</a>
+<!-- Pincode Coverage -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path>
+<circle cx="12" cy="10" r="3"></circle>
+</svg>
+<span>Pincode Coverage</span>
+</a>
+<!-- Finance / Payouts -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<line x1="12" x2="12" y1="1" y2="23"></line>
+<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+</svg>
+<span>Finance / Payouts</span>
+</a>
+<!-- Profile / Settings -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="3"></circle>
+<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+</svg>
+<span>Profile / Settings</span>
+</a>
+<!-- Support -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+<line x1="12" x2="12.01" y1="17" y2="17"></line>
+</svg>
+<span>Support</span>
+</a>
+</nav>
+</div>
+<!-- Partner Unit Card in Sidebar Footer -->
+<div class="p-3 border-t border-slate-100 bg-slate-50/50 m-2 rounded-xl">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 border border-emerald-300">
+            MT
+          </div>
+<div class="truncate">
+<p class="font-semibold text-slate-800 text-xs truncate leading-tight">Maharashtra Team</p>
+<span class="inline-flex items-center text-[10px] text-emerald-600 font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span> Partner Active
+            </span>
+</div>
+</div>
+</div>
+</aside>
+<!-- END: LeftSidebar -->
+<!-- BEGIN: MainContentArea -->
+<div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+<!-- BEGIN: HeaderNav -->
+<header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-20">
+<!-- Search bar input -->
+<div class="relative w-80">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="11" cy="11" r="8"></circle>
+<line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+</svg>
+</span>
+<input class="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 placeholder-slate-400 transition" placeholder="Search dashboard, jobs, technicians..." type="text"/>
+</div>
+<!-- Top Right Actions & User Profile -->
+<div class="flex items-center gap-3.5">
+<!-- Quick Status Pill -->
+<div class="hidden md:flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs px-2.5 py-1 rounded-full">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span class="font-medium text-[11px]">Region: MH Operations</span>
+</div>
+<!-- Notification Bell -->
+<button aria-label="Notifications" class="p-2 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100 relative" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+<path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+</svg>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+</button>
+<div class="h-5 w-px bg-slate-200"></div>
+<!-- Profile Badge -->
+<div class="flex items-center gap-2.5 pl-1 cursor-pointer">
+<div class="w-8 h-8 rounded-full bg-slate-800 text-white font-semibold flex items-center justify-center text-xs">
+              MH
+            </div>
+<div class="hidden sm:block text-left">
+<span class="block text-xs font-semibold text-slate-700 leading-tight">Maharashtra Ops</span>
+<span class="text-[10px] text-slate-400">admin-mh@electricare.in</span>
+</div>
+<svg class="w-3.5 h-3.5 text-slate-400 ml-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</div>
+</div>
+</header>
+<!-- END: HeaderNav -->
+<!-- Main Body Container -->
+<main class="p-6 space-y-6"><div class="flex flex-col w-full">
+<!-- Micro Top Context / Breadcrumb Bar -->
+<div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+<div class="flex items-center gap-2 text-on-surface-variant font-label-md text-label-md">
+<span class="flex items-center gap-1 hover:text-primary transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-[16px]">engineering</span>
+        Technicians
+      </span>
+<span>/</span>
+<span class="hover:text-primary transition-colors cursor-pointer">KYC Compliance Review</span>
+<span>/</span>
+<span class="text-on-surface font-label-lg text-label-lg">Pradeep Gaikwad (EMP-MH-148)</span>
+</div>
+<!-- Quick SLA Badge Indicator -->
+<div class="flex items-center gap-2 px-3 py-1 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm shadow-sm">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+<span class="tracking-wider uppercase">SLA Target: 4.5h Remaining</span>
+</div>
+</div>
+<!-- Primary Page Header / Identity Strip -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6">
+<div class="space-y-1">
+<div class="flex flex-wrap items-center gap-3">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Technician KYC Review — Pradeep Gaikwad</h1>
+<span class="px-2.5 py-0.5 rounded bg-surface-container-highest text-on-primary-fixed-variant font-label-sm text-label-sm tracking-widest uppercase">
+          EMP-MH-148
+        </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+        Review submitted government credentials, electrical licenses, and background documentation before authorizing dispatch allocation.
+      </p>
+</div>
+<!-- Header Action Controls -->
+<div class="flex flex-wrap items-center gap-2 shrink-0">
+<button class="px-3.5 py-2 rounded bg-surface-container-lowest text-on-surface font-label-md text-label-md shadow-sm hover:bg-surface-container transition flex items-center gap-1.5 cursor-pointer" type="button">
+<span class="material-symbols-outlined text-[18px] text-outline">history_edu</span>
+        Request Document Correction
+      </button>
+<button class="px-3.5 py-2 rounded bg-error-container text-on-error-container font-label-md text-label-md shadow-sm hover:opacity-90 transition flex items-center gap-1.5 cursor-pointer" type="button">
+<span class="material-symbols-outlined text-[18px]">cancel</span>
+        Reject Application
+      </button>
+<button class="px-4 py-2 rounded bg-secondary text-on-secondary font-label-md text-label-md shadow-md hover:bg-on-secondary-container transition flex items-center gap-2 cursor-pointer" type="button">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+        Approve &amp; Activate Technician
+      </button>
+</div>
+</div>
+<!-- Status Alert Banner -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container p-4 mb-6 shadow-sm">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[22px]">pending_actions</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-on-surface">Status: PENDING PARTNER AUDIT</span>
+<span class="w-2 h-2 rounded-full bg-secondary-container"></span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Submitted 23 Sep 2024, 16:40 IST • Regional Office Queue: Pune South &amp; Central Division</p>
+</div>
+</div>
+<div class="flex items-center gap-4 text-right">
+<div>
+<span class="block font-label-sm text-label-sm uppercase text-outline">Auto Verification Engine</span>
+<span class="font-label-lg text-label-lg text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+            3/4 Checks Cleared
+          </span>
+</div>
+</div>
+</div>
+</div>
+<!-- Operational Telemetry / Summary Dashboard Row -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+<div class="p-3.5 rounded-lg bg-surface-container-lowest shadow-sm flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-surface-container-low flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[20px]">badge</span>
+</div>
+<div class="min-w-0">
+<span class="block font-label-sm text-label-sm uppercase tracking-wider text-outline">Technician</span>
+<span class="font-label-lg text-label-lg text-on-surface truncate block">Pradeep Gaikwad</span>
+</div>
+</div>
+<div class="p-3.5 rounded-lg bg-surface-container-lowest shadow-sm flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-surface-container-low flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[20px]">call</span>
+</div>
+<div class="min-w-0">
+<span class="block font-label-sm text-label-sm uppercase tracking-wider text-outline">Contact Phone</span>
+<span class="font-label-lg text-label-lg text-on-surface truncate block">+91 98220 55667</span>
+</div>
+</div>
+<div class="p-3.5 rounded-lg bg-surface-container-lowest shadow-sm flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-surface-container-low flex items-center justify-center text-secondary shrink-0">
+<span class="material-symbols-outlined text-[20px]">location_city</span>
+</div>
+<div class="min-w-0">
+<span class="block font-label-sm text-label-sm uppercase tracking-wider text-outline">City Jurisdiction</span>
+<span class="font-label-lg text-label-lg text-on-surface truncate block">Pune Central</span>
+</div>
+</div>
+<div class="p-3.5 rounded-lg bg-surface-container-lowest shadow-sm flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-surface-container-low flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[20px]">hub</span>
+</div>
+<div class="min-w-0">
+<span class="block font-label-sm text-label-sm uppercase tracking-wider text-outline">Assigned Cluster</span>
+<span class="font-label-lg text-label-lg text-on-surface truncate block">Pune Hub 01</span>
+</div>
+</div>
+<div class="p-3.5 rounded-lg bg-surface-container-lowest shadow-sm flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-surface-container-low flex items-center justify-center text-outline shrink-0">
+<span class="material-symbols-outlined text-[20px]">tag</span>
+</div>
+<div class="min-w-0">
+<span class="block font-label-sm text-label-sm uppercase tracking-wider text-outline">Application Ref</span>
+<span class="font-label-lg text-label-lg text-on-surface truncate block">KYC-MH-2024-094</span>
+</div>
+</div>
+</div>
+<!-- Primary KYC Verification Workspace (2x2 Grid) -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+<!-- Document 1: Aadhaar Card -->
+<div class="rounded-xl bg-surface-container-lowest p-5 shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2.5">
+<span class="w-6 h-6 rounded bg-surface-container-high flex items-center justify-center text-primary font-label-sm text-label-sm font-bold">1</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Identity Proof (Aadhaar Card)</h2>
+</div>
+<span class="px-2 py-0.5 rounded bg-secondary-container text-on-secondary-fixed font-label-sm text-label-sm flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+            Verified ✓ Match 100%
+          </span>
+</div>
+<!-- Document Scan Visual Thumbnail & OCR Results -->
+<div class="grid grid-cols-1 sm:grid-cols-12 gap-4 mb-4">
+<div class="sm:col-span-5 relative group overflow-hidden rounded bg-surface-container-low aspect-[4/3] flex items-center justify-center">
+<img class="w-full h-full object-cover group-hover:scale-105 transition duration-300" data-alt="Photographic document preview of a sanitized Indian government identification card on white background with official hologram emblem, secure watermark pattern, and blurred biometric photo area in clear focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBL1gw_oN4FgIafzGLKKFNJ0XI1gUhqrzmFYRaW0UjfaH4PMw5e0ORTsk5oN5sUmI7_47y5lYSwB6kVshUzdR5GElPfToPr6v5F6O5I402EC7eRTMjc7G86qc2JmL6aHmUZzxjKrlKxqIAMrYXbFrgOtbLBPbATpillNgWWZcHTH0VBljqpcQMLD6eFKL7asPWQHparAle6a-WZyjVmoymmHTsz7Rm4kdM7FrX_f4VnlqGo9HMH7OezYg"/>
+<div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
+<button class="p-2 rounded-full bg-surface-container-lowest text-primary shadow-md hover:scale-110 transition cursor-pointer" type="button">
+<span class="material-symbols-outlined text-[18px]">zoom_in</span>
+</button>
+</div>
+<span class="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-surface-container-lowest/90 text-on-surface font-label-sm text-[10px] tracking-wide">
+              FRONT &amp; REAR SCANNED
+            </span>
+</div>
+<div class="sm:col-span-7 space-y-2">
+<div class="p-2.5 rounded bg-surface-container-low">
+<span class="block font-label-sm text-label-sm uppercase text-outline">Extracted Full Name</span>
+<span class="font-label-lg text-label-lg text-on-surface">Pradeep S. Gaikwad</span>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<div class="p-2 rounded bg-surface-container-low">
+<span class="block font-label-sm text-label-sm uppercase text-outline">Date of Birth</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold">14/08/1988</span>
+</div>
+<div class="p-2 rounded bg-surface-container-low">
+<span class="block font-label-sm text-label-sm uppercase text-outline">UID Masked</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold tracking-wider">•••• 7721</span>
+</div>
+</div>
+<div class="p-2 rounded bg-surface-container-low">
+<span class="block font-label-sm text-label-sm uppercase text-outline">Gender / Status</span>
+<span class="font-body-sm text-body-sm text-on-surface">Male • Resident Individual</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card Footer Notes -->
+<div class="p-3 rounded bg-surface-container flex items-start gap-2 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[18px] text-secondary shrink-0 mt-0.5">verified_user</span>
+<span>Audit note: Verified via UIDAI OTP Gateway. Name &amp; DOB matches regional partner master roster without discrepancies.</span>
+</div>
+</div>
+<!-- Document 2: PAN Card -->
+<div class="rounded-xl bg-surface-container-lowest p-5 shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2.5">
+<span class="w-6 h-6 rounded bg-surface-container-high flex items-center justify-center text-primary font-label-sm text-label-sm font-bold">2</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Permanent Account Number (PAN)</h2>
+</div>
+<span class="px-2 py-0.5 rounded bg-secondary-container text-on-secondary-fixed font-label-sm text-label-sm flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+            Verified ✓ Match 100%
+          </span>
+</div>
+<!-- Document Scan Visual Thumbnail & OCR Results -->
+<div class="grid grid-cols-1 sm:grid-cols-12 gap-4 mb-4">
+<div class="sm:col-span-5 relative group overflow-hidden rounded bg-surface-container-low aspect-[4/3] flex items-center justify-center">
+<img class="w-full h-full object-cover group-hover:scale-105 transition duration-300" data-alt="Clean corporate macro scan of an Indian Income Tax Department permanent account card on desk surface showing clear typography, metallic emblem, and official tax jurisdiction stamp." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDzswaFjv6VM4n6EZ6PIo6K333PWkvRRF_6lmB45XrI3s2olPJMzZYcSyDbt-FVlZIGAuQBslOAftR5GHAhtmkvCkuOF8xSXvBiDJFzwQnJ5yJlikkhjOQ4XREZ8fGnD223E9l5rw--JvLjCalXfSySWFq44iif2KFmi2RGbBbH1Y_HSfvOA0ijyKAw-7IOg0vSsAiMcWdlTEOhLufh_Lzvw8nfBsjgvYKkosBoY-K1VYv4UXHNFhtwgw"/>
+<div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
+<button class="p-2 rounded-full bg-surface-container-lowest text-primary shadow-md hover:scale-110 transition cursor-pointer" type="button">
+<span class="material-symbols-outlined text-[18px]">zoom_in</span>
+</button>
+</div>
+<span class="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-surface-container-lowest/90 text-on-surface font-label-sm text-[10px] tracking-wide">
+              NSDL VALIDATED
+            </span>
+</div>
+<div class="sm:col-span-7 space-y-2">
+<div class="p-2.5 rounded bg-surface-container-low">
+<span class="block font-label-sm text-label-sm uppercase text-outline">PAN Reference</span>
+<span class="font-headline-sm text-headline-sm text-primary tracking-widest">BZRPG4419E</span>
+</div>
+<div class="p-2 rounded bg-surface-container-low">
+<span class="block font-label-sm text-label-sm uppercase text-outline">Registered Legal Name</span>
+<span class="font-label-lg text-label-lg text-on-surface">Pradeep Shivram Gaikwad</span>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<div class="p-2 rounded bg-surface-container-low">
+<span class="block font-label-sm text-label-sm uppercase text-outline">Father's Name</span>
+<span class="font-body-md text-body-md text-on-surface truncate">Shivram Gaikwad</span>
+</div>
+<div class="p-2 rounded bg-surface-container-low">
+<span class="block font-label-sm text-label-sm uppercase text-outline">Category</span>
+<span class="font-body-md text-body-md text-on-surface">Individual</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Card Footer Notes -->
+<div class="p-3 rounded bg-surface-container flex items-start gap-2 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[18px] text-secondary shrink-0 mt-0.5">task_alt</span>
+<span>Audit note: Verified via NSDL Database API. Tax deduction status active, mapped for automated TDS billing deductions.</span>
+</div>
+</div>
+<!-- Document 3: Electrical Wireman License (ATTENTION REQUIRED) -->
+<div class="rounded-xl bg-surface-container-lowest p-5 shadow-sm flex flex-col justify-between relative overflow-hidden">
+<!-- High attention visual strip -->
+<div class="absolute top-0 left-0 right-0 h-1 bg-tertiary-container"></div>
+<div>
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2.5">
+<span class="w-6 h-6 rounded bg-surface-container-high flex items-center justify-center text-primary font-label-sm text-label-sm font-bold">3</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">MH Electrical License / Wireman Cert.</h2>
+</div>
+<span class="px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm flex items-center gap-1 font-semibold">
+<span class="material-symbols-outlined text-[14px]">flag</span>
+            Needs Partner Confirmation
+          </span>
+</div>
+<!-- Document Scan Visual Thumbnail & OCR Results -->
+<div class="grid grid-cols-1 sm:grid-cols-12 gap-4 mb-4">
+<div class="sm:col-span-5 relative group overflow-hidden rounded bg-surface-container-low aspect-[4/3] flex items-center justify-center">
+<img class="w-full h-full object-cover group-hover:scale-105 transition duration-300" data-alt="High-resolution industrial scan of an official Maharashtra state electrical licensing certificate with green security border, official state seal, authorized supervisor sign-off, and license stamps." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAS_k4jkl0fM7QKp3-Wt-23x6oe4pO7dUPrQiNUuzRNLKgpIUkD7_YgQQECXV2iw837oY47zkt59t7q8pTWqjzc84ANvA7VzGRThUJ7Qy4DEDeI5OKLEwCSGnnzaFD3y4mg0ezvCtoCLujkQM7NoMuikrjLbRT0YLbWT4xb_fjMVvqSF8MftExughnc3e3d4k6hNsHsJvHApM5w1lFt2QMPldDWrM2ggdEvFzFviZ1FdXtKYaYutSI9VQ"/>
+<div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
+<button class="p-2 rounded-full bg-surface-container-lowest text-primary shadow-md hover:scale-110 transition cursor-pointer" type="button">
+<span class="material-symbols-outlined text-[18px]">zoom_in</span>
+</button>
+</div>
+<span class="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-surface-container-lowest/90 text-on-surface font-label-sm text-[10px] tracking-wide">
+              CLASS II WIREMAN
+            </span>
+</div>
+<div class="sm:col-span-7 space-y-2">
+<div class="p-2.5 rounded bg-surface-container-low">
+<span class="block font-label-sm text-label-sm uppercase text-outline">Issuing Authority &amp; License Number</span>
+<span class="font-label-lg text-label-lg text-on-surface block">MH State Licensing Board</span>
+<span class="font-headline-sm text-headline-sm text-tertiary font-mono">MH-EL-2021-99432</span>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<div class="p-2 rounded bg-surface-container-low">
+<span class="block font-label-sm text-label-sm uppercase text-outline">Expiration Date</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold text-secondary">12 March 2026</span>
+</div>
+<div class="p-2 rounded bg-surface-container-low">
+<span class="block font-label-sm text-label-sm uppercase text-outline">Voltage Grade</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold">LV / 415V 3-Phase</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Verification Checklist Specific to Electrical Cert -->
+<div class="space-y-1.5 mb-4 p-3 rounded bg-surface-container-low">
+<span class="block font-label-sm text-label-sm uppercase tracking-wider text-outline mb-1">Partner Physical Verification Protocol</span>
+<label class="flex items-center gap-2 text-on-surface font-body-sm text-body-sm cursor-pointer">
+<input checked="" class="rounded text-primary focus:ring-0 w-4 h-4 bg-surface-container" disabled="" type="checkbox"/>
+<span>Official state stamp and serial hologram intact on parchment copy</span>
+</label>
+<label class="flex items-center gap-2 text-on-surface font-body-sm text-body-sm cursor-pointer">
+<input checked="" class="rounded text-primary focus:ring-0 w-4 h-4 bg-surface-container" disabled="" type="checkbox"/>
+<span>Wireman category explicitly permits domestic and commercial LV power distribution</span>
+</label>
+<label class="flex items-center gap-2 text-tertiary font-body-sm text-body-sm font-semibold cursor-pointer">
+<input class="rounded text-primary focus:ring-0 w-4 h-4 bg-surface-container cursor-pointer" id="check-jurisdiction" type="checkbox"/>
+<span>Pincode jurisdiction verified for Pune District (Pending partner confirmation)</span>
+</label>
+</div>
+</div>
+<!-- Card Footer Notes -->
+<div class="p-3 rounded bg-surface-container-high flex items-start gap-2 text-on-surface font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[18px] text-tertiary shrink-0 mt-0.5">notification_important</span>
+<span>Action required: Confirm that Pune Hub 01 residential pincodes fall strictly within this technician's certified operational perimeter.</span>
+</div>
+</div>
+<!-- Document 4: Police Verification Certificate -->
+<div class="rounded-xl bg-surface-container-lowest p-5 shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2.5">
+<span class="w-6 h-6 rounded bg-surface-container-high flex items-center justify-center text-primary font-label-sm text-label-sm font-bold">4</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Police Clearance &amp; Residential Proof</h2>
+</div>
+<span class="px-2 py-0.5 rounded bg-secondary-container text-on-secondary-fixed font-label-sm text-label-sm flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+            Verified ✓ Clean Record
+          </span>
+</div>
+<!-- Document Scan Visual Thumbnail & OCR Results -->
+<div class="grid grid-cols-1 sm:grid-cols-12 gap-4 mb-4">
+<div class="sm:col-span-5 relative group overflow-hidden rounded bg-surface-container-low aspect-[4/3] flex items-center justify-center">
+<img class="w-full h-full object-cover group-hover:scale-105 transition duration-300" data-alt="Digital scan of official police commissionerate verification report document featuring official blue ink signature, police insignia emblem stamp, and clean background verification remarks." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBiXGyGnLOAKMxR0OldHMmbWPwzXNQanDS52vAyZ_oIq-sUAFo63HQeDG6V22IIQtALBO7O-dq439qyS0tmi22p2QHm0XjpcNfT3zXa7k_VU2kCTc-SeZH62t_7DdrXa9k8FHlw1VXPmgM9UWY-Pz4DLlka3V9gBvhqG59iO_bqqHauHRGhCY9ayUxkjvuSwm66gq26jlXkNfxCxtlFJ_BeDJsA9D4j7sh1c6erqJFtqL6y7Uroe0yPaQ"/>
+<div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
+<button class="p-2 rounded-full bg-surface-container-lowest text-primary shadow-md hover:scale-110 transition cursor-pointer" type="button">
+<span class="material-symbols-outlined text-[18px]">zoom_in</span>
+</button>
+</div>
+<span class="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-surface-container-lowest/90 text-on-surface font-label-sm text-[10px] tracking-wide">
+              POLICE RECORD CLEAR
+            </span>
+</div>
+<div class="sm:col-span-7 space-y-2">
+<div class="p-2.5 rounded bg-surface-container-low">
+<span class="block font-label-sm text-label-sm uppercase text-outline">Clearance Authority &amp; Cert Ref</span>
+<span class="font-label-lg text-label-lg text-on-surface block">Pune Police Commissionerate</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-mono">PUN-PCC-8821</span>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<div class="p-2 rounded bg-surface-container-low">
+<span class="block font-label-sm text-label-sm uppercase text-outline">Issue Date</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold">10 August 2024</span>
+</div>
+<div class="p-2 rounded bg-surface-container-low">
+<span class="block font-label-sm text-label-sm uppercase text-outline">Validity Window</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold">Valid 1 Year</span>
+</div>
+</div>
+<div class="p-2 rounded bg-surface-container-low">
+<span class="block font-label-sm text-label-sm uppercase text-outline">Permanent Verified Residence</span>
+<span class="font-body-sm text-body-sm text-on-surface block truncate">Flat 12, Shivajinagar, Pune 411005</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card Footer Notes -->
+<div class="p-3 rounded bg-surface-container flex items-start gap-2 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[18px] text-secondary shrink-0 mt-0.5">gavel</span>
+<span>Audit note: No criminal precedents or pending traffic infractions flagged. Residence verified within 5.2 km from Pune Hub 01.</span>
+</div>
+</div>
+</div>
+<!-- Bottom Partner Audit Declaration & Authorisation Box -->
+<div class="rounded-xl bg-surface-container-lowest p-6 shadow-sm mb-6">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 mb-6 bg-surface-container-low p-4 rounded-lg">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-full bg-surface-container-highest text-primary font-bold flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]">verified_user</span>
+</div>
+<div>
+<span class="block font-label-sm text-label-sm uppercase tracking-wider text-outline">Authorized Audit Reviewer</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Maharashtra Operations Lead</span>
+<span class="block font-body-sm text-body-sm text-on-surface-variant">admin-mh@electricare.in • Regional Partner Session 4409</span>
+</div>
+</div>
+<!-- Digital Audit Stamp Indicator -->
+<div class="flex items-center gap-3 bg-surface-container-lowest px-4 py-2 rounded shadow-sm">
+<div class="w-3 h-3 rounded-full bg-secondary animate-ping"></div>
+<div class="text-right">
+<span class="block font-label-sm text-label-sm text-outline">Audit Timestamp</span>
+<span class="font-label-md text-label-md text-on-surface font-mono" id="live-timestamp">23-SEP-2024 • LIVE</span>
+</div>
+</div>
+</div>
+<!-- Formal Attestation Checkbox -->
+<div class="mb-6">
+<label class="flex items-start gap-3.5 p-3 rounded-lg bg-surface hover:bg-surface-container transition cursor-pointer select-none">
+<input class="mt-1 rounded text-primary focus:ring-0 w-5 h-5 bg-surface-container cursor-pointer" id="partner-declaration" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface leading-relaxed">
+          I confirm I have visually audited the original electrical license and certified the technician's eligibility under <strong class="font-semibold text-primary">Maharashtra Electrical Safety Regulations 2024</strong>. I attest that this contractor meets field standards for grid safety and domestic LV isolation.
+        </span>
+</label>
+</div>
+<!-- Final Operational Command Controls -->
+<div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
+<div class="flex items-center gap-2 text-outline font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px]">info</span>
+<span>Approval will instantly push EMP-MH-148 to active dispatch queue and provision Field App access.</span>
+</div>
+<div class="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
+<button class="w-full sm:w-auto px-4 py-2 rounded bg-surface-container-high text-on-surface font-label-md text-label-md hover:bg-surface-container-highest transition cursor-pointer" type="button">
+          Cancel
+        </button>
+<button class="w-full sm:w-auto px-4 py-2 rounded bg-surface-container-lowest text-tertiary font-label-md text-label-md hover:bg-surface-container-low transition flex items-center justify-center gap-1.5 cursor-pointer" type="button">
+<span class="material-symbols-outlined text-[16px]">pause_circle</span>
+          Hold Application
+        </button>
+<button class="w-full sm:w-auto px-6 py-2.5 rounded bg-secondary text-on-secondary font-label-md text-label-md opacity-40 cursor-not-allowed shadow-md transition flex items-center justify-center gap-2" disabled="" id="btn-final-approve" type="button">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+          Approve &amp; Enable Dispatches
+        </button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Simple interaction wiring for the partner attestation checklist & approval unlock
+  const declarationCheckbox = document.getElementById('partner-declaration');
+  const jurisdictionCheckbox = document.getElementById('check-jurisdiction');
+  const approveButton = document.getElementById('btn-final-approve');
+
+  function updateApprovalState() {
+    if (declarationCheckbox.checked && jurisdictionCheckbox.checked) {
+      approveButton.disabled = false;
+      approveButton.classList.remove('opacity-40', 'cursor-not-allowed');
+      approveButton.classList.add('hover:bg-on-secondary-container', 'cursor-pointer');
+    } else {
+      approveButton.disabled = true;
+      approveButton.classList.add('opacity-40', 'cursor-not-allowed');
+      approveButton.classList.remove('hover:bg-on-secondary-container', 'cursor-pointer');
+    }
+  }
+
+  if (declarationCheckbox && jurisdictionCheckbox) {
+    declarationCheckbox.addEventListener('change', updateApprovalState);
+    jurisdictionCheckbox.addEventListener('change', updateApprovalState);
+  }
+
+  // Dynamic live clock for operational audit trail
+  const liveClockEl = document.getElementById('live-timestamp');
+  if (liveClockEl) {
+    setInterval(() => {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('en-IN', { hour12: false });
+      liveClockEl.innerText = `23-SEP-2024 • ${timeStr} IST`;
+    }, 1000);
+  }
+</script></main>
+<!-- END: Main Content Container -->
+<!-- Footer Info -->
+<footer class="mt-auto px-6 py-4 border-t border-slate-200 bg-white text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
+<p>© 2024 ElectriCare Inc. Regional Partner Portal. All rights reserved.</p>
+<div class="flex items-center gap-4 text-[11px] text-slate-500">
+<a class="hover:text-emerald-600" href="#">Privacy Policy</a>
+<a class="hover:text-emerald-600" href="#">Technician Guidelines</a>
+<a class="hover:text-emerald-600" href="#">Emergency Dispatch: 1800-202-099</a>
+</div>
+</footer>
+</div>
+<!-- END: MainContentArea -->
+</div>
+<!-- END: MainLayoutWrapper -->
+</body></html>

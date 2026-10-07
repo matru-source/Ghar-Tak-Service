@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"outline":"#757684","on-primary":"#ffffff","inverse-surface":"#283044","on-tertiary-fixed":"#25005a","on-secondary-fixed":"#002114","secondary":"#006c4a","surface-dim":"#d2d9f4","surface-tint":"#3755c3","secondary-container":"#82f5c1","on-primary-fixed-variant":"#173bab","primary-fixed":"#dde1ff","on-error-container":"#93000a","on-tertiary-fixed-variant":"#5a00c6","primary-container":"#1e40af","on-surface-variant":"#444653","surface-container-lowest":"#ffffff","on-secondary":"#ffffff","error-container":"#ffdad6","secondary-fixed-dim":"#68dba9","error":"#ba1a1a","on-surface":"#131b2e","tertiary-fixed":"#eaddff","on-secondary-fixed-variant":"#005137","surface-bright":"#faf8ff","primary":"#00288e","on-background":"#131b2e","outline-variant":"#c4c5d5","tertiary":"#440098","surface-container-highest":"#dae2fd","tertiary-container":"#5f00d1","surface-container-low":"#f2f3ff","surface":"#faf8ff","on-secondary-container":"#00714e","on-primary-fixed":"#001453","primary-fixed-dim":"#b8c4ff","on-tertiary-container":"#c9aeff","on-tertiary":"#ffffff","tertiary-fixed-dim":"#d2bbff","surface-container-high":"#e2e7ff","secondary-fixed":"#85f8c4","surface-variant":"#dae2fd","surface-container":"#eaedff","inverse-on-surface":"#eef0ff","background":"#faf8ff","on-primary-container":"#a8b8ff","on-error":"#ffffff","inverse-primary":"#b8c4ff"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"gutter":"1rem","space-sm":"0.5rem","space-xl":"2rem","space-xs":"0.25rem","margin-mobile":"1rem","margin":"1.5rem","gutter-mobile":"0.75rem","space-md":"0.75rem","space-lg":"1.25rem"},"fontFamily":{"headline-sm":["Inter"],"headline-xl-mobile":["Inter"],"label-md":["Inter"],"headline-lg":["Inter"],"body-sm":["Inter"],"headline-xl":["Inter"],"body-lg":["Inter"],"headline-md":["Inter"],"body-md":["Inter"],"label-sm":["Inter"],"label-lg":["Inter"]},"fontSize":{"headline-sm":["16px",{"lineHeight":"24px","fontWeight":"600"}],"headline-xl-mobile":["28px",{"lineHeight":"36px","fontWeight":"700"}],"label-md":["12px",{"lineHeight":"16px","fontWeight":"500"}],"headline-lg":["24px",{"lineHeight":"32px","fontWeight":"600"}],"body-sm":["12px",{"lineHeight":"16px","fontWeight":"400"}],"headline-xl":["36px",{"lineHeight":"44px","fontWeight":"700"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"headline-md":["20px",{"lineHeight":"28px","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"label-sm":["11px",{"lineHeight":"14px","fontWeight":"600"}],"label-lg":["14px",{"lineHeight":"20px","fontWeight":"600"}]}}}}</script></head><body class="bg-surface font-body-md text-on-surface min-h-screen"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest border-r border-outline-variant/30 shadow-[0_1px_3px_0_rgba(15,23,42,0.04)] z-50 flex flex-col justify-between"><div class="flex flex-col flex-1 overflow-y-auto"><div class="h-16 px-margin flex items-center gap-space-md border-b border-outline-variant/30"><div class="w-9 h-9 rounded-xl bg-primary-container flex items-center justify-center text-on-primary shadow-sm"><span class="material-symbols-outlined text-[20px]">bolt</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight leading-none">ElectriCare</span><div class="flex items-center gap-space-xs mt-space-xs"><span class="px-1.5 py-0.5 rounded bg-tertiary text-on-tertiary font-label-sm text-[10px] uppercase font-bold tracking-wider">Admin / Owner</span></div></div></div><div class="px-margin pt-space-lg pb-space-xs"><span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Platform Navigation</span></div><nav class="flex-1 px-space-md py-space-xs flex flex-col gap-space-xs" data-active-classes="bg-primary-container text-on-primary shadow-sm font-semibold rounded-lg"><a class="flex items-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-label-lg text-label-lg" data-path="dashboard" href="#">Dashboard</a><a class="flex items-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-label-lg text-label-lg" data-path="manage-partners" href="#">Manage Partners</a><a class="flex items-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-label-lg text-label-lg" data-path="manage-technicians" href="#">Manage Technicians</a><a class="flex items-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-label-lg text-label-lg" data-path="manage-customers" href="#">Manage Customers</a><a class="flex items-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-label-lg text-label-lg" data-path="finance-commission" href="#">Finance / Commission</a><a aria-current="page" class="flex items-center px-space-md py-space-sm transition-all bg-primary-container text-on-primary shadow-sm font-semibold rounded-lg" data-path="subscription-modules" href="#">Subscription Modules</a><a class="flex items-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-label-lg text-label-lg" data-path="system-settings" href="#">System Settings</a><a class="flex items-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-label-lg text-label-lg" data-path="support" href="#">Support</a><a class="flex items-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-label-lg text-label-lg" data-path="audit-logs" href="#">Audit Logs</a></nav></div><div class="p-space-md border-t border-outline-variant/30 bg-surface-container-lowest"><div class="bg-surface-container-low rounded-xl p-space-sm mb-space-sm flex items-center justify-between border border-outline-variant/20"><div class="flex items-center gap-space-sm min-w-0"><div class="relative flex-shrink-0"><div class="w-9 h-9 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-label-md font-semibold text-[13px]">SA</div><span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-secondary border-2 border-surface-container-lowest"></span></div><div class="flex flex-col min-w-0"><span class="font-label-md text-label-md text-on-surface font-semibold truncate">Super Admin</span><span class="font-body-sm text-body-sm text-on-surface-variant truncate text-[11px]">admin@electricare.in</span></div></div><span class="flex h-2 w-2 relative flex-shrink-0"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span></span></div><div class="flex items-center justify-between gap-space-xs"><a class="flex items-center justify-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-all font-label-md text-label-md flex-1" data-path="login" href="#">Sign Out</a><span class="font-label-sm text-label-sm text-outline px-space-xs">v2.4.0</span></div></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface-container-lowest border-b border-outline-variant/30 shadow-[0_1px_3px_0_rgba(15,23,42,0.04)] z-40 flex items-center justify-between px-margin"><div class="flex items-center gap-space-lg flex-1 max-w-2xl"><div class="relative w-full"><span class="material-symbols-outlined absolute left-space-md top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span><input class="w-full h-9 pl-10 pr-space-md bg-surface-container-low border border-outline-variant/40 rounded-lg text-on-surface placeholder:text-outline font-body-sm text-body-sm focus:outline-none focus:border-primary-container focus:bg-surface-container-lowest transition-all" placeholder="Search partners, technicians, customers, orders, tickets..." type="text"/></div><div class="hidden xl:flex items-center gap-space-xs px-space-sm py-1 bg-surface-container-high rounded border border-outline-variant/40 whitespace-nowrap"><span class="w-2 h-2 rounded-full bg-tertiary"></span><span class="font-label-sm text-label-sm text-tertiary font-bold tracking-wider">SCOPE: PLATFORM-WIDE / ALL INDIA</span></div></div><div class="flex items-center gap-space-md"><button class="relative w-9 h-9 flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all border border-transparent hover:border-outline-variant/30"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-error ring-2 ring-surface-container-lowest"></span></button><div class="h-5 w-px bg-outline-variant/40"></div><div class="flex items-center gap-space-sm pl-space-xs cursor-pointer group"><div class="w-9 h-9 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-label-md font-semibold text-[13px] shadow-sm">SA</div><div class="hidden sm:flex flex-col text-left"><span class="font-label-sm text-label-sm text-on-surface font-semibold group-hover:text-primary-container transition-colors">Super Admin</span><span class="font-body-sm text-body-sm text-on-surface-variant text-[11px] leading-tight">National Control</span></div><span class="material-symbols-outlined text-outline text-[18px] group-hover:text-on-surface transition-colors">expand_more</span></div></div></header><main class="relative pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<div class="p-margin flex flex-col gap-space-lg max-w-[1600px] mx-auto w-full">
+<!-- Top Action Breadcrumb & Notification Strip -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-sm pb-space-xs border-b border-outline-variant/30">
+<div class="flex items-center gap-space-xs text-outline font-label-md text-label-md">
+<span class="hover:text-primary cursor-pointer transition-colors">Platform Governance</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="hover:text-primary cursor-pointer transition-colors">Subscription Management</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-on-surface font-semibold">Active Zex Modules</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-secondary/10 text-secondary font-label-sm text-label-sm border border-secondary/20">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+          Payment Gateway Sync: Active (RazorpayX E-Mandate v3.2)
+        </span>
+</div>
+</div>
+<!-- Header Section with Title, Badges & Primary Actions -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-outline-variant/30">
+<div class="flex flex-col gap-space-xs">
+<div class="flex flex-wrap items-center gap-space-sm">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Subscription Modules &amp; Tier Management</h1>
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-tertiary-container/15 text-tertiary font-label-sm text-label-sm uppercase tracking-wider font-semibold border border-tertiary-container/30">
+<span class="material-symbols-outlined text-[14px]">verified</span>
+            Zex Multi-Tier Protocol Active
+          </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-3xl">
+          Platform-wide oversight of recurring subscription plans across Consumer, Technician, and Franchise Partner tiers with real-time lifecycle auditing.
+        </p>
+</div>
+<div class="flex items-center gap-space-sm self-start lg:self-center shrink-0">
+<button class="inline-flex items-center gap-1.5 px- space-md py-2 rounded-lg bg-surface-container-lowest border border-outline-variant/50 text-on-surface hover:bg-surface-container-high transition-colors font-label-lg text-label-lg shadow-sm">
+<span class="material-symbols-outlined text-[18px] text-outline">file_download</span>
+          Export Subscribers (.CSV)
+        </button>
+<button class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-tertiary text-on-tertiary hover:bg-tertiary/90 transition-all font-label-lg text-label-lg shadow-sm shadow-tertiary/20">
+<span class="material-symbols-outlined text-[18px]">add_card</span>
+          + Manual Plan Enrollment
+        </button>
+</div>
+</div>
+<!-- 4 High-Density Operational KPI Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-gutter">
+<!-- Card 1: Active Subscriptions -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md border border-outline-variant/30 shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Active Subscriptions</span>
+<div class="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[20px]">electric_bolt</span>
+</div>
+</div>
+<div class="my-space-sm flex items-baseline gap-space-sm">
+<span class="font-headline-xl text-headline-xl text-on-surface tabular-nums">512</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-secondary-container/40 text-on-secondary-container font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[13px] mr-0.5">trending_up</span>
+            +16.4% MoM
+          </span>
+</div>
+<div class="pt-space-xs border-t border-outline-variant/20 flex items-center justify-between text-outline font-body-sm text-body-sm">
+<span>412 Consumer • 76 Tech • 24 Partner</span>
+</div>
+</div>
+<!-- Card 2: Expiring Soon -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md border border-outline-variant/30 shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Expiring Soon (30 Days)</span>
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-[#d97706]">
+<span class="material-symbols-outlined text-[20px]">warning</span>
+</div>
+</div>
+<div class="my-space-sm flex items-baseline gap-space-sm">
+<span class="font-headline-xl text-headline-xl text-on-surface tabular-nums">38</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-[#fef3c7] text-[#92400e] font-label-sm text-label-sm font-semibold">
+            Action Priority High
+          </span>
+</div>
+<div class="pt-space-xs border-t border-outline-variant/20 text-outline font-body-sm text-body-sm truncate">
+          Action required for auto-renewal fallbacks
+        </div>
+</div>
+<!-- Card 3: Expired / Lapsed -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md border border-outline-variant/30 shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Expired / Lapsed</span>
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-outline">
+<span class="material-symbols-outlined text-[20px]">timer_off</span>
+</div>
+</div>
+<div class="my-space-sm flex items-baseline gap-space-sm">
+<span class="font-headline-xl text-headline-xl text-on-surface tabular-nums">19</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-semibold">
+            -2.1% Net Churn
+          </span>
+</div>
+<div class="pt-space-xs border-t border-outline-variant/20 text-outline font-body-sm text-body-sm truncate">
+          Grace period retention campaign active
+        </div>
+</div>
+<!-- Card 4: Total Platform Subscribers -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md border border-outline-variant/30 shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Total Platform Subscribers</span>
+<div class="w-8 h-8 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[20px]">currency_rupee</span>
+</div>
+</div>
+<div class="my-space-sm flex items-baseline gap-space-sm">
+<span class="font-headline-xl text-headline-xl text-on-surface tabular-nums">569</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-primary-container/15 text-primary-container font-label-sm text-label-sm font-semibold">
+            ₹4.82L ARR Run-rate
+          </span>
+</div>
+<div class="pt-space-xs border-t border-outline-variant/20 text-outline font-body-sm text-body-sm truncate">
+          ₹4,82,000 monthly recurring yield
+        </div>
+</div>
+</div>
+<!-- Zex Three Tier Architecture Showcase -->
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary-container text-[20px]">layers</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Zex Subscription Architecture Matrix</h2>
+</div>
+<span class="font-body-sm text-body-sm text-outline">Real-time Tier Rule Definitions</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Tier 1: Customer (Zex Shield) -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-space-lg flex flex-col justify-between shadow-sm relative overflow-hidden group hover:border-primary-container/40 transition-colors">
+<div class="absolute top-0 right-0 w-24 h-24 bg-primary-container/5 rounded-bl-full pointer-events-none"></div>
+<div>
+<div class="flex items-center justify-between mb-space-xs">
+<span class="px-2 py-0.5 rounded text-[11px] font-label-sm uppercase tracking-wider font-bold bg-primary-container/10 text-primary-container border border-primary-container/20">
+                Consumer Tier
+              </span>
+<span class="text-outline font-body-sm text-body-sm">ID: MOD-SHIELD-01</span>
+</div>
+<h3 class="font-headline-lg text-headline-lg text-on-surface mt-space-xs">Zex Shield</h3>
+<p class="font-body-sm text-body-sm text-outline mt-0.5">Residential &amp; Commercial single-meter priority guard</p>
+<div class="mt-space-md pb-space-md border-b border-outline-variant/20 flex items-baseline gap-1">
+<span class="font-headline-xl text-headline-xl text-on-surface">₹199</span>
+<span class="text-outline font-body-sm text-body-sm">/ month (Auto-renew)</span>
+</div>
+<div class="mt-space-md flex flex-col gap-2">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Tier Coverage SLA</span>
+<ul class="flex flex-col gap-2 font-body-sm text-body-sm text-on-surface-variant">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span>1 Free diagnostic electric audit per cycle</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span>Priority emergency dispatch guarantee (&lt;45 min)</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span>Flat 10% discount on OEM-certified spares</span>
+</li>
+</ul>
+</div>
+</div>
+<div class="mt-space-lg pt-space-md border-t border-outline-variant/20 flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface tabular-nums">412 Users</span>
+<span class="font-body-sm text-body-sm text-secondary font-medium">₹81,988 / mo Volume</span>
+</div>
+<button class="px-space-md py-1.5 rounded-lg border border-outline-variant/40 hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold transition-colors">
+              Edit Plan Rules
+            </button>
+</div>
+</div>
+<!-- Tier 2: Technician (Zex Protect) -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-space-lg flex flex-col justify-between shadow-sm relative overflow-hidden group hover:border-tertiary/40 transition-colors">
+<div class="absolute top-0 right-0 w-24 h-24 bg-tertiary/5 rounded-bl-full pointer-events-none"></div>
+<div>
+<div class="flex items-center justify-between mb-space-xs">
+<span class="px-2 py-0.5 rounded text-[11px] font-label-sm uppercase tracking-wider font-bold bg-tertiary-container/10 text-tertiary border border-tertiary-container/20">
+                Technician Tier
+              </span>
+<span class="text-outline font-body-sm text-body-sm">ID: MOD-PROT-03</span>
+</div>
+<h3 class="font-headline-lg text-headline-lg text-on-surface mt-space-xs">Zex Protect</h3>
+<p class="font-body-sm text-body-sm text-outline mt-0.5">Field workforce welfare and high-volume dispatch shield</p>
+<div class="mt-space-md pb-space-md border-b border-outline-variant/20 flex items-baseline gap-1">
+<span class="font-headline-xl text-headline-xl text-on-surface">₹499</span>
+<span class="text-outline font-body-sm text-body-sm">/ quarter (90 Days)</span>
+</div>
+<div class="mt-space-md flex flex-col gap-2">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Tier Coverage SLA</span>
+<ul class="flex flex-col gap-2 font-body-sm text-body-sm text-on-surface-variant">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span>Accidental heavy tool &amp; multimeter loss coverage</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span>Zero platform cancellation dispatch penalty</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span>Direct priority lane in high-margin job bidding</span>
+</li>
+</ul>
+</div>
+</div>
+<div class="mt-space-lg pt-space-md border-t border-outline-variant/20 flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface tabular-nums">76 Electricians</span>
+<span class="font-body-sm text-body-sm text-secondary font-medium">₹37,924 / qtr Volume</span>
+</div>
+<button class="px-space-md py-1.5 rounded-lg border border-outline-variant/40 hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold transition-colors">
+              Edit Plan Rules
+            </button>
+</div>
+</div>
+<!-- Tier 3: Franchise Partner (Zex Enterprise) -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-space-lg flex flex-col justify-between shadow-sm relative overflow-hidden group hover:border-secondary/40 transition-colors">
+<div class="absolute top-0 right-0 w-24 h-24 bg-secondary/5 rounded-bl-full pointer-events-none"></div>
+<div>
+<div class="flex items-center justify-between mb-space-xs">
+<span class="px-2 py-0.5 rounded text-[11px] font-label-sm uppercase tracking-wider font-bold bg-secondary/10 text-secondary border border-secondary/20">
+                Franchise Partner Tier
+              </span>
+<span class="text-outline font-body-sm text-body-sm">ID: MOD-ENT-04</span>
+</div>
+<h3 class="font-headline-lg text-headline-lg text-on-surface mt-space-xs">Zex Enterprise</h3>
+<p class="font-body-sm text-body-sm text-outline mt-0.5">Hub-level multi-pincode operations &amp; fleet synchronization</p>
+<div class="mt-space-md pb-space-md border-b border-outline-variant/20 flex items-baseline gap-1">
+<span class="font-headline-xl text-headline-xl text-on-surface">₹2,499</span>
+<span class="text-outline font-body-sm text-body-sm">/ quarter (90 Days)</span>
+</div>
+<div class="mt-space-md flex flex-col gap-2">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Tier Coverage SLA</span>
+<ul class="flex flex-col gap-2 font-body-sm text-body-sm text-on-surface-variant">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span>Dedicated regional enterprise dispatch manager</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span>Multi-pincode load balancing &amp; surge multiplier lock</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span>Direct telemetry webhook feed into ERP systems</span>
+</li>
+</ul>
+</div>
+</div>
+<div class="mt-space-lg pt-space-md border-t border-outline-variant/20 flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface tabular-nums">24 Franchise Hubs</span>
+<span class="font-body-sm text-body-sm text-secondary font-medium">₹59,976 / qtr Volume</span>
+</div>
+<button class="px-space-md py-1.5 rounded-lg border border-outline-variant/40 hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold transition-colors">
+              Edit Plan Rules
+            </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Subscriber Management Workspace -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm overflow-hidden flex flex-col">
+<!-- Role Filter Segmented Tabs -->
+<div class="px-space-md pt-space-md bg-surface-container-low/40 border-b border-outline-variant/30 flex items-center gap-space-xs overflow-x-auto">
+<button class="flex items-center gap-space-xs px-space-md py-2.5 font-label-lg text-label-lg border-b-2 border-tertiary text-tertiary font-bold transition-all whitespace-nowrap">
+<span>All Subscribers</span>
+<span class="px-1.5 py-0.2 rounded-full bg-tertiary/10 text-tertiary text-[11px] font-semibold">569</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-2.5 font-label-lg text-label-lg border-b-2 border-transparent text-outline hover:text-on-surface transition-all whitespace-nowrap">
+<span>Customers</span>
+<span class="px-1.5 py-0.2 rounded-full bg-surface-container-high text-outline text-[11px] font-semibold">412</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-2.5 font-label-lg text-label-lg border-b-2 border-transparent text-outline hover:text-on-surface transition-all whitespace-nowrap">
+<span>Technicians</span>
+<span class="px-1.5 py-0.2 rounded-full bg-surface-container-high text-outline text-[11px] font-semibold">76</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-2.5 font-label-lg text-label-lg border-b-2 border-transparent text-outline hover:text-on-surface transition-all whitespace-nowrap">
+<span>Partners</span>
+<span class="px-1.5 py-0.2 rounded-full bg-surface-container-high text-outline text-[11px] font-semibold">24</span>
+</button>
+</div>
+<!-- Advanced Search and Multi-Filter Bar -->
+<div class="p-space-md border-b border-outline-variant/20 bg-surface-container-lowest flex flex-col xl:flex-row gap-space-sm items-stretch xl:items-center justify-between">
+<div class="relative flex-1 max-w-xl">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
+<input class="w-full h-9 pl-9 pr-space-md bg-surface border border-outline-variant/40 rounded-lg text-on-surface placeholder:text-outline font-body-sm text-body-sm focus:outline-none focus:border-tertiary transition-colors" placeholder="Search by subscriber name, entity, mobile, or ZEX-SUB-ID..." type="text"/>
+</div>
+<div class="flex flex-wrap items-center gap-space-xs">
+<!-- Plan Filter -->
+<div class="relative">
+<select class="h-9 pl-space-sm pr-8 bg-surface border border-outline-variant/40 rounded-lg text-on-surface font-body-sm text-body-sm appearance-none focus:outline-none focus:border-tertiary cursor-pointer">
+<option value="">All Subscription Plans</option>
+<option value="shield">Zex Shield (Consumer)</option>
+<option value="protect">Zex Protect (Technician)</option>
+<option value="enterprise">Zex Enterprise (Partner)</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-outline text-[18px] pointer-events-none">arrow_drop_down</span>
+</div>
+<!-- Status Filter -->
+<div class="relative">
+<select class="h-9 pl-space-sm pr-8 bg-surface border border-outline-variant/40 rounded-lg text-on-surface font-body-sm text-body-sm appearance-none focus:outline-none focus:border-tertiary cursor-pointer">
+<option value="">All Statuses</option>
+<option value="active">Active (Renewing)</option>
+<option value="expiring">Expiring Soon (30d)</option>
+<option value="expired">Expired / Grace</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-outline text-[18px] pointer-events-none">arrow_drop_down</span>
+</div>
+<!-- Date Range Indicator / Selector -->
+<button class="h-9 px-space-sm flex items-center gap-1.5 bg-surface border border-outline-variant/40 rounded-lg text-on-surface font-body-sm text-body-sm hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-outline text-[16px]">calendar_today</span>
+<span>01 Oct 2026 - 02 Oct 2026</span>
+</button>
+<button class="h-9 px-space-sm flex items-center gap-1 bg-surface-container-high text-on-surface-variant hover:text-on-surface rounded-lg font-label-md text-label-md transition-colors" title="Reset Filters">
+<span class="material-symbols-outlined text-[16px]">filter_alt_off</span>
+<span>Reset</span>
+</button>
+</div>
+</div>
+<!-- Subscribers Operational Data Table -->
+<div class="overflow-x-auto w-full">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low/70 border-b border-outline-variant/30 text-outline font-label-sm text-label-sm uppercase tracking-wider h-10">
+<th class="px-space-md py-2 font-semibold">Subscriber &amp; Contact</th>
+<th class="px-space-md py-2 font-semibold">Role / Entity</th>
+<th class="px-space-md py-2 font-semibold">Plan &amp; Tier</th>
+<th class="px-space-md py-2 font-semibold">Start Date</th>
+<th class="px-space-md py-2 font-semibold">Expiry Date</th>
+<th class="px-space-md py-2 font-semibold">Renewal Status</th>
+<th class="px-space-md py-2 font-semibold text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/20 font-body-md text-body-md text-on-surface">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-full bg-primary-container/10 text-primary-container font-semibold flex items-center justify-center text-[12px] shrink-0">
+                    AS
+                  </div>
+<div class="flex flex-col min-w-0">
+<span class="font-semibold text-on-surface truncate">Amit Sharma</span>
+<span class="text-outline font-body-sm text-body-sm text-[12px]">Colaba, Mumbai • +91 98201 44921</span>
+</div>
+</div>
+</td>
+<td class="px-space-md py-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-label-sm uppercase font-semibold bg-primary-container/10 text-primary-container border border-primary-container/20">
+                  Customer
+                </span>
+</td>
+<td class="px-space-md py-3">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">Zex Shield</span>
+<span class="text-outline font-body-sm text-body-sm text-[12px]">1 Month Cycle (₹199)</span>
+</div>
+</td>
+<td class="px-space-md py-3 tabular-nums text-outline">25 Sep 2026</td>
+<td class="px-space-md py-3 tabular-nums font-semibold text-on-surface">24 Oct 2026</td>
+<td class="px-space-md py-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-label-sm font-semibold bg-secondary/10 text-secondary border border-secondary/20">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Active (Auto-renew)
+                </span>
+</td>
+<td class="px-space-md py-3 text-right">
+<button class="px-space-sm py-1 rounded text-primary-container hover:bg-primary-container/10 font-label-md text-label-md transition-colors font-semibold">
+                  View Details
+                </button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-full bg-tertiary/10 text-tertiary font-semibold flex items-center justify-center text-[12px] shrink-0">
+                    RK
+                  </div>
+<div class="flex flex-col min-w-0">
+<span class="font-semibold text-on-surface truncate">Rajesh Kumar</span>
+<span class="text-outline font-body-sm text-body-sm text-[12px]">Tech EMP-MH-108 • +91 97110 33810</span>
+</div>
+</div>
+</td>
+<td class="px-space-md py-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-label-sm uppercase font-semibold bg-tertiary-container/10 text-tertiary border border-tertiary-container/20">
+                  Technician
+                </span>
+</td>
+<td class="px-space-md py-3">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">Zex Protect</span>
+<span class="text-outline font-body-sm text-body-sm text-[12px]">3 Month Cycle (₹499)</span>
+</div>
+</td>
+<td class="px-space-md py-3 tabular-nums text-outline">01 Aug 2026</td>
+<td class="px-space-md py-3 tabular-nums font-semibold text-on-surface">31 Oct 2026</td>
+<td class="px-space-md py-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-label-sm font-semibold bg-[#fef3c7] text-[#92400e] border border-[#fde68a]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#d97706]"></span>
+                  Expiring Soon (29d)
+                </span>
+</td>
+<td class="px-space-md py-3 text-right">
+<button class="px-space-sm py-1 rounded text-primary-container hover:bg-primary-container/10 font-label-md text-label-md transition-colors font-semibold">
+                  View Details
+                </button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-full bg-secondary/15 text-secondary font-semibold flex items-center justify-center text-[12px] shrink-0">
+                    MT
+                  </div>
+<div class="flex flex-col min-w-0">
+<span class="font-semibold text-on-surface truncate">Maharashtra Team PowerCare</span>
+<span class="text-outline font-body-sm text-body-sm text-[12px]">Partner Hub (PIN 400001) • 8 Tech Nodes</span>
+</div>
+</div>
+</td>
+<td class="px-space-md py-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-label-sm uppercase font-semibold bg-secondary/10 text-secondary border border-secondary/20">
+                  Partner Hub
+                </span>
+</td>
+<td class="px-space-md py-3">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">Zex Enterprise</span>
+<span class="text-outline font-body-sm text-body-sm text-[12px]">3 Month Cycle (₹2,499)</span>
+</div>
+</td>
+<td class="px-space-md py-3 tabular-nums text-outline">15 Jul 2026</td>
+<td class="px-space-md py-3 tabular-nums font-semibold text-[#b45309]">14 Oct 2026</td>
+<td class="px-space-md py-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-label-sm font-semibold bg-[#fef3c7] text-[#92400e] border border-[#fde68a]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#d97706]"></span>
+                  Expiring Soon (12d)
+                </span>
+</td>
+<td class="px-space-md py-3 text-right">
+<button class="px-space-sm py-1 rounded text-primary-container hover:bg-primary-container/10 font-label-md text-label-md transition-colors font-semibold">
+                  View Details
+                </button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-full bg-primary-container/10 text-primary-container font-semibold flex items-center justify-center text-[12px] shrink-0">
+                    PM
+                  </div>
+<div class="flex flex-col min-w-0">
+<span class="font-semibold text-on-surface truncate">Priya Mehta</span>
+<span class="text-outline font-body-sm text-body-sm text-[12px]">Viman Nagar, Pune • +91 99304 88124</span>
+</div>
+</div>
+</td>
+<td class="px-space-md py-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-label-sm uppercase font-semibold bg-primary-container/10 text-primary-container border border-primary-container/20">
+                  Customer
+                </span>
+</td>
+<td class="px-space-md py-3">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">Zex Shield</span>
+<span class="text-outline font-body-sm text-body-sm text-[12px]">1 Month Cycle (₹199)</span>
+</div>
+</td>
+<td class="px-space-md py-3 tabular-nums text-outline">10 Sep 2026</td>
+<td class="px-space-md py-3 tabular-nums font-semibold text-[#b45309]">09 Oct 2026</td>
+<td class="px-space-md py-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-label-sm font-semibold bg-[#fef3c7] text-[#92400e] border border-[#fde68a]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#d97706]"></span>
+                  Expiring Soon (7d)
+                </span>
+</td>
+<td class="px-space-md py-3 text-right">
+<button class="px-space-sm py-1 rounded text-primary-container hover:bg-primary-container/10 font-label-md text-label-md transition-colors font-semibold">
+                  View Details
+                </button>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-full bg-tertiary/10 text-tertiary font-semibold flex items-center justify-center text-[12px] shrink-0">
+                    SV
+                  </div>
+<div class="flex flex-col min-w-0">
+<span class="font-semibold text-on-surface truncate">Suresh Verma</span>
+<span class="text-outline font-body-sm text-body-sm text-[12px]">Tech EMP-MH-114 • +91 98334 12093</span>
+</div>
+</div>
+</td>
+<td class="px-space-md py-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-label-sm uppercase font-semibold bg-tertiary-container/10 text-tertiary border border-tertiary-container/20">
+                  Technician
+                </span>
+</td>
+<td class="px-space-md py-3">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">Zex Protect</span>
+<span class="text-outline font-body-sm text-body-sm text-[12px]">3 Month Cycle (₹499)</span>
+</div>
+</td>
+<td class="px-space-md py-3 tabular-nums text-outline">15 Aug 2026</td>
+<td class="px-space-md py-3 tabular-nums font-semibold text-on-surface">14 Nov 2026</td>
+<td class="px-space-md py-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-label-sm font-semibold bg-secondary/10 text-secondary border border-secondary/20">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Active
+                </span>
+</td>
+<td class="px-space-md py-3 text-right">
+<button class="px-space-sm py-1 rounded text-primary-container hover:bg-primary-container/10 font-label-md text-label-md transition-colors font-semibold">
+                  View Details
+                </button>
+</td>
+</tr>
+<!-- Row 6 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-full bg-secondary/15 text-secondary font-semibold flex items-center justify-center text-[12px] shrink-0">
+                    GP
+                  </div>
+<div class="flex flex-col min-w-0">
+<span class="font-semibold text-on-surface truncate">Gujarat Partner Electricals</span>
+<span class="text-outline font-body-sm text-body-sm text-[12px]">Partner Hub (PIN 380001) • 14 Nodes</span>
+</div>
+</div>
+</td>
+<td class="px-space-md py-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-label-sm uppercase font-semibold bg-secondary/10 text-secondary border border-secondary/20">
+                  Partner Hub
+                </span>
+</td>
+<td class="px-space-md py-3">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">Zex Enterprise</span>
+<span class="text-outline font-body-sm text-body-sm text-[12px]">3 Month Cycle (₹2,499)</span>
+</div>
+</td>
+<td class="px-space-md py-3 tabular-nums text-outline">01 Sep 2026</td>
+<td class="px-space-md py-3 tabular-nums font-semibold text-on-surface">30 Nov 2026</td>
+<td class="px-space-md py-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-label-sm font-semibold bg-secondary/10 text-secondary border border-secondary/20">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Active
+                </span>
+</td>
+<td class="px-space-md py-3 text-right">
+<button class="px-space-sm py-1 rounded text-primary-container hover:bg-primary-container/10 font-label-md text-label-md transition-colors font-semibold">
+                  View Details
+                </button>
+</td>
+</tr>
+<!-- Row 7 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-full bg-primary-container/10 text-primary-container font-semibold flex items-center justify-center text-[12px] shrink-0">
+                    NK
+                  </div>
+<div class="flex flex-col min-w-0">
+<span class="font-semibold text-on-surface truncate">Neha Kumar</span>
+<span class="text-outline font-body-sm text-body-sm text-[12px]">Andheri West, Mumbai • +91 98218 90341</span>
+</div>
+</div>
+</td>
+<td class="px-space-md py-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-label-sm uppercase font-semibold bg-primary-container/10 text-primary-container border border-primary-container/20">
+                  Customer
+                </span>
+</td>
+<td class="px-space-md py-3">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">Zex Shield</span>
+<span class="text-outline font-body-sm text-body-sm text-[12px]">1 Month Cycle (₹199)</span>
+</div>
+</td>
+<td class="px-space-md py-3 tabular-nums text-outline">01 Oct 2026</td>
+<td class="px-space-md py-3 tabular-nums font-semibold text-on-surface">31 Oct 2026</td>
+<td class="px-space-md py-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-label-sm font-semibold bg-secondary/10 text-secondary border border-secondary/20">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Active
+                </span>
+</td>
+<td class="px-space-md py-3 text-right">
+<button class="px-space-sm py-1 rounded text-primary-container hover:bg-primary-container/10 font-label-md text-label-md transition-colors font-semibold">
+                  View Details
+                </button>
+</td>
+</tr>
+<!-- Row 8 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors bg-surface-container-low/20">
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-full bg-outline-variant/30 text-outline font-semibold flex items-center justify-center text-[12px] shrink-0">
+                    VR
+                  </div>
+<div class="flex flex-col min-w-0">
+<span class="font-semibold text-on-surface truncate">Vikram Rao</span>
+<span class="text-outline font-body-sm text-body-sm text-[12px]">Bandra Kurla, Mumbai • +91 97692 88711</span>
+</div>
+</div>
+</td>
+<td class="px-space-md py-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-label-sm uppercase font-semibold bg-primary-container/10 text-primary-container border border-primary-container/20">
+                  Customer
+                </span>
+</td>
+<td class="px-space-md py-3">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">Zex Shield</span>
+<span class="text-outline font-body-sm text-body-sm text-[12px]">1 Month Cycle (₹199)</span>
+</div>
+</td>
+<td class="px-space-md py-3 tabular-nums text-outline">28 Aug 2026</td>
+<td class="px-space-md py-3 tabular-nums text-error font-medium">27 Sep 2026</td>
+<td class="px-space-md py-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-label-sm font-semibold bg-surface-container-high text-outline border border-outline-variant/40">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+                  Expired
+                </span>
+</td>
+<td class="px-space-md py-3 text-right">
+<button class="px-space-sm py-1 rounded bg-tertiary-container/10 text-tertiary hover:bg-tertiary-container/20 font-label-md text-label-md transition-colors font-semibold">
+                  Re-engage
+                </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination and Table Metadata Footer -->
+<div class="p-space-md bg-surface-container-lowest border-t border-outline-variant/30 flex flex-col sm:flex-row items-center justify-between gap-space-sm">
+<div class="flex items-center gap-2 text-outline font-body-sm text-body-sm">
+<span>Showing <strong class="text-on-surface font-semibold">1-8</strong> of <strong class="text-on-surface font-semibold">569</strong> subscribers</span>
+<span class="text-outline-variant">•</span>
+<span>Page 1 of 72</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<button class="px-2.5 py-1.5 rounded border border-outline-variant/40 text-outline hover:bg-surface-container-high hover:text-on-surface font-label-sm text-label-sm disabled:opacity-50 disabled:pointer-events-none transition-colors" disabled="">
+            Previous
+          </button>
+<button class="w-8 h-8 rounded bg-tertiary text-on-tertiary font-label-sm text-label-sm font-bold flex items-center justify-center shadow-sm">
+            1
+          </button>
+<button class="w-8 h-8 rounded border border-outline-variant/40 text-on-surface hover:bg-surface-container-high font-label-sm text-label-sm flex items-center justify-center transition-colors">
+            2
+          </button>
+<button class="w-8 h-8 rounded border border-outline-variant/40 text-on-surface hover:bg-surface-container-high font-label-sm text-label-sm flex items-center justify-center transition-colors">
+            3
+          </button>
+<span class="px-1 text-outline">...</span>
+<button class="w-8 h-8 rounded border border-outline-variant/40 text-on-surface hover:bg-surface-container-high font-label-sm text-label-sm flex items-center justify-center transition-colors">
+            72
+          </button>
+<button class="px-2.5 py-1.5 rounded border border-outline-variant/40 text-on-surface hover:bg-surface-container-high font-label-sm text-label-sm transition-colors">
+            Next
+          </button>
+</div>
+</div>
+</div>
+<!-- Regulatory Compliance Banner (RBI E-Mandate Compliance Notice) -->
+<div class="rounded-xl bg-surface-container-low p-space-md border border-outline-variant/30 flex items-start gap-space-md">
+<div class="w-9 h-9 rounded-lg bg-surface-container-high flex items-center justify-center text-primary-container shrink-0">
+<span class="material-symbols-outlined text-[20px]">account_balance</span>
+</div>
+<div class="flex flex-col gap-0.5">
+<span class="font-label-md text-label-md text-on-surface font-bold">RBI Recurring E-Mandate &amp; Payment Settlement Framework (AFA 2026 Compliant)</span>
+<p class="font-body-sm text-body-sm text-outline">
+          All automated debits for Zex Shield, Zex Protect, and Zex Enterprise tiers comply strictly with RBI master directions on recurring card payments with pre-debit notifications dispatched via SMS/WhatsApp 24 hours prior to account settlement. Expired mandates automatically switch to manual UPI push renewal triggers.
+        </p>
+</div>
+</div>
+</div>
+</div></main></div></body></html>

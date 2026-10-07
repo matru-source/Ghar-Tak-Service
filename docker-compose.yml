@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: electricare-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: electricare_db
+      POSTGRES_USER: electricare_admin
+      POSTGRES_PASSWORD: electricare_secret_2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - electricare_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U electricare_admin -d electricare_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  electricare_pgdata:
+    driver: local

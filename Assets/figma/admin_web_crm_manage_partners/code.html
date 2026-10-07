@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"on-surface-variant":"#444653","on-tertiary":"#ffffff","on-tertiary-fixed":"#25005a","outline":"#757684","secondary-fixed-dim":"#68dba9","error-container":"#ffdad6","on-primary-fixed":"#001453","surface-variant":"#dae2fd","tertiary-fixed":"#eaddff","surface":"#faf8ff","on-error":"#ffffff","tertiary-fixed-dim":"#d2bbff","surface-tint":"#3755c3","error":"#ba1a1a","on-primary-container":"#a8b8ff","on-secondary-fixed-variant":"#005137","on-tertiary-container":"#c9aeff","surface-container-lowest":"#ffffff","surface-container-low":"#f2f3ff","primary-fixed-dim":"#b8c4ff","secondary-container":"#82f5c1","on-background":"#131b2e","inverse-surface":"#283044","background":"#faf8ff","tertiary-container":"#5f00d1","on-primary":"#ffffff","secondary":"#006c4a","surface-bright":"#faf8ff","on-surface":"#131b2e","tertiary":"#440098","on-error-container":"#93000a","surface-container-high":"#e2e7ff","on-secondary":"#ffffff","on-tertiary-fixed-variant":"#5a00c6","surface-dim":"#d2d9f4","on-secondary-container":"#00714e","primary":"#00288e","primary-container":"#1e40af","surface-container":"#eaedff","inverse-primary":"#b8c4ff","on-secondary-fixed":"#002114","surface-container-highest":"#dae2fd","outline-variant":"#c4c5d5","primary-fixed":"#dde1ff","inverse-on-surface":"#eef0ff","on-primary-fixed-variant":"#173bab","secondary-fixed":"#85f8c4"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"space-sm":"0.5rem","gutter-mobile":"0.75rem","margin-mobile":"1rem","gutter":"1rem","space-xl":"2rem","space-lg":"1.25rem","margin":"1.5rem","space-md":"0.75rem","space-xs":"0.25rem"},"fontFamily":{"headline-xl-mobile":["Inter"],"body-lg":["Inter"],"label-lg":["Inter"],"headline-sm":["Inter"],"headline-xl":["Inter"],"label-md":["Inter"],"headline-md":["Inter"],"headline-lg":["Inter"],"body-sm":["Inter"],"label-sm":["Inter"],"body-md":["Inter"]},"fontSize":{"headline-xl-mobile":["28px",{"lineHeight":"36px","fontWeight":"700"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"label-lg":["14px",{"lineHeight":"20px","fontWeight":"600"}],"headline-sm":["16px",{"lineHeight":"24px","fontWeight":"600"}],"headline-xl":["36px",{"lineHeight":"44px","fontWeight":"700"}],"label-md":["12px",{"lineHeight":"16px","fontWeight":"500"}],"headline-md":["20px",{"lineHeight":"28px","fontWeight":"600"}],"headline-lg":["24px",{"lineHeight":"32px","fontWeight":"600"}],"body-sm":["12px",{"lineHeight":"16px","fontWeight":"400"}],"label-sm":["11px",{"lineHeight":"14px","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}]}}}}</script></head><body class="bg-surface font-body-md text-on-surface min-h-screen"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between"><div class="flex flex-col flex-1 overflow-y-auto"><div class="h-16 px-margin flex items-center gap-space-md border-b border-surface-container"><div class="w-9 h-9 rounded-xl bg-tertiary-container flex items-center justify-center text-on-tertiary shadow-sm"><span class="material-symbols-outlined text-[20px]">bolt</span></div><div class="flex flex-col"><span class="font-label-lg text-label-lg text-on-surface tracking-tight leading-none">ElectriCare</span><span class="font-label-sm text-label-sm text-tertiary font-semibold uppercase tracking-wider mt-space-xs">Admin / Owner</span></div></div><div class="px-margin pt-space-lg pb-space-xs"><span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Platform Governance</span></div><nav class="flex-1 px-space-md py-space-xs flex flex-col gap-space-xs" data-active-classes="bg-tertiary-container text-on-tertiary shadow-sm font-semibold rounded-xl"><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="dashboard" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">dashboard</span><span class="font-label-lg text-label-lg">Dashboard</span></a><a aria-current="page" class="flex items-center gap-space-md px-space-md py-space-sm transition-all group bg-tertiary-container text-on-tertiary shadow-sm font-semibold rounded-xl" data-path="manage-partners" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">handshake</span><span class="font-label-lg text-label-lg">Manage Partners</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="manage-technicians" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">engineering</span><span class="font-label-lg text-label-lg">Manage Technicians</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="manage-customers" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">group</span><span class="font-label-lg text-label-lg">Manage Customers</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="finance-commission" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">payments</span><span class="font-label-lg text-label-lg">Finance / Commission</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="subscription-modules" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">verified_user</span><span class="font-label-lg text-label-lg">Subscription Modules</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="system-settings" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">tune</span><span class="font-label-lg text-label-lg">System Settings</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="support" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">headset_mic</span><span class="font-label-lg text-label-lg">Support</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="audit-logs" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">receipt_long</span><span class="font-label-lg text-label-lg">Audit Logs</span></a></nav></div><div class="p-space-md border-t border-surface-container bg-surface-container-lowest"><div class="bg-surface-container-low rounded-xl p-space-sm mb-space-sm flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="relative"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-secondary border border-surface-container-lowest"></span></div><div class="flex flex-col min-w-0"><span class="font-label-md text-label-md text-on-surface font-semibold truncate">Super Admin</span><span class="font-body-sm text-body-sm text-on-surface-variant truncate">admin@electricare.in</span></div></div><span class="flex h-2 w-2 relative"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span></span></div><a class="flex items-center justify-between w-full px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-all group" data-path="login" href="#"><span class="flex items-center gap-space-sm font-label-md text-label-md"><span class="material-symbols-outlined text-[18px] text-outline group-hover:text-on-error-container">logout</span>Sign Out</span><span class="font-label-sm text-label-sm text-outline group-hover:text-on-error-container">v2.4.0</span></a></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] border-b border-surface-container z-40 flex items-center justify-between px-margin"><div class="flex items-center gap-space-lg flex-1 max-w-2xl"><div class="relative w-full"><span class="material-symbols-outlined absolute left-space-md top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span><input class="w-full h-9 pl-10 pr-space-md bg-surface-container-low border border-surface-container rounded-lg text-on-surface placeholder:text-outline font-body-sm text-body-sm focus:outline-none focus:border-tertiary focus:bg-surface-container-lowest transition-all" placeholder="Search partners, technicians, customers, orders, tickets..." type="text"/></div><div class="hidden lg:flex items-center gap-space-xs px-space-sm py-1 bg-surface-container rounded-lg border border-surface-container-high whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span><span class="font-label-sm text-label-sm text-tertiary font-semibold uppercase tracking-wider">Scope: Platform-wide / All India</span></div></div><div class="flex items-center gap-space-md"><button class="relative w-9 h-9 flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"></span></button><div class="h-5 w-px bg-surface-container"></div><div class="flex items-center gap-space-sm pl-space-xs cursor-pointer group"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><div class="hidden sm:flex flex-col text-left"><span class="font-label-sm text-label-sm text-on-surface font-semibold group-hover:text-tertiary transition-colors">Super Admin</span><span class="font-body-sm text-body-sm text-on-surface-variant text-[11px] leading-tight">National Control</span></div><span class="material-symbols-outlined text-outline text-[18px] group-hover:text-on-surface transition-colors">expand_more</span></div></div></header><main class="relative pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<div class="p-margin flex flex-col gap-space-lg">
+<!-- Breadcrumb & Top Bar -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-xs text-outline font-label-sm">
+<span>Governance</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-tertiary font-semibold">Platform Franchise Network</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-on-surface-variant">02 Oct 2026</span>
+</div>
+<div class="flex items-baseline gap-space-md">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Manage Partners</h1>
+<span class="font-body-sm text-body-sm text-outline hidden sm:inline">| National Franchise Allocation &amp; Licensing</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-3xl">
+          National franchise allocation, regional operating licenses, and revenue contribution telemetry across high-voltage and commercial service networks.
+        </p>
+</div>
+<!-- Action Buttons -->
+<div class="flex items-center gap-space-sm self-start md:self-auto">
+<button class="flex items-center gap-space-xs px-space-md py-2 bg-surface-container-lowest text-on-surface rounded-xl shadow-sm hover:bg-surface-container-high transition-all font-label-md" id="exportBtn">
+<span class="material-symbols-outlined text-[18px] text-outline">download</span>
+<span>Export Matrix (CSV)</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-2 bg-tertiary text-on-tertiary rounded-xl shadow-md hover:opacity-90 active:scale-95 transition-all font-label-md" id="onboardModalTrigger">
+<span class="material-symbols-outlined text-[18px]">add_business</span>
+<span>+ Onboard New Partner</span>
+</button>
+</div>
+</div>
+<!-- Top KPI Metric Cards (Bento style) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- KPI 1 -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group">
+<div class="absolute -right-4 -bottom-4 w-20 h-20 bg-primary-fixed/30 rounded-full blur-xl group-hover:scale-125 transition-transform"></div>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Total Licensed Hubs</span>
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">hub</span>
+</div>
+</div>
+<div class="mt-space-sm">
+<div class="font-headline-xl text-headline-xl text-on-surface">24</div>
+<div class="flex items-center gap-space-xs mt-space-xs">
+<span class="inline-flex items-center text-secondary font-label-sm font-semibold">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>+3 QoQ
+            </span>
+<span class="font-body-sm text-body-sm text-outline">Across 5 Tier-1 Clusters</span>
+</div>
+</div>
+</div>
+<!-- KPI 2 -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group">
+<div class="absolute -right-4 -bottom-4 w-20 h-20 bg-secondary-fixed/40 rounded-full blur-xl group-hover:scale-125 transition-transform"></div>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary">Active Operations</span>
+<div class="w-8 h-8 rounded-lg bg-secondary-container/50 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</div>
+</div>
+<div class="mt-space-sm">
+<div class="font-headline-xl text-headline-xl text-on-surface">22 <span class="font-label-md text-label-md text-outline">Active</span></div>
+<div class="flex items-center gap-space-xs mt-space-xs">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">91.6% SLA Complying (Grid ready)</span>
+</div>
+</div>
+</div>
+<!-- KPI 3 -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group">
+<div class="absolute -right-4 -bottom-4 w-20 h-20 bg-tertiary-fixed/30 rounded-full blur-xl group-hover:scale-125 transition-transform"></div>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-tertiary">Pending Clearance</span>
+<div class="w-8 h-8 rounded-lg bg-tertiary-fixed/50 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[18px]">pending_actions</span>
+</div>
+</div>
+<div class="mt-space-sm">
+<div class="font-headline-xl text-headline-xl text-tertiary">2 <span class="font-label-md text-label-md text-outline">In Review</span></div>
+<div class="flex items-center gap-space-xs mt-space-xs">
+<span class="w-2 h-2 rounded-full bg-tertiary-container animate-pulse"></span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">KYC, GSTN &amp; Escrow Setup</span>
+</div>
+</div>
+</div>
+<!-- KPI 4 -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group">
+<div class="absolute -right-4 -bottom-4 w-20 h-20 bg-surface-variant/40 rounded-full blur-xl group-hover:scale-125 transition-transform"></div>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">States Covered</span>
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-on-surface">
+<span class="material-symbols-outlined text-[18px]">map</span>
+</div>
+</div>
+<div class="mt-space-sm">
+<div class="font-headline-xl text-headline-xl text-on-surface">4 <span class="font-label-md text-label-md text-outline">States</span></div>
+<div class="flex items-center gap-space-xs mt-space-xs">
+<span class="font-body-sm text-body-sm text-outline truncate">MH, GJ, KA, OD (+2 Pipeline)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Telemetry Strip Banner with Inline Sparkline Visual -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-md flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-tertiary-container text-on-tertiary flex items-center justify-center shadow-inner shrink-0">
+<span class="material-symbols-outlined text-[24px]">electric_meter</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-tertiary font-semibold uppercase tracking-wider">National Grid Telemetry &amp; Revenue Flow</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">MTD Dispatched Value: ₹16,15,000 across 1,042 Orders</span>
+<span class="font-body-sm text-body-sm text-outline">Real-time aggregate partner payout margin calibrated at 18.4% flat.</span>
+</div>
+</div>
+<!-- Mini SVG Data Sparkline -->
+<div class="flex items-center gap-space-lg self-end lg:self-center">
+<div class="flex flex-col text-right">
+<span class="font-label-sm text-label-sm text-outline">Weekly Peak Load</span>
+<span class="font-label-lg text-label-lg text-secondary font-semibold">99.2% Uptime</span>
+</div>
+<div class="w-36 h-10 flex items-center">
+<svg class="w-full h-full overflow-visible" fill="none" viewbox="0 0 120 30">
+<path d="M0 25 C 20 22, 30 10, 45 15 C 60 20, 70 5, 85 8 C 100 11, 110 2, 120 4" fill="none" stroke="#006c4a" stroke-linecap="round" stroke-width="2.5"></path>
+<path d="M0 25 C 20 22, 30 10, 45 15 C 60 20, 70 5, 85 8 C 100 11, 110 2, 120 4 L 120 30 L 0 30 Z" fill="#82f5c1" fill-opacity="0.18"></path>
+<circle cx="120" cy="4" fill="#006c4a" r="3"></circle>
+</svg>
+</div>
+</div>
+</div>
+<!-- Filters, Search & Tabs Strip -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-md flex flex-col gap-space-md">
+<!-- Tabs -->
+<div class="flex items-center justify-between border-b-0">
+<div class="flex items-center gap-space-xs overflow-x-auto pb-1">
+<button class="partner-tab px-space-md py-1.5 rounded-lg bg-surface-container-high text-on-surface font-label-md flex items-center gap-space-xs transition-all" data-tab="all">
+<span>All Partners</span>
+<span class="px-1.5 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant font-label-sm">24</span>
+</button>
+<button class="partner-tab px-space-md py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container font-label-md flex items-center gap-space-xs transition-all" data-tab="active">
+<span>Active Operations</span>
+<span class="px-1.5 py-0.5 rounded-full bg-secondary-container/50 text-secondary font-label-sm">22</span>
+</button>
+<button class="partner-tab px-space-md py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container font-label-md flex items-center gap-space-xs transition-all" data-tab="review">
+<span>Under Audit / Review</span>
+<span class="px-1.5 py-0.5 rounded-full bg-tertiary-fixed text-tertiary font-label-sm">2</span>
+</button>
+<button class="partner-tab px-space-md py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container font-label-md flex items-center gap-space-xs transition-all opacity-60" data-tab="suspended">
+<span>Suspended</span>
+<span class="px-1.5 py-0.5 rounded-full bg-surface-container text-outline font-label-sm">0</span>
+</button>
+</div>
+<div class="hidden sm:flex items-center gap-space-xs text-outline font-label-sm">
+<span class="material-symbols-outlined text-[16px]">sync</span>
+<span>Synced: Today, 14:32 IST</span>
+</div>
+</div>
+<!-- Search & Select Input Strip -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-space-sm items-center">
+<!-- Search input -->
+<div class="md:col-span-6 relative">
+<span class="material-symbols-outlined absolute left-space-md top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
+<input class="w-full h-9 pl-9 pr-space-md bg-surface-container-low rounded-lg text-on-surface placeholder:text-outline font-body-sm text-body-sm focus:outline-none focus:bg-surface-container-lowest shadow-sm transition-all" id="partnerSearch" placeholder="Search partner franchise by name, ID (e.g. PTR-MH), or district..." type="text"/>
+</div>
+<!-- State Dropdown -->
+<div class="md:col-span-3">
+<select class="w-full h-9 px-space-md bg-surface-container-low rounded-lg text-on-surface font-body-sm text-body-sm focus:outline-none focus:bg-surface-container-lowest shadow-sm transition-all" id="stateFilter">
+<option value="all">All States (4 Regional Licenses)</option>
+<option value="maharashtra">Maharashtra (MH-West Zone)</option>
+<option value="gujarat">Gujarat (GJ-West Hub)</option>
+<option value="karnataka">Karnataka (KA-South Grid)</option>
+<option value="odisha">Odisha (OD-East Sector)</option>
+<option value="telangana">Telangana (TG-Pending)</option>
+<option value="delhi">Delhi NCR (DL-North Area)</option>
+</select>
+</div>
+<!-- Status Filter Dropdown -->
+<div class="md:col-span-3">
+<select class="w-full h-9 px-space-md bg-surface-container-low rounded-lg text-on-surface font-body-sm text-body-sm focus:outline-none focus:bg-surface-container-lowest shadow-sm transition-all" id="statusFilter">
+<option value="all">All Statuses (Active, Review, Suspended)</option>
+<option value="active">Active Operations Only</option>
+<option value="review">Audit / Pending KYC Only</option>
+</select>
+</div>
+</div>
+</div>
+<!-- Main Partner Directory Table Container -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse" id="partnerTable">
+<thead>
+<tr class="bg-surface-container-low text-outline font-label-sm uppercase tracking-wider h-10">
+<th class="px-space-md py-space-xs font-semibold">Partner Entity &amp; License ID</th>
+<th class="px-space-md py-space-xs font-semibold">State Allocation</th>
+<th class="px-space-md py-space-xs font-semibold">Operating Districts &amp; Pincodes</th>
+<th class="px-space-md py-space-xs font-semibold text-right">Techs</th>
+<th class="px-space-md py-space-xs font-semibold text-right">MTD Jobs</th>
+<th class="px-space-md py-space-xs font-semibold text-right">Revenue (MTD)</th>
+<th class="px-space-md py-space-xs font-semibold text-center">Status</th>
+<th class="px-space-md py-space-xs font-semibold text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 font-body-md text-on-surface" id="tableBody">
+<!-- Row 1: Maharashtra -->
+<tr class="partner-row hover:bg-surface-container-low transition-colors group cursor-pointer" data-search="maharashtra team ptr-mh-2024-001 mumbai pune" data-state="maharashtra" data-status="active">
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-sm">
+<div class="w-9 h-9 rounded-lg bg-primary-container text-on-primary font-label-md flex items-center justify-center font-bold tracking-tight shadow-sm shrink-0">
+                    MH
+                  </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-on-surface font-semibold group-hover:text-primary transition-colors truncate">Maharashtra Team PowerCare</span>
+<span class="font-body-sm text-body-sm text-outline">PTR-MH-2024-001</span>
+</div>
+</div>
+</td>
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-md text-label-md text-on-surface">Maharashtra</span>
+<span class="text-tertiary font-label-sm text-[10px] px-1.5 py-0.2 bg-tertiary-fixed rounded">Tier-1 Hub</span>
+</div>
+</td>
+<td class="px-space-md py-3">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface">Mumbai Metro + Pune Urban</span>
+<span class="font-body-sm text-body-sm text-outline">18 Pincodes covered (99.4% SLA)</span>
+</div>
+</td>
+<td class="px-space-md py-3 text-right">
+<span class="font-label-md text-label-md text-on-surface font-semibold">42</span>
+<span class="font-body-sm text-body-sm text-outline block text-[11px]">Field Eng.</span>
+</td>
+<td class="px-space-md py-3 text-right">
+<span class="font-label-md text-label-md text-on-surface font-semibold">284</span>
+<span class="text-secondary font-body-sm text-body-sm block text-[11px]">+14% MoM</span>
+</td>
+<td class="px-space-md py-3 text-right">
+<span class="font-label-lg text-label-lg text-on-surface font-bold">₹4,20,000</span>
+<span class="font-body-sm text-body-sm text-outline block text-[11px]">Paid: ₹3.44L</span>
+</td>
+<td class="px-space-md py-3 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-container/40 text-secondary font-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Active
+                </span>
+</td>
+<td class="px-space-md py-3 text-right">
+<div class="flex items-center justify-end gap-space-xs">
+<button class="view-detail-btn p-1.5 text-on-surface-variant hover:text-primary hover:bg-surface-container rounded-lg transition-colors" data-partner="Maharashtra Team PowerCare" title="View Franchise Details">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+<button class="p-1.5 text-on-surface-variant hover:text-tertiary hover:bg-surface-container rounded-lg transition-colors" title="State Allocation">
+<span class="material-symbols-outlined text-[18px]">share_location</span>
+</button>
+<button class="p-1.5 text-outline hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors" title="Franchise Operations Menu">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2: Gujarat -->
+<tr class="partner-row hover:bg-surface-container-low transition-colors group cursor-pointer bg-surface-container-lowest" data-search="gujarat partner ptr-gj-2024-004 ahmedabad surat" data-state="gujarat" data-status="active">
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-sm">
+<div class="w-9 h-9 rounded-lg bg-secondary text-on-secondary font-label-md flex items-center justify-center font-bold tracking-tight shadow-sm shrink-0">
+                    GJ
+                  </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-on-surface font-semibold group-hover:text-primary transition-colors truncate">Gujarat Partner Electricals</span>
+<span class="font-body-sm text-body-sm text-outline">PTR-GJ-2024-004</span>
+</div>
+</div>
+</td>
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-md text-label-md text-on-surface">Gujarat</span>
+<span class="text-outline font-label-sm text-[10px] px-1.5 py-0.2 bg-surface-container rounded">West Hub</span>
+</div>
+</td>
+<td class="px-space-md py-3">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface">Ahmedabad + Surat Industrial</span>
+<span class="font-body-sm text-body-sm text-outline">12 Pincodes covered (98.9% SLA)</span>
+</div>
+</td>
+<td class="px-space-md py-3 text-right">
+<span class="font-label-md text-label-md text-on-surface font-semibold">28</span>
+<span class="font-body-sm text-body-sm text-outline block text-[11px]">Field Eng.</span>
+</td>
+<td class="px-space-md py-3 text-right">
+<span class="font-label-md text-label-md text-on-surface font-semibold">196</span>
+<span class="text-secondary font-body-sm text-body-sm block text-[11px]">+8% MoM</span>
+</td>
+<td class="px-space-md py-3 text-right">
+<span class="font-label-lg text-label-lg text-on-surface font-bold">₹3,10,000</span>
+<span class="font-body-sm text-body-sm text-outline block text-[11px]">Paid: ₹2.55L</span>
+</td>
+<td class="px-space-md py-3 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-container/40 text-secondary font-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Active
+                </span>
+</td>
+<td class="px-space-md py-3 text-right">
+<div class="flex items-center justify-end gap-space-xs">
+<button class="view-detail-btn p-1.5 text-on-surface-variant hover:text-primary hover:bg-surface-container rounded-lg transition-colors" data-partner="Gujarat Partner Electricals" title="View Franchise Details">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+<button class="p-1.5 text-on-surface-variant hover:text-tertiary hover:bg-surface-container rounded-lg transition-colors" title="State Allocation">
+<span class="material-symbols-outlined text-[18px]">share_location</span>
+</button>
+<button class="p-1.5 text-outline hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors" title="Franchise Operations Menu">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3: Karnataka -->
+<tr class="partner-row hover:bg-surface-container-low transition-colors group cursor-pointer" data-search="karnataka partner ptr-ka-2025-009 bengaluru urban rural" data-state="karnataka" data-status="active">
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-sm">
+<div class="w-9 h-9 rounded-lg bg-tertiary text-on-tertiary font-label-md flex items-center justify-center font-bold tracking-tight shadow-sm shrink-0">
+                    KA
+                  </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-on-surface font-semibold group-hover:text-primary transition-colors truncate">Karnataka Grid Masters</span>
+<span class="font-body-sm text-body-sm text-outline">PTR-KA-2025-009</span>
+</div>
+</div>
+</td>
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-md text-label-md text-on-surface">Karnataka</span>
+<span class="text-tertiary font-label-sm text-[10px] px-1.5 py-0.2 bg-tertiary-fixed rounded">South Hub</span>
+</div>
+</td>
+<td class="px-space-md py-3">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface">Bengaluru Urban + Tech Corridor</span>
+<span class="font-body-sm text-body-sm text-outline">15 Pincodes covered (99.8% SLA)</span>
+</div>
+</td>
+<td class="px-space-md py-3 text-right">
+<span class="font-label-md text-label-md text-on-surface font-semibold">34</span>
+<span class="font-body-sm text-body-sm text-outline block text-[11px]">Field Eng.</span>
+</td>
+<td class="px-space-md py-3 text-right">
+<span class="font-label-md text-label-md text-on-surface font-semibold">240</span>
+<span class="text-secondary font-body-sm text-body-sm block text-[11px]">+22% MoM</span>
+</td>
+<td class="px-space-md py-3 text-right">
+<span class="font-label-lg text-label-lg text-on-surface font-bold">₹3,80,000</span>
+<span class="font-body-sm text-body-sm text-outline block text-[11px]">Paid: ₹3.10L</span>
+</td>
+<td class="px-space-md py-3 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-container/40 text-secondary font-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Active
+                </span>
+</td>
+<td class="px-space-md py-3 text-right">
+<div class="flex items-center justify-end gap-space-xs">
+<button class="view-detail-btn p-1.5 text-on-surface-variant hover:text-primary hover:bg-surface-container rounded-lg transition-colors" data-partner="Karnataka Grid Masters" title="View Franchise Details">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+<button class="p-1.5 text-on-surface-variant hover:text-tertiary hover:bg-surface-container rounded-lg transition-colors" title="State Allocation">
+<span class="material-symbols-outlined text-[18px]">share_location</span>
+</button>
+<button class="p-1.5 text-outline hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors" title="Franchise Operations Menu">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4: Odisha -->
+<tr class="partner-row hover:bg-surface-container-low transition-colors group cursor-pointer" data-search="odisha partner ptr-od-2025-012 bhubaneswar cuttack" data-state="odisha" data-status="active">
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-sm">
+<div class="w-9 h-9 rounded-lg bg-surface-tint text-on-primary font-label-md flex items-center justify-center font-bold tracking-tight shadow-sm shrink-0">
+                    OD
+                  </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-on-surface font-semibold group-hover:text-primary transition-colors truncate">Odisha Power Solutions</span>
+<span class="font-body-sm text-body-sm text-outline">PTR-OD-2025-012</span>
+</div>
+</div>
+</td>
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-md text-label-md text-on-surface">Odisha</span>
+<span class="text-outline font-label-sm text-[10px] px-1.5 py-0.2 bg-surface-container rounded">East Sector</span>
+</div>
+</td>
+<td class="px-space-md py-3">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface">Bhubaneswar + Cuttack Belt</span>
+<span class="font-body-sm text-body-sm text-outline">8 Pincodes covered (97.5% SLA)</span>
+</div>
+</td>
+<td class="px-space-md py-3 text-right">
+<span class="font-label-md text-label-md text-on-surface font-semibold">16</span>
+<span class="font-body-sm text-body-sm text-outline block text-[11px]">Field Eng.</span>
+</td>
+<td class="px-space-md py-3 text-right">
+<span class="font-label-md text-label-md text-on-surface font-semibold">110</span>
+<span class="text-secondary font-body-sm text-body-sm block text-[11px]">+5% MoM</span>
+</td>
+<td class="px-space-md py-3 text-right">
+<span class="font-label-lg text-label-lg text-on-surface font-bold">₹1,60,000</span>
+<span class="font-body-sm text-body-sm text-outline block text-[11px]">Paid: ₹1.28L</span>
+</td>
+<td class="px-space-md py-3 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-container/40 text-secondary font-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Active
+                </span>
+</td>
+<td class="px-space-md py-3 text-right">
+<div class="flex items-center justify-end gap-space-xs">
+<button class="view-detail-btn p-1.5 text-on-surface-variant hover:text-primary hover:bg-surface-container rounded-lg transition-colors" data-partner="Odisha Power Solutions" title="View Franchise Details">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+<button class="p-1.5 text-on-surface-variant hover:text-tertiary hover:bg-surface-container rounded-lg transition-colors" title="State Allocation">
+<span class="material-symbols-outlined text-[18px]">share_location</span>
+</button>
+<button class="p-1.5 text-outline hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors" title="Franchise Operations Menu">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 5: Telangana (Pending) -->
+<tr class="partner-row hover:bg-surface-container-low transition-colors group cursor-pointer bg-surface-container-low/40" data-search="telangana partner pending ptr-tg-2026-015 hyderabad metro" data-state="telangana" data-status="review">
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-sm">
+<div class="w-9 h-9 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed font-label-md flex items-center justify-center font-bold tracking-tight shadow-sm shrink-0">
+                    TG
+                  </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-on-surface font-semibold group-hover:text-primary transition-colors truncate">Telangana Energy Partners</span>
+<span class="font-body-sm text-body-sm text-outline">PTR-TG-2026-015</span>
+</div>
+</div>
+</td>
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-md text-label-md text-on-surface">Telangana</span>
+<span class="text-tertiary font-label-sm text-[10px] px-1.5 py-0.2 bg-tertiary-container/20 rounded">Pending Verification</span>
+</div>
+</td>
+<td class="px-space-md py-3">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface">Hyderabad Metro &amp; Cyberabad</span>
+<span class="font-body-sm text-body-sm text-outline">10 Allocated Pincodes (Pre-dispatch)</span>
+</div>
+</td>
+<td class="px-space-md py-3 text-right">
+<span class="font-label-md text-label-md text-on-surface font-semibold">12</span>
+<span class="font-body-sm text-body-sm text-outline block text-[11px]">Enrolled</span>
+</td>
+<td class="px-space-md py-3 text-right">
+<span class="font-label-md text-label-md text-outline font-semibold">0</span>
+<span class="font-body-sm text-body-sm text-outline block text-[11px]">Pending Go-Live</span>
+</td>
+<td class="px-space-md py-3 text-right">
+<span class="font-label-lg text-label-lg text-outline font-bold">₹0</span>
+<span class="font-body-sm text-body-sm text-outline block text-[11px]">Escrow Deposit: ₹50K</span>
+</td>
+<td class="px-space-md py-3 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-ping"></span>
+                  In Review
+                </span>
+</td>
+<td class="px-space-md py-3 text-right">
+<div class="flex items-center justify-end gap-space-xs">
+<button class="px-2 py-1 bg-tertiary text-on-tertiary font-label-sm rounded-lg hover:opacity-90 transition-opacity" title="Review Audit KYC">
+                    Verify KYC
+                  </button>
+<button class="p-1.5 text-outline hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors" title="Franchise Operations Menu">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 6: Delhi NCR -->
+<tr class="partner-row hover:bg-surface-container-low transition-colors group cursor-pointer" data-search="delhi ncr operations ptr-dl-2026-018 south delhi gurgaon" data-state="delhi" data-status="active">
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-sm">
+<div class="w-9 h-9 rounded-lg bg-primary text-on-primary font-label-md flex items-center justify-center font-bold tracking-tight shadow-sm shrink-0">
+                    DL
+                  </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-on-surface font-semibold group-hover:text-primary transition-colors truncate">Delhi NCR Operations Network</span>
+<span class="font-body-sm text-body-sm text-outline">PTR-DL-2026-018</span>
+</div>
+</div>
+</td>
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-md text-label-md text-on-surface">Delhi NCR</span>
+<span class="text-tertiary font-label-sm text-[10px] px-1.5 py-0.2 bg-tertiary-fixed rounded">Capital Zone</span>
+</div>
+</td>
+<td class="px-space-md py-3">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface">South Delhi + Gurgaon Hub</span>
+<span class="font-body-sm text-body-sm text-outline">14 Pincodes covered (99.1% SLA)</span>
+</div>
+</td>
+<td class="px-space-md py-3 text-right">
+<span class="font-label-md text-label-md text-on-surface font-semibold">22</span>
+<span class="font-body-sm text-body-sm text-outline block text-[11px]">Field Eng.</span>
+</td>
+<td class="px-space-md py-3 text-right">
+<span class="font-label-md text-label-md text-on-surface font-semibold">212</span>
+<span class="text-secondary font-body-sm text-body-sm block text-[11px]">+19% MoM</span>
+</td>
+<td class="px-space-md py-3 text-right">
+<span class="font-label-lg text-label-lg text-on-surface font-bold">₹3,45,000</span>
+<span class="font-body-sm text-body-sm text-outline block text-[11px]">Paid: ₹2.80L</span>
+</td>
+<td class="px-space-md py-3 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-container/40 text-secondary font-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Active
+                </span>
+</td>
+<td class="px-space-md py-3 text-right">
+<div class="flex items-center justify-end gap-space-xs">
+<button class="view-detail-btn p-1.5 text-on-surface-variant hover:text-primary hover:bg-surface-container rounded-lg transition-colors" data-partner="Delhi NCR Operations Network" title="View Franchise Details">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+<button class="p-1.5 text-on-surface-variant hover:text-tertiary hover:bg-surface-container rounded-lg transition-colors" title="State Allocation">
+<span class="material-symbols-outlined text-[18px]">share_location</span>
+</button>
+<button class="p-1.5 text-outline hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors" title="Franchise Operations Menu">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer -->
+<div class="px-space-md py-space-sm bg-surface-container-low flex flex-col sm:flex-row items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs text-on-surface-variant font-body-sm text-body-sm">
+<span>Showing <strong class="text-on-surface font-semibold">1 to 6</strong> of 24 licensed partner networks</span>
+<span class="hidden md:inline text-outline">• Escrow safety threshold: 100% compliant</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<button class="px-2.5 py-1 text-outline hover:text-on-surface hover:bg-surface-container rounded-md font-label-sm disabled:opacity-40" disabled="">
+            Previous
+          </button>
+<div class="flex items-center gap-1">
+<span class="w-7 h-7 rounded-lg bg-tertiary text-on-tertiary flex items-center justify-center font-label-sm font-semibold">1</span>
+<button class="w-7 h-7 rounded-lg text-on-surface-variant hover:bg-surface-container flex items-center justify-center font-label-sm">2</button>
+<button class="w-7 h-7 rounded-lg text-on-surface-variant hover:bg-surface-container flex items-center justify-center font-label-sm">3</button>
+<button class="w-7 h-7 rounded-lg text-on-surface-variant hover:bg-surface-container flex items-center justify-center font-label-sm">4</button>
+</div>
+<button class="px-2.5 py-1 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-md font-label-sm">
+            Next
+          </button>
+</div>
+</div>
+</div>
+<!-- State Allocation Governance Guidelines Notice (Deep Purple Tone) -->
+<div class="bg-tertiary-container text-on-tertiary rounded-xl p-space-md shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-md">
+<div class="w-10 h-10 rounded-xl bg-on-tertiary/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px] text-tertiary-fixed">policy</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-sm text-headline-sm font-semibold text-on-tertiary">Platform State Allocation &amp; Licensing Policy</span>
+<span class="px-2 py-0.5 rounded-full bg-on-tertiary/20 text-tertiary-fixed font-label-sm">Updated Oct 2026</span>
+</div>
+<p class="font-body-sm text-body-sm text-tertiary-fixed/90 mt-0.5 max-w-4xl">
+            Under ElectriCare Platform Governance Directive §4.2, every state territory requires an active Escrow Security Deposit of ₹1,50,000 and minimum 15 certified tier-1 technicians prior to unlocking automated high-voltage job dispatching. Overlapping pincode allocations must receive dual Super-Admin clearance.
+          </p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm shrink-0">
+<button class="px-space-md py-2 bg-on-tertiary text-tertiary font-label-md rounded-xl hover:bg-surface-container-lowest transition-all shadow-sm">
+          Review Mandate
+        </button>
+</div>
+</div>
+</div>
+<!-- Slide-Over Drawer for Partner Details (Interactivity) -->
+<div class="fixed inset-0 z-50 overflow-hidden pointer-events-none transition-opacity duration-300 opacity-0" id="partnerDrawer">
+<div class="absolute inset-0 bg-inverse-surface/40 backdrop-blur-sm pointer-events-auto" id="drawerBackdrop"></div>
+<div class="fixed inset-y-0 right-0 max-w-full flex pl-10">
+<div class="w-screen max-w-md bg-surface-container-lowest shadow-2xl p-space-lg flex flex-col justify-between transform translate-x-full transition-transform duration-300 ease-in-out pointer-events-auto" id="drawerPanel">
+<div class="flex flex-col gap-space-md overflow-y-auto">
+<div class="flex items-center justify-between border-b pb-space-sm border-surface-container">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-tertiary text-[24px]">corporate_fare</span>
+<span class="font-headline-sm text-headline-sm text-on-surface" id="drawerPartnerTitle">Partner Franchise</span>
+</div>
+<button class="p-1 rounded-lg hover:bg-surface-container text-outline hover:text-on-surface transition-colors" id="closeDrawerBtn">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- Drawer Content -->
+<div class="flex flex-col gap-space-md">
+<div class="bg-surface-container-low p-space-sm rounded-xl flex items-center justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-outline uppercase">License Registry</span>
+<div class="font-label-lg text-label-lg text-on-surface" id="drawerLicenseCode">PTR-MH-2024-001</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-secondary font-label-sm">Active &amp; Certified</span>
+</div>
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-md text-label-md text-outline">Operating Districts Assigned</span>
+<p class="font-body-md text-body-md text-on-surface bg-surface-container-lowest border border-surface-container p-space-sm rounded-lg" id="drawerDistricts">
+                Mumbai Suburban, Pune Central, Thane West (18 Core Electrical Zones)
+              </p>
+</div>
+<div class="grid grid-cols-2 gap-space-sm">
+<div class="bg-surface-container-low p-space-sm rounded-lg">
+<span class="font-label-sm text-label-sm text-outline">Escrow Balance</span>
+<span class="font-headline-sm text-headline-sm text-on-surface block mt-1">₹1,50,000</span>
+<span class="text-secondary font-label-sm text-[11px]">Fully Funded</span>
+</div>
+<div class="bg-surface-container-low p-space-sm rounded-lg">
+<span class="font-label-sm text-label-sm text-outline">SLA Dispatch Rate</span>
+<span class="font-headline-sm text-headline-sm text-on-surface block mt-1">99.4%</span>
+<span class="text-secondary font-label-sm text-[11px]">Exceeds 95% SLA</span>
+</div>
+</div>
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Franchise Lead Information</span>
+<div class="flex items-center gap-space-sm bg-surface-container-low p-space-sm rounded-xl">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold">
+                  RK
+                </div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Rajesh Kulkarni</span>
+<span class="font-body-sm text-body-sm text-outline">Managing Director • +91 98201 44520</span>
+</div>
+</div>
+</div>
+<!-- Action cluster inside Drawer -->
+<div class="flex flex-col gap-space-xs pt-space-md">
+<button class="w-full py-2 bg-primary text-on-primary font-label-md rounded-xl hover:opacity-95 transition-opacity">
+                Reallocate Regional Pincodes
+              </button>
+<button class="w-full py-2 bg-surface-container-high text-on-surface font-label-md rounded-xl hover:bg-surface-container-highest transition-colors">
+                Audit Settlement Ledger
+              </button>
+<button class="w-full py-2 bg-error-container text-on-error-container font-label-md rounded-xl hover:opacity-90 transition-opacity">
+                Place Under Compliance Review
+              </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Onboard Partner Modal -->
+<div class="fixed inset-0 z-50 hidden items-center justify-center p-space-md" id="onboardModal">
+<div class="fixed inset-0 bg-inverse-surface/50 backdrop-blur-sm" id="onboardModalBackdrop"></div>
+<div class="relative bg-surface-container-lowest rounded-xl shadow-2xl max-w-lg w-full p-space-lg z-10 flex flex-col gap-space-md">
+<div class="flex items-center justify-between border-b pb-space-sm border-surface-container">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary text-[22px]">add_business</span>
+<span class="font-headline-md text-headline-md text-on-surface">Onboard Regional Franchise</span>
+</div>
+<button class="p-1 rounded-lg hover:bg-surface-container text-outline hover:text-on-surface" id="closeOnboardModalBtn">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="flex flex-col gap-space-sm">
+<label class="flex flex-col gap-1 font-label-md text-label-md text-on-surface">
+          Franchise Legal Entity Name
+          <input class="h-9 px-space-sm bg-surface-container-low rounded-lg text-body-md focus:bg-surface-container-lowest outline-none shadow-sm" placeholder="e.g. Apex Electrical Grid Pvt Ltd" type="text"/>
+</label>
+<div class="grid grid-cols-2 gap-space-sm">
+<label class="flex flex-col gap-1 font-label-md text-label-md text-on-surface">
+            State License Allocation
+            <select class="h-9 px-space-sm bg-surface-container-low rounded-lg text-body-md focus:bg-surface-container-lowest outline-none shadow-sm">
+<option>Maharashtra (West)</option>
+<option>Gujarat (West)</option>
+<option>Karnataka (South)</option>
+<option>Odisha (East)</option>
+<option>Telangana (South)</option>
+<option>Delhi NCR (North)</option>
+</select>
+</label>
+<label class="flex flex-col gap-1 font-label-md text-label-md text-on-surface">
+            GSTIN / Entity ID
+            <input class="h-9 px-space-sm bg-surface-container-low rounded-lg text-body-md focus:bg-surface-container-lowest outline-none shadow-sm" placeholder="27ABCDE1234F1Z5" type="text"/>
+</label>
+</div>
+<label class="flex flex-col gap-1 font-label-md text-label-md text-on-surface">
+          Operating Pincodes (Comma separated)
+          <input class="h-9 px-space-sm bg-surface-container-low rounded-lg text-body-md focus:bg-surface-container-lowest outline-none shadow-sm" placeholder="400001, 400002, 400050, 411001" type="text"/>
+</label>
+<div class="bg-surface-container-low p-space-sm rounded-lg flex items-center gap-space-xs text-on-surface-variant font-body-sm">
+<span class="material-symbols-outlined text-tertiary text-[18px]">verified_user</span>
+<span>Requires minimum ₹1,50,000 Escrow Security Deposit after onboarding approval.</span>
+</div>
+</div>
+<div class="flex items-center justify-end gap-space-sm pt-space-xs">
+<button class="px-space-md py-2 bg-surface-container text-on-surface font-label-md rounded-xl hover:bg-surface-container-high transition-colors" id="cancelOnboardBtn">
+          Cancel
+        </button>
+<button class="px-space-md py-2 bg-tertiary text-on-tertiary font-label-md rounded-xl hover:opacity-90 transition-opacity" id="submitOnboardBtn">
+          Initiate Partner Onboarding
+        </button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Search, State and Status Filtering Logic
+  const searchInput = document.getElementById('partnerSearch');
+  const stateSelect = document.getElementById('stateFilter');
+  const statusSelect = document.getElementById('statusFilter');
+  const rows = document.querySelectorAll('.partner-row');
+  const tabs = document.querySelectorAll('.partner-tab');
+
+  function applyFilters() {
+    const query = (searchInput.value || '').toLowerCase().trim();
+    const stateVal = (stateSelect.value || 'all').toLowerCase();
+    const statusVal = (statusSelect.value || 'all').toLowerCase();
+
+    rows.forEach(row => {
+      const rowSearch = row.getAttribute('data-search') || '';
+      const rowState = row.getAttribute('data-state') || '';
+      const rowStatus = row.getAttribute('data-status') || '';
+
+      const matchSearch = query === '' || rowSearch.includes(query);
+      const matchState = stateVal === 'all' || rowState === stateVal;
+      const matchStatus = statusVal === 'all' || rowStatus === statusVal;
+
+      if (matchSearch && matchState && matchStatus) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+
+  if (searchInput) searchInput.addEventListener('input', applyFilters);
+  if (stateSelect) stateSelect.addEventListener('change', applyFilters);
+  if (statusSelect) statusSelect.addEventListener('change', applyFilters);
+
+  // Quick Tab Filtering
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => {
+        t.classList.remove('bg-surface-container-high', 'text-on-surface');
+        t.classList.add('text-on-surface-variant');
+      });
+      tab.classList.add('bg-surface-container-high', 'text-on-surface');
+      tab.classList.remove('text-on-surface-variant');
+
+      const tabType = tab.getAttribute('data-tab');
+      if (tabType === 'all') {
+        statusSelect.value = 'all';
+      } else if (tabType === 'active') {
+        statusSelect.value = 'active';
+      } else if (tabType === 'review') {
+        statusSelect.value = 'review';
+      } else if (tabType === 'suspended') {
+        statusSelect.value = 'all'; // Default fallback
+      }
+      applyFilters();
+    });
+  });
+
+  // Drawer Slide-over Micro-interaction
+  const drawer = document.getElementById('partnerDrawer');
+  const drawerPanel = document.getElementById('drawerPanel');
+  const closeDrawerBtn = document.getElementById('closeDrawerBtn');
+  const drawerBackdrop = document.getElementById('drawerBackdrop');
+  const viewDetailBtns = document.querySelectorAll('.view-detail-btn');
+
+  function openDrawer(partnerName) {
+    if (drawer && drawerPanel) {
+      document.getElementById('drawerPartnerTitle').textContent = partnerName || 'Partner Franchise';
+      drawer.classList.remove('pointer-events-none', 'opacity-0');
+      drawer.classList.add('pointer-events-auto', 'opacity-100');
+      drawerPanel.classList.remove('translate-x-full');
+      drawerPanel.classList.add('translate-x-0');
+    }
+  }
+
+  function closeDrawer() {
+    if (drawer && drawerPanel) {
+      drawerPanel.classList.add('translate-x-full');
+      drawerPanel.classList.remove('translate-x-0');
+      drawer.classList.remove('pointer-events-auto', 'opacity-100');
+      drawer.classList.add('pointer-events-none', 'opacity-0');
+    }
+  }
+
+  viewDetailBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const partnerName = btn.getAttribute('data-partner');
+      openDrawer(partnerName);
+    });
+  });
+
+  if (closeDrawerBtn) closeDrawerBtn.addEventListener('click', closeDrawer);
+  if (drawerBackdrop) drawerBackdrop.addEventListener('click', closeDrawer);
+
+  // Onboard Partner Modal logic
+  const onboardTrigger = document.getElementById('onboardModalTrigger');
+  const onboardModal = document.getElementById('onboardModal');
+  const closeOnboardBtn = document.getElementById('closeOnboardModalBtn');
+  const cancelOnboardBtn = document.getElementById('cancelOnboardBtn');
+  const submitOnboardBtn = document.getElementById('submitOnboardBtn');
+  const onboardBackdrop = document.getElementById('onboardModalBackdrop');
+
+  function toggleModal(show) {
+    if (onboardModal) {
+      if (show) {
+        onboardModal.classList.remove('hidden');
+        onboardModal.classList.add('flex');
+      } else {
+        onboardModal.classList.remove('flex');
+        onboardModal.classList.add('hidden');
+      }
+    }
+  }
+
+  if (onboardTrigger) onboardTrigger.addEventListener('click', () => toggleModal(true));
+  if (closeOnboardBtn) closeOnboardBtn.addEventListener('click', () => toggleModal(false));
+  if (cancelOnboardBtn) cancelOnboardBtn.addEventListener('click', () => toggleModal(false));
+  if (onboardBackdrop) onboardBackdrop.addEventListener('click', () => toggleModal(false));
+  if (submitOnboardBtn) submitOnboardBtn.addEventListener('click', () => {
+    alert('Partner application registered for Super Admin verification & KYC audit.');
+    toggleModal(false);
+  });
+
+  // Export CSV mock trigger
+  const exportBtn = document.getElementById('exportBtn');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+      alert('Generating ElectriCare National Partner Matrix CSV (v2.4.0)... Export complete.');
+    });
+  }
+</script></main></div></body></html>

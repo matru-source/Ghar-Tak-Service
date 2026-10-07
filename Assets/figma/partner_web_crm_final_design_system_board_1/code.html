@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ElectriCare - Partner Web CRM (Maharashtra Team)</title>
+<!-- Inter Google Font -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            },
+            surface: {
+              bg: '#f8fafc',
+              border: '#e2e8f0',
+              sidebar: '#ffffff'
+            }
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom CSS -->
+<style data-purpose="custom-enhancements">
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .chart-donut-ring {
+      stroke-dasharray: 440;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+      transition: stroke-dashoffset 0.5s ease;
+    }
+  </style>
+<!-- END: Custom CSS -->
+<meta content="web_dashboard" name="shell-type"/></head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 text-[13px]">
+<!-- BEGIN: TopBarBanner -->
+<!-- Context indicator for Regional Operations -->
+<div class="bg-brand-900 text-brand-100 text-xs px-6 py-1.5 flex items-center justify-between border-b border-brand-800">
+<div class="flex items-center space-x-2 font-medium">
+<span class="inline-flex items-center justify-center w-4 h-4 bg-emerald-500 text-white rounded-full text-[10px] font-bold">11</span>
+<span class="tracking-wide font-semibold text-white">Partner Web CRM</span>
+<span class="text-emerald-300">(Maharashtra Team)</span>
+</div>
+<div class="flex items-center space-x-4 text-[11px] text-emerald-200">
+<span>Regional Operations</span>
+<span class="text-emerald-500">•</span>
+<span>Manage Technicians</span>
+<span class="text-emerald-500">•</span>
+<span>Jobs</span>
+<span class="text-emerald-500">•</span>
+<span>Pincodes</span>
+<span class="text-emerald-500">•</span>
+<span>Finance</span>
+<span class="text-emerald-500">•</span>
+<span>Support</span>
+</div>
+</div>
+<!-- END: TopBarBanner -->
+<!-- BEGIN: MainLayoutWrapper -->
+<div class="flex flex-1 min-h-[calc(100vh-28px)]">
+<!-- BEGIN: LeftSidebar -->
+<aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 select-none">
+<div>
+<!-- Logo Section -->
+<div class="h-16 flex items-center px-6 border-b border-slate-100 gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-sm shadow-emerald-500/30">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<path d="M13 2L3 14h8v8l10-12h-8l0-8z"></path>
+</svg>
+</div>
+<div>
+<span class="text-base font-bold text-slate-900 tracking-tight flex items-center gap-1">
+              ElectriCare
+            </span>
+<span class="block text-[10px] font-medium uppercase tracking-wider text-emerald-600 -mt-1">Partner Portal</span>
+</div>
+</div>
+<!-- Navigation Menu -->
+<nav aria-label="Main Navigation" class="p-3 space-y-1">
+<!-- Dashboard - Active Item -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg bg-emerald-600 text-white font-medium shadow-sm shadow-emerald-600/20 transition-colors" href="#">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="9" rx="1" width="7" x="3" y="3"></rect>
+<rect height="5" rx="1" width="7" x="14" y="3"></rect>
+<rect height="9" rx="1" width="7" x="14" y="12"></rect>
+<rect height="5" rx="1" width="7" x="3" y="16"></rect>
+</svg>
+<span>Dashboard</span>
+</a>
+<!-- Technicians -->
+<a class="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<div class="flex items-center gap-3">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+<circle cx="9" cy="7" r="4"></circle>
+<path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+</svg>
+<span>Technicians</span>
+</div>
+<span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">24</span>
+</a>
+<!-- Job Management -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="14" rx="2" ry="2" width="20" x="2" y="7"></rect>
+<path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+</svg>
+<span>Job Management</span>
+</a>
+<!-- Pincode Coverage -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path>
+<circle cx="12" cy="10" r="3"></circle>
+</svg>
+<span>Pincode Coverage</span>
+</a>
+<!-- Finance / Payouts -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<line x1="12" x2="12" y1="1" y2="23"></line>
+<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+</svg>
+<span>Finance / Payouts</span>
+</a>
+<!-- Profile / Settings -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="3"></circle>
+<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+</svg>
+<span>Profile / Settings</span>
+</a>
+<!-- Support -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+<line x1="12" x2="12.01" y1="17" y2="17"></line>
+</svg>
+<span>Support</span>
+</a>
+</nav>
+</div>
+<!-- Partner Unit Card in Sidebar Footer -->
+<div class="p-3 border-t border-slate-100 bg-slate-50/50 m-2 rounded-xl">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 border border-emerald-300">
+            MT
+          </div>
+<div class="truncate">
+<p class="font-semibold text-slate-800 text-xs truncate leading-tight">Maharashtra Team</p>
+<span class="inline-flex items-center text-[10px] text-emerald-600 font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span> Partner Active
+            </span>
+</div>
+</div>
+</div>
+</aside>
+<!-- END: LeftSidebar -->
+<!-- BEGIN: MainContentArea -->
+<div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+<!-- BEGIN: HeaderNav -->
+<header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-20">
+<!-- Search bar input -->
+<div class="relative w-80">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="11" cy="11" r="8"></circle>
+<line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+</svg>
+</span>
+<input class="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 placeholder-slate-400 transition" placeholder="Search dashboard, jobs, technicians..." type="text"/>
+</div>
+<!-- Top Right Actions & User Profile -->
+<div class="flex items-center gap-3.5">
+<!-- Quick Status Pill -->
+<div class="hidden md:flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs px-2.5 py-1 rounded-full">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span class="font-medium text-[11px]">Region: MH Operations</span>
+</div>
+<!-- Notification Bell -->
+<button aria-label="Notifications" class="p-2 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100 relative" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+<path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+</svg>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+</button>
+<div class="h-5 w-px bg-slate-200"></div>
+<!-- Profile Badge -->
+<div class="flex items-center gap-2.5 pl-1 cursor-pointer">
+<div class="w-8 h-8 rounded-full bg-slate-800 text-white font-semibold flex items-center justify-center text-xs">
+              MH
+            </div>
+<div class="hidden sm:block text-left">
+<span class="block text-xs font-semibold text-slate-700 leading-tight">Maharashtra Ops</span>
+<span class="text-[10px] text-slate-400">admin-mh@electricare.in</span>
+</div>
+<svg class="w-3.5 h-3.5 text-slate-400 ml-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</div>
+</div>
+</header>
+<!-- END: HeaderNav -->
+<!-- Main Body Container -->
+<main class="p-6 space-y-6"><div class="flex flex-col w-full">
+<div class="relative overflow-hidden rounded-xl bg-surface-container-low shadow-sm p-6 mb-6">
+<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+<div class="space-y-1">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-full bg-secondary text-on-secondary font-label-sm text-label-sm tracking-wide uppercase">Client Approval Reference</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm font-medium">Design System v2.4 • Maharashtra Ops</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">ElectriCare Partner Web Design System</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-3xl">Comprehensive component library, token specifications, typography scales, and UI patterns established for the Partner Web CRM platform.</p>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<div class="px-3 py-1.5 rounded-lg bg-surface-container-lowest text-on-surface font-label-md text-label-md shadow-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-sm" style="font-variation-settings: 'FILL' 1;">verified</span>
+          Spec Standard: WCAG 2.1 AA
+        </div>
+<button class="px-3 py-1.5 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md shadow-sm hover:opacity-90 transition flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">download</span>
+          Export Token Map
+        </button>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+<section class="xl:col-span-12 rounded-xl bg-surface-container-lowest shadow-sm p-6 space-y-5">
+<div class="flex items-center justify-between pb-3 border-b-0">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">01. Architecture</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Brand &amp; System Color Palette</h2>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">HEX • RGB • Role Tokens</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
+<div class="rounded-lg p-3.5 bg-primary-container text-on-primary shadow-sm flex flex-col justify-between h-28">
+<div class="flex justify-between items-start">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-primary-container">Universal Brand</span>
+<span class="material-symbols-outlined text-sm">electric_bolt</span>
+</div>
+<div>
+<div class="font-headline-sm text-headline-sm">Brand Royal Blue</div>
+<div class="font-body-sm text-body-sm opacity-80 flex justify-between">
+<span>#1E40AF</span>
+<span>primary-container</span>
+</div>
+</div>
+</div>
+<div class="rounded-lg p-3.5 bg-secondary text-on-secondary shadow-sm flex flex-col justify-between h-28">
+<div class="flex justify-between items-start">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary-fixed">Partner Hub</span>
+<span class="material-symbols-outlined text-sm">handshake</span>
+</div>
+<div>
+<div class="font-headline-sm text-headline-sm">Partner Forest Green</div>
+<div class="font-body-sm text-body-sm opacity-80 flex justify-between">
+<span>#059669</span>
+<span>secondary</span>
+</div>
+</div>
+</div>
+<div class="rounded-lg p-3.5 bg-tertiary text-on-tertiary shadow-sm flex flex-col justify-between h-28">
+<div class="flex justify-between items-start">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-tertiary-fixed">Platform Admin</span>
+<span class="material-symbols-outlined text-sm">admin_panel_settings</span>
+</div>
+<div>
+<div class="font-headline-sm text-headline-sm">Admin Deep Purple</div>
+<div class="font-body-sm text-body-sm opacity-80 flex justify-between">
+<span>#7C3AED</span>
+<span>tertiary</span>
+</div>
+</div>
+</div>
+<div class="rounded-lg p-3.5 bg-error text-on-error shadow-sm flex flex-col justify-between h-28">
+<div class="flex justify-between items-start">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-error-container">Critical</span>
+<span class="material-symbols-outlined text-sm">crisis_alert</span>
+</div>
+<div>
+<div class="font-headline-sm text-headline-sm">Alert Emergency Red</div>
+<div class="font-body-sm text-body-sm opacity-80 flex justify-between">
+<span>#DC2626</span>
+<span>error</span>
+</div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+<div class="rounded-lg p-3 bg-secondary-container text-on-secondary-container">
+<div class="flex items-center gap-1.5 font-label-sm text-label-sm uppercase">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span>Success Green</span>
+</div>
+<p class="font-label-lg text-label-lg mt-1">#16A34A</p>
+<span class="font-body-sm text-body-sm opacity-75">Work order completed</span>
+</div>
+<div class="rounded-lg p-3 bg-surface-container-high text-on-surface">
+<div class="flex items-center gap-1.5 font-label-sm text-label-sm uppercase">
+<span class="w-2 h-2 rounded-full bg-amber-600"></span>
+<span>Warning Amber</span>
+</div>
+<p class="font-label-lg text-label-lg mt-1">#D97706</p>
+<span class="font-body-sm text-body-sm text-on-surface-variant">SLA risk threshold</span>
+</div>
+<div class="rounded-lg p-3 bg-surface-container-high text-on-surface">
+<div class="flex items-center gap-1.5 font-label-sm text-label-sm uppercase">
+<span class="w-2 h-2 rounded-full bg-sky-600"></span>
+<span>Info Sky</span>
+</div>
+<p class="font-label-lg text-label-lg mt-1">#0284C7</p>
+<span class="font-body-sm text-body-sm text-on-surface-variant">En-route tracking</span>
+</div>
+<div class="rounded-lg p-3 bg-surface-container-high text-on-surface">
+<div class="flex items-center gap-1.5 font-label-sm text-label-sm uppercase">
+<span class="w-2 h-2 rounded-full bg-slate-500"></span>
+<span>Neutral Base</span>
+</div>
+<p class="font-label-lg text-label-lg mt-1">#0F172A / #F8FAFC</p>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Slate canvas range</span>
+</div>
+</div>
+<div class="rounded-lg p-3 bg-surface-container flex flex-wrap items-center gap-2 text-on-surface">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant pr-2">Slate Scale:</span>
+<span class="px-2 py-1 rounded bg-slate-900 text-white font-body-sm text-body-sm">#0F172A</span>
+<span class="px-2 py-1 rounded bg-slate-700 text-white font-body-sm text-body-sm">#334155</span>
+<span class="px-2 py-1 rounded bg-slate-500 text-white font-body-sm text-body-sm">#64748B</span>
+<span class="px-2 py-1 rounded bg-slate-400 text-slate-900 font-body-sm text-body-sm">#94A3B8</span>
+<span class="px-2 py-1 rounded bg-slate-300 text-slate-900 font-body-sm text-body-sm">#CBD5E1</span>
+<span class="px-2 py-1 rounded bg-slate-100 text-slate-900 font-body-sm text-body-sm">#F1F5F9</span>
+<span class="px-2 py-1 rounded bg-white text-slate-900 shadow-sm font-body-sm text-body-sm">#FFFFFF</span>
+</div>
+</section>
+<section class="xl:col-span-6 rounded-xl bg-surface-container-lowest shadow-sm p-6 space-y-4">
+<div class="flex items-center justify-between pb-3">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">02. Hierarchy</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Inter Typography Scale</h2>
+</div>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container text-on-surface-variant">Tabular • Responsive</span>
+</div>
+<div class="space-y-3.5">
+<div class="p-3 rounded-lg bg-surface-container-low flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
+<div>
+<div class="font-headline-xl text-headline-xl text-on-surface">Maharashtra Ops 2024</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Display H1 • 28px Bold • Primary Page Header</p>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-mono shrink-0">headline-xl</span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
+<div>
+<div class="font-headline-lg text-headline-lg text-on-surface">Technician Dispatch Matrix</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">H2 Page Title • 22px SemiBold • Section Anchor</p>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-mono shrink-0">headline-lg</span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
+<div>
+<div class="font-headline-md text-headline-md text-on-surface">Substation Grid Load • Zone 04</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">H3 Section Header • 18px SemiBold • Sub-module Grouping</p>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-mono shrink-0">headline-md</span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
+<div>
+<div class="font-headline-sm text-headline-sm text-on-surface">Active Pincode 400076 (Powai East)</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">H4 Card Title • 15px Medium • Tile Headers</p>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-mono shrink-0">headline-sm</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+<div class="p-3 rounded-lg bg-surface-container">
+<p class="font-body-md text-body-md text-on-surface">Field service ticket assigned to lead electrician Rajesh Patil at 08:30 IST.</p>
+<span class="font-label-sm text-label-sm text-on-surface-variant block mt-1">Body Regular (14px/20px)</span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container">
+<p class="font-body-sm text-body-sm text-on-surface">Transformer inspection cycle standard SLA: 45 min response window.</p>
+<span class="font-label-sm text-label-sm text-on-surface-variant block mt-1">Body Compact / Caption (12px/16px)</span>
+</div>
+</div>
+</div>
+</section>
+<section class="xl:col-span-6 rounded-xl bg-surface-container-lowest shadow-sm p-6 space-y-4">
+<div class="flex items-center justify-between pb-3">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">03. Shell Elements</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Navigation Chrome</h2>
+</div>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container text-on-surface-variant">Mini Layout Prototype</span>
+</div>
+<div class="rounded-lg bg-surface-container p-3 space-y-3">
+<div class="rounded-lg bg-surface-container-lowest p-2.5 shadow-sm flex items-center justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">MH REGION</span>
+<div class="relative w-44">
+<span class="absolute inset-y-0 left-0 pl-2 flex items-center text-on-surface-variant">
+<span class="material-symbols-outlined text-xs">search</span>
+</span>
+<input class="w-full pl-6 pr-2 py-1 rounded bg-surface-container-low text-on-surface font-body-sm text-body-sm placeholder:text-on-surface-variant focus:outline-none" placeholder="Search jobs, tech ID..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="w-7 h-7 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface relative">
+<span class="material-symbols-outlined text-sm">notifications</span>
+<span class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-error"></span>
+</button>
+<div class="flex items-center gap-1.5 pl-1.5">
+<div class="w-6 h-6 rounded-full bg-secondary text-on-secondary font-label-sm text-label-sm flex items-center justify-center font-bold">MT</div>
+<span class="font-label-sm text-label-sm text-on-surface hidden sm:inline">Maha Team</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-2">
+<div class="col-span-5 rounded-lg bg-surface-container-lowest p-2 shadow-sm space-y-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant px-1.5">Sidebar Rail</span>
+<div class="flex items-center gap-2 px-2 py-1.5 rounded-md bg-secondary text-on-secondary font-label-md text-label-md">
+<span class="material-symbols-outlined text-sm">dashboard</span>
+<span>Dashboard</span>
+</div>
+<div class="flex items-center justify-between px-2 py-1.5 rounded-md text-on-surface-variant font-label-md text-label-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">engineering</span>
+<span>Technicians</span>
+</div>
+<span class="px-1.5 rounded bg-surface-container font-label-sm text-label-sm">24</span>
+</div>
+<div class="flex items-center gap-2 px-2 py-1.5 rounded-md text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-sm">assignment</span>
+<span>Work Orders</span>
+</div>
+<div class="flex items-center gap-2 px-2 py-1.5 rounded-md text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-sm">pin_drop</span>
+<span>Pincode Hub</span>
+</div>
+</div>
+<div class="col-span-7 rounded-lg bg-surface-container-lowest p-3 shadow-sm flex flex-col justify-between">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Live Context</span>
+<p class="font-headline-sm text-headline-sm text-on-surface mt-1">Thane &amp; Navi Mumbai Cluster</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">18 Active Electricians • 4 Emergency Inverters</p>
+</div>
+<div class="pt-2 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-secondary font-medium">Status: Optimal Routing</span>
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="xl:col-span-12 rounded-xl bg-surface-container-lowest shadow-sm p-6 space-y-4">
+<div class="flex items-center justify-between pb-3">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">04. Telemetry</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">KPI Summary Cards</h2>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Realtime Field Metrics</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="rounded-xl p-4 bg-surface-container-low shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant">Total Dispatched Jobs</span>
+<div class="w-8 h-8 rounded-lg bg-primary-container text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-sm">assignment_turned_in</span>
+</div>
+</div>
+<div class="my-3">
+<div class="font-headline-xl text-headline-xl text-on-surface">284</div>
+<div class="flex items-center gap-1.5 mt-1">
+<span class="px-1.5 py-0.5 rounded bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">+12% WoW</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">vs. prev 7 days</span>
+</div>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 78%;"></div>
+</div>
+</div>
+<div class="rounded-xl p-4 bg-surface-container-low shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant">Settled Partner Revenue</span>
+<div class="w-8 h-8 rounded-lg bg-secondary text-on-secondary flex items-center justify-center">
+<span class="material-symbols-outlined text-sm">payments</span>
+</div>
+</div>
+<div class="my-3">
+<div class="font-headline-xl text-headline-xl text-on-surface">₹4,20,500</div>
+<div class="flex items-center gap-1.5 mt-1">
+<span class="px-1.5 py-0.5 rounded bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">91% Target</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">₹4.6L Monthly goal</span>
+</div>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full rounded-full" style="width: 91%;"></div>
+</div>
+</div>
+<div class="rounded-xl p-4 bg-surface-container-low shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant">Escalation Priority</span>
+<div class="w-8 h-8 rounded-lg bg-error text-on-error flex items-center justify-center">
+<span class="material-symbols-outlined text-sm">warning</span>
+</div>
+</div>
+<div class="my-3">
+<div class="flex items-baseline gap-2">
+<span class="font-headline-xl text-headline-xl text-error">03</span>
+<span class="font-label-lg text-label-lg text-on-surface font-semibold">Critical Tickets</span>
+</div>
+<div class="flex items-center gap-1.5 mt-1">
+<span class="px-1.5 py-0.5 rounded bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">Action Required</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">&lt; 15m breach</span>
+</div>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-error h-full rounded-full" style="width: 65%;"></div>
+</div>
+</div>
+</div>
+</section>
+<section class="xl:col-span-6 rounded-xl bg-surface-container-lowest shadow-sm p-6 space-y-4">
+<div class="flex items-center justify-between pb-3">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">05. Actions</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Buttons &amp; Controls</h2>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">State Interactive</span>
+</div>
+<div class="space-y-4">
+<div>
+<span class="font-label-sm text-label-sm uppercase text-on-surface-variant block mb-2">Intent Variants</span>
+<div class="flex flex-wrap items-center gap-2.5">
+<button class="px-4 py-2 rounded-lg bg-secondary text-on-secondary font-label-md text-label-md shadow-sm hover:opacity-90 transition flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+              Acknowledge Dispatch
+            </button>
+<button class="px-4 py-2 rounded-lg bg-surface-container-low text-on-surface font-label-md text-label-md hover:bg-surface-container transition">
+              Secondary / Reassign
+            </button>
+<button class="px-4 py-2 rounded-lg bg-error text-on-error font-label-md text-label-md shadow-sm hover:opacity-90 transition flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">emergency</span>
+              Escalate to Regional Lead
+            </button>
+</div>
+</div>
+<div>
+<span class="font-label-sm text-label-sm uppercase text-on-surface-variant block mb-2">Icon Micro Controls</span>
+<div class="flex flex-wrap items-center gap-2">
+<button class="px-3 py-1.5 rounded-lg bg-primary-container text-on-primary font-label-sm text-label-sm flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-sm">person_add</span>
+              Add Electrician
+            </button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface font-label-sm text-label-sm flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">file_download</span>
+              Export CSV
+            </button>
+<button class="w-8 h-8 rounded-lg bg-surface-container-high text-on-surface flex items-center justify-center hover:bg-surface-container">
+<span class="material-symbols-outlined text-sm">print</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-surface-container-high text-on-surface flex items-center justify-center hover:bg-surface-container">
+<span class="material-symbols-outlined text-sm">filter_alt</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<section class="xl:col-span-6 rounded-xl bg-surface-container-lowest shadow-sm p-6 space-y-4">
+<div class="flex items-center justify-between pb-3">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">06. Inputs</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Form Elements &amp; Filters</h2>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Dense Operational Style</span>
+</div>
+<div class="space-y-3">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1">Target Pincode</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">pin_drop</span>
+</span>
+<input class="w-full pl-8 pr-3 py-1.5 rounded-lg bg-surface-container text-on-surface font-body-sm text-body-sm focus:outline-none" type="text" value="400001 (Mumbai South)"/>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1">Service Type Filter</label>
+<select class="w-full px-3 py-1.5 rounded-lg bg-surface-container text-on-surface font-body-sm text-body-sm focus:outline-none">
+<option>Industrial 3-Phase Meter</option>
+<option>Solar Inverter Sync</option>
+<option>EV Fast Charger Install</option>
+</select>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1">Dispatch Date Range</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+</span>
+<input class="w-full pl-8 pr-3 py-1.5 rounded-lg bg-surface-container text-on-surface font-body-sm text-body-sm focus:outline-none" type="text" value="01 May - 15 May 2024"/>
+</div>
+</div>
+<div class="flex items-end pb-1 gap-4">
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="w-4 h-4 rounded text-secondary focus:ring-0 cursor-pointer" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface">Auto-assign</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="w-4 h-4 rounded text-secondary focus:ring-0 cursor-pointer" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface">Overtime Alert</span>
+</label>
+</div>
+</div>
+</div>
+</section>
+<section class="xl:col-span-12 rounded-xl bg-surface-container-lowest shadow-sm p-6 space-y-4">
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-3">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">07. Data Presentation</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Data Table &amp; Status Badges</h2>
+</div>
+<div class="flex flex-wrap items-center gap-1.5">
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">Completed</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold">In Progress</span>
+<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-label-sm text-label-sm font-semibold">Assigned</span>
+<span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">Escalated</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-semibold">Cancelled</span>
+</div>
+</div>
+<div class="overflow-x-auto rounded-lg bg-surface-container-low shadow-sm">
+<table class="w-full text-left">
+<thead class="bg-surface-container text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<tr>
+<th class="px-4 py-3">Work Order #</th>
+<th class="px-4 py-3">Assigned Electrician</th>
+<th class="px-4 py-3">Area / Pincode</th>
+<th class="px-4 py-3">Service Code</th>
+<th class="px-4 py-3">Status</th>
+<th class="px-4 py-3 text-right">Fee (₹)</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-on-surface font-body-sm text-body-sm">
+<tr class="hover:bg-surface-container transition-colors">
+<td class="px-4 py-3 font-semibold text-primary">#EC-MH-9821</td>
+<td class="px-4 py-3">
+<div class="font-medium text-on-surface">Rajesh V. Patil</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Tech ID: MH-ET-042</div>
+</td>
+<td class="px-4 py-3">Vashi Sector 17 (400703)</td>
+<td class="px-4 py-3">Substation Capacitor Bank</td>
+<td class="px-4 py-3">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Completed
+                </span>
+</td>
+<td class="px-4 py-3 text-right font-medium">₹3,400.00</td>
+</tr>
+<tr class="hover:bg-surface-container transition-colors">
+<td class="px-4 py-3 font-semibold text-primary">#EC-MH-9822</td>
+<td class="px-4 py-3">
+<div class="font-medium text-on-surface">Amit K. Shinde</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Tech ID: MH-ET-019</div>
+</td>
+<td class="px-4 py-3">Bhiwandi Logistics Hub (421302)</td>
+<td class="px-4 py-3">DG Set Synchronization</td>
+<td class="px-4 py-3">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                  Escalated
+                </span>
+</td>
+<td class="px-4 py-3 text-right font-medium">₹5,850.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section class="xl:col-span-12 rounded-xl bg-surface-container-lowest shadow-sm p-6 space-y-4">
+<div class="flex items-center justify-between pb-3">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">08. Patterns</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Charts, Tabs, Pagination &amp; States</h2>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">UX Flow Kit</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="rounded-xl p-4 bg-surface-container-low shadow-sm flex flex-col justify-between">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Mini Revenue Trend</span>
+<p class="font-headline-sm text-headline-sm text-on-surface mt-1">₹14.8L Peak Cluster</p>
+</div>
+<div class="py-3">
+<svg class="w-full h-16" fill="none" viewbox="0 0 200 60">
+<rect class="fill-surface-container-high" height="36" rx="2" width="16" x="10" y="24"></rect>
+<rect class="fill-surface-container-high" height="44" rx="2" width="16" x="36" y="16"></rect>
+<rect class="fill-surface-container-high" height="30" rx="2" width="16" x="62" y="30"></rect>
+<rect class="fill-secondary" height="50" rx="2" width="16" x="88" y="10"></rect>
+<rect class="fill-surface-container-high" height="38" rx="2" width="16" x="114" y="22"></rect>
+<rect class="fill-primary-container" height="46" rx="2" width="16" x="140" y="14"></rect>
+<rect class="fill-surface-container-high" height="32" rx="2" width="16" x="166" y="28"></rect>
+</svg>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant flex justify-between">
+<span>Mon</span><span>Thu (Peak)</span><span>Sun</span>
+</span>
+</div>
+<div class="rounded-xl p-4 bg-surface-container-low shadow-sm flex flex-col justify-between">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Segmented Tabs</span>
+<p class="font-headline-sm text-headline-sm text-on-surface mt-1">Status Switching</p>
+</div>
+<div class="my-3 p-1 rounded-lg bg-surface-container flex items-center gap-1">
+<button class="flex-1 py-1.5 rounded-md bg-surface-container-lowest text-on-surface font-label-sm text-label-sm font-semibold shadow-sm text-center">Active (18)</button>
+<button class="flex-1 py-1.5 rounded-md text-on-surface-variant font-label-sm text-label-sm text-center hover:text-on-surface">Standby (6)</button>
+<button class="flex-1 py-1.5 rounded-md text-on-surface-variant font-label-sm text-label-sm text-center hover:text-on-surface">Off (2)</button>
+</div>
+<span class="font-body-sm text-body-sm text-secondary font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">sync</span> Auto-refreshes every 30s
+          </span>
+</div>
+<div class="rounded-xl p-4 bg-surface-container-low shadow-sm flex flex-col justify-between">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Table Pagination</span>
+<p class="font-headline-sm text-headline-sm text-on-surface mt-1">284 Total Entries</p>
+</div>
+<div class="my-3 flex items-center justify-center gap-1">
+<button class="w-7 h-7 rounded bg-surface-container text-on-surface flex items-center justify-center text-xs">
+<span class="material-symbols-outlined text-xs">chevron_left</span>
+</button>
+<button class="w-7 h-7 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">1</button>
+<button class="w-7 h-7 rounded bg-primary-container text-on-primary font-label-sm text-label-sm font-semibold shadow-sm">2</button>
+<button class="w-7 h-7 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">3</button>
+<button class="w-7 h-7 rounded bg-surface-container text-on-surface flex items-center justify-center text-xs">
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+</button>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-center">Showing rows 11 to 20</span>
+</div>
+<div class="rounded-xl p-4 bg-surface-container-low shadow-sm flex flex-col justify-center text-center">
+<div class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container mx-auto flex items-center justify-center mb-2">
+<span class="material-symbols-outlined text-base">task_alt</span>
+</div>
+<p class="font-headline-sm text-headline-sm text-on-surface">Queue Cleared</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">No unresolved escalations in this cluster today.</p>
+</div>
+</div>
+</section>
+</div>
+</div></main>
+<!-- END: Main Content Container -->
+<!-- Footer Info -->
+<footer class="mt-auto px-6 py-4 border-t border-slate-200 bg-white text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
+<p>© 2024 ElectriCare Inc. Regional Partner Portal. All rights reserved.</p>
+<div class="flex items-center gap-4 text-[11px] text-slate-500">
+<a class="hover:text-emerald-600" href="#">Privacy Policy</a>
+<a class="hover:text-emerald-600" href="#">Technician Guidelines</a>
+<a class="hover:text-emerald-600" href="#">Emergency Dispatch: 1800-202-099</a>
+</div>
+</footer>
+</div>
+<!-- END: MainContentArea -->
+</div>
+<!-- END: MainLayoutWrapper -->
+</body></html>

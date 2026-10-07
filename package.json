@@ -1,0 +1,16 @@
+{
+  "name": "ghar-tak-service",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix web run dev",
+    "dev:admin": "npm --prefix web run dev:admin",
+    "dev:partner": "npm --prefix web run dev:partner",
+    "build": "npm --prefix web run build",
+    "start": "npm --prefix web run start",
+    "android:build": "cmd /c \"cd /d android && build_apks.bat\"",
+    "android:clean": "cmd /c \"cd /d android && gradlew.bat clean\"",
+    "test:e2e": "node scripts/e2e_verification.js",
+    "test:sse": "node scripts/test_sse_stream.js"
+  }
+}

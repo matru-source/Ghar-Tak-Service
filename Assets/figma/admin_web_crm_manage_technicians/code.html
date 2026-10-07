@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"on-surface-variant":"#444653","on-tertiary":"#ffffff","on-tertiary-fixed":"#25005a","outline":"#757684","secondary-fixed-dim":"#68dba9","error-container":"#ffdad6","on-primary-fixed":"#001453","surface-variant":"#dae2fd","tertiary-fixed":"#eaddff","surface":"#faf8ff","on-error":"#ffffff","tertiary-fixed-dim":"#d2bbff","surface-tint":"#3755c3","error":"#ba1a1a","on-primary-container":"#a8b8ff","on-secondary-fixed-variant":"#005137","on-tertiary-container":"#c9aeff","surface-container-lowest":"#ffffff","surface-container-low":"#f2f3ff","primary-fixed-dim":"#b8c4ff","secondary-container":"#82f5c1","on-background":"#131b2e","inverse-surface":"#283044","background":"#faf8ff","tertiary-container":"#5f00d1","on-primary":"#ffffff","secondary":"#006c4a","surface-bright":"#faf8ff","on-surface":"#131b2e","tertiary":"#440098","on-error-container":"#93000a","surface-container-high":"#e2e7ff","on-secondary":"#ffffff","on-tertiary-fixed-variant":"#5a00c6","surface-dim":"#d2d9f4","on-secondary-container":"#00714e","primary":"#00288e","primary-container":"#1e40af","surface-container":"#eaedff","inverse-primary":"#b8c4ff","on-secondary-fixed":"#002114","surface-container-highest":"#dae2fd","outline-variant":"#c4c5d5","primary-fixed":"#dde1ff","inverse-on-surface":"#eef0ff","on-primary-fixed-variant":"#173bab","secondary-fixed":"#85f8c4"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"space-sm":"0.5rem","gutter-mobile":"0.75rem","margin-mobile":"1rem","gutter":"1rem","space-xl":"2rem","space-lg":"1.25rem","margin":"1.5rem","space-md":"0.75rem","space-xs":"0.25rem"},"fontFamily":{"headline-xl-mobile":["Inter"],"body-lg":["Inter"],"label-lg":["Inter"],"headline-sm":["Inter"],"headline-xl":["Inter"],"label-md":["Inter"],"headline-md":["Inter"],"headline-lg":["Inter"],"body-sm":["Inter"],"label-sm":["Inter"],"body-md":["Inter"]},"fontSize":{"headline-xl-mobile":["28px",{"lineHeight":"36px","fontWeight":"700"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"label-lg":["14px",{"lineHeight":"20px","fontWeight":"600"}],"headline-sm":["16px",{"lineHeight":"24px","fontWeight":"600"}],"headline-xl":["36px",{"lineHeight":"44px","fontWeight":"700"}],"label-md":["12px",{"lineHeight":"16px","fontWeight":"500"}],"headline-md":["20px",{"lineHeight":"28px","fontWeight":"600"}],"headline-lg":["24px",{"lineHeight":"32px","fontWeight":"600"}],"body-sm":["12px",{"lineHeight":"16px","fontWeight":"400"}],"label-sm":["11px",{"lineHeight":"14px","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}]}}}}</script></head><body class="bg-surface font-body-md text-on-surface min-h-screen"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between"><div class="flex flex-col flex-1 overflow-y-auto"><div class="h-16 px-margin flex items-center gap-space-md border-b border-surface-container"><div class="w-9 h-9 rounded-xl bg-tertiary-container flex items-center justify-center text-on-tertiary shadow-sm"><span class="material-symbols-outlined text-[20px]">bolt</span></div><div class="flex flex-col"><span class="font-label-lg text-label-lg text-on-surface tracking-tight leading-none">ElectriCare</span><span class="font-label-sm text-label-sm text-tertiary font-semibold uppercase tracking-wider mt-space-xs">Admin / Owner</span></div></div><div class="px-margin pt-space-lg pb-space-xs"><span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Platform Governance</span></div><nav class="flex-1 px-space-md py-space-xs flex flex-col gap-space-xs" data-active-classes="bg-tertiary-container text-on-tertiary shadow-sm font-semibold rounded-xl"><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="dashboard" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">dashboard</span><span class="font-label-lg text-label-lg">Dashboard</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="manage-partners" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">handshake</span><span class="font-label-lg text-label-lg">Manage Partners</span></a><a aria-current="page" class="flex items-center gap-space-md px-space-md py-space-sm transition-all group bg-tertiary-container text-on-tertiary shadow-sm font-semibold rounded-xl" data-path="manage-technicians" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">engineering</span><span class="font-label-lg text-label-lg">Manage Technicians</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="manage-customers" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">group</span><span class="font-label-lg text-label-lg">Manage Customers</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="finance-commission" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">payments</span><span class="font-label-lg text-label-lg">Finance / Commission</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="subscription-modules" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">verified_user</span><span class="font-label-lg text-label-lg">Subscription Modules</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="system-settings" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">tune</span><span class="font-label-lg text-label-lg">System Settings</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="support" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">headset_mic</span><span class="font-label-lg text-label-lg">Support</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="audit-logs" href="#"><span class="material-symbols-outlined text-[20px] text-outline group-hover:text-on-surface">receipt_long</span><span class="font-label-lg text-label-lg">Audit Logs</span></a></nav></div><div class="p-space-md border-t border-surface-container bg-surface-container-lowest"><div class="bg-surface-container-low rounded-xl p-space-sm mb-space-sm flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="relative"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-secondary border border-surface-container-lowest"></span></div><div class="flex flex-col min-w-0"><span class="font-label-md text-label-md text-on-surface font-semibold truncate">Super Admin</span><span class="font-body-sm text-body-sm text-on-surface-variant truncate">admin@electricare.in</span></div></div><span class="flex h-2 w-2 relative"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span></span></div><a class="flex items-center justify-between w-full px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-all group" data-path="login" href="#"><span class="flex items-center gap-space-sm font-label-md text-label-md"><span class="material-symbols-outlined text-[18px] text-outline group-hover:text-on-error-container">logout</span>Sign Out</span><span class="font-label-sm text-label-sm text-outline group-hover:text-on-error-container">v2.4.0</span></a></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] border-b border-surface-container z-40 flex items-center justify-between px-margin"><div class="flex items-center gap-space-lg flex-1 max-w-2xl"><div class="relative w-full"><span class="material-symbols-outlined absolute left-space-md top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span><input class="w-full h-9 pl-10 pr-space-md bg-surface-container-low border border-surface-container rounded-lg text-on-surface placeholder:text-outline font-body-sm text-body-sm focus:outline-none focus:border-tertiary focus:bg-surface-container-lowest transition-all" placeholder="Search partners, technicians, customers, orders, tickets..." type="text"/></div><div class="hidden lg:flex items-center gap-space-xs px-space-sm py-1 bg-surface-container rounded-lg border border-surface-container-high whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span><span class="font-label-sm text-label-sm text-tertiary font-semibold uppercase tracking-wider">Scope: Platform-wide / All India</span></div></div><div class="flex items-center gap-space-md"><button class="relative w-9 h-9 flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"></span></button><div class="h-5 w-px bg-surface-container"></div><div class="flex items-center gap-space-sm pl-space-xs cursor-pointer group"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><div class="hidden sm:flex flex-col text-left"><span class="font-label-sm text-label-sm text-on-surface font-semibold group-hover:text-tertiary transition-colors">Super Admin</span><span class="font-body-sm text-body-sm text-on-surface-variant text-[11px] leading-tight">National Control</span></div><span class="material-symbols-outlined text-outline text-[18px] group-hover:text-on-surface transition-colors">expand_more</span></div></div></header><main class="relative pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<div class="p-margin flex flex-col gap-space-lg">
+<!-- Top Utility & Breadcrumb Bar -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs font-label-md text-label-md text-on-surface-variant">
+<span class="text-outline">Workforce Governance</span>
+<span class="material-symbols-outlined text-[16px] text-outline">chevron_right</span>
+<span class="text-tertiary font-semibold">National Technician Registry</span>
+<span class="ml-space-xs px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant text-[11px] font-mono">OCT 2026 AUDIT CYCLE</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<button class="h-9 px-space-md rounded-xl bg-surface-container-lowest text-on-surface hover:bg-surface-container-low transition-all font-label-md text-label-md shadow-sm flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px] text-outline">file_download</span>
+          Export National Roster
+        </button>
+<button class="h-9 px-space-md rounded-xl bg-tertiary text-on-tertiary hover:bg-tertiary-container hover:shadow-md transition-all font-label-md text-label-md flex items-center gap-space-xs shadow-sm">
+<span class="material-symbols-outlined text-[18px]">person_add</span>
+          + Add Technician
+        </button>
+</div>
+</div>
+<!-- Header Section with Operational Meta -->
+<div class="flex flex-col lg:flex-row lg:items-end justify-between gap-space-md bg-surface-container-lowest p-space-lg rounded-xl shadow-sm relative overflow-hidden">
+<div class="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-gradient-to-br from-tertiary/5 to-transparent pointer-events-none"></div>
+<div class="flex flex-col gap-space-xs max-w-3xl relative z-10">
+<div class="flex items-center gap-space-sm">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Manage Technicians</h1>
+<span class="px-2.5 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm uppercase tracking-wider font-semibold">Live Central DB</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+          Centralized registry of electrical technicians across all state partner clusters, live dispatch statuses, credentials, and verification compliance audits.
+        </p>
+</div>
+<div class="flex items-center gap-space-md self-start lg:self-auto relative z-10">
+<div class="flex flex-col text-right">
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold">National Grid Pulse</span>
+<span class="font-headline-sm text-headline-sm text-secondary flex items-center gap-1.5 justify-end">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+            99.4% Field Coverage
+          </span>
+</div>
+</div>
+</div>
+<!-- KPI Metric Cards Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Metric 1 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between group hover:shadow-md transition-all">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-outline font-semibold uppercase tracking-wider">Total Technicians</span>
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[18px]">group</span>
+</div>
+</div>
+<div class="mt-space-md flex items-baseline gap-space-xs">
+<span class="font-headline-xl text-headline-xl text-on-surface">142</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Fleet Headcount</span>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between font-body-sm text-body-sm text-outline">
+<span>Across all 28 states</span>
+<span class="text-secondary font-semibold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span> +8 this mo
+          </span>
+</div>
+</div>
+<!-- Metric 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between group hover:shadow-md transition-all">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-secondary font-semibold uppercase tracking-wider">Online &amp; Active</span>
+<div class="w-8 h-8 rounded-lg bg-secondary-container flex items-center justify-center text-on-secondary-container group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+</div>
+</div>
+<div class="mt-space-md flex items-baseline gap-space-xs">
+<span class="font-headline-xl text-headline-xl text-on-surface">88</span>
+<span class="font-label-md text-label-md text-secondary font-medium">Field Active Now</span>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between font-body-sm text-body-sm text-outline">
+<span>61.9% active concurrency</span>
+<span class="text-on-surface-variant font-mono text-[11px]">AVG RESP: 18m</span>
+</div>
+</div>
+<!-- Metric 3 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between group hover:shadow-md transition-all">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-outline font-semibold uppercase tracking-wider">Offline / Inactive</span>
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-on-surface-variant group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[18px]">bedtime</span>
+</div>
+</div>
+<div class="mt-space-md flex items-baseline gap-space-xs">
+<span class="font-headline-xl text-headline-xl text-on-surface">42</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Off-Duty Rest</span>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between font-body-sm text-body-sm text-outline">
+<span>Scheduled shift rotations</span>
+<span class="text-outline">Roster OK</span>
+</div>
+</div>
+<!-- Metric 4: Pending KYC -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-all">
+<div class="absolute -right-3 -bottom-3 w-16 h-16 rounded-full bg-error/5 pointer-events-none"></div>
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-error font-semibold uppercase tracking-wider">Pending KYC Action</span>
+<div class="w-8 h-8 rounded-lg bg-error-container flex items-center justify-center text-on-error-container group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[18px]">pending_actions</span>
+</div>
+</div>
+<div class="mt-space-md flex items-baseline gap-space-xs">
+<span class="font-headline-xl text-headline-xl text-error">12</span>
+<span class="font-label-md text-label-md text-error font-medium">Requires Audit</span>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between font-body-sm text-body-sm text-outline">
+<span>Central Admin sign-off</span>
+<span class="text-error font-semibold text-[11px] uppercase tracking-wider">SLA &lt; 24h</span>
+</div>
+</div>
+</div>
+<!-- Multi-Parameter Filter Toolbar -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-md">
+<!-- Search & Select Row -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-space-sm">
+<!-- Search Input -->
+<div class="lg:col-span-4 relative">
+<span class="material-symbols-outlined absolute left-space-md top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
+<input class="w-full h-9 pl-10 pr-space-md bg-surface-container-low rounded-lg text-on-surface placeholder:text-outline font-body-sm text-body-sm focus:outline-none focus:bg-surface-container transition-all" placeholder="Search by technician name, mobile, EMP-ID, or skill..." type="text"/>
+</div>
+<!-- Partner Filter Dropdown -->
+<div class="lg:col-span-2">
+<select class="w-full h-9 px-space-sm bg-surface-container-low rounded-lg text-on-surface font-body-sm text-body-sm focus:outline-none cursor-pointer">
+<option value="">All Partners (All Clusters)</option>
+<option value="mh">Maharashtra Team</option>
+<option value="gj">Gujarat Partner</option>
+<option value="ka">Karnataka Partner</option>
+<option value="dl">Delhi NCR Team</option>
+<option value="tn">Tamil Nadu Operations</option>
+</select>
+</div>
+<!-- State / City Dropdown -->
+<div class="lg:col-span-2">
+<select class="w-full h-9 px-space-sm bg-surface-container-low rounded-lg text-on-surface font-body-sm text-body-sm focus:outline-none cursor-pointer">
+<option value="">All Regions / Hubs</option>
+<option value="mum-south">Mumbai South (Colaba/Fort)</option>
+<option value="mum-sub">Mumbai Suburbs (Bandra)</option>
+<option value="pune">Pune Central Hub</option>
+<option value="ahmedabad">Ahmedabad (Navrangpura)</option>
+<option value="bengaluru">Bengaluru (Indiranagar)</option>
+</select>
+</div>
+<!-- Live Status Filter -->
+<div class="lg:col-span-2">
+<select class="w-full h-9 px-space-sm bg-surface-container-low rounded-lg text-on-surface font-body-sm text-body-sm focus:outline-none cursor-pointer">
+<option value="">All Statuses (Online, Busy...)</option>
+<option value="online">Online (Available)</option>
+<option value="in_route">Online (In Route)</option>
+<option value="busy">Busy (Work Started)</option>
+<option value="pending">Pending Onboarding</option>
+<option value="offline">Offline / Rest</option>
+</select>
+</div>
+<!-- KYC Filter -->
+<div class="lg:col-span-2">
+<select class="w-full h-9 px-space-sm bg-surface-container-low rounded-lg text-on-surface font-body-sm text-body-sm focus:outline-none cursor-pointer">
+<option value="">All KYC Stages</option>
+<option value="verified">Verified Compliance</option>
+<option value="pending">Pending Admin Review</option>
+<option value="rejected">Documentation Rejected</option>
+</select>
+</div>
+</div>
+<!-- Quick Status Chips Bar -->
+<div class="flex items-center justify-between flex-wrap gap-space-sm pt-space-xs">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold mr-space-xs">Pills:</span>
+<button class="px-3 py-1 rounded-full bg-tertiary text-on-tertiary font-label-sm text-label-sm font-semibold shadow-sm transition-all">
+            All (142)
+          </button>
+<button class="px-3 py-1 rounded-full bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high transition-all font-label-sm text-label-sm flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+            Online (88)
+          </button>
+<button class="px-3 py-1 rounded-full bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high transition-all font-label-sm text-label-sm flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+            Offline (42)
+          </button>
+<button class="px-3 py-1 rounded-full bg-surface-container-low text-error hover:bg-error-container hover:text-on-error-container transition-all font-label-sm text-label-sm flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+            Pending KYC (12)
+          </button>
+<button class="px-3 py-1 rounded-full bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high transition-all font-label-sm text-label-sm flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-secondary">verified</span>
+            Verified (130)
+          </button>
+</div>
+<div class="flex items-center gap-space-sm text-on-surface-variant font-body-sm text-body-sm">
+<span>Showing <strong class="text-on-surface font-semibold">7</strong> of 142 Technicians</span>
+<button class="p-1 rounded-lg hover:bg-surface-container-high text-outline hover:text-on-surface transition-all flex items-center justify-center" title="Reset Filters">
+<span class="material-symbols-outlined text-[18px]">restart_alt</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Main Fleet Table Section -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low h-10 font-label-sm text-label-sm text-outline uppercase tracking-wider">
+<th class="px-space-md py-2 font-semibold">Technician &amp; ID</th>
+<th class="px-space-md py-2 font-semibold">Partner Cluster</th>
+<th class="px-space-md py-2 font-semibold">Location / Hub</th>
+<th class="px-space-md py-2 font-semibold">Live Status</th>
+<th class="px-space-md py-2 font-semibold">KYC Compliance</th>
+<th class="px-space-md py-2 font-semibold text-center">Rating &amp; Reviews</th>
+<th class="px-space-md py-2 font-semibold text-center">Active Orders</th>
+<th class="px-space-md py-2 font-semibold text-right">Completed Jobs</th>
+<th class="px-space-md py-2 font-semibold text-right">Governance Action</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-on-surface font-body-md text-body-md">
+<!-- Row 1: Rajesh Kumar -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-space-md py-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="relative w-9 h-9 rounded-full overflow-hidden bg-surface-container-high flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Close up corporate portrait photograph of an Indian male electrical engineer wearing a navy blue service uniform and safety badge, bright professional studio lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCl_HH53VPfzBc5B4twd7FH1B6LHR9ilYEiULpHja2qwN1bXzhQTV7lRdnILoygY_8iXq50O7dg_MboRiDtIE8l6tRkqXyTdYBd4PrumLmHqWvNpgixQ1W0d7TUWfSWYODCqhN3ZP16a7yCePnBwcLgftw2LmAmVze88qMd43eEoI-bv9Hkcoi0ItIMBYMZr6tPQPYcHTpdeQ61KgnHJjT43Bqhgsvx2nlRcQ6yr7PBCYMdIz2Nqokmcw"/>
+<span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-secondary ring-2 ring-surface-container-lowest"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-lg text-label-lg text-on-surface font-semibold truncate group-hover:text-tertiary transition-colors">Rajesh Kumar</span>
+<div class="flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant">
+<span class="font-mono text-tertiary font-semibold text-[11px]">EMP-MH-108</span>
+<span>•</span>
+<span class="truncate">+91 98201 44521</span>
+</div>
+</div>
+</div>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-medium">Maharashtra Team</span>
+<span class="font-body-sm text-body-sm text-outline">Western Grid</span>
+</div>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<div class="flex items-center gap-1 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px] text-tertiary">near_me</span>
+<span>Mumbai South (Colaba)</span>
+</div>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+                  Online (In Route)
+                </span>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm font-medium">
+<span class="material-symbols-outlined text-[14px] text-secondary">verified</span>
+                  Verified
+                </span>
+</td>
+<td class="px-space-md py-space-sm text-center whitespace-nowrap">
+<div class="inline-flex flex-col items-center">
+<span class="font-label-md text-label-md font-semibold text-on-surface flex items-center gap-0.5">
+                    4.8 <span class="material-symbols-outlined text-[14px] text-amber-500 fill-1" style="font-variation-settings: 'FILL' 1;">star</span>
+</span>
+<span class="font-body-sm text-body-sm text-outline">(156 reviews)</span>
+</div>
+</td>
+<td class="px-space-md py-space-sm text-center whitespace-nowrap">
+<span class="inline-block px-2 py-0.5 rounded-lg bg-surface-container-high font-mono text-[11px] font-semibold text-primary">
+                  1 Active (#J-1001)
+                </span>
+</td>
+<td class="px-space-md py-space-sm text-right whitespace-nowrap font-mono font-medium text-on-surface">
+                38
+              </td>
+<td class="px-space-md py-space-sm text-right whitespace-nowrap">
+<div class="flex items-center justify-end gap-space-xs">
+<button class="h-8 px-space-sm rounded-lg bg-surface-container hover:bg-tertiary-container hover:text-on-tertiary text-on-surface font-label-sm text-label-sm font-semibold transition-all">
+                    View Profile
+                  </button>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center text-outline hover:text-on-surface transition-all">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2: Suresh Verma -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-space-md py-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="relative w-9 h-9 rounded-full overflow-hidden bg-surface-container-high flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Portrait of a focused Indian industrial technician in early thirties with mustache, wearing beige work shirt in a modern equipment depot." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1QqS82Jwb-3iBDTNzojDhsmoEN0S1CqW3K8Jb2LBSzeO1oGqJ_fvGUj_sk4olbqPbQ0xjlRGHceN_zru8PpFBmqnYaNKU9TjdnL4WySrtH4kANse1rEOAkXxj-Z5BbcJBgKDOujsOo8cHKO19767UI5DiXT84q30zV82r4t18HdYSOcHsJMCc41ZXZS-m3CQjl_6C_BKkWQV4DkZsbX6irL0Y4p84tE98N5pH9-BdmrqpiesMVehxyQ"/>
+<span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-secondary ring-2 ring-surface-container-lowest"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-lg text-label-lg text-on-surface font-semibold truncate group-hover:text-tertiary transition-colors">Suresh Verma</span>
+<div class="flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant">
+<span class="font-mono text-tertiary font-semibold text-[11px]">EMP-MH-114</span>
+<span>•</span>
+<span class="truncate">+91 97650 11984</span>
+</div>
+</div>
+</div>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-medium">Maharashtra Team</span>
+<span class="font-body-sm text-body-sm text-outline">Western Grid</span>
+</div>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<div class="flex items-center gap-1 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px] text-tertiary">location_on</span>
+<span>Mumbai South (Fort)</span>
+</div>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Online (Available)
+                </span>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm font-medium">
+<span class="material-symbols-outlined text-[14px] text-secondary">verified</span>
+                  Verified
+                </span>
+</td>
+<td class="px-space-md py-space-sm text-center whitespace-nowrap">
+<div class="inline-flex flex-col items-center">
+<span class="font-label-md text-label-md font-semibold text-on-surface flex items-center gap-0.5">
+                    4.6 <span class="material-symbols-outlined text-[14px] text-amber-500 fill-1" style="font-variation-settings: 'FILL' 1;">star</span>
+</span>
+<span class="font-body-sm text-body-sm text-outline">(134 reviews)</span>
+</div>
+</td>
+<td class="px-space-md py-space-sm text-center whitespace-nowrap">
+<span class="text-outline font-label-sm text-label-sm">0 Active (Idle)</span>
+</td>
+<td class="px-space-md py-space-sm text-right whitespace-nowrap font-mono font-medium text-on-surface">
+                42
+              </td>
+<td class="px-space-md py-space-sm text-right whitespace-nowrap">
+<div class="flex items-center justify-end gap-space-xs">
+<button class="h-8 px-space-sm rounded-lg bg-surface-container hover:bg-tertiary-container hover:text-on-tertiary text-on-surface font-label-sm text-label-sm font-semibold transition-all">
+                    View Profile
+                  </button>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center text-outline hover:text-on-surface transition-all">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3: Ankit Singh -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-space-md py-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="relative w-9 h-9 rounded-full overflow-hidden bg-surface-container-high flex-shrink-0">
+<div class="w-full h-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed font-semibold font-label-md">
+                      AS
+                    </div>
+<span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-secondary ring-2 ring-surface-container-lowest"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-lg text-label-lg text-on-surface font-semibold truncate group-hover:text-tertiary transition-colors">Ankit Singh</span>
+<div class="flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant">
+<span class="font-mono text-tertiary font-semibold text-[11px]">EMP-MH-121</span>
+<span>•</span>
+<span class="truncate">+91 91371 82901</span>
+</div>
+</div>
+</div>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-medium">Maharashtra Team</span>
+<span class="font-body-sm text-body-sm text-outline">Western Grid</span>
+</div>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<div class="flex items-center gap-1 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px] text-tertiary">location_on</span>
+<span>Mumbai Suburbs (Bandra)</span>
+</div>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Online (Available)
+                </span>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm font-medium">
+<span class="material-symbols-outlined text-[14px] text-secondary">verified</span>
+                  Verified
+                </span>
+</td>
+<td class="px-space-md py-space-sm text-center whitespace-nowrap">
+<div class="inline-flex flex-col items-center">
+<span class="font-label-md text-label-md font-semibold text-on-surface flex items-center gap-0.5">
+                    4.5 <span class="material-symbols-outlined text-[14px] text-amber-500 fill-1" style="font-variation-settings: 'FILL' 1;">star</span>
+</span>
+<span class="font-body-sm text-body-sm text-outline">(98 reviews)</span>
+</div>
+</td>
+<td class="px-space-md py-space-sm text-center whitespace-nowrap">
+<span class="inline-block px-2 py-0.5 rounded-lg bg-surface-container-high font-mono text-[11px] font-semibold text-primary">
+                  1 Active Order
+                </span>
+</td>
+<td class="px-space-md py-space-sm text-right whitespace-nowrap font-mono font-medium text-on-surface">
+                29
+              </td>
+<td class="px-space-md py-space-sm text-right whitespace-nowrap">
+<div class="flex items-center justify-end gap-space-xs">
+<button class="h-8 px-space-sm rounded-lg bg-surface-container hover:bg-tertiary-container hover:text-on-tertiary text-on-surface font-label-sm text-label-sm font-semibold transition-all">
+                    View Profile
+                  </button>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center text-outline hover:text-on-surface transition-all">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4: Vikram Patel -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-space-md py-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="relative w-9 h-9 rounded-full overflow-hidden bg-surface-container-high flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Portrait of an experienced Indian electrical contractor in safety helmet and reflective jacket, smiling confidently with tool bag." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvG_xtR6WlbH22qCzDL-034dc13QPZbbId3dhjwsVt2cpCt6mEN0AquaajMm6jRyUO5ohHgq-Y3h-AgzKUUmiw9_IfHUXTRZcK2BUQe7vatTzoubunzifhiAycUB6VY6jiUayEbojBDTq6PXD5ZfX173KBgGx5pbcNiY6VEyLMBrBhzLAVPb6MOP0EWZ94fiaBFiHNo6_7fPZo3cyyowiKWXxmzid2j0LH9OYn_wT5n7A58Wljj3OpSA"/>
+<span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-amber-500 ring-2 ring-surface-container-lowest"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-lg text-label-lg text-on-surface font-semibold truncate group-hover:text-tertiary transition-colors">Vikram Patel</span>
+<div class="flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant">
+<span class="font-mono text-tertiary font-semibold text-[11px]">EMP-GJ-204</span>
+<span>•</span>
+<span class="truncate">+91 94280 77312</span>
+</div>
+</div>
+</div>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-medium">Gujarat Partner</span>
+<span class="font-body-sm text-body-sm text-outline">Western Cluster</span>
+</div>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<div class="flex items-center gap-1 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px] text-tertiary">location_on</span>
+<span>Ahmedabad (Navrangpura)</span>
+</div>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+                  Busy (Work Started)
+                </span>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm font-medium">
+<span class="material-symbols-outlined text-[14px] text-secondary">verified</span>
+                  Verified
+                </span>
+</td>
+<td class="px-space-md py-space-sm text-center whitespace-nowrap">
+<div class="inline-flex flex-col items-center">
+<span class="font-label-md text-label-md font-semibold text-on-surface flex items-center gap-0.5">
+                    4.4 <span class="material-symbols-outlined text-[14px] text-amber-500 fill-1" style="font-variation-settings: 'FILL' 1;">star</span>
+</span>
+<span class="font-body-sm text-body-sm text-outline">(67 reviews)</span>
+</div>
+</td>
+<td class="px-space-md py-space-sm text-center whitespace-nowrap">
+<span class="inline-block px-2 py-0.5 rounded-lg bg-surface-container-high font-mono text-[11px] font-semibold text-primary">
+                  1 Active (#J-1004)
+                </span>
+</td>
+<td class="px-space-md py-space-sm text-right whitespace-nowrap font-mono font-medium text-on-surface">
+                24
+              </td>
+<td class="px-space-md py-space-sm text-right whitespace-nowrap">
+<div class="flex items-center justify-end gap-space-xs">
+<button class="h-8 px-space-sm rounded-lg bg-surface-container hover:bg-tertiary-container hover:text-on-tertiary text-on-surface font-label-sm text-label-sm font-semibold transition-all">
+                    View Profile
+                  </button>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center text-outline hover:text-on-surface transition-all">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 5: Pradeep Gaikwad (Pending KYC) -->
+<tr class="hover:bg-surface-container-low transition-colors group bg-error-container/10">
+<td class="px-space-md py-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="relative w-9 h-9 rounded-full overflow-hidden bg-surface-container-high flex-shrink-0">
+<div class="w-full h-full bg-tertiary-fixed text-tertiary flex items-center justify-center font-semibold font-label-md">
+                      PG
+                    </div>
+<span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-outline ring-2 ring-surface-container-lowest"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-lg text-label-lg text-on-surface font-semibold truncate group-hover:text-tertiary transition-colors">Pradeep Gaikwad</span>
+<div class="flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant">
+<span class="font-mono text-tertiary font-semibold text-[11px]">EMP-MH-148</span>
+<span>•</span>
+<span class="truncate">+91 98904 55190</span>
+</div>
+</div>
+</div>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-medium">Maharashtra Team</span>
+<span class="font-body-sm text-body-sm text-outline">Western Grid</span>
+</div>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<div class="flex items-center gap-1 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px] text-outline">domain</span>
+<span>Pune Central Hub</span>
+</div>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-outline font-label-sm text-label-sm">
+                  Pending Onboarding
+                </span>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+                  Pending KYC
+                </span>
+</td>
+<td class="px-space-md py-space-sm text-center whitespace-nowrap">
+<div class="inline-flex flex-col items-center">
+<span class="font-label-md text-label-md font-semibold text-on-surface flex items-center gap-0.5">
+                    4.2 <span class="material-symbols-outlined text-[14px] text-amber-500 fill-1" style="font-variation-settings: 'FILL' 1;">star</span>
+</span>
+<span class="font-body-sm text-body-sm text-outline">(14 prior test)</span>
+</div>
+</td>
+<td class="px-space-md py-space-sm text-center whitespace-nowrap">
+<span class="text-outline font-body-sm text-body-sm">0 Active</span>
+</td>
+<td class="px-space-md py-space-sm text-right whitespace-nowrap font-mono font-medium text-outline">
+                0
+              </td>
+<td class="px-space-md py-space-sm text-right whitespace-nowrap">
+<div class="flex items-center justify-end gap-space-xs">
+<button class="h-8 px-space-sm rounded-lg bg-tertiary text-on-tertiary hover:bg-tertiary-container font-label-sm text-label-sm font-semibold transition-all shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">fact_check</span>
+                    Audit KYC
+                  </button>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center text-outline hover:text-on-surface transition-all">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 6: Arvind Joshi (New Applicant) -->
+<tr class="hover:bg-surface-container-low transition-colors group bg-error-container/10">
+<td class="px-space-md py-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="relative w-9 h-9 rounded-full overflow-hidden bg-surface-container-high flex-shrink-0">
+<div class="w-full h-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-semibold font-label-md">
+                      AJ
+                    </div>
+<span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-outline ring-2 ring-surface-container-lowest"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-lg text-label-lg text-on-surface font-semibold truncate group-hover:text-tertiary transition-colors">Arvind Joshi</span>
+<div class="flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant">
+<span class="font-mono text-tertiary font-semibold text-[11px]">EMP-MH-152</span>
+<span>•</span>
+<span class="truncate">+91 97233 40019</span>
+</div>
+</div>
+</div>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-medium">Maharashtra Team</span>
+<span class="font-body-sm text-body-sm text-outline">Western Grid</span>
+</div>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<div class="flex items-center gap-1 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px] text-outline">domain</span>
+<span>Mumbai West (Bandra)</span>
+</div>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-outline font-label-sm text-label-sm">
+                  Pending Onboarding
+                </span>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+                  Pending KYC
+                </span>
+</td>
+<td class="px-space-md py-space-sm text-center whitespace-nowrap">
+<span class="inline-block px-2 py-0.5 rounded bg-surface-container-high text-outline font-label-sm text-label-sm">
+                  New Applicant
+                </span>
+</td>
+<td class="px-space-md py-space-sm text-center whitespace-nowrap">
+<span class="text-outline font-body-sm text-body-sm">0 Active</span>
+</td>
+<td class="px-space-md py-space-sm text-right whitespace-nowrap font-mono font-medium text-outline">
+                0
+              </td>
+<td class="px-space-md py-space-sm text-right whitespace-nowrap">
+<div class="flex items-center justify-end gap-space-xs">
+<button class="h-8 px-space-sm rounded-lg bg-tertiary text-on-tertiary hover:bg-tertiary-container font-label-sm text-label-sm font-semibold transition-all shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">fact_check</span>
+                    Audit KYC
+                  </button>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center text-outline hover:text-on-surface transition-all">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 7: Harish Gowda -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-space-md py-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="relative w-9 h-9 rounded-full overflow-hidden bg-surface-container-high flex-shrink-0">
+<div class="w-full h-full bg-tertiary-container text-on-tertiary flex items-center justify-center font-semibold font-label-md">
+                      HG
+                    </div>
+<span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-secondary ring-2 ring-surface-container-lowest"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-lg text-label-lg text-on-surface font-semibold truncate group-hover:text-tertiary transition-colors">Harish Gowda</span>
+<div class="flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant">
+<span class="font-mono text-tertiary font-semibold text-[11px]">EMP-KA-301</span>
+<span>•</span>
+<span class="truncate">+91 94480 32187</span>
+</div>
+</div>
+</div>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-medium">Karnataka Partner</span>
+<span class="font-body-sm text-body-sm text-outline">Southern Hub</span>
+</div>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<div class="flex items-center gap-1 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px] text-tertiary">location_on</span>
+<span>Bengaluru (Indiranagar)</span>
+</div>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Online (Available)
+                </span>
+</td>
+<td class="px-space-md py-space-sm whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm font-medium">
+<span class="material-symbols-outlined text-[14px] text-secondary">verified</span>
+                  Verified
+                </span>
+</td>
+<td class="px-space-md py-space-sm text-center whitespace-nowrap">
+<div class="inline-flex flex-col items-center">
+<span class="font-label-md text-label-md font-semibold text-on-surface flex items-center gap-0.5">
+                    4.9 <span class="material-symbols-outlined text-[14px] text-amber-500 fill-1" style="font-variation-settings: 'FILL' 1;">star</span>
+</span>
+<span class="font-body-sm text-body-sm text-outline">(182 reviews)</span>
+</div>
+</td>
+<td class="px-space-md py-space-sm text-center whitespace-nowrap">
+<span class="text-outline font-label-sm text-label-sm">0 Active (Idle)</span>
+</td>
+<td class="px-space-md py-space-sm text-right whitespace-nowrap font-mono font-semibold text-on-surface">
+                54
+              </td>
+<td class="px-space-md py-space-sm text-right whitespace-nowrap">
+<div class="flex items-center justify-end gap-space-xs">
+<button class="h-8 px-space-sm rounded-lg bg-surface-container hover:bg-tertiary-container hover:text-on-tertiary text-on-surface font-label-sm text-label-sm font-semibold transition-all">
+                    View Profile
+                  </button>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center text-outline hover:text-on-surface transition-all">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination & Table Controls -->
+<div class="px-space-md py-space-sm bg-surface-container-low flex flex-col sm:flex-row items-center justify-between gap-space-sm font-body-sm text-body-sm text-on-surface-variant">
+<div class="flex items-center gap-space-md">
+<span>Rows per page:</span>
+<select class="h-7 px-2 bg-surface-container-lowest rounded text-on-surface font-label-sm text-label-sm focus:outline-none">
+<option>10</option>
+<option selected="">20</option>
+<option>50</option>
+<option>100</option>
+</select>
+<span class="text-outline">1–7 of 142 total roster records</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<button class="w-8 h-8 rounded-lg bg-surface-container-lowest flex items-center justify-center text-outline opacity-50 cursor-not-allowed" disabled="">
+<span class="material-symbols-outlined text-[18px]">first_page</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-surface-container-lowest flex items-center justify-center text-outline opacity-50 cursor-not-allowed" disabled="">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-tertiary text-on-tertiary font-semibold font-label-sm text-label-sm flex items-center justify-center shadow-sm">
+            1
+          </button>
+<button class="w-8 h-8 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center justify-center transition-all">
+            2
+          </button>
+<button class="w-8 h-8 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center justify-center transition-all">
+            3
+          </button>
+<span class="px-1 text-outline">...</span>
+<button class="w-8 h-8 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center justify-center transition-all">
+            8
+          </button>
+<button class="w-8 h-8 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface flex items-center justify-center transition-all">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface flex items-center justify-center transition-all">
+<span class="material-symbols-outlined text-[18px]">last_page</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Governance & Verification SLA Notice Footer -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col md:flex-row items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-xl bg-tertiary-container text-on-tertiary flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[20px]">policy</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Central Regulatory Compliance Directive (IS-732 &amp; CEA Safety Codes)</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-2xl">
+            All electricians in the National Roster must undergo periodic license renewal every 24 months. Failure to approve pending audits within the 24-hour window temporarily restricts partner work order allocation.
+          </p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm whitespace-nowrap self-end md:self-auto">
+<button class="px-space-md py-1.5 rounded-lg bg-surface-container text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-all">
+          View Audit Policy
+        </button>
+<button class="px-space-md py-1.5 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed font-label-md text-label-md hover:bg-tertiary hover:text-on-tertiary transition-all font-semibold">
+          Batch Review (12)
+        </button>
+</div>
+</div>
+</div>
+</div></main></div></body></html>
