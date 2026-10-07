@@ -5,7 +5,7 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
-  workflow_dispatch: # Allows manual trigger from GitHub UI with 1 click
+  workflow_dispatch:
 
 jobs:
   build:
@@ -20,22 +20,22 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+          cache: 'gradle'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Make Gradle Wrapper Executable
-        run: chmod +x android/gradlew
+      - name: Ensure Unix Line Endings & Executable Permissions for Gradle Wrapper
+        run: |
+          sed -i 's/\r$//' android/gradlew
+          chmod +x android/gradlew
 
       - name: Build Customer App Debug APK
         run: |
           cd android
-          ./gradlew :customer-app:assembleDebug --no-daemon
+          ./gradlew :customer-app:assembleDebug --no-daemon --stacktrace
 
       - name: Build Technician App Debug APK
         run: |
           cd android
-          ./gradlew :technician-app:assembleDebug --no-daemon
+          ./gradlew :technician-app:assembleDebug --no-daemon --stacktrace
 
       - name: Upload Customer App Debug APK Artifact
         uses: actions/upload-artifact@v4
