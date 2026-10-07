@@ -11,6 +11,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
@@ -22,10 +26,12 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      - name: Ensure Unix Line Endings & Executable Permissions for Gradle Wrapper
+      - name: Configure Android SDK & Permissions
         run: |
+          echo "sdk.dir=/usr/local/lib/android/sdk" > android/local.properties
           sed -i 's/\r$//' android/gradlew
           chmod +x android/gradlew
+          yes | sdkmanager --licenses || true
 
       - name: Build Customer App Debug APK
         run: |
