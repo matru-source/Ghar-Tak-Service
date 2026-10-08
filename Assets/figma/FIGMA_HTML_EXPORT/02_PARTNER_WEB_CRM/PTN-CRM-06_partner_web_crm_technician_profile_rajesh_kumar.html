@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ElectriCare - Partner Web CRM (Maharashtra Team)</title>
+<!-- Inter Google Font -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            },
+            surface: {
+              bg: '#f8fafc',
+              border: '#e2e8f0',
+              sidebar: '#ffffff'
+            }
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom CSS -->
+<style data-purpose="custom-enhancements">
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .chart-donut-ring {
+      stroke-dasharray: 440;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+      transition: stroke-dashoffset 0.5s ease;
+    }
+  </style>
+<!-- END: Custom CSS -->
+<meta content="web_dashboard" name="shell-type"/></head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 text-[13px]">
+<!-- BEGIN: TopBarBanner -->
+<!-- Context indicator for Regional Operations -->
+<div class="bg-brand-900 text-brand-100 text-xs px-6 py-1.5 flex items-center justify-between border-b border-brand-800">
+<div class="flex items-center space-x-2 font-medium">
+<span class="inline-flex items-center justify-center w-4 h-4 bg-emerald-500 text-white rounded-full text-[10px] font-bold">11</span>
+<span class="tracking-wide font-semibold text-white">Partner Web CRM</span>
+<span class="text-emerald-300">(Maharashtra Team)</span>
+</div>
+<div class="flex items-center space-x-4 text-[11px] text-emerald-200">
+<span>Regional Operations</span>
+<span class="text-emerald-500">•</span>
+<span>Manage Technicians</span>
+<span class="text-emerald-500">•</span>
+<span>Jobs</span>
+<span class="text-emerald-500">•</span>
+<span>Pincodes</span>
+<span class="text-emerald-500">•</span>
+<span>Finance</span>
+<span class="text-emerald-500">•</span>
+<span>Support</span>
+</div>
+</div>
+<!-- END: TopBarBanner -->
+<!-- BEGIN: MainLayoutWrapper -->
+<div class="flex flex-1 min-h-[calc(100vh-28px)]">
+<!-- BEGIN: LeftSidebar -->
+<aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 select-none">
+<div>
+<!-- Logo Section -->
+<div class="h-16 flex items-center px-6 border-b border-slate-100 gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-sm shadow-emerald-500/30">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<path d="M13 2L3 14h8v8l10-12h-8l0-8z"></path>
+</svg>
+</div>
+<div>
+<span class="text-base font-bold text-slate-900 tracking-tight flex items-center gap-1">
+              ElectriCare
+            </span>
+<span class="block text-[10px] font-medium uppercase tracking-wider text-emerald-600 -mt-1">Partner Portal</span>
+</div>
+</div>
+<!-- Navigation Menu -->
+<nav aria-label="Main Navigation" class="p-3 space-y-1">
+<!-- Dashboard - Active Item -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg bg-emerald-600 text-white font-medium shadow-sm shadow-emerald-600/20 transition-colors" href="#">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="9" rx="1" width="7" x="3" y="3"></rect>
+<rect height="5" rx="1" width="7" x="14" y="3"></rect>
+<rect height="9" rx="1" width="7" x="14" y="12"></rect>
+<rect height="5" rx="1" width="7" x="3" y="16"></rect>
+</svg>
+<span>Dashboard</span>
+</a>
+<!-- Technicians -->
+<a class="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<div class="flex items-center gap-3">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+<circle cx="9" cy="7" r="4"></circle>
+<path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+</svg>
+<span>Technicians</span>
+</div>
+<span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">24</span>
+</a>
+<!-- Job Management -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="14" rx="2" ry="2" width="20" x="2" y="7"></rect>
+<path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+</svg>
+<span>Job Management</span>
+</a>
+<!-- Pincode Coverage -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path>
+<circle cx="12" cy="10" r="3"></circle>
+</svg>
+<span>Pincode Coverage</span>
+</a>
+<!-- Finance / Payouts -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<line x1="12" x2="12" y1="1" y2="23"></line>
+<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+</svg>
+<span>Finance / Payouts</span>
+</a>
+<!-- Profile / Settings -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="3"></circle>
+<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+</svg>
+<span>Profile / Settings</span>
+</a>
+<!-- Support -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+<line x1="12" x2="12.01" y1="17" y2="17"></line>
+</svg>
+<span>Support</span>
+</a>
+</nav>
+</div>
+<!-- Partner Unit Card in Sidebar Footer -->
+<div class="p-3 border-t border-slate-100 bg-slate-50/50 m-2 rounded-xl">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 border border-emerald-300">
+            MT
+          </div>
+<div class="truncate">
+<p class="font-semibold text-slate-800 text-xs truncate leading-tight">Maharashtra Team</p>
+<span class="inline-flex items-center text-[10px] text-emerald-600 font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span> Partner Active
+            </span>
+</div>
+</div>
+</div>
+</aside>
+<!-- END: LeftSidebar -->
+<!-- BEGIN: MainContentArea -->
+<div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+<!-- BEGIN: HeaderNav -->
+<header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-20">
+<!-- Search bar input -->
+<div class="relative w-80">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="11" cy="11" r="8"></circle>
+<line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+</svg>
+</span>
+<input class="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 placeholder-slate-400 transition" placeholder="Search dashboard, jobs, technicians..." type="text"/>
+</div>
+<!-- Top Right Actions & User Profile -->
+<div class="flex items-center gap-3.5">
+<!-- Quick Status Pill -->
+<div class="hidden md:flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs px-2.5 py-1 rounded-full">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span class="font-medium text-[11px]">Region: MH Operations</span>
+</div>
+<!-- Notification Bell -->
+<button aria-label="Notifications" class="p-2 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100 relative" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+<path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+</svg>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+</button>
+<div class="h-5 w-px bg-slate-200"></div>
+<!-- Profile Badge -->
+<div class="flex items-center gap-2.5 pl-1 cursor-pointer">
+<div class="w-8 h-8 rounded-full bg-slate-800 text-white font-semibold flex items-center justify-center text-xs">
+              MH
+            </div>
+<div class="hidden sm:block text-left">
+<span class="block text-xs font-semibold text-slate-700 leading-tight">Maharashtra Ops</span>
+<span class="text-[10px] text-slate-400">admin-mh@electricare.in</span>
+</div>
+<svg class="w-3.5 h-3.5 text-slate-400 ml-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</div>
+</div>
+</header>
+<!-- END: HeaderNav -->
+<!-- Main Body Container -->
+<main class="p-6 space-y-6"><div class="flex flex-col w-full">
+<!-- Breadcrumbs & Meta Bar -->
+<div class="flex flex-wrap items-center justify-between gap-y-2 mb-space-lg">
+<nav class="flex items-center gap-2 font-label-md text-label-md text-on-surface-variant">
+<a class="hover:text-primary transition-colors flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-base">engineering</span>
+        Technicians
+      </a>
+<span class="text-outline-variant">/</span>
+<span class="font-semibold text-on-surface flex items-center gap-1.5">
+        Rajesh Kumar
+        <span class="font-label-sm text-label-sm bg-surface-container text-on-surface-variant px-2 py-0.5 rounded-full">EMP-MH-108</span>
+</span>
+</nav>
+<div class="flex items-center gap-3">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Operational Jurisdiction:</span>
+<span class="font-label-sm text-label-sm font-semibold bg-secondary-container text-on-secondary-container px-2.5 py-0.5 rounded-full flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-ping"></span>
+        Maharashtra Operations Base (Hub-01)
+      </span>
+</div>
+</div>
+<!-- Hero Profile Header Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg mb-space-xl relative overflow-hidden">
+<div class="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-secondary-fixed/20 blur-3xl pointer-events-none"></div>
+<div class="flex flex-col xl:flex-row xl:items-center justify-between gap-space-lg relative z-10">
+<!-- Avatar & Core Profile Details -->
+<div class="flex flex-col sm:flex-row items-start sm:items-center gap-space-lg">
+<div class="relative shrink-0">
+<img class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl object-cover shadow-sm bg-surface-container" data-alt="Close up professional portrait of Rajesh Kumar, a focused Indian male certified electrician in his late 30s wearing a high-visibility dark emerald green technical polo shirt with navy blue trim and an ElectriCare embroidered emblem. Clean daylight industrial logistics setting, sharp studio focus, confident and approachable expression." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAThPcZeOrdaXuqaDleSYgUiNmi0vq4FDk7O0QO8fpCchyLlZPu3OIM2MM09RwBnLE7Zisd6CJRe0V8uxBPePba91PSDsV41LhgVyjQXDCefjd-OHaZdakx9oaOPUx-K7FFq331iJrdLhJ3ijNbnxShRKnJa3gxmqw-tmGZz5WN51_RvC-7NDsSp2uHIrU-drrpmfEKnGPRyUGYfUaHx4mNFzkihB9wd7Fk3xmt-XvuKktJPfVTR03acw"/>
+<div class="absolute -bottom-2 -right-2 bg-secondary text-on-secondary w-7 h-7 rounded-full flex items-center justify-center shadow-md" title="Govt Certified Wireman">
+<span class="material-symbols-outlined text-sm font-bold">verified</span>
+</div>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex flex-wrap items-center gap-2 mb-1">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Rajesh Kumar</h1>
+<span class="font-label-sm text-label-sm bg-primary text-on-primary px-2.5 py-0.5 rounded-full flex items-center gap-1 font-medium">
+<span class="material-symbols-outlined text-xs">workspace_premium</span> Tier 1 Certified Specialist
+            </span>
+</div>
+<!-- Reviews & Govt License -->
+<div class="flex flex-wrap items-center gap-3 text-body-sm font-body-sm text-on-surface-variant mb-2">
+<div class="flex items-center text-amber-500 font-semibold gap-1">
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-on-surface font-headline-sm text-headline-sm">4.8</span>
+<span class="font-normal text-on-surface-variant text-label-sm font-label-sm">(156 verified customer reviews)</span>
+</div>
+<span class="text-outline-variant">•</span>
+<span class="flex items-center gap-1 text-secondary font-medium text-label-sm font-label-sm">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+              Govt &amp; Electrical License Validated
+            </span>
+</div>
+<!-- Contact & Base Matrix -->
+<div class="flex flex-wrap items-center gap-x-5 gap-y-1 font-body-sm text-body-sm text-on-surface-variant">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base text-outline">location_on</span>
+              Base Hub: <strong class="text-on-surface">Mumbai South (Colaba)</strong>
+</span>
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base text-outline">call</span>
+              +91 98201 11223
+            </span>
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base text-outline">mail</span>
+              rajesh.k@electricare-fleet.in
+            </span>
+</div>
+</div>
+</div>
+<!-- Quick Action Buttons -->
+<div class="flex flex-wrap items-center gap-2 self-start xl:self-center shrink-0">
+<a class="bg-secondary hover:bg-secondary-fixed text-on-secondary hover:text-on-secondary-fixed px-3.5 py-2 rounded-lg font-label-md text-label-md flex items-center gap-1.5 transition-colors shadow-sm" href="tel:+919820111223">
+<span class="material-symbols-outlined text-base">phone_in_talk</span>
+          Call Technician
+        </a>
+<button class="bg-surface-container hover:bg-surface-container-high text-on-surface px-3 py-2 rounded-lg font-label-md text-label-md flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-base">pin_drop</span>
+          Reassign Pincodes
+        </button>
+<button class="bg-surface-container hover:bg-surface-container-high text-on-surface px-3 py-2 rounded-lg font-label-md text-label-md flex items-center gap-1.5 transition-colors" title="Download dossier PDF">
+<span class="material-symbols-outlined text-base">download</span>
+          Dossier
+        </button>
+<button class="bg-surface-container hover:bg-surface-container-high text-on-surface px-2.5 py-2 rounded-lg font-label-md text-label-md transition-colors" title="Edit Profile Details">
+<span class="material-symbols-outlined text-base">tune</span>
+</button>
+</div>
+</div>
+<!-- Live Telemetry Status Ribbon -->
+<div class="mt-space-lg pt-space-md border-t-0 bg-surface-container-low -mx-space-lg -mb-space-lg px-space-lg py-3 flex flex-wrap items-center justify-between gap-y-2">
+<div class="flex flex-wrap items-center gap-4">
+<div class="flex items-center gap-2 bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full font-label-sm text-label-sm">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+<span class="font-bold">Online &amp; In Transit</span>
+<span class="opacity-75">→ Job #J-1001 (Colaba Causeway)</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-base text-secondary">battery_charging_full</span>
+<span>Battery: <strong class="text-on-surface">88%</strong> (Device Active)</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-base text-primary">satellite_alt</span>
+<span>GPS Signal: <strong class="text-on-surface">Live (High Accuracy ~3m)</strong></span>
+</div>
+</div>
+<div class="text-on-surface-variant font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">schedule</span>
+        Last ping: Just now (10:18:42 IST)
+      </div>
+</div>
+</div>
+<!-- Metric KPI Summary (4 Cards) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md mb-space-xl">
+<!-- Active Dispatches -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Active Dispatches</span>
+<span class="w-8 h-8 rounded-lg bg-secondary-container text-on-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-lg">electric_moped</span>
+</span>
+</div>
+<div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-xl text-headline-xl text-on-surface tracking-tight font-bold">1</span>
+<span class="font-label-md text-label-md font-semibold text-secondary">Live Now</span>
+</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mt-1">Order #J-1001 • Orient Fan Install</div>
+</div>
+<div class="mt-3 flex items-center gap-1.5 font-label-sm text-label-sm text-secondary">
+<span class="material-symbols-outlined text-sm">near_me</span>
+<span>ETA: 12 minutes to customer</span>
+</div>
+</div>
+<!-- Completed Month -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Completed (Sep 2024)</span>
+<span class="w-8 h-8 rounded-lg bg-surface-container text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-lg">task_alt</span>
+</span>
+</div>
+<div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-xl text-headline-xl text-on-surface tracking-tight font-bold">38</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Total Jobs</span>
+</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mt-1">Regional target: 35 jobs (Achieved)</div>
+</div>
+<div class="mt-3 flex items-center gap-1.5 font-label-sm text-label-sm text-secondary font-semibold">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+<span>99.2% SLA On-Time Adherence</span>
+</div>
+</div>
+<!-- Monthly Payout Earned -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Monthly Earnings</span>
+<span class="w-8 h-8 rounded-lg bg-surface-container text-on-surface flex items-center justify-center">
+<span class="material-symbols-outlined text-lg">account_balance_wallet</span>
+</span>
+</div>
+<div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-xl text-headline-xl text-on-surface tracking-tight font-bold">₹36,450</span>
+</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mt-1">Base + Peak Incentive + Travel</div>
+</div>
+<div class="mt-3 flex items-center gap-1.5 font-label-sm text-label-sm text-secondary font-semibold">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+<span>100% Payout Verified &amp; Cleared</span>
+</div>
+</div>
+<!-- Average Rating -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Safety &amp; CSAT</span>
+<span class="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+</span>
+</div>
+<div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-xl text-headline-xl text-on-surface tracking-tight font-bold">4.8</span>
+<span class="font-label-md text-label-md text-on-surface-variant font-medium">/ 5.0</span>
+</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mt-1">Based on 156 verified ratings</div>
+</div>
+<div class="mt-3 flex items-center gap-1.5 font-label-sm text-label-sm text-secondary font-semibold">
+<span class="material-symbols-outlined text-sm">shield</span>
+<span>Zero Safety Incidents (YTD)</span>
+</div>
+</div>
+</div>
+<!-- Operational Tabs Navigation -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-1.5 mb-space-lg flex flex-wrap items-center justify-between gap-2">
+<div class="flex flex-wrap items-center gap-1" id="tab-nav">
+<button class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label-md text-label-md font-semibold flex items-center gap-2 shadow-sm transition-all" data-target="overview">
+<span class="material-symbols-outlined text-base">bar_chart</span>
+        Operational Performance &amp; Jobs
+      </button>
+<button class="text-on-surface-variant hover:text-on-surface hover:bg-surface-container px-4 py-2 rounded-lg font-label-md text-label-md font-medium flex items-center gap-2 transition-colors" data-target="history">
+<span class="material-symbols-outlined text-base">receipt_long</span>
+        Recent Jobs (38)
+      </button>
+<button class="text-on-surface-variant hover:text-on-surface hover:bg-surface-container px-4 py-2 rounded-lg font-label-md text-label-md font-medium flex items-center gap-2 transition-colors" data-target="coverage">
+<span class="material-symbols-outlined text-base">map</span>
+        Assigned Pincodes &amp; Map
+      </button>
+<button class="text-on-surface-variant hover:text-on-surface hover:bg-surface-container px-4 py-2 rounded-lg font-label-md text-label-md font-medium flex items-center gap-2 transition-colors" data-target="kyc">
+<span class="material-symbols-outlined text-base">verified_user</span>
+        KYC &amp; Certifications
+      </button>
+<button class="text-on-surface-variant hover:text-on-surface hover:bg-surface-container px-4 py-2 rounded-lg font-label-md text-label-md font-medium flex items-center gap-2 transition-colors" data-target="earnings">
+<span class="material-symbols-outlined text-base">payments</span>
+        Earnings Breakdown
+      </button>
+</div>
+<div class="flex items-center gap-2 px-3 py-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-base text-secondary">sync</span>
+<span>Auto-sync every 30s</span>
+</div>
+</div>
+<!-- Main Split Layout (Left 2/3, Right 1/3) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<!-- Left Column (8 cols): Recent Jobs + Performance Grid -->
+<div class="lg:col-span-8 flex flex-col gap-space-lg">
+<!-- Performance Metrics Grid (High Density) -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-xl">analytics</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Service Level &amp; Reliability Index</h2>
+</div>
+<span class="font-label-sm text-label-sm bg-surface-container text-on-surface-variant px-2.5 py-1 rounded">Rolling 90-Day Audit</span>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-space-md">
+<!-- Metric 1 -->
+<div class="bg-surface-container-low p-space-md rounded-lg flex flex-col justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">On-Time Arrival</span>
+<div class="mt-2 mb-1 flex items-baseline justify-between">
+<span class="font-headline-md text-headline-md font-bold text-on-surface">98.4%</span>
+<span class="text-secondary font-label-sm text-label-sm font-semibold flex items-center">+1.2%</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 98.4%;"></div>
+</div>
+</div>
+<!-- Metric 2 -->
+<div class="bg-surface-container-low p-space-md rounded-lg flex flex-col justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">First-Time Fix</span>
+<div class="mt-2 mb-1 flex items-baseline justify-between">
+<span class="font-headline-md text-headline-md font-bold text-on-surface">94.6%</span>
+<span class="text-secondary font-label-sm text-label-sm font-semibold flex items-center">+0.8%</span>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 94.6%;"></div>
+</div>
+</div>
+<!-- Metric 3 -->
+<div class="bg-surface-container-low p-space-md rounded-lg flex flex-col justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Customer CSAT</span>
+<div class="mt-2 mb-1 flex items-baseline justify-between">
+<span class="font-headline-md text-headline-md font-bold text-on-surface">96.0%</span>
+<span class="text-secondary font-label-sm text-label-sm font-semibold flex items-center">+2.1%</span>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 96%;"></div>
+</div>
+</div>
+<!-- Metric 4 -->
+<div class="bg-surface-container-low p-space-md rounded-lg flex flex-col justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Safety Compliance</span>
+<div class="mt-2 mb-1 flex items-baseline justify-between">
+<span class="font-headline-md text-headline-md font-bold text-on-surface">100%</span>
+<span class="text-secondary font-label-sm text-label-sm font-semibold flex items-center">Flawless</span>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 100%;"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Recent Jobs Table Section -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<div class="p-space-lg flex flex-wrap items-center justify-between gap-y-2">
+<div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">assignment</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Recent Work Orders &amp; Field Logs</h2>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Showing last 4 regional dispatches for South Mumbai cluster</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="bg-surface-container hover:bg-surface-container-high text-on-surface text-label-sm font-label-sm px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-sm">filter_list</span> Filter
+            </button>
+<button class="bg-surface-container hover:bg-surface-container-high text-on-surface text-label-sm font-label-sm px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-sm">file_download</span> Export
+            </button>
+</div>
+</div>
+<!-- Table Container -->
+<div class="overflow-x-auto">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<tr>
+<th class="py-3 px-4">Job ID</th>
+<th class="py-3 px-4">Service Details</th>
+<th class="py-3 px-4">Customer</th>
+<th class="py-3 px-4">Date &amp; Window</th>
+<th class="py-3 px-4 text-right">Amount</th>
+<th class="py-3 px-4 text-center">Status</th>
+<th class="py-3 px-4 text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-none">
+<!-- Row 1: Active In-Transit -->
+<tr class="bg-secondary-container/15 hover:bg-secondary-container/25 transition-colors">
+<td class="py-3.5 px-4 font-semibold text-primary">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary animate-ping"></span>
+                    #J-1001
+                  </div>
+</td>
+<td class="py-3.5 px-4">
+<span class="font-medium text-on-surface block">Fan Installation</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">Orient Electric 1200mm Aeroquiet</span>
+</td>
+<td class="py-3.5 px-4">
+<span class="font-medium text-on-surface block">Amit Sharma</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm font-mono">+91 98201 XXXXX</span>
+</td>
+<td class="py-3.5 px-4 text-on-surface">
+<span class="block font-medium">24 Sep, 10:15 AM</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">Window: 10:00 - 11:30</span>
+</td>
+<td class="py-3.5 px-4 text-right font-semibold text-on-surface">₹1,250</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm bg-secondary-container text-on-secondary-container px-2.5 py-1 rounded-full font-semibold">
+<span class="material-symbols-outlined text-xs">navigation</span> En Route (12m away)
+                  </span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<button class="bg-primary hover:bg-primary-container text-on-primary font-label-sm text-label-sm px-3 py-1.5 rounded-lg shadow-sm transition-colors">
+                    View Job
+                  </button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3.5 px-4 font-semibold text-on-surface">#J-0988</td>
+<td class="py-3.5 px-4">
+<span class="font-medium text-on-surface block">Concealed Rewiring Inspection</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">3BHK Distribution Board + Load Balancing</span>
+</td>
+<td class="py-3.5 px-4">
+<span class="font-medium text-on-surface block">Dr. V. Shah</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm font-mono">+91 98202 XXXXX</span>
+</td>
+<td class="py-3.5 px-4 text-on-surface">
+<span class="block">23 Sep, 02:30 PM</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">Finished: 04:10 PM</span>
+</td>
+<td class="py-3.5 px-4 text-right font-semibold text-on-surface">₹2,800</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm bg-surface-container text-secondary px-2.5 py-1 rounded-full font-semibold">
+<span class="material-symbols-outlined text-xs">check</span> Completed
+                  </span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<button class="bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm px-3 py-1.5 rounded-lg transition-colors">
+                    View Report
+                  </button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3.5 px-4 font-semibold text-on-surface">#J-0972</td>
+<td class="py-3.5 px-4">
+<span class="font-medium text-on-surface block">MCB Tripping &amp; Short Circuit</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">Emergency Isolator Replacement</span>
+</td>
+<td class="py-3.5 px-4">
+<span class="font-medium text-on-surface block">Sunita Kapoor</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm font-mono">+91 98199 XXXXX</span>
+</td>
+<td class="py-3.5 px-4 text-on-surface">
+<span class="block">22 Sep, 11:00 AM</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">Finished: 12:15 PM</span>
+</td>
+<td class="py-3.5 px-4 text-right font-semibold text-on-surface">₹1,450</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm bg-surface-container text-secondary px-2.5 py-1 rounded-full font-semibold">
+<span class="material-symbols-outlined text-xs">check</span> Completed
+                  </span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<button class="bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm px-3 py-1.5 rounded-lg transition-colors">
+                    View Report
+                  </button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3.5 px-4 font-semibold text-on-surface">#J-0960</td>
+<td class="py-3.5 px-4">
+<span class="font-medium text-on-surface block">AC Isolator Replacement</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">32A Heavy Duty Industrial Switch</span>
+</td>
+<td class="py-3.5 px-4">
+<span class="font-medium text-on-surface block">Godrej Heights Office</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm font-mono">Facilities Desk</span>
+</td>
+<td class="py-3.5 px-4 text-on-surface">
+<span class="block">21 Sep, 04:15 PM</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">Finished: 05:40 PM</span>
+</td>
+<td class="py-3.5 px-4 text-right font-semibold text-on-surface">₹1,850</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm bg-surface-container text-secondary px-2.5 py-1 rounded-full font-semibold">
+<span class="material-symbols-outlined text-xs">check</span> Completed
+                  </span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<button class="bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm px-3 py-1.5 rounded-lg transition-colors">
+                    View Report
+                  </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Footer Pagination / Quick Summary -->
+<div class="bg-surface-container-low p-space-md flex flex-wrap items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
+<span>Showing 4 of 38 jobs completed in current billing cycle</span>
+<a class="text-primary hover:underline font-semibold flex items-center gap-1" href="#">
+            View All Historical Dispatches <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+</div>
+</div>
+<!-- Right Column (4 cols): Assigned Pincodes + KYC Card + Earnings Widget -->
+<div class="lg:col-span-4 flex flex-col gap-space-lg">
+<!-- Assigned Service Pincodes & Map Preview -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">map</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Assigned Pincodes</h3>
+</div>
+<span class="font-label-sm text-label-sm bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full font-semibold">2 Active Zones</span>
+</div>
+<!-- Static Map Component -->
+<div class="w-full h-36 bg-cover bg-center rounded-lg relative overflow-hidden mb-space-md shadow-sm" data-location="Colaba, Mumbai, Maharashtra, India" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBuPeV-YY_h01Gx6HYI6Znq2GCsUNs6m3HtBLzjR1Zm0QecB6On-yAYC3COoXVvh7y3jMyxYQfqq5Hc5_gRfh6Rd6M8NfPt08HHNKbZqder0dFP63-dfGTguLMyr-ti1BGl6HFAwYM7p3gufS79mcT_ixirkXqZOAOrAkrqW9UhHDWRHTgqaphyOmcaR08mHfQPjQTElpBo0_g8_j2emoAS7o41iKnNuoH7QqmTrSd9rUPnrBeZATWUAg')">
+<div class="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-transparent to-transparent"></div>
+<div class="absolute bottom-2 left-3 right-3 flex items-center justify-between text-white font-label-sm text-label-sm">
+<span class="flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-secondary animate-ping"></span>
+              Live Geofence: Mumbai Ward 'A'
+            </span>
+<span class="bg-black/50 backdrop-blur-sm px-2 py-0.5 rounded text-[10px]">South Ops</span>
+</div>
+</div>
+<!-- Pincode Chips List -->
+<div class="space-y-2 mb-space-md">
+<div class="flex items-center justify-between bg-surface-container-low p-2.5 rounded-lg">
+<div class="flex items-center gap-2.5">
+<span class="w-8 h-8 rounded-md bg-secondary-container text-on-secondary-container font-mono font-bold flex items-center justify-center text-xs">
+                400
+              </span>
+<div>
+<span class="font-semibold text-on-surface block text-label-md font-label-md">400001 • Colaba, Mumbai</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">Primary Service Hub (85% volume)</span>
+</div>
+</div>
+<span class="bg-secondary text-on-secondary text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Active</span>
+</div>
+<div class="flex items-center justify-between bg-surface-container-low p-2.5 rounded-lg">
+<div class="flex items-center gap-2.5">
+<span class="w-8 h-8 rounded-md bg-surface-container text-on-surface font-mono font-bold flex items-center justify-center text-xs">
+                400
+              </span>
+<div>
+<span class="font-semibold text-on-surface block text-label-md font-label-md">400002 • Fort / Kalbadevi</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">Secondary Coverage Hub</span>
+</div>
+</div>
+<span class="bg-secondary text-on-secondary text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Active</span>
+</div>
+</div>
+<button class="w-full bg-surface-container hover:bg-surface-container-high text-on-surface py-2 rounded-lg font-label-md text-label-md font-semibold flex items-center justify-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-base">add_location_alt</span>
+          + Add Pincode Coverage
+        </button>
+</div>
+<!-- Verified KYC & Government License Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-xl">verified</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Verified KYC &amp; Licensure</h3>
+</div>
+<span class="font-label-sm text-label-sm bg-secondary-container text-on-secondary-container font-semibold px-2 py-0.5 rounded-full">Audited</span>
+</div>
+<div class="space-y-3 font-body-sm text-body-sm mb-space-md">
+<!-- License -->
+<div class="bg-surface-container-low p-3 rounded-lg flex items-start justify-between gap-2">
+<div>
+<span class="text-on-surface-variant font-label-sm text-label-sm block">Wireman &amp; Electrical Contractor License</span>
+<span class="font-semibold text-on-surface font-mono text-label-md font-label-md">MH-PWD-2019-8874</span>
+<span class="text-secondary font-label-sm text-label-sm block mt-0.5">Valid till Oct 2026 (State PWD)</span>
+</div>
+<span class="material-symbols-outlined text-secondary text-base shrink-0" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<!-- Aadhaar -->
+<div class="bg-surface-container-low p-3 rounded-lg flex items-start justify-between gap-2">
+<div>
+<span class="text-on-surface-variant font-label-sm text-label-sm block">Aadhaar &amp; Biometric ID</span>
+<span class="font-semibold text-on-surface font-mono text-label-md font-label-md">XXXX-XXXX-4521</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm block mt-0.5">UIDAI Verified via OTP</span>
+</div>
+<span class="material-symbols-outlined text-secondary text-base shrink-0" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<!-- PAN Card -->
+<div class="bg-surface-container-low p-3 rounded-lg flex items-start justify-between gap-2">
+<div>
+<span class="text-on-surface-variant font-label-sm text-label-sm block">Permanent Account Number (PAN)</span>
+<span class="font-semibold text-on-surface font-mono text-label-md font-label-md">ABCPK9921D</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm block mt-0.5">Tax Compliance Status: Active</span>
+</div>
+<span class="material-symbols-outlined text-secondary text-base shrink-0" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<!-- Police Verification -->
+<div class="bg-surface-container-low p-3 rounded-lg flex items-start justify-between gap-2">
+<div>
+<span class="text-on-surface-variant font-label-sm text-label-sm block">Police Verification Certificate</span>
+<span class="font-semibold text-on-surface text-label-md font-label-md">Clean Record (Mumbai Police)</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm block mt-0.5">Issued Nov 2023 • Annually Renewed</span>
+</div>
+<span class="material-symbols-outlined text-secondary text-base shrink-0" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<button class="w-full bg-surface-container hover:bg-surface-container-high text-on-surface py-2 rounded-lg font-label-md text-label-md font-semibold flex items-center justify-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-base">visibility</span>
+          View Full KYC Dossier &amp; Certificates
+        </button>
+</div>
+<!-- Earnings & Settlement Summary -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-xl">savings</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Earnings &amp; Payout Summary</h3>
+</div>
+<span class="font-label-sm text-label-sm bg-amber-100 text-amber-900 font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">workspace_premium</span> Gold Tier
+          </span>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-lg mb-space-md">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant block mb-1">Accrued Payout (Sep Cycle)</span>
+<div class="flex items-baseline justify-between">
+<span class="font-headline-lg text-headline-lg font-bold text-on-surface">₹36,450.00</span>
+<span class="font-label-sm text-label-sm text-secondary font-semibold">Ready for Batch Payout</span>
+</div>
+<div class="mt-3 space-y-1.5 font-body-sm text-body-sm border-t-0 pt-2 text-on-surface-variant">
+<div class="flex justify-between">
+<span>Standard Job Labor:</span>
+<span class="text-on-surface font-semibold">₹29,600</span>
+</div>
+<div class="flex justify-between">
+<span>High-Rating Quality Bonus:</span>
+<span class="text-on-surface font-semibold">₹4,250</span>
+</div>
+<div class="flex justify-between">
+<span>Fuel &amp; Inter-cluster Allowance:</span>
+<span class="text-on-surface font-semibold">₹2,600</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3 p-3 bg-surface-container-low rounded-lg mb-space-md">
+<div class="w-9 h-9 rounded-md bg-surface-container flex items-center justify-center text-primary font-bold">
+<span class="material-symbols-outlined text-lg">account_balance</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Scheduled Direct Deposit</span>
+<span class="font-semibold text-on-surface font-label-md text-label-md">30 Sep 2024</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant font-mono">HDFC Bank •••• 4402</span>
+</div>
+</div>
+<button class="w-full bg-secondary text-on-secondary hover:bg-secondary-fixed hover:text-on-secondary-fixed py-2 rounded-lg font-label-md text-label-md font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-base">receipt</span>
+          Generate Monthly Statement
+        </button>
+</div>
+</div>
+</div>
+</div></main>
+<!-- END: Main Content Container -->
+<!-- Footer Info -->
+<footer class="mt-auto px-6 py-4 border-t border-slate-200 bg-white text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
+<p>© 2024 ElectriCare Inc. Regional Partner Portal. All rights reserved.</p>
+<div class="flex items-center gap-4 text-[11px] text-slate-500">
+<a class="hover:text-emerald-600" href="#">Privacy Policy</a>
+<a class="hover:text-emerald-600" href="#">Technician Guidelines</a>
+<a class="hover:text-emerald-600" href="#">Emergency Dispatch: 1800-202-099</a>
+</div>
+</footer>
+</div>
+<!-- END: MainContentArea -->
+</div>
+<!-- END: MainLayoutWrapper -->
+</body></html>

@@ -198,12 +198,9 @@ fun CustomerHomeScreen(
 
                 NavigationBarItem(
                     selected = currentBottomTab == 3,
-                    onClick = {
-                        currentBottomTab = 3
-                        Toast.makeText(context, "Completed Orders & Invoices History", Toast.LENGTH_SHORT).show()
-                    },
+                    onClick = { currentBottomTab = 3 },
                     icon = { Icon(Icons.Default.ReceiptLong, contentDescription = "History") },
-                    label = { Text("History", fontSize = 11.sp) },
+                    label = { Text("History", fontSize = 11.sp, fontWeight = if (currentBottomTab == 3) FontWeight.Bold else FontWeight.Normal) },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = SapphireBlue800,
                         selectedTextColor = SapphireBlue800,
@@ -213,13 +210,9 @@ fun CustomerHomeScreen(
 
                 NavigationBarItem(
                     selected = currentBottomTab == 4,
-                    onClick = {
-                        currentBottomTab = 4
-                        viewModel.logout()
-                        onLogout()
-                    },
+                    onClick = { currentBottomTab = 4 },
                     icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-                    label = { Text("Profile", fontSize = 11.sp) },
+                    label = { Text("Profile", fontSize = 11.sp, fontWeight = if (currentBottomTab == 4) FontWeight.Bold else FontWeight.Normal) },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = SapphireBlue800,
                         selectedTextColor = SapphireBlue800,
@@ -230,14 +223,38 @@ fun CustomerHomeScreen(
         },
         containerColor = Color(0xFFF8FAFC)
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp)
-        ) {
-            item { Spacer(modifier = Modifier.height(4.dp)) }
+        when (currentBottomTab) {
+            3 -> {
+                Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+                    CustomerHistoryView(
+                        onBookServiceAgain = {
+                            currentBottomTab = 0
+                            val firstService = state.filteredServices.firstOrNull()?.id ?: "srv_mcb_replace"
+                            onServiceSelected(firstService)
+                        }
+                    )
+                }
+            }
+            4 -> {
+                Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+                    CustomerProfileView(
+                        userName = state.userName,
+                        onLogout = {
+                            viewModel.logout()
+                            onLogout()
+                        }
+                    )
+                }
+            }
+            else -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(18.dp)
+                ) {
+                    item { Spacer(modifier = Modifier.height(4.dp)) }
 
             // ==========================================
             // 1. SECTION: Quick Actions (3 Cards)
@@ -285,7 +302,7 @@ fun CustomerHomeScreen(
                             iconTint = Color(0xFFD97706),
                             label = "History",
                             onClick = {
-                                Toast.makeText(context, "Completed Orders & Invoices History", Toast.LENGTH_SHORT).show()
+                                currentBottomTab = 3
                             }
                         )
                     }
@@ -490,6 +507,8 @@ fun CustomerHomeScreen(
                 Spacer(modifier = Modifier.height(20.dp))
             }
         }
+        }
+    }
     }
 }
 

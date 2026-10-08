@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ElectriCare - Partner Web CRM (Maharashtra Team)</title>
+<!-- Inter Google Font -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            },
+            surface: {
+              bg: '#f8fafc',
+              border: '#e2e8f0',
+              sidebar: '#ffffff'
+            }
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom CSS -->
+<style data-purpose="custom-enhancements">
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .chart-donut-ring {
+      stroke-dasharray: 440;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+      transition: stroke-dashoffset 0.5s ease;
+    }
+  </style>
+<!-- END: Custom CSS -->
+<meta content="web_dashboard" name="shell-type"/></head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 text-[13px]">
+<!-- BEGIN: TopBarBanner -->
+<!-- Context indicator for Regional Operations -->
+<div class="bg-brand-900 text-brand-100 text-xs px-6 py-1.5 flex items-center justify-between border-b border-brand-800">
+<div class="flex items-center space-x-2 font-medium">
+<span class="inline-flex items-center justify-center w-4 h-4 bg-emerald-500 text-white rounded-full text-[10px] font-bold">11</span>
+<span class="tracking-wide font-semibold text-white">Partner Web CRM</span>
+<span class="text-emerald-300">(Maharashtra Team)</span>
+</div>
+<div class="flex items-center space-x-4 text-[11px] text-emerald-200">
+<span>Regional Operations</span>
+<span class="text-emerald-500">•</span>
+<span>Manage Technicians</span>
+<span class="text-emerald-500">•</span>
+<span>Jobs</span>
+<span class="text-emerald-500">•</span>
+<span>Pincodes</span>
+<span class="text-emerald-500">•</span>
+<span>Finance</span>
+<span class="text-emerald-500">•</span>
+<span>Support</span>
+</div>
+</div>
+<!-- END: TopBarBanner -->
+<!-- BEGIN: MainLayoutWrapper -->
+<div class="flex flex-1 min-h-[calc(100vh-28px)]">
+<!-- BEGIN: LeftSidebar -->
+<aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 select-none">
+<div>
+<!-- Logo Section -->
+<div class="h-16 flex items-center px-6 border-b border-slate-100 gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-sm shadow-emerald-500/30">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<path d="M13 2L3 14h8v8l10-12h-8l0-8z"></path>
+</svg>
+</div>
+<div>
+<span class="text-base font-bold text-slate-900 tracking-tight flex items-center gap-1">
+              ElectriCare
+            </span>
+<span class="block text-[10px] font-medium uppercase tracking-wider text-emerald-600 -mt-1">Partner Portal</span>
+</div>
+</div>
+<!-- Navigation Menu -->
+<nav aria-label="Main Navigation" class="p-3 space-y-1">
+<!-- Dashboard - Active Item -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg bg-emerald-600 text-white font-medium shadow-sm shadow-emerald-600/20 transition-colors" href="#">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="9" rx="1" width="7" x="3" y="3"></rect>
+<rect height="5" rx="1" width="7" x="14" y="3"></rect>
+<rect height="9" rx="1" width="7" x="14" y="12"></rect>
+<rect height="5" rx="1" width="7" x="3" y="16"></rect>
+</svg>
+<span>Dashboard</span>
+</a>
+<!-- Technicians -->
+<a class="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<div class="flex items-center gap-3">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+<circle cx="9" cy="7" r="4"></circle>
+<path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+</svg>
+<span>Technicians</span>
+</div>
+<span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">24</span>
+</a>
+<!-- Job Management -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="14" rx="2" ry="2" width="20" x="2" y="7"></rect>
+<path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+</svg>
+<span>Job Management</span>
+</a>
+<!-- Pincode Coverage -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path>
+<circle cx="12" cy="10" r="3"></circle>
+</svg>
+<span>Pincode Coverage</span>
+</a>
+<!-- Finance / Payouts -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<line x1="12" x2="12" y1="1" y2="23"></line>
+<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+</svg>
+<span>Finance / Payouts</span>
+</a>
+<!-- Profile / Settings -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="3"></circle>
+<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+</svg>
+<span>Profile / Settings</span>
+</a>
+<!-- Support -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+<line x1="12" x2="12.01" y1="17" y2="17"></line>
+</svg>
+<span>Support</span>
+</a>
+</nav>
+</div>
+<!-- Partner Unit Card in Sidebar Footer -->
+<div class="p-3 border-t border-slate-100 bg-slate-50/50 m-2 rounded-xl">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 border border-emerald-300">
+            MT
+          </div>
+<div class="truncate">
+<p class="font-semibold text-slate-800 text-xs truncate leading-tight">Maharashtra Team</p>
+<span class="inline-flex items-center text-[10px] text-emerald-600 font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span> Partner Active
+            </span>
+</div>
+</div>
+</div>
+</aside>
+<!-- END: LeftSidebar -->
+<!-- BEGIN: MainContentArea -->
+<div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+<!-- BEGIN: HeaderNav -->
+<header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-20">
+<!-- Search bar input -->
+<div class="relative w-80">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="11" cy="11" r="8"></circle>
+<line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+</svg>
+</span>
+<input class="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 placeholder-slate-400 transition" placeholder="Search dashboard, jobs, technicians..." type="text"/>
+</div>
+<!-- Top Right Actions & User Profile -->
+<div class="flex items-center gap-3.5">
+<!-- Quick Status Pill -->
+<div class="hidden md:flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs px-2.5 py-1 rounded-full">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span class="font-medium text-[11px]">Region: MH Operations</span>
+</div>
+<!-- Notification Bell -->
+<button aria-label="Notifications" class="p-2 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100 relative" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+<path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+</svg>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+</button>
+<div class="h-5 w-px bg-slate-200"></div>
+<!-- Profile Badge -->
+<div class="flex items-center gap-2.5 pl-1 cursor-pointer">
+<div class="w-8 h-8 rounded-full bg-slate-800 text-white font-semibold flex items-center justify-center text-xs">
+              MH
+            </div>
+<div class="hidden sm:block text-left">
+<span class="block text-xs font-semibold text-slate-700 leading-tight">Maharashtra Ops</span>
+<span class="text-[10px] text-slate-400">admin-mh@electricare.in</span>
+</div>
+<svg class="w-3.5 h-3.5 text-slate-400 ml-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</div>
+</div>
+</header>
+<!-- END: HeaderNav -->
+<!-- Main Body Container -->
+<main class="p-6 space-y-6"><div class="flex flex-col w-full space-y-6">
+<!-- Sub-header Breadcrumb & Actions Bar -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface-container-lowest p-4 rounded-xl shadow-sm">
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm">
+<a class="hover:text-primary transition-colors" href="#">Pincode Coverage</a>
+<span>/</span>
+<span class="hover:text-primary transition-colors cursor-pointer">Mumbai</span>
+<span>/</span>
+<span class="text-on-surface font-semibold">400001 (Colaba)</span>
+</div>
+<div class="flex items-center flex-wrap gap-3">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Pincode 400001 — Colaba, Mumbai</h1>
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-container/40 text-secondary font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-ping"></span>
+<span>Active Coverage • Normal Load</span>
+</div>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex items-center flex-wrap gap-2.5">
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors font-label-md text-label-md" type="button">
+<span class="material-symbols-outlined text-[16px]">file_download</span>
+<span>Export Log</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors font-label-md text-label-md" type="button">
+<span class="material-symbols-outlined text-[16px]">cloud_upload</span>
+<span>Edit Boundary</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-secondary text-on-secondary hover:bg-on-secondary-container transition-colors shadow-sm font-label-md text-label-md" type="button">
+<span class="material-symbols-outlined text-[16px]">person_add</span>
+<span>Assign Technician</span>
+</button>
+</div>
+</div>
+<!-- Key Telemetry Cards Grid (4 Cards) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- Card 1 -->
+<div class="p-4 rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Coverage Status</span>
+<span class="material-symbols-outlined text-[20px] text-secondary">verified</span>
+</div>
+<div class="my-2">
+<div class="font-headline-lg text-headline-lg text-on-surface leading-tight">Active</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Primary Maharashtra Hub</div>
+</div>
+<div class="flex items-center gap-1.5 text-secondary font-label-sm text-label-sm bg-secondary-container/20 px-2 py-1 rounded">
+<span class="material-symbols-outlined text-[14px]">timer</span>
+<span>14 mins avg SLA response</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="p-4 rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Assigned Techs</span>
+<span class="material-symbols-outlined text-[20px] text-primary">badge</span>
+</div>
+<div class="my-2">
+<div class="font-headline-lg text-headline-lg text-on-surface leading-tight">5 Techs</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Colaba Field Division</div>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant">
+<span class="text-secondary font-semibold">4 Online</span>
+<span>•</span>
+<span class="text-primary font-semibold">1 In Transit</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="p-4 rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Live Job Queue</span>
+<span class="material-symbols-outlined text-[20px] text-tertiary-container">bolt</span>
+</div>
+<div class="my-2">
+<div class="font-headline-lg text-headline-lg text-on-surface leading-tight">12 Live Jobs</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Under execution right now</div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
+<span>4 En Route</span>
+<span>6 In Work</span>
+<span class="text-error font-semibold">2 Pending</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="p-4 rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Today's Dispatches</span>
+<span class="material-symbols-outlined text-[20px] text-secondary">payments</span>
+</div>
+<div class="my-2">
+<div class="font-headline-lg text-headline-lg text-on-surface leading-tight">28 Dispatches</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">₹34,200 Gross Volume</div>
+</div>
+<div class="flex items-center gap-1 text-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+<span>+18.4% vs yesterday</span>
+</div>
+</div>
+</div>
+<!-- Main Body Grid: 2/3 Content (Technicians & Jobs) + 1/3 Side Widget (Boundary, Map & Capacity) -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+<!-- Center Left Section: Technicians and Dispatches Tables (2 Cols) -->
+<div class="xl:col-span-2 space-y-6">
+<!-- Section A: Assigned Technicians in 400001 -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-5 space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[22px]">engineering</span>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Assigned Technicians in 400001</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Active personnel registered for instant deployment in Colaba territory</p>
+</div>
+</div>
+<span class="px-2.5 py-0.5 text-label-sm font-label-sm rounded-full bg-surface-container text-on-surface-variant font-medium">5 Field Units</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<th class="py-2.5 px-3 rounded-l">Technician</th>
+<th class="py-2.5 px-3">Rating</th>
+<th class="py-2.5 px-3">Current Status</th>
+<th class="py-2.5 px-3 text-center">Active Jobs</th>
+<th class="py-2.5 px-3 text-center">Total Completed</th>
+<th class="py-2.5 px-3 text-right rounded-r">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-on-surface font-body-sm text-body-sm">
+<!-- Tech 1 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3 px-3">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-label-sm">RK</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface">Rajesh Kumar</div>
+<div class="text-[11px] text-on-surface-variant">EMP-MH-108</div>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<div class="flex items-center gap-1 font-label-md text-label-md text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-amber-500 fill-current" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>4.8</span>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-container/40 text-secondary font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Online (In Route)
+                  </span>
+</td>
+<td class="py-3 px-3 text-center font-semibold">1</td>
+<td class="py-3 px-3 text-center text-on-surface-variant">38</td>
+<td class="py-3 px-3 text-right">
+<div class="inline-flex items-center gap-2">
+<button class="px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded text-on-surface font-label-sm text-label-sm transition-colors">Profile</button>
+<button class="px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded text-primary font-label-sm text-label-sm transition-colors">Reassign</button>
+</div>
+</td>
+</tr>
+<!-- Tech 2 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3 px-3">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-full bg-secondary/10 text-secondary flex items-center justify-center font-bold text-label-sm">SV</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface">Suresh Verma</div>
+<div class="text-[11px] text-on-surface-variant">EMP-MH-114</div>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<div class="flex items-center gap-1 font-label-md text-label-md text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>4.6</span>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-container/40 text-secondary font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Online (Available)
+                  </span>
+</td>
+<td class="py-3 px-3 text-center font-semibold text-on-surface-variant">0</td>
+<td class="py-3 px-3 text-center text-on-surface-variant">42</td>
+<td class="py-3 px-3 text-right">
+<div class="inline-flex items-center gap-2">
+<button class="px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded text-on-surface font-label-sm text-label-sm transition-colors">Profile</button>
+<button class="px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded text-primary font-label-sm text-label-sm transition-colors">Reassign</button>
+</div>
+</td>
+</tr>
+<!-- Tech 3 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3 px-3">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-full bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center font-bold text-label-sm">AS</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface">Ankit Singh</div>
+<div class="text-[11px] text-on-surface-variant">EMP-MH-121</div>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<div class="flex items-center gap-1 font-label-md text-label-md text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>4.5</span>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-container/40 text-secondary font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Online (Available)
+                  </span>
+</td>
+<td class="py-3 px-3 text-center font-semibold">1</td>
+<td class="py-3 px-3 text-center text-on-surface-variant">29</td>
+<td class="py-3 px-3 text-right">
+<div class="inline-flex items-center gap-2">
+<button class="px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded text-on-surface font-label-sm text-label-sm transition-colors">Profile</button>
+<button class="px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded text-primary font-label-sm text-label-sm transition-colors">Reassign</button>
+</div>
+</td>
+</tr>
+<!-- Tech 4 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3 px-3">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-bold text-label-sm">VP</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface">Vikram Patel</div>
+<div class="text-[11px] text-on-surface-variant">EMP-MH-132</div>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<div class="flex items-center gap-1 font-label-md text-label-md text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>4.4</span>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                    Busy (Work Started)
+                  </span>
+</td>
+<td class="py-3 px-3 text-center font-semibold">1</td>
+<td class="py-3 px-3 text-center text-on-surface-variant">24</td>
+<td class="py-3 px-3 text-right">
+<div class="inline-flex items-center gap-2">
+<button class="px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded text-on-surface font-label-sm text-label-sm transition-colors">Profile</button>
+<button class="px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded text-primary font-label-sm text-label-sm transition-colors">Reassign</button>
+</div>
+</td>
+</tr>
+<!-- Tech 5 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3 px-3">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-full bg-surface-container text-on-surface flex items-center justify-center font-bold text-label-sm">SJ</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface">Sachin Jadhav</div>
+<div class="text-[11px] text-on-surface-variant">EMP-MH-155</div>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<div class="flex items-center gap-1 font-label-md text-label-md text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>4.7</span>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-container/40 text-secondary font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Online (Available)
+                  </span>
+</td>
+<td class="py-3 px-3 text-center font-semibold text-on-surface-variant">0</td>
+<td class="py-3 px-3 text-center text-on-surface-variant">19</td>
+<td class="py-3 px-3 text-right">
+<div class="inline-flex items-center gap-2">
+<button class="px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded text-on-surface font-label-sm text-label-sm transition-colors">Profile</button>
+<button class="px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded text-primary font-label-sm text-label-sm transition-colors">Reassign</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Section B: Recent Dispatches in Pincode 400001 -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-5 space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[22px]">assignment</span>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Recent Dispatches in Pincode 400001</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Real-time status of service calls across Colaba precinct</p>
+</div>
+</div>
+<button class="text-primary font-label-sm text-label-sm hover:underline">View All 28 Dispatches</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<th class="py-2.5 px-3 rounded-l">Job ID</th>
+<th class="py-2.5 px-3">Customer</th>
+<th class="py-2.5 px-3">Service</th>
+<th class="py-2.5 px-3">Assigned Tech</th>
+<th class="py-2.5 px-3">Status</th>
+<th class="py-2.5 px-3 text-right">Amount</th>
+<th class="py-2.5 px-3 text-right rounded-r">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-on-surface font-body-sm text-body-sm">
+<!-- Dispatch 1 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3 px-3 font-semibold text-primary">#J-1001</td>
+<td class="py-3 px-3">
+<div class="font-label-md text-label-md">Amit Sharma</div>
+<div class="text-[11px] text-on-surface-variant">Regal Circle, Colaba</div>
+</td>
+<td class="py-3 px-3">Fan Installation</td>
+<td class="py-3 px-3">
+<span class="font-medium">Rajesh Kumar</span>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary-fixed text-primary font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                    En Route
+                  </span>
+</td>
+<td class="py-3 px-3 text-right font-medium">₹1,250</td>
+<td class="py-3 px-3 text-right">
+<a class="px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded text-primary font-label-sm text-label-sm inline-block transition-colors" href="#">View Job</a>
+</td>
+</tr>
+<!-- Dispatch 2 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3 px-3 font-semibold text-primary">#J-1008</td>
+<td class="py-3 px-3">
+<div class="font-label-md text-label-md">Rohan Kapoor</div>
+<div class="text-[11px] text-on-surface-variant">Cuffe Parade Rd</div>
+</td>
+<td class="py-3 px-3">MCB Tripping Diagnostic</td>
+<td class="py-3 px-3">
+<span class="font-medium">Vikram Patel</span>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+                    Work Started
+                  </span>
+</td>
+<td class="py-3 px-3 text-right font-medium">₹850</td>
+<td class="py-3 px-3 text-right">
+<a class="px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded text-primary font-label-sm text-label-sm inline-block transition-colors" href="#">View Job</a>
+</td>
+</tr>
+<!-- Dispatch 3 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3 px-3 font-semibold text-primary">#J-0994</td>
+<td class="py-3 px-3">
+<div class="font-label-md text-label-md">Dr. Farhan Merchant</div>
+<div class="text-[11px] text-on-surface-variant">Apollo Bandar</div>
+</td>
+<td class="py-3 px-3">Chandelier Installation</td>
+<td class="py-3 px-3">
+<span class="font-medium">Suresh Verma</span>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-secondary-container/40 text-secondary font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Completed
+                  </span>
+</td>
+<td class="py-3 px-3 text-right font-medium">₹2,400</td>
+<td class="py-3 px-3 text-right">
+<a class="px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded text-primary font-label-sm text-label-sm inline-block transition-colors" href="#">View Job</a>
+</td>
+</tr>
+<!-- Dispatch 4 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3 px-3 font-semibold text-primary">#J-0985</td>
+<td class="py-3 px-3">
+<div class="font-label-md text-label-md">Sunita Deshmukh</div>
+<div class="text-[11px] text-on-surface-variant">SBS Road, Colaba</div>
+</td>
+<td class="py-3 px-3">Concealed Switch Replace</td>
+<td class="py-3 px-3">
+<span class="font-medium">Ankit Singh</span>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-secondary-container/40 text-secondary font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Completed
+                  </span>
+</td>
+<td class="py-3 px-3 text-right font-medium">₹650</td>
+<td class="py-3 px-3 text-right">
+<a class="px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded text-primary font-label-sm text-label-sm inline-block transition-colors" href="#">View Job</a>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Side Widget: Pincode 400001 Boundary & Landmarks (1 Col) -->
+<div class="space-y-6">
+<!-- Boundary Map Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-5 space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">map</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Boundary &amp; Landmarks</h3>
+</div>
+<span class="text-label-sm font-label-sm text-secondary bg-secondary-container/30 px-2 py-0.5 rounded font-medium">Zone MH-01</span>
+</div>
+<!-- Static Map Simulation Container -->
+<div class="w-full h-48 rounded-lg relative overflow-hidden bg-surface-container flex flex-col justify-between p-3" data-location="Colaba, Mumbai, India" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBlFN7bvTUjNPqkxFShcuhHd-AslX9XmZULkBGV4n2twgqpSZ85ga4Ja5Q6NXWh7kN3KYqMuExXj7qhOQy9JuQGj6TBD6ZvaF-soMcUqCjVSG_beKhMq5CEAeD2OOjEUNHAGAX-lfdy4IglxW3RGoTsx7PEs4bgY2Q2KdZ3DItpZHSTJq0EtIP3kPSj_Iv5uboKxhnw00q430XqDx4rZ9ZlJzy0I8wQlKl6KYqjhElN6-setflaPobHqQ')">
+<div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent"></div>
+<div class="relative z-10 flex items-center justify-between">
+<span class="px-2 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur text-on-surface font-label-sm text-label-sm">
+              Colaba Sector 400001
+            </span>
+<div class="flex items-center gap-1 bg-secondary text-on-secondary px-2 py-0.5 rounded text-[11px] font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+              Live Grid
+            </div>
+</div>
+<div class="relative z-10 text-white space-y-1">
+<div class="flex items-center gap-1.5 text-xs font-semibold">
+<span class="material-symbols-outlined text-secondary-container text-[16px]">location_on</span>
+              Base Hub: Colaba Post Depot
+            </div>
+<div class="text-[11px] text-slate-200">Perimeter: Causeway • Cuffe Parade • Gateway</div>
+</div>
+</div>
+<!-- Boundary Landmarks List -->
+<div class="space-y-2">
+<div class="text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wide">Key Coverage Sectors</div>
+<div class="grid grid-cols-2 gap-2 text-on-surface font-body-sm text-body-sm">
+<div class="flex items-center gap-1.5 p-2 bg-surface-container-low rounded-lg">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>Colaba Causeway</span>
+</div>
+<div class="flex items-center gap-1.5 p-2 bg-surface-container-low rounded-lg">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>Cuffe Parade</span>
+</div>
+<div class="flex items-center gap-1.5 p-2 bg-surface-container-low rounded-lg">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>Gateway Sector</span>
+</div>
+<div class="flex items-center gap-1.5 p-2 bg-surface-container-low rounded-lg">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>Radio Club Jetty</span>
+</div>
+</div>
+</div>
+<!-- Field Capacity Meter -->
+<div class="p-3.5 bg-surface-container-low rounded-lg space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface">Pincode Workload Capacity</span>
+<span class="font-label-md text-label-md text-secondary font-bold">80% Utilization</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-secondary h-2 rounded-full" style="width: 80%"></div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-body-sm text-body-sm">
+<span>Current: 12 / 15 Concurrent</span>
+<span class="text-secondary font-semibold">2 Slots Before Surge</span>
+</div>
+</div>
+</div>
+<!-- Quick Dispatch Protocol Info -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-5 space-y-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">electric_bolt</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">MH Power Dispatch Rules</h3>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+          Pincode 400001 requires certified Grade-A electricians for heritage architecture switchboard work along Causeway &amp; Apollo Bandar. Auto-routing honors 15-minute SLA locks.
+        </p>
+<div class="pt-2 flex items-center justify-between">
+<span class="text-[11px] text-on-surface-variant">Last Grid Sync: 2 mins ago</span>
+<button class="text-primary hover:underline font-label-sm text-label-sm">Edit Dispatch Rules</button>
+</div>
+</div>
+</div>
+</div>
+</div></main>
+<!-- END: Main Content Container -->
+<!-- Footer Info -->
+<footer class="mt-auto px-6 py-4 border-t border-slate-200 bg-white text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
+<p>© 2024 ElectriCare Inc. Regional Partner Portal. All rights reserved.</p>
+<div class="flex items-center gap-4 text-[11px] text-slate-500">
+<a class="hover:text-emerald-600" href="#">Privacy Policy</a>
+<a class="hover:text-emerald-600" href="#">Technician Guidelines</a>
+<a class="hover:text-emerald-600" href="#">Emergency Dispatch: 1800-202-099</a>
+</div>
+</footer>
+</div>
+<!-- END: MainContentArea -->
+</div>
+<!-- END: MainLayoutWrapper -->
+</body></html>

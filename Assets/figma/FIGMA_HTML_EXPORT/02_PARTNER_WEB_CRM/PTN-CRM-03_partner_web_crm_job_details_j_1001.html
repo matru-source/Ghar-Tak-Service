@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ElectriCare - Partner Web CRM (Maharashtra Team)</title>
+<!-- Inter Google Font -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            },
+            surface: {
+              bg: '#f8fafc',
+              border: '#e2e8f0',
+              sidebar: '#ffffff'
+            }
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom CSS -->
+<style data-purpose="custom-enhancements">
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .chart-donut-ring {
+      stroke-dasharray: 440;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+      transition: stroke-dashoffset 0.5s ease;
+    }
+  </style>
+<!-- END: Custom CSS -->
+<meta content="web_dashboard" name="shell-type"/></head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 text-[13px]">
+<!-- BEGIN: TopBarBanner -->
+<!-- Context indicator for Regional Operations -->
+<div class="bg-brand-900 text-brand-100 text-xs px-6 py-1.5 flex items-center justify-between border-b border-brand-800">
+<div class="flex items-center space-x-2 font-medium">
+<span class="inline-flex items-center justify-center w-4 h-4 bg-emerald-500 text-white rounded-full text-[10px] font-bold">11</span>
+<span class="tracking-wide font-semibold text-white">Partner Web CRM</span>
+<span class="text-emerald-300">(Maharashtra Team)</span>
+</div>
+<div class="flex items-center space-x-4 text-[11px] text-emerald-200">
+<span>Regional Operations</span>
+<span class="text-emerald-500">•</span>
+<span>Manage Technicians</span>
+<span class="text-emerald-500">•</span>
+<span>Jobs</span>
+<span class="text-emerald-500">•</span>
+<span>Pincodes</span>
+<span class="text-emerald-500">•</span>
+<span>Finance</span>
+<span class="text-emerald-500">•</span>
+<span>Support</span>
+</div>
+</div>
+<!-- END: TopBarBanner -->
+<!-- BEGIN: MainLayoutWrapper -->
+<div class="flex flex-1 min-h-[calc(100vh-28px)]">
+<!-- BEGIN: LeftSidebar -->
+<aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 select-none">
+<div>
+<!-- Logo Section -->
+<div class="h-16 flex items-center px-6 border-b border-slate-100 gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-sm shadow-emerald-500/30">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<path d="M13 2L3 14h8v8l10-12h-8l0-8z"></path>
+</svg>
+</div>
+<div>
+<span class="text-base font-bold text-slate-900 tracking-tight flex items-center gap-1">
+              ElectriCare
+            </span>
+<span class="block text-[10px] font-medium uppercase tracking-wider text-emerald-600 -mt-1">Partner Portal</span>
+</div>
+</div>
+<!-- Navigation Menu -->
+<nav aria-label="Main Navigation" class="p-3 space-y-1">
+<!-- Dashboard - Active Item -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg bg-emerald-600 text-white font-medium shadow-sm shadow-emerald-600/20 transition-colors" href="#">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="9" rx="1" width="7" x="3" y="3"></rect>
+<rect height="5" rx="1" width="7" x="14" y="3"></rect>
+<rect height="9" rx="1" width="7" x="14" y="12"></rect>
+<rect height="5" rx="1" width="7" x="3" y="16"></rect>
+</svg>
+<span>Dashboard</span>
+</a>
+<!-- Technicians -->
+<a class="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<div class="flex items-center gap-3">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+<circle cx="9" cy="7" r="4"></circle>
+<path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+</svg>
+<span>Technicians</span>
+</div>
+<span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">24</span>
+</a>
+<!-- Job Management -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="14" rx="2" ry="2" width="20" x="2" y="7"></rect>
+<path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+</svg>
+<span>Job Management</span>
+</a>
+<!-- Pincode Coverage -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path>
+<circle cx="12" cy="10" r="3"></circle>
+</svg>
+<span>Pincode Coverage</span>
+</a>
+<!-- Finance / Payouts -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<line x1="12" x2="12" y1="1" y2="23"></line>
+<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+</svg>
+<span>Finance / Payouts</span>
+</a>
+<!-- Profile / Settings -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="3"></circle>
+<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+</svg>
+<span>Profile / Settings</span>
+</a>
+<!-- Support -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+<line x1="12" x2="12.01" y1="17" y2="17"></line>
+</svg>
+<span>Support</span>
+</a>
+</nav>
+</div>
+<!-- Partner Unit Card in Sidebar Footer -->
+<div class="p-3 border-t border-slate-100 bg-slate-50/50 m-2 rounded-xl">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 border border-emerald-300">
+            MT
+          </div>
+<div class="truncate">
+<p class="font-semibold text-slate-800 text-xs truncate leading-tight">Maharashtra Team</p>
+<span class="inline-flex items-center text-[10px] text-emerald-600 font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span> Partner Active
+            </span>
+</div>
+</div>
+</div>
+</aside>
+<!-- END: LeftSidebar -->
+<!-- BEGIN: MainContentArea -->
+<div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+<!-- BEGIN: HeaderNav -->
+<header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-20">
+<!-- Search bar input -->
+<div class="relative w-80">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="11" cy="11" r="8"></circle>
+<line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+</svg>
+</span>
+<input class="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 placeholder-slate-400 transition" placeholder="Search dashboard, jobs, technicians..." type="text"/>
+</div>
+<!-- Top Right Actions & User Profile -->
+<div class="flex items-center gap-3.5">
+<!-- Quick Status Pill -->
+<div class="hidden md:flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs px-2.5 py-1 rounded-full">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span class="font-medium text-[11px]">Region: MH Operations</span>
+</div>
+<!-- Notification Bell -->
+<button aria-label="Notifications" class="p-2 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100 relative" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+<path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+</svg>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+</button>
+<div class="h-5 w-px bg-slate-200"></div>
+<!-- Profile Badge -->
+<div class="flex items-center gap-2.5 pl-1 cursor-pointer">
+<div class="w-8 h-8 rounded-full bg-slate-800 text-white font-semibold flex items-center justify-center text-xs">
+              MH
+            </div>
+<div class="hidden sm:block text-left">
+<span class="block text-xs font-semibold text-slate-700 leading-tight">Maharashtra Ops</span>
+<span class="text-[10px] text-slate-400">admin-mh@electricare.in</span>
+</div>
+<svg class="w-3.5 h-3.5 text-slate-400 ml-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</div>
+</div>
+</header>
+<!-- END: HeaderNav -->
+<!-- Main Body Container -->
+<main class="p-6 space-y-6"><div class="flex flex-col w-full">
+<!-- Dynamic Sidebar & Breadcrumb Sync Script -->
+<script>
+    (function syncShell() {
+      // Highlight 'Job Management' in existing sidebar navigation
+      const navLinks = document.querySelectorAll('aside nav a');
+      navLinks.forEach(link => {
+        if (link.textContent.includes('Job Management')) {
+          link.className = 'flex items-center gap-3 px-3.5 py-2.5 rounded-lg bg-emerald-600 text-white font-medium shadow-sm shadow-emerald-600/20 transition-colors';
+          const icon = link.querySelector('svg');
+          if (icon) {
+            icon.classList.remove('text-slate-400');
+            icon.classList.add('text-white');
+          }
+        } else if (link.textContent.includes('Dashboard')) {
+          link.className = 'flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium';
+          const icon = link.querySelector('svg');
+          if (icon) {
+            icon.classList.add('text-slate-400');
+            icon.classList.remove('text-white');
+          }
+        }
+      });
+    })();
+  </script>
+<!-- Top Action & Context Header Bar -->
+<section class="flex flex-col gap-4 pb-6">
+<!-- Breadcrumb Hierarchy -->
+<nav aria-label="Breadcrumbs" class="flex items-center gap-2 text-on-surface-variant font-label-md text-label-md">
+<a class="hover:text-primary transition-colors" href="#">Jobs</a>
+<span class="text-outline-variant font-body-sm">/</span>
+<span class="text-on-surface font-label-md">#J-1001 — Fan Installation</span>
+<span class="ml-2 px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wide">Work Order</span>
+</nav>
+<!-- Header Actions Bar -->
+<div class="flex flex-wrap items-center justify-between gap-4">
+<div class="flex flex-wrap items-center gap-3">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Job Details — #J-1001</h1>
+<div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+</span>
+<span>EN ROUTE (ACTIVE)</span>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex flex-wrap items-center gap-2.5">
+<button class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-surface-container-lowest text-on-surface hover:bg-surface-container shadow-sm font-label-md text-label-md transition-all active:scale-95" type="button">
+<span class="material-symbols-outlined text-base">swap_horiz</span>
+          Reassign Technician
+        </button>
+<button class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-surface-container-lowest text-error hover:bg-error-container/40 shadow-sm font-label-md text-label-md transition-all active:scale-95" type="button">
+<span class="material-symbols-outlined text-base">cancel</span>
+          Cancel Job
+        </button>
+<button class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-container text-on-primary hover:bg-primary shadow-sm font-label-md text-label-md transition-all active:scale-95" type="button">
+<span class="material-symbols-outlined text-base">print</span>
+          Print Work Order
+        </button>
+</div>
+</div>
+</section>
+<!-- Main 2-Column Responsive Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<!-- LEFT COLUMN: Primary Dispatch Execution (65% -> 8 of 12 cols desktop) -->
+<div class="lg:col-span-8 flex flex-col gap-6">
+<!-- 1. JOB OVERVIEW Card -->
+<section class="bg-surface-container-lowest rounded-xl p-5 shadow-sm relative overflow-hidden">
+<div class="absolute -right-10 -bottom-10 w-44 h-44 bg-surface-container-high/40 rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex flex-wrap items-center justify-between gap-2 pb-4 mb-4 bg-surface-container-low/60 -mx-5 -mt-5 p-5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-2xl">mode_fan</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Service Task</p>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Fan Installation (Orient 1200mm Ceiling Fan)</h2>
+</div>
+</div>
+<div class="text-right">
+<span class="font-headline-md text-headline-md text-secondary">₹1,250</span>
+<span class="block font-label-sm text-label-sm text-on-surface-variant">Prepaid Online</span>
+</div>
+</div>
+<!-- Metric Details Quad -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+<div class="p-3 rounded-lg bg-surface-container-low">
+<p class="font-label-sm text-label-sm text-on-surface-variant">Job ID</p>
+<p class="font-label-lg text-label-lg text-on-surface mt-0.5">#J-1001</p>
+<p class="font-body-sm text-body-sm text-outline mt-1">Priority: Standard</p>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low">
+<p class="font-label-sm text-label-sm text-on-surface-variant">Booking Time</p>
+<p class="font-label-lg text-label-lg text-on-surface mt-0.5">24 Sep 2024</p>
+<p class="font-body-sm text-body-sm text-outline mt-1">09:45 AM</p>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low">
+<p class="font-label-sm text-label-sm text-on-surface-variant">Scheduled Window</p>
+<p class="font-label-lg text-label-lg text-on-surface mt-0.5">10:30 — 11:30 AM</p>
+<p class="font-body-sm text-body-sm text-secondary font-medium mt-1">On Schedule</p>
+</div>
+<div class="p-3 rounded-lg bg-secondary-container/40">
+<p class="font-label-sm text-label-sm text-on-secondary-container">Live Status</p>
+<p class="font-label-lg text-label-lg text-on-secondary-container mt-0.5 flex items-center gap-1.5">
+<span>En Route</span>
+</p>
+<p class="font-body-sm text-body-sm text-on-secondary-container mt-1">1.4 km • ETA 8 mins</p>
+</div>
+</div>
+</section>
+<!-- 2. JOB TIMELINE Card -->
+<section class="bg-surface-container-lowest rounded-xl p-5 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">timeline</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Service Progression</h2>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Step 4 of 7</span>
+</div>
+<!-- Horizontal Step Stepper Flow -->
+<div class="relative pt-2 pb-4 overflow-x-auto">
+<div class="min-w-[620px]">
+<div class="grid grid-cols-7 relative">
+<!-- Background progress line track -->
+<div class="absolute top-4 left-6 right-6 h-0.5 bg-surface-container-highest -z-0"></div>
+<!-- Completed progress bar overlay: 50% width for step 4 -->
+<div class="absolute top-4 left-6 w-[52%] h-0.5 bg-secondary -z-0 transition-all duration-500"></div>
+<!-- Step 1 -->
+<div class="flex flex-col items-center text-center relative z-10">
+<div class="w-8 h-8 rounded-full bg-secondary text-on-secondary flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-base">check</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface mt-2">Booking Created</p>
+<span class="font-body-sm text-body-sm text-on-surface-variant">09:45 AM</span>
+</div>
+<!-- Step 2 -->
+<div class="flex flex-col items-center text-center relative z-10">
+<div class="w-8 h-8 rounded-full bg-secondary text-on-secondary flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-base">check</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface mt-2">Assigned</p>
+<span class="font-body-sm text-body-sm text-on-surface-variant">09:48 AM</span>
+</div>
+<!-- Step 3 -->
+<div class="flex flex-col items-center text-center relative z-10">
+<div class="w-8 h-8 rounded-full bg-secondary text-on-secondary flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-base">check</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface mt-2">Accepted</p>
+<span class="font-body-sm text-body-sm text-on-surface-variant">09:50 AM</span>
+</div>
+<!-- Step 4 (Active) -->
+<div class="flex flex-col items-center text-center relative z-10">
+<div class="relative w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shadow-sm ring-4 ring-secondary-container/50">
+<span class="relative flex h-3 w-3">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-secondary"></span>
+</span>
+</div>
+<p class="font-label-md text-label-md text-secondary mt-2 font-semibold">En Route</p>
+<span class="font-body-sm text-body-sm text-secondary">10:12 AM</span>
+</div>
+<!-- Step 5 (Pending) -->
+<div class="flex flex-col items-center text-center relative z-10 opacity-60">
+<div class="w-8 h-8 rounded-full bg-surface-container-high text-outline flex items-center justify-center">
+<span class="material-symbols-outlined text-base">pin_drop</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant mt-2">Arrived</p>
+<span class="font-body-sm text-body-sm text-outline">Pending</span>
+</div>
+<!-- Step 6 (Pending) -->
+<div class="flex flex-col items-center text-center relative z-10 opacity-60">
+<div class="w-8 h-8 rounded-full bg-surface-container-high text-outline flex items-center justify-center">
+<span class="material-symbols-outlined text-base">build</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant mt-2">Work Started</p>
+<span class="font-body-sm text-body-sm text-outline">Pending</span>
+</div>
+<!-- Step 7 (Pending) -->
+<div class="flex flex-col items-center text-center relative z-10 opacity-60">
+<div class="w-8 h-8 rounded-full bg-surface-container-high text-outline flex items-center justify-center">
+<span class="material-symbols-outlined text-base">verified</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant mt-2">Completed</p>
+<span class="font-body-sm text-body-sm text-outline">Pending</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 3. BEFORE & AFTER SERVICE EVIDENCE Card -->
+<section class="bg-surface-container-lowest rounded-xl p-5 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">camera_enhance</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Before &amp; After Service Evidence</h2>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container-high px-2 py-0.5 rounded">Digital Proof Mandatory</span>
+</div>
+<!-- Evidence Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Before Photo Box -->
+<div class="bg-surface-container-low rounded-lg p-4 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-md text-label-md text-on-surface">Pre-Installation Condition</span>
+<span class="font-label-sm text-label-sm text-outline uppercase bg-surface px-1.5 py-0.5 rounded">Pending</span>
+</div>
+<div class="relative w-full h-44 rounded-lg overflow-hidden bg-surface-container flex items-center justify-center group">
+<img class="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-300" data-alt="Interior residential ceiling fan junction point with exposed electrical box, ceiling rose, and safety ladder ready for new fan installation in Mumbai flat." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqcRa-v-BJx3tqcpHehv28_LfnFOiyp7T5ygrquGchX6Zmz1Ty9qiosY6uVw3v84SWzW_q4PYFrquvfJBTAfv-EBBZxdqdzrR1UVSxlZMEM7wRsXmCo1DLuIZAZKXCpbQLFczSx5WzHejBhIr0cjf7iqeA5g6kyJMTuRIcETJOd2FGDkLssR1YG9UL7zBFBj8dxIif7erGip2lZU3IeZxssz07XIZqcX28x3rcWkErMeTLv2eG3sFQ1g"/>
+<div class="absolute inset-0 bg-inverse-surface/40 flex flex-col items-center justify-center text-on-primary p-4 text-center">
+<span class="material-symbols-outlined text-3xl mb-1">add_a_photo</span>
+<p class="font-label-md text-label-md">Technician Arrival Upload</p>
+<p class="font-body-sm text-body-sm opacity-80 mt-0.5">Required: Pre-installation check</p>
+</div>
+</div>
+</div>
+<div class="mt-3 flex items-center justify-between font-body-sm text-body-sm text-on-surface-variant">
+<span>Status: Waiting for arrival</span>
+<span class="font-label-sm text-label-sm text-outline">0 / 2 Photos</span>
+</div>
+</div>
+<!-- After Photo Box -->
+<div class="bg-surface-container-low rounded-lg p-4 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-md text-label-md text-on-surface">Post-Installation Completion</span>
+<span class="font-label-sm text-label-sm text-outline uppercase bg-surface px-1.5 py-0.5 rounded">Locked</span>
+</div>
+<div class="relative w-full h-44 rounded-lg overflow-hidden bg-surface-container flex items-center justify-center group">
+<img class="w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-300" data-alt="Brand new 1200mm Orient ceiling fan neatly mounted on residential ceiling with test run spinning smoothly and clean wire trunking." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBM8iuTrdRBeWDB6StvKk2NcbC_Sb4-HRV6_XqV9ce8R0AbpZ_3rl1DNAwNTJqfiz4EU-j9vp0vFo_0MeTNsLdwI-tcgr2HkBQfKlvdnaf7ptBvk1gQxZarIMvRTnojw_KxwfMJRx0uDAiL8hU4yfVMiVrY5uqetqtqMnSRmZIo9K7cSNQHkdjyHs_8LHeyRP4IBVjTw4J3wGolkHqIn0l2q16JN2T2MY3bV94c5ZsQ22gCXJAask6nsQ"/>
+<div class="absolute inset-0 bg-inverse-surface/50 flex flex-col items-center justify-center text-on-primary p-4 text-center">
+<span class="material-symbols-outlined text-3xl mb-1">lock</span>
+<p class="font-label-md text-label-md">Awaiting service completion</p>
+<p class="font-body-sm text-body-sm opacity-80 mt-0.5">Photo mandatory before OTP verification</p>
+</div>
+</div>
+</div>
+<div class="mt-3 flex items-center justify-between font-body-sm text-body-sm text-on-surface-variant">
+<span>Customer OTP Guard: Active</span>
+<span class="font-label-sm text-label-sm text-outline">0 / 1 Photo</span>
+</div>
+</div>
+</div>
+<!-- Technician Quality Checklist -->
+<div class="mt-5 pt-4 bg-surface-container-low/40 rounded-lg p-4">
+<p class="font-label-md text-label-md text-on-surface mb-3 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base text-secondary">fact_check</span>
+            Quality &amp; Safety Mandatory Checklist Preview (4 Tasks)
+          </p>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+<div class="flex items-center gap-2 p-2 rounded bg-surface-container-lowest">
+<span class="material-symbols-outlined text-outline text-lg">check_box_outline_blank</span>
+<span class="font-body-sm text-body-sm text-on-surface">Switch isolation &amp; phase tester check</span>
+</div>
+<div class="flex items-center gap-2 p-2 rounded bg-surface-container-lowest">
+<span class="material-symbols-outlined text-outline text-lg">check_box_outline_blank</span>
+<span class="font-body-sm text-body-sm text-on-surface">Blade pitch balance &amp; clamp torque</span>
+</div>
+<div class="flex items-center gap-2 p-2 rounded bg-surface-container-lowest">
+<span class="material-symbols-outlined text-outline text-lg">check_box_outline_blank</span>
+<span class="font-body-sm text-body-sm text-on-surface">Motor winding resistance measurement</span>
+</div>
+<div class="flex items-center gap-2 p-2 rounded bg-surface-container-lowest">
+<span class="material-symbols-outlined text-outline text-lg">check_box_outline_blank</span>
+<span class="font-body-sm text-body-sm text-on-surface">Earthing continuity verified (Earth-Neutral &lt; 2V)</span>
+</div>
+</div>
+</div>
+</section>
+<!-- 4. LOCATION & LIVE MAP Card -->
+<section class="bg-surface-container-lowest rounded-xl p-5 shadow-sm">
+<div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-xl">navigation</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Location &amp; Live Tracking Telemetry</h2>
+</div>
+<div class="flex items-center gap-3">
+<span class="font-label-sm text-label-sm text-secondary font-medium flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+              Live GPS Signal
+            </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Update: 15s ago</span>
+</div>
+</div>
+<!-- Live Telemetry Route Map Container -->
+<div class="relative w-full h-80 rounded-xl overflow-hidden bg-surface-container-high shadow-inner">
+<div class="w-full h-full bg-cover bg-center" data-location="Marine Drive to Colaba, Mumbai" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDa622Sfg_uPbb8ZQAIw1z2_k3OB_5cArYe4C6XdFzzfnC74J3j_J95teS7FjirpzWC-swQn8hFRHYw6lBsMm3XmB8PtJkIx1HF1q-iDOW2uFRcOg3tM_MRj924SNFx7Zk7JSxB3L_liQ2uIBPtT0Ix4RVRaREAUtiUH1HH8V-yb6Zgzg-HprS5v3WKaOc8qcZKAOXouacFvNp5SwnZ-i9SXXvgtE-ViABzb5NjfteeQcSD2lB1dL-VWA')"></div>
+<!-- Live Route Overlay SVG -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none" fill="none" preserveaspectratio="none" viewbox="0 0 800 320">
+<!-- Planned Polyline -->
+<path d="M 120 70 Q 280 120, 420 180 T 680 250" stroke="#006c4a" stroke-dasharray="8 6" stroke-linecap="round" stroke-width="4"></path>
+<path d="M 120 70 Q 280 120, 420 180" stroke="#00288e" stroke-linecap="round" stroke-width="5"></path>
+</svg>
+<!-- Origin Beacon (Marine Lines) -->
+<div class="absolute top-14 left-24 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+<div class="px-2.5 py-1 rounded bg-inverse-surface text-on-primary font-label-sm text-label-sm shadow-md mb-1 whitespace-nowrap">
+              Marine Lines Depot
+            </div>
+<div class="w-4 h-4 rounded-full bg-primary border-2 border-white shadow"></div>
+</div>
+<!-- Live Technician Position Marker (Mid route) -->
+<div class="absolute top-[170px] left-[415px] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10">
+<div class="px-3 py-1 rounded-full bg-secondary text-on-secondary font-label-sm text-label-sm shadow-lg mb-1 flex items-center gap-1.5 whitespace-nowrap">
+<span class="material-symbols-outlined text-xs">two_wheeler</span>
+              Rajesh Kumar • 24 km/h
+            </div>
+<div class="relative flex h-5 w-5">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-80"></span>
+<span class="relative inline-flex rounded-full h-5 w-5 bg-white items-center justify-center shadow">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+</span>
+</div>
+</div>
+<!-- Destination Beacon (Colaba Flat) -->
+<div class="absolute top-[245px] left-[680px] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+<div class="px-2.5 py-1 rounded bg-inverse-surface text-on-primary font-label-sm text-label-sm shadow-md mb-1 whitespace-nowrap flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-secondary-container">home</span>
+              Colaba • Flat 402
+            </div>
+<div class="w-5 h-5 rounded-full bg-error flex items-center justify-center text-white shadow-md">
+<span class="w-2 h-2 rounded-full bg-white"></span>
+</div>
+</div>
+<!-- Floating Route Stats Card in bottom corner -->
+<div class="absolute bottom-4 left-4 bg-surface/95 backdrop-blur-md p-3 rounded-lg shadow-md max-w-xs flex items-center gap-4">
+<div class="w-9 h-9 rounded bg-secondary-container text-on-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-xl">near_me</span>
+</div>
+<div>
+<p class="font-label-lg text-label-lg text-on-surface">1.4 km Remaining</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Est. arrival in 8 mins (via MG Road)</p>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- RIGHT COLUMN: Customer, Technician & Finance (35% -> 4 of 12 cols desktop) -->
+<div class="lg:col-span-4 flex flex-col gap-6">
+<!-- 1. CUSTOMER DETAILS Card -->
+<section class="bg-surface-container-lowest rounded-xl p-5 shadow-sm">
+<div class="flex items-center justify-between pb-3 mb-4 bg-surface-container-low/50 -mx-5 -mt-5 p-5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">person</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Customer Profile</h2>
+</div>
+<span class="font-label-sm text-label-sm bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded">Verified User</span>
+</div>
+<div class="flex items-start gap-3.5 mb-4">
+<div class="w-12 h-12 rounded-full bg-surface-container-highest text-on-primary-fixed flex items-center justify-center font-headline-sm text-headline-sm shrink-0">
+            AS
+          </div>
+<div class="min-w-0 flex-1">
+<h3 class="font-label-lg text-label-lg text-on-surface truncate">Amit Sharma</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Premium Home Care Subscriber</p>
+<div class="flex items-center gap-1 text-amber-600 mt-1">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">5.0</span>
+<span class="font-body-sm text-body-sm text-outline">(3 past bookings completed)</span>
+</div>
+</div>
+</div>
+<!-- Contact & Address Details -->
+<div class="space-y-3 font-body-sm text-body-sm">
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-base">call</span>
+<span class="text-on-surface font-medium">+91 98201 XXXXX</span>
+</div>
+<a class="px-2.5 py-1 rounded bg-primary-container text-on-primary font-label-sm text-label-sm hover:bg-primary transition" href="tel:+919820100000">
+              Click to Call
+            </a>
+</div>
+<div class="p-2.5 rounded-lg bg-surface-container-low">
+<div class="flex items-start gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-base mt-0.5">location_on</span>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Service Address</p>
+<p class="text-on-surface-variant mt-0.5 leading-relaxed">
+                  Flat 402, Sea View Apartments, Shahid Bhagat Singh Road, Colaba, Mumbai
+                </p>
+<span class="inline-block mt-1 font-label-sm text-label-sm text-on-surface font-semibold bg-surface-container px-2 py-0.5 rounded">
+                  PIN: 400001
+                </span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 2. ASSIGNED TECHNICIAN Card -->
+<section class="bg-surface-container-lowest rounded-xl p-5 shadow-sm relative overflow-hidden">
+<div class="flex items-center justify-between pb-3 mb-4 bg-surface-container-low/50 -mx-5 -mt-5 p-5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-xl">badge</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Assigned Technician</h2>
+</div>
+<span class="font-label-sm text-label-sm text-secondary bg-secondary-container px-2 py-0.5 rounded flex items-center gap-1 font-semibold">
+<span class="material-symbols-outlined text-xs">verified</span>
+            Verified Pro
+          </span>
+</div>
+<div class="flex items-center gap-3.5 mb-4">
+<div class="relative">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="Professional Indian electrician technician wearing smart blue ElectriCare service polo uniform with badge and warm confident expression." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEDElwGDjyJ4Yp3etA9mMj5bYzT6PHDuib3MjIGzWi5f9HnMMpUFkmF6xRk4h_0c4a8nSwhqnxbvR3XgotAtoYIn4itWfOH9mMVuZglsSXNmCN2oXSRi5S7GmAjOGE0EnUPxMJDMMYMm4Xr3WHmDX3NaQtLvsGkR0ctzI1zjN3dUE3AXYfddlHSV5_DDfnyEpLc2S6AxyAoQG6Da6M5MACVT37t03yBFPQ12ZPS4bpV4EHb6OZQH4d4Q"/>
+</div>
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-secondary border-2 border-white rounded-full"></span>
+</div>
+<div class="min-w-0 flex-1">
+<h3 class="font-label-lg text-label-lg text-on-surface truncate">Rajesh Kumar</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Tier 1 Certified Specialist</p>
+<div class="flex items-center gap-1.5 text-amber-600 mt-0.5">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">4.8</span>
+<span class="font-body-sm text-body-sm text-outline">• 156 completed jobs</span>
+</div>
+</div>
+</div>
+<!-- Telemetry & Dispatch Stats -->
+<div class="grid grid-cols-2 gap-2 mb-4 font-body-sm text-body-sm">
+<div class="p-2.5 rounded-lg bg-surface-container-low">
+<span class="text-on-surface-variant text-label-sm font-label-sm block">Assigned Time</span>
+<span class="text-on-surface font-medium">Today, 09:48 AM</span>
+</div>
+<div class="p-2.5 rounded-lg bg-surface-container-low">
+<span class="text-on-surface-variant text-label-sm font-label-sm block">Distance from Site</span>
+<span class="text-secondary font-medium">1.4 km away</span>
+</div>
+</div>
+<!-- Direct Action Bar -->
+<div class="flex items-center gap-2">
+<a class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-secondary-container text-on-secondary-container hover:bg-secondary hover:text-on-secondary font-label-md text-label-md transition" href="tel:+919819200000">
+<span class="material-symbols-outlined text-base">call</span>
+            Call Rajesh (+91 98192 XXXXX)
+          </a>
+<button aria-label="Direct message technician" class="p-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant transition" type="button">
+<span class="material-symbols-outlined text-base">chat</span>
+</button>
+</div>
+</section>
+<!-- 3. PAYMENT BREAKDOWN Card -->
+<section class="bg-surface-container-lowest rounded-xl p-5 shadow-sm">
+<div class="flex items-center justify-between pb-3 mb-4 bg-surface-container-low/50 -mx-5 -mt-5 p-5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">payments</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Payment Breakdown</h2>
+</div>
+<span class="font-label-sm text-label-sm bg-secondary-container text-on-secondary-container font-semibold px-2 py-0.5 rounded">
+            PAID / ESCROWED
+          </span>
+</div>
+<div class="space-y-2.5 font-body-sm text-body-sm">
+<div class="flex justify-between items-center text-on-surface-variant">
+<span>Base Service Charge</span>
+<span class="text-on-surface font-medium">₹950.00</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant">
+<span>Spare Parts (Regulator &amp; Safety Hooks)</span>
+<span class="text-on-surface font-medium">₹300.00</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant">
+<span>Taxes (GST 18%)</span>
+<span class="text-secondary font-medium">Included in Total</span>
+</div>
+<div class="my-3 pt-3 bg-surface-container-low -mx-5 px-5 flex justify-between items-center">
+<span class="font-label-lg text-label-lg text-on-surface">Grand Total</span>
+<span class="font-headline-md text-headline-md text-primary font-bold">₹1,250.00</span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex flex-col gap-2">
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-on-surface-variant">Gateway Channel</span>
+<span class="text-on-surface font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-secondary text-sm">account_balance_wallet</span>
+                Razorpay UPI
+              </span>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-on-surface-variant">Invoice Reference</span>
+<span class="text-on-surface font-mono font-medium">#INV-2024-8841</span>
+</div>
+</div>
+</div>
+<!-- Download Invoice Action -->
+<button class="w-full mt-4 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-surface-container text-on-surface hover:bg-surface-container-high font-label-md text-label-md transition active:scale-95 shadow-sm" type="button">
+<span class="material-symbols-outlined text-base">download</span>
+          Download PDF Invoice
+        </button>
+</section>
+</div>
+</div>
+</div></main>
+<!-- END: Main Content Container -->
+<!-- Footer Info -->
+<footer class="mt-auto px-6 py-4 border-t border-slate-200 bg-white text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
+<p>© 2024 ElectriCare Inc. Regional Partner Portal. All rights reserved.</p>
+<div class="flex items-center gap-4 text-[11px] text-slate-500">
+<a class="hover:text-emerald-600" href="#">Privacy Policy</a>
+<a class="hover:text-emerald-600" href="#">Technician Guidelines</a>
+<a class="hover:text-emerald-600" href="#">Emergency Dispatch: 1800-202-099</a>
+</div>
+</footer>
+</div>
+<!-- END: MainContentArea -->
+</div>
+<!-- END: MainLayoutWrapper -->
+</body></html>

@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ElectriCare - Partner Web CRM (Maharashtra Team)</title>
+<!-- Inter Google Font -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            },
+            surface: {
+              bg: '#f8fafc',
+              border: '#e2e8f0',
+              sidebar: '#ffffff'
+            }
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom CSS -->
+<style data-purpose="custom-enhancements">
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .chart-donut-ring {
+      stroke-dasharray: 440;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+      transition: stroke-dashoffset 0.5s ease;
+    }
+  </style>
+<!-- END: Custom CSS -->
+<meta content="web_dashboard" name="shell-type"/></head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 text-[13px]">
+<!-- BEGIN: TopBarBanner -->
+<!-- Context indicator for Regional Operations -->
+<div class="bg-brand-900 text-brand-100 text-xs px-6 py-1.5 flex items-center justify-between border-b border-brand-800">
+<div class="flex items-center space-x-2 font-medium">
+<span class="inline-flex items-center justify-center w-4 h-4 bg-emerald-500 text-white rounded-full text-[10px] font-bold">11</span>
+<span class="tracking-wide font-semibold text-white">Partner Web CRM</span>
+<span class="text-emerald-300">(Maharashtra Team)</span>
+</div>
+<div class="flex items-center space-x-4 text-[11px] text-emerald-200">
+<span>Regional Operations</span>
+<span class="text-emerald-500">•</span>
+<span>Manage Technicians</span>
+<span class="text-emerald-500">•</span>
+<span>Jobs</span>
+<span class="text-emerald-500">•</span>
+<span>Pincodes</span>
+<span class="text-emerald-500">•</span>
+<span>Finance</span>
+<span class="text-emerald-500">•</span>
+<span>Support</span>
+</div>
+</div>
+<!-- END: TopBarBanner -->
+<!-- BEGIN: MainLayoutWrapper -->
+<div class="flex flex-1 min-h-[calc(100vh-28px)]">
+<!-- BEGIN: LeftSidebar -->
+<aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 select-none">
+<div>
+<!-- Logo Section -->
+<div class="h-16 flex items-center px-6 border-b border-slate-100 gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-sm shadow-emerald-500/30">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<path d="M13 2L3 14h8v8l10-12h-8l0-8z"></path>
+</svg>
+</div>
+<div>
+<span class="text-base font-bold text-slate-900 tracking-tight flex items-center gap-1">
+              ElectriCare
+            </span>
+<span class="block text-[10px] font-medium uppercase tracking-wider text-emerald-600 -mt-1">Partner Portal</span>
+</div>
+</div>
+<!-- Navigation Menu -->
+<nav aria-label="Main Navigation" class="p-3 space-y-1">
+<!-- Dashboard - Active Item -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg bg-emerald-600 text-white font-medium shadow-sm shadow-emerald-600/20 transition-colors" href="#">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="9" rx="1" width="7" x="3" y="3"></rect>
+<rect height="5" rx="1" width="7" x="14" y="3"></rect>
+<rect height="9" rx="1" width="7" x="14" y="12"></rect>
+<rect height="5" rx="1" width="7" x="3" y="16"></rect>
+</svg>
+<span>Dashboard</span>
+</a>
+<!-- Technicians -->
+<a class="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<div class="flex items-center gap-3">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+<circle cx="9" cy="7" r="4"></circle>
+<path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+</svg>
+<span>Technicians</span>
+</div>
+<span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">24</span>
+</a>
+<!-- Job Management -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="14" rx="2" ry="2" width="20" x="2" y="7"></rect>
+<path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+</svg>
+<span>Job Management</span>
+</a>
+<!-- Pincode Coverage -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path>
+<circle cx="12" cy="10" r="3"></circle>
+</svg>
+<span>Pincode Coverage</span>
+</a>
+<!-- Finance / Payouts -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<line x1="12" x2="12" y1="1" y2="23"></line>
+<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+</svg>
+<span>Finance / Payouts</span>
+</a>
+<!-- Profile / Settings -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="3"></circle>
+<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+</svg>
+<span>Profile / Settings</span>
+</a>
+<!-- Support -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+<line x1="12" x2="12.01" y1="17" y2="17"></line>
+</svg>
+<span>Support</span>
+</a>
+</nav>
+</div>
+<!-- Partner Unit Card in Sidebar Footer -->
+<div class="p-3 border-t border-slate-100 bg-slate-50/50 m-2 rounded-xl">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 border border-emerald-300">
+            MT
+          </div>
+<div class="truncate">
+<p class="font-semibold text-slate-800 text-xs truncate leading-tight">Maharashtra Team</p>
+<span class="inline-flex items-center text-[10px] text-emerald-600 font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span> Partner Active
+            </span>
+</div>
+</div>
+</div>
+</aside>
+<!-- END: LeftSidebar -->
+<!-- BEGIN: MainContentArea -->
+<div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+<!-- BEGIN: HeaderNav -->
+<header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-20">
+<!-- Search bar input -->
+<div class="relative w-80">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="11" cy="11" r="8"></circle>
+<line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+</svg>
+</span>
+<input class="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 placeholder-slate-400 transition" placeholder="Search dashboard, jobs, technicians..." type="text"/>
+</div>
+<!-- Top Right Actions & User Profile -->
+<div class="flex items-center gap-3.5">
+<!-- Quick Status Pill -->
+<div class="hidden md:flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs px-2.5 py-1 rounded-full">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span class="font-medium text-[11px]">Region: MH Operations</span>
+</div>
+<!-- Notification Bell -->
+<button aria-label="Notifications" class="p-2 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100 relative" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+<path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+</svg>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+</button>
+<div class="h-5 w-px bg-slate-200"></div>
+<!-- Profile Badge -->
+<div class="flex items-center gap-2.5 pl-1 cursor-pointer">
+<div class="w-8 h-8 rounded-full bg-slate-800 text-white font-semibold flex items-center justify-center text-xs">
+              MH
+            </div>
+<div class="hidden sm:block text-left">
+<span class="block text-xs font-semibold text-slate-700 leading-tight">Maharashtra Ops</span>
+<span class="text-[10px] text-slate-400">admin-mh@electricare.in</span>
+</div>
+<svg class="w-3.5 h-3.5 text-slate-400 ml-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</div>
+</div>
+</header>
+<!-- END: HeaderNav -->
+<!-- Main Body Container -->
+<main class="p-6 space-y-6"><div class="flex flex-col w-full">
+<div class="flex flex-col gap-space-lg w-full">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div class="space-y-space-xs">
+<nav aria-label="Breadcrumbs" class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm">
+<span>Operational Portal</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-secondary font-semibold">Partner Support</span>
+</nav>
+<div class="flex items-center gap-3">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Support Center</h1>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm uppercase tracking-wider">
+            SLA ACTIVE
+          </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-3xl">
+          Submit tickets, track resolution status, and communicate directly with ElectriCare Central Operations.
+        </p>
+</div>
+<div class="flex items-center gap-space-sm self-start lg:self-center">
+<button class="h-9 px-4 rounded-lg bg-secondary text-on-secondary hover:bg-on-secondary-container active:scale-[0.98] transition-all flex items-center gap-2 shadow-sm font-label-md text-label-md" id="open-ticket-btn">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+<span>Open New Support Ticket</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md">
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between transition-all hover:shadow-md">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Open Tickets</span>
+<span class="w-8 h-8 rounded-lg bg-error-container text-on-error-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">emergency_home</span>
+</span>
+</div>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="font-headline-xl text-headline-xl text-on-surface">02</span>
+<span class="font-label-sm text-label-sm text-error font-medium">Immediate SLA Risk</span>
+</div>
+<div class="mt-2 text-on-surface-variant font-body-sm text-body-sm flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+<span>Awaiting Support Response</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between transition-all hover:shadow-md">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">In Progress</span>
+<span class="w-8 h-8 rounded-lg bg-primary-fixed text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">pending_actions</span>
+</span>
+</div>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="font-headline-xl text-headline-xl text-on-surface">03</span>
+<span class="font-label-sm text-label-sm text-primary font-medium">Assigned to Tier-2</span>
+</div>
+<div class="mt-2 text-on-surface-variant font-body-sm text-body-sm flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<span>Under Operational Review</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between transition-all hover:shadow-md">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Resolved</span>
+<span class="w-8 h-8 rounded-lg bg-secondary-container text-on-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</span>
+</div>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="font-headline-xl text-headline-xl text-on-surface">29</span>
+<span class="font-label-sm text-label-sm text-secondary font-medium">96.8% Satisfied</span>
+</div>
+<div class="mt-2 text-on-surface-variant font-body-sm text-body-sm flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>Successfully closed this quarter</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between transition-all hover:shadow-md">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Total Tickets</span>
+<span class="w-8 h-8 rounded-lg bg-surface-container-high text-on-surface flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">history</span>
+</span>
+</div>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="font-headline-xl text-headline-xl text-on-surface">34</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">FY 2026-27</span>
+</div>
+<div class="mt-2 text-on-surface-variant font-body-sm text-body-sm flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+<span>Lifetime historical support requests</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-md space-y-space-md">
+<div class="flex flex-wrap items-center gap-2 overflow-x-auto pb-1 text-label-sm font-label-sm">
+<button class="filter-tab px-3 py-1.5 rounded-lg bg-secondary text-on-secondary flex items-center gap-2 font-semibold">
+<span>All Tickets</span>
+<span class="px-1.5 py-0.2 bg-white/20 text-on-secondary rounded text-[10px]">34</span>
+</button>
+<button class="filter-tab px-3 py-1.5 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high flex items-center gap-2 font-medium">
+<span>Action Required</span>
+<span class="px-1.5 py-0.2 bg-error-container text-on-error-container rounded text-[10px]">5</span>
+</button>
+<button class="filter-tab px-3 py-1.5 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high flex items-center gap-2 font-medium">
+<span>Payment &amp; Billing</span>
+<span class="px-1.5 py-0.2 bg-surface-container-highest text-on-surface-variant rounded text-[10px]">8</span>
+</button>
+<button class="filter-tab px-3 py-1.5 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high flex items-center gap-2 font-medium">
+<span>Technician Grievances</span>
+<span class="px-1.5 py-0.2 bg-surface-container-highest text-on-surface-variant rounded text-[10px]">12</span>
+</button>
+<button class="filter-tab px-3 py-1.5 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high flex items-center gap-2 font-medium">
+<span>Resolved</span>
+<span class="px-1.5 py-0.2 bg-secondary-container text-on-secondary-container rounded text-[10px]">29</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-space-sm items-center">
+<div class="lg:col-span-4 relative">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-outline">
+<span class="material-symbols-outlined text-[18px]">search</span>
+</span>
+<input class="w-full h-9 pl-9 pr-3 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest transition-colors" placeholder="Search ticket ID, subject, customer, or keyword..." type="text"/>
+</div>
+<div class="lg:col-span-2">
+<select class="w-full h-9 px-2.5 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-on-surface focus:outline-none focus:bg-surface-container-lowest">
+<option>All Statuses</option>
+<option>Open</option>
+<option>In Progress</option>
+<option>Resolved</option>
+</select>
+</div>
+<div class="lg:col-span-2">
+<select class="w-full h-9 px-2.5 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-on-surface focus:outline-none focus:bg-surface-container-lowest">
+<option>All Priorities</option>
+<option>High Priority</option>
+<option>Medium Priority</option>
+<option>Low Priority</option>
+</select>
+</div>
+<div class="lg:col-span-2">
+<select class="w-full h-9 px-2.5 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-on-surface focus:outline-none focus:bg-surface-container-lowest">
+<option>All Categories</option>
+<option>Job Issue</option>
+<option>Technician Issue</option>
+<option>Payment Issue</option>
+<option>Technical Issue</option>
+<option>General Support</option>
+</select>
+</div>
+<div class="lg:col-span-2">
+<div class="h-9 px-2.5 rounded-lg bg-surface-container-low flex items-center justify-between text-on-surface font-body-sm text-body-sm cursor-pointer hover:bg-surface-container-high transition-colors">
+<span class="truncate">01 Oct - 02 Oct 2026</span>
+<span class="material-symbols-outlined text-[16px] text-outline">date_range</span>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<div class="overflow-x-auto">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<tr>
+<th class="py-3 px-4" scope="col">Ticket ID</th>
+<th class="py-3 px-4 min-w-[280px]" scope="col">Subject</th>
+<th class="py-3 px-4" scope="col">Category</th>
+<th class="py-3 px-4 whitespace-nowrap" scope="col">Created</th>
+<th class="py-3 px-4" scope="col">Priority</th>
+<th class="py-3 px-4" scope="col">Status</th>
+<th class="py-3 px-4 whitespace-nowrap" scope="col">Last Updated</th>
+<th class="py-3 px-4 text-right" scope="col">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-on-surface font-body-sm">
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4 font-semibold text-primary">#SUP-1024</td>
+<td class="py-3.5 px-4">
+<div class="flex flex-col">
+<span class="font-medium text-on-surface line-clamp-1">Technician assignment failure on high-voltage job #J-1005</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Pune East Division • High Priority Grid Station</span>
+</div>
+</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant">
+                  Technician Issue
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-on-surface-variant">02 Oct 2026, 09:15 AM</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                  High
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary-fixed text-primary font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                  In Progress
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-on-surface-variant">02 Oct 2026, 10:04 AM</td>
+<td class="py-3.5 px-4 text-right whitespace-nowrap">
+<button class="h-7 px-3 rounded-lg bg-surface-container hover:bg-secondary hover:text-on-secondary text-secondary font-label-sm text-label-sm font-semibold transition-colors">
+                  View Ticket
+                </button>
+</td>
+</tr>
+<tr class="bg-surface-container-lowest hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4 font-semibold text-primary">#SUP-1023</td>
+<td class="py-3.5 px-4">
+<div class="flex flex-col">
+<span class="font-medium text-on-surface line-clamp-1">Pincode 411005 boundary synchronization discrepancy</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Geo-fence shift detected after polygon reload</span>
+</div>
+</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant">
+                  Technical Issue
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-on-surface-variant">02 Oct 2026, 08:30 AM</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-tertiary-fixed text-tertiary font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                  Medium
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Open
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-on-surface-variant">02 Oct 2026, 08:30 AM</td>
+<td class="py-3.5 px-4 text-right whitespace-nowrap">
+<button class="h-7 px-3 rounded-lg bg-surface-container hover:bg-secondary hover:text-on-secondary text-secondary font-label-sm text-label-sm font-semibold transition-colors">
+                  View Ticket
+                </button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4 font-semibold text-primary">#SUP-1020</td>
+<td class="py-3.5 px-4">
+<div class="flex flex-col">
+<span class="font-medium text-on-surface line-clamp-1">Razorpay payout settlement batch delay reconciliation</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">UTR acknowledgment missing for 6 partner line items</span>
+</div>
+</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant">
+                  Payment Issue
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-on-surface-variant">01 Oct 2026, 02:45 PM</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                  High
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary-fixed text-primary font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                  In Progress
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-on-surface-variant">01 Oct 2026, 05:20 PM</td>
+<td class="py-3.5 px-4 text-right whitespace-nowrap">
+<button class="h-7 px-3 rounded-lg bg-surface-container hover:bg-secondary hover:text-on-secondary text-secondary font-label-sm text-label-sm font-semibold transition-colors">
+                  View Ticket
+                </button>
+</td>
+</tr>
+<tr class="bg-surface-container-lowest hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4 font-semibold text-primary">#SUP-1018</td>
+<td class="py-3.5 px-4">
+<div class="flex flex-col">
+<span class="font-medium text-on-surface line-clamp-1">Customer dispute regarding MCB diagnostic quotation #J-1002</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Price deviation verified against standard tariff card</span>
+</div>
+</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant">
+                  Job Issue
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-on-surface-variant">30 Sep 2026, 11:20 AM</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-tertiary-fixed text-tertiary font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                  Medium
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Resolved
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-on-surface-variant">01 Oct 2026, 09:10 AM</td>
+<td class="py-3.5 px-4 text-right whitespace-nowrap">
+<button class="h-7 px-3 rounded-lg bg-surface-container hover:bg-secondary hover:text-on-secondary text-secondary font-label-sm text-label-sm font-semibold transition-colors">
+                  View Ticket
+                </button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4 font-semibold text-primary">#SUP-1015</td>
+<td class="py-3.5 px-4">
+<div class="flex flex-col">
+<span class="font-medium text-on-surface line-clamp-1">Request for Wireman license verification manual override</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Technician ID #TECH-4091 verified with state registrar</span>
+</div>
+</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant">
+                  Technician Issue
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-on-surface-variant">29 Sep 2026, 04:15 PM</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+                  Low
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Resolved
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-on-surface-variant">30 Sep 2026, 02:00 PM</td>
+<td class="py-3.5 px-4 text-right whitespace-nowrap">
+<button class="h-7 px-3 rounded-lg bg-surface-container hover:bg-secondary hover:text-on-secondary text-secondary font-label-sm text-label-sm font-semibold transition-colors">
+                  View Ticket
+                </button>
+</td>
+</tr>
+<tr class="bg-surface-container-lowest hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4 font-semibold text-primary">#SUP-1012</td>
+<td class="py-3.5 px-4">
+<div class="flex flex-col">
+<span class="font-medium text-on-surface line-clamp-1">Quarterly partner platform fee tax invoice breakdown</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">GST credit documentation dispatched to regional accounts</span>
+</div>
+</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant">
+                  Payment Issue
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-on-surface-variant">28 Sep 2026, 10:00 AM</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+                  Low
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Resolved
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-on-surface-variant">28 Sep 2026, 03:40 PM</td>
+<td class="py-3.5 px-4 text-right whitespace-nowrap">
+<button class="h-7 px-3 rounded-lg bg-surface-container hover:bg-secondary hover:text-on-secondary text-secondary font-label-sm text-label-sm font-semibold transition-colors">
+                  View Ticket
+                </button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4 font-semibold text-primary">#SUP-1008</td>
+<td class="py-3.5 px-4">
+<div class="flex flex-col">
+<span class="font-medium text-on-surface line-clamp-1">Clarification on festive monsoon surge dispatch protocol</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Standardized guidelines appended to partner handbook</span>
+</div>
+</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant">
+                  General Support
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-on-surface-variant">26 Sep 2026, 01:15 PM</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+                  Low
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Resolved
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-on-surface-variant">27 Sep 2026, 11:00 AM</td>
+<td class="py-3.5 px-4 text-right whitespace-nowrap">
+<button class="h-7 px-3 rounded-lg bg-surface-container hover:bg-secondary hover:text-on-secondary text-secondary font-label-sm text-label-sm font-semibold transition-colors">
+                  View Ticket
+                </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-space-md bg-surface-container-low flex flex-col sm:flex-row items-center justify-between gap-space-sm font-body-sm text-body-sm text-on-surface-variant">
+<span class="font-medium">Showing 1 to 7 of 34 tickets</span>
+<div class="flex items-center gap-1">
+<button class="px-2.5 py-1 rounded bg-surface-container-lowest text-on-surface hover:bg-surface-container font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">arrow_back</span>
+<span>Previous</span>
+</button>
+<button class="w-7 h-7 rounded bg-secondary text-on-secondary font-label-sm text-label-sm font-bold flex items-center justify-center">1</button>
+<button class="w-7 h-7 rounded bg-surface-container-lowest text-on-surface hover:bg-surface-container font-label-sm text-label-sm flex items-center justify-center">2</button>
+<button class="w-7 h-7 rounded bg-surface-container-lowest text-on-surface hover:bg-surface-container font-label-sm text-label-sm flex items-center justify-center">3</button>
+<span class="px-1 text-outline">...</span>
+<button class="w-7 h-7 rounded bg-surface-container-lowest text-on-surface hover:bg-surface-container font-label-sm text-label-sm flex items-center justify-center">5</button>
+<button class="px-2.5 py-1 rounded bg-surface-container-lowest text-on-surface hover:bg-surface-container font-label-sm text-label-sm flex items-center gap-1">
+<span>Next</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="hidden fixed inset-0 z-50 flex items-center justify-center bg-inverse-surface/40 backdrop-blur-sm p-4" id="new-ticket-modal">
+<div class="bg-surface-container-lowest w-full max-w-xl rounded-xl shadow-xl p-space-lg space-y-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-8 h-8 rounded-lg bg-secondary-container text-on-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">support_agent</span>
+</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Submit Operations Ticket</h2>
+</div>
+<button class="w-8 h-8 rounded-full hover:bg-surface-container text-on-surface-variant flex items-center justify-center" id="close-modal-btn">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="space-y-space-sm font-body-sm text-body-sm">
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface mb-1">Issue Category</label>
+<select class="w-full h-9 px-3 rounded-lg bg-surface-container-low text-on-surface focus:outline-none">
+<option>Job Execution Issue</option>
+<option>Technician Dispute / Verification</option>
+<option>Payment Settlement Delay</option>
+<option>Technical / App Boundary Issue</option>
+<option>General Operational Support</option>
+</select>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface mb-1">Subject</label>
+<input class="w-full h-9 px-3 rounded-lg bg-surface-container-low text-on-surface placeholder:text-outline focus:outline-none" placeholder="Summary of the operational obstacle..." type="text"/>
+</div>
+<div class="grid grid-cols-2 gap-space-sm">
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface mb-1">Priority Tier</label>
+<select class="w-full h-9 px-3 rounded-lg bg-surface-container-low text-on-surface focus:outline-none">
+<option>High (SLA Breach Risk &lt; 2 hrs)</option>
+<option>Medium (Standard Response)</option>
+<option>Low (Informational inquiry)</option>
+</select>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface mb-1">Reference ID (Optional)</label>
+<input class="w-full h-9 px-3 rounded-lg bg-surface-container-low text-on-surface placeholder:text-outline focus:outline-none" placeholder="e.g. #J-1005 or #TECH-401" type="text"/>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface mb-1">Detailed Explanation</label>
+<textarea class="w-full p-3 rounded-lg bg-surface-container-low text-on-surface placeholder:text-outline focus:outline-none resize-none" placeholder="Include technician names, affected consumer addresses, and system logs..." rows="4"></textarea>
+</div>
+</div>
+<div class="flex items-center justify-end gap-space-sm pt-2">
+<button class="h-9 px-4 rounded-lg bg-surface-container text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-colors" id="cancel-modal-btn">
+          Cancel
+        </button>
+<button class="h-9 px-4 rounded-lg bg-secondary text-on-secondary font-label-md text-label-md hover:bg-on-secondary-container transition-colors shadow-sm" id="submit-ticket-action">
+          Dispatch to Operations Desk
+        </button>
+</div>
+</div>
+</div>
+<script>
+    const openBtn = document.getElementById('open-ticket-btn');
+    const closeBtn = document.getElementById('close-modal-btn');
+    const cancelBtn = document.getElementById('cancel-modal-btn');
+    const submitBtn = document.getElementById('submit-ticket-action');
+    const modal = document.getElementById('new-ticket-modal');
+
+    function toggleModal(show) {
+      if (show) {
+        modal.classList.remove('hidden');
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    if (openBtn) openBtn.addEventListener('click', () => toggleModal(true));
+    if (closeBtn) closeBtn.addEventListener('click', () => toggleModal(false));
+    if (cancelBtn) cancelBtn.addEventListener('click', () => toggleModal(false));
+    if (submitBtn) {
+      submitBtn.addEventListener('click', () => {
+        toggleModal(false);
+      });
+    }
+
+    const tabs = document.querySelectorAll('.filter-tab');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => {
+          t.classList.remove('bg-secondary', 'text-on-secondary', 'font-semibold');
+          t.classList.add('bg-surface-container', 'text-on-surface', 'font-medium');
+        });
+        tab.classList.remove('bg-surface-container', 'text-on-surface', 'font-medium');
+        tab.classList.add('bg-secondary', 'text-on-secondary', 'font-semibold');
+      });
+    });
+  </script>
+</div></main>
+<!-- END: Main Content Container -->
+<!-- Footer Info -->
+<footer class="mt-auto px-6 py-4 border-t border-slate-200 bg-white text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
+<p>© 2024 ElectriCare Inc. Regional Partner Portal. All rights reserved.</p>
+<div class="flex items-center gap-4 text-[11px] text-slate-500">
+<a class="hover:text-emerald-600" href="#">Privacy Policy</a>
+<a class="hover:text-emerald-600" href="#">Technician Guidelines</a>
+<a class="hover:text-emerald-600" href="#">Emergency Dispatch: 1800-202-099</a>
+</div>
+</footer>
+</div>
+<!-- END: MainContentArea -->
+</div>
+<!-- END: MainLayoutWrapper -->
+</body></html>

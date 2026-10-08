@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "458445561611",
+    "project_id": "ghar-tak-service",
+    "storage_bucket": "ghar-tak-service.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:458445561611:android:d1c26bc8a1b53727eecc0e",
+        "android_client_info": {
+          "package_name": "com.ghartak.customer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXdbwpkmRCpSPYX4PIaIXboT0YaoC2UpU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

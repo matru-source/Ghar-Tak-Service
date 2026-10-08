@@ -31,6 +31,8 @@ fun CustomerAuthScreen(
     onLoginSuccess: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val activity = context as? android.app.Activity
 
     LaunchedEffect(state.isLoggedIn) {
         if (state.isLoggedIn) {
@@ -180,7 +182,7 @@ fun CustomerAuthScreen(
             // Primary Action
             Button(
                 onClick = {
-                    if (state.isOtpSent) viewModel.verifyOtp() else viewModel.sendOtp()
+                    if (state.isOtpSent) viewModel.verifyOtp() else viewModel.sendOtp(activity)
                 },
                 enabled = !state.isLoading,
                 modifier = Modifier

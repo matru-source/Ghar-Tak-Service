@@ -31,6 +31,44 @@ fun PaymentScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    var showBackWarningDialog by remember { mutableStateOf(false) }
+
+    androidx.activity.compose.BackHandler(enabled = state.isProcessing) {
+        showBackWarningDialog = true
+    }
+
+    if (showBackWarningDialog) {
+        AlertDialog(
+            onDismissRequest = { showBackWarningDialog = false },
+            title = {
+                Text("Cancel Electrician Dispatch?", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            },
+            text = {
+                Text(
+                    "We are currently allocating the nearest certified technician in your zone. Going back now will abort this booking request.",
+                    fontSize = 13.sp,
+                    color = TextDarkMuted
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showBackWarningDialog = false
+                        viewModel.cancelDispatch()
+                        onBack()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
+                ) {
+                    Text("Yes, Cancel", color = Color.White)
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showBackWarningDialog = false }) {
+                    Text("Stay on Screen")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -51,7 +89,15 @@ fun PaymentScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(
+                        onClick = {
+                            if (state.isProcessing) {
+                                showBackWarningDialog = true
+                            } else {
+                                onBack()
+                            }
+                        }
+                    ) {
                         Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = TextDarkPrimary)
                     }
                 },

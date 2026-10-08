@@ -88,20 +88,20 @@ class PaymentViewModel(
 
             try {
                 val api = ApiClient.getService(context)
-                val response = api.createJob(
-                    CreateJobRequest(
-                        serviceId = _uiState.value.serviceId,
-                        pincode = _uiState.value.pincode,
-                        customerAddressText = _uiState.value.addressText,
-                        customerLatitude = 18.9220,
-                        customerLongitude = 72.8347,
-                        priority = _uiState.value.priority
+                val response = kotlinx.coroutines.withTimeoutOrNull(2000) {
+                    api.createJob(
+                        CreateJobRequest(
+                            serviceId = _uiState.value.serviceId,
+                            pincode = _uiState.value.pincode,
+                            customerAddressText = _uiState.value.addressText,
+                            customerLatitude = 18.9220,
+                            customerLongitude = 72.8347,
+                            priority = _uiState.value.priority
+                        )
                     )
-                )
+                }
 
-                delay(800) // Realistic dispatch engine allocation sensation
-
-                if (response.isSuccessful && response.body()?.data != null) {
+                if (response != null && response.isSuccessful && response.body()?.data != null) {
                     val job = response.body()!!.data!!
                     _uiState.value = _uiState.value.copy(
                         isProcessing = false,
@@ -117,6 +117,10 @@ class PaymentViewModel(
                 handleFallbackSuccess(onSuccess)
             }
         }
+    }
+
+    fun cancelDispatch() {
+        _uiState.value = _uiState.value.copy(isProcessing = false)
     }
 
     private fun handleFallbackSuccess(onSuccess: (jobId: String) -> Unit) {

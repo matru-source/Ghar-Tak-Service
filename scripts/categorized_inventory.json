@@ -1,0 +1,373 @@
+[
+  {
+    "file": "admin_web_crm_audit_logs.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\admin_web_crm_audit_logs.png",
+    "role": "Admin / Owner CRM",
+    "category": "Security & Audit",
+    "screenName": "WORM Compliance Ledger & Cryptographic Audit Logs"
+  },
+  {
+    "file": "admin_web_crm_commission_configuration.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\admin_web_crm_commission_configuration.png",
+    "role": "Admin / Owner CRM",
+    "category": "Finance & Commission",
+    "screenName": "Global Commission & Tariffs Configuration"
+  },
+  {
+    "file": "admin_web_crm_customer_invoices_payments.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\admin_web_crm_customer_invoices_payments.png",
+    "role": "Admin / Owner CRM",
+    "category": "Customer Management",
+    "screenName": "Customer User Management & Directory"
+  },
+  {
+    "file": "admin_web_crm_customer_profile_amit_sharma.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\admin_web_crm_customer_profile_amit_sharma.png",
+    "role": "Admin / Owner CRM",
+    "category": "Customer Management",
+    "screenName": "Customer CRM Dossier & Booking History (Amit Sharma)"
+  },
+  {
+    "file": "admin_web_crm_finance_commission_overview.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\admin_web_crm_finance_commission_overview.png",
+    "role": "Admin / Owner CRM",
+    "category": "Finance & Commission",
+    "screenName": "Enterprise Finance & Partner Settlement Overview"
+  },
+  {
+    "file": "admin_web_crm_manage_customers.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\admin_web_crm_manage_customers.png",
+    "role": "Admin / Owner CRM",
+    "category": "Customer Management",
+    "screenName": "Customer User Management & Directory"
+  },
+  {
+    "file": "admin_web_crm_manage_partners.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\admin_web_crm_manage_partners.png",
+    "role": "Admin / Owner CRM",
+    "category": "Partner Management",
+    "screenName": "Franchise Partner Directory & Allocation"
+  },
+  {
+    "file": "admin_web_crm_manage_technicians.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\admin_web_crm_manage_technicians.png",
+    "role": "Admin / Owner CRM",
+    "category": "Technician & KYC",
+    "screenName": "National Technician Fleet Management"
+  },
+  {
+    "file": "admin_web_crm_partner_details_maharashtra_team.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\admin_web_crm_partner_details_maharashtra_team.png",
+    "role": "Admin / Owner CRM",
+    "category": "Partner Management",
+    "screenName": "Regional Partner Operations Hub (Maharashtra Tier-1)"
+  },
+  {
+    "file": "admin_web_crm_pincode_coverage_settings.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\admin_web_crm_pincode_coverage_settings.png",
+    "role": "Admin / Owner CRM",
+    "category": "Territory & Coverage",
+    "screenName": "Territory Pincode Coverage & Density Mapping"
+  },
+  {
+    "file": "admin_web_crm_platform_dashboard.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\admin_web_crm_platform_dashboard.png",
+    "role": "Admin / Owner CRM",
+    "category": "Dashboard & Analytics",
+    "screenName": "Platform Overview & KPI Dashboard"
+  },
+  {
+    "file": "admin_web_crm_profile_settings.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\admin_web_crm_profile_settings.png",
+    "role": "Admin / Owner CRM",
+    "category": "Settings & Profile",
+    "screenName": "Super Admin Executive Profile & Security Credentials"
+  },
+  {
+    "file": "admin_web_crm_service_catalog.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\admin_web_crm_service_catalog.png",
+    "role": "Admin / Owner CRM",
+    "category": "Service Catalog",
+    "screenName": "Master Electrical Service Catalog & Price Tiers"
+  },
+  {
+    "file": "admin_web_crm_service_category_management.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\admin_web_crm_service_category_management.png",
+    "role": "Admin / Owner CRM",
+    "category": "Service Catalog",
+    "screenName": "Service Category & Emergency SOS Matrix"
+  },
+  {
+    "file": "admin_web_crm_state_allocation_management.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\admin_web_crm_state_allocation_management.png",
+    "role": "Admin / Owner CRM",
+    "category": "Territory & Coverage",
+    "screenName": "Pan-India State Allocation & Quota Management"
+  },
+  {
+    "file": "admin_web_crm_subscription_details.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\admin_web_crm_subscription_details.png",
+    "role": "Admin / Owner CRM",
+    "category": "Subscriptions",
+    "screenName": "ZEX-Shield Commercial Annual Plan Dossier"
+  },
+  {
+    "file": "admin_web_crm_subscription_modules.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\admin_web_crm_subscription_modules.png",
+    "role": "Admin / Owner CRM",
+    "category": "Subscriptions",
+    "screenName": "ZEX-Shield AMC Subscription Management"
+  },
+  {
+    "file": "admin_web_crm_support_desk.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\admin_web_crm_support_desk.png",
+    "role": "Admin / Owner CRM",
+    "category": "Support Desk",
+    "screenName": "Omnichannel Support Desk & Ticket Queue"
+  },
+  {
+    "file": "admin_web_crm_support_ticket_details_sup_1024.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\admin_web_crm_support_ticket_details_sup_1024.png",
+    "role": "Admin / Owner CRM",
+    "category": "Support Desk",
+    "screenName": "SLA Escalation Ticket Details (SUP-1024 Sparking Risk)"
+  },
+  {
+    "file": "admin_web_crm_system_settings.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\admin_web_crm_system_settings.png",
+    "role": "Admin / Owner CRM",
+    "category": "Settings & Profile",
+    "screenName": "Enterprise Platform Configurations & SLA Rules"
+  },
+  {
+    "file": "admin_web_crm_technician_kyc_review.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\admin_web_crm_technician_kyc_review.png",
+    "role": "Admin / Owner CRM",
+    "category": "Technician & KYC",
+    "screenName": "National Electrician KYC & Safety Certification Review"
+  },
+  {
+    "file": "admin_web_crm_technician_profile_rajesh_kumar.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\admin_web_crm_technician_profile_rajesh_kumar.png",
+    "role": "Admin / Owner CRM",
+    "category": "Technician & KYC",
+    "screenName": "Field Electrician Profile & Telemetry (Rajesh Kumar)"
+  },
+  {
+    "file": "partner_web_crm_dashboard_maharashtra_team.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\partner_web_crm_dashboard_maharashtra_team.png",
+    "role": "Partner CRM / App",
+    "category": "Dashboard & Operations",
+    "screenName": "Regional Franchise Command Center (Maharashtra Hub)"
+  },
+  {
+    "file": "partner_web_crm_escalated_jobs.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\partner_web_crm_escalated_jobs.png",
+    "role": "Partner CRM / App",
+    "category": "Job Dispatch & Escalations",
+    "screenName": "SLA Breach & Escalated Emergency Jobs Queue"
+  },
+  {
+    "file": "partner_web_crm_final_design_system_board_1.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\partner_web_crm_final_design_system_board_1.png",
+    "role": "Common / System",
+    "category": "Design System & Standards",
+    "screenName": "Design System Foundation Board 1 (Tokens, Colors, Elevation)"
+  },
+  {
+    "file": "partner_web_crm_final_design_system_board_2.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\partner_web_crm_final_design_system_board_2.png",
+    "role": "Common / System",
+    "category": "Design System & Standards",
+    "screenName": "Design System Component Board 2 (Widgets, Tables, Buttons)"
+  },
+  {
+    "file": "partner_web_crm_finance_payouts.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\partner_web_crm_finance_payouts.png",
+    "role": "Partner CRM / App",
+    "category": "Finance & Invoices",
+    "screenName": "Technician Bi-Weekly Payout Distribution Desk"
+  },
+  {
+    "file": "partner_web_crm_invoices.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\partner_web_crm_invoices.png",
+    "role": "Partner CRM / App",
+    "category": "Finance & Invoices",
+    "screenName": "Regional Franchise Invoices & Tax Registry"
+  },
+  {
+    "file": "partner_web_crm_invoice_preview_inv_2026_001.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\partner_web_crm_invoice_preview_inv_2026_001.png",
+    "role": "Partner CRM / App",
+    "category": "Finance & Invoices",
+    "screenName": "GST Tax Invoice Print Preview (INV-2026-001)"
+  },
+  {
+    "file": "partner_web_crm_job_details_j_1001.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\partner_web_crm_job_details_j_1001.png",
+    "role": "Partner CRM / App",
+    "category": "Job Dispatch & Escalations",
+    "screenName": "Live Work Order Dispatch Dossier (J-1001)"
+  },
+  {
+    "file": "partner_web_crm_job_management.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\partner_web_crm_job_management.png",
+    "role": "Partner CRM / App",
+    "category": "Job Dispatch & Escalations",
+    "screenName": "Regional Work Order Dispatch & Monitoring Desk"
+  },
+  {
+    "file": "partner_web_crm_manage_technicians.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\partner_web_crm_manage_technicians.png",
+    "role": "Partner CRM / App",
+    "category": "Fleet & KYC Verification",
+    "screenName": "Regional Technician Fleet Directory & Live Shift Duty"
+  },
+  {
+    "file": "partner_web_crm_pincode_coverage_capacity.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\partner_web_crm_pincode_coverage_capacity.png",
+    "role": "Partner CRM / App",
+    "category": "Territory & Capacity",
+    "screenName": "Territory Pincode Quota & Emergency Capacity Control"
+  },
+  {
+    "file": "partner_web_crm_pincode_details_400001_colaba.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\partner_web_crm_pincode_details_400001_colaba.png",
+    "role": "Partner CRM / App",
+    "category": "Territory & Capacity",
+    "screenName": "Colaba Pincode 400001 Density & Fleet Distribution"
+  },
+  {
+    "file": "partner_web_crm_profile_settings.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\partner_web_crm_profile_settings.png",
+    "role": "Partner CRM / App",
+    "category": "Settings & Profile",
+    "screenName": "Franchise Partner Profile & Operating Agreement"
+  },
+  {
+    "file": "partner_web_crm_support_center.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\partner_web_crm_support_center.png",
+    "role": "Partner CRM / App",
+    "category": "Support Center",
+    "screenName": "Franchise Partner Support & Dispute Hub"
+  },
+  {
+    "file": "partner_web_crm_support_ticket_details_sup_1024.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\partner_web_crm_support_ticket_details_sup_1024.png",
+    "role": "Partner CRM / App",
+    "category": "Support Center",
+    "screenName": "Customer Support Case Resolution (SUP-1024)"
+  },
+  {
+    "file": "partner_web_crm_technician_kyc_review.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\partner_web_crm_technician_kyc_review.png",
+    "role": "Partner CRM / App",
+    "category": "Fleet & KYC Verification",
+    "screenName": "Regional Electrician Safety & License Onboarding Review"
+  },
+  {
+    "file": "partner_web_crm_technician_profile_rajesh_kumar.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\partner_web_crm_technician_profile_rajesh_kumar.png",
+    "role": "Partner CRM / App",
+    "category": "Fleet & KYC Verification",
+    "screenName": "Regional Technician Performance & Tools Dossier (Rajesh Kumar)"
+  },
+  {
+    "file": "partner_web_crm_technician_reassignment_j_1005.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\partner_web_crm_technician_reassignment_j_1005.png",
+    "role": "Partner CRM / App",
+    "category": "Fleet & KYC Verification",
+    "screenName": "Emergency Technician Live Reassignment Console (J-1005)"
+  },
+  {
+    "file": "partner_web_crm_transactions_ledger.png",
+    "relPath": "ALL_SCREENS_FOR_FIGMA\\partner_web_crm_transactions_ledger.png",
+    "role": "Partner CRM / App",
+    "category": "Finance & Invoices",
+    "screenName": "Franchise Double-Entry Transactions Ledger"
+  },
+  {
+    "file": "01_customer_app_home_dashboard.png",
+    "relPath": "APP\\stitch_electricare_mobile_app_suite\\ALL_APP_SCREENS_FOR_FIGMA\\01_customer_app_home_dashboard.png",
+    "role": "Customer App",
+    "category": "Home & Booking",
+    "screenName": "Customer Home Screen & Service Quick Actions"
+  },
+  {
+    "file": "02_customer_app_invoice_receipt.png",
+    "relPath": "APP\\stitch_electricare_mobile_app_suite\\ALL_APP_SCREENS_FOR_FIGMA\\02_customer_app_invoice_receipt.png",
+    "role": "Customer App",
+    "category": "Billing & Sign-off",
+    "screenName": "Job Completion Invoice, GST Receipt & Quality Rating"
+  },
+  {
+    "file": "03_customer_app_live_tracking.png",
+    "relPath": "APP\\stitch_electricare_mobile_app_suite\\ALL_APP_SCREENS_FOR_FIGMA\\03_customer_app_live_tracking.png",
+    "role": "Customer App",
+    "category": "Tracking & Navigation",
+    "screenName": "Real-Time Technician GPS Live Tracking & En-Route ETA"
+  },
+  {
+    "file": "04_partner_app_escalations_reassign_tech.png",
+    "relPath": "APP\\stitch_electricare_mobile_app_suite\\ALL_APP_SCREENS_FOR_FIGMA\\04_partner_app_escalations_reassign_tech.png",
+    "role": "Partner CRM / App",
+    "category": "Mobile Dispatch",
+    "screenName": "Emergency Job Escalation & Field Reassignment Console"
+  },
+  {
+    "file": "05_partner_app_operations_dashboard.png",
+    "relPath": "APP\\stitch_electricare_mobile_app_suite\\ALL_APP_SCREENS_FOR_FIGMA\\05_partner_app_operations_dashboard.png",
+    "role": "Partner CRM / App",
+    "category": "Mobile Operations",
+    "screenName": "Partner Mobile Operations Dashboard & Active Dispatch"
+  },
+  {
+    "file": "06_partner_app_regional_finance_payouts.png",
+    "relPath": "APP\\stitch_electricare_mobile_app_suite\\ALL_APP_SCREENS_FOR_FIGMA\\06_partner_app_regional_finance_payouts.png",
+    "role": "Partner CRM / App",
+    "category": "Mobile Finance",
+    "screenName": "Regional Franchise Mobile Finance & Commission Payouts"
+  },
+  {
+    "file": "07_partner_app_technician_fleet_kyc.png",
+    "relPath": "APP\\stitch_electricare_mobile_app_suite\\ALL_APP_SCREENS_FOR_FIGMA\\07_partner_app_technician_fleet_kyc.png",
+    "role": "Partner CRM / App",
+    "category": "Mobile Fleet Management",
+    "screenName": "Mobile Technician Fleet List & KYC Verification Status"
+  },
+  {
+    "file": "08_technician_app_dashboard_active_queue.png",
+    "relPath": "APP\\stitch_electricare_mobile_app_suite\\ALL_APP_SCREENS_FOR_FIGMA\\08_technician_app_dashboard_active_queue.png",
+    "role": "Technician App",
+    "category": "Duty & Dispatch Queue",
+    "screenName": "Field Electrician Shift Dashboard & Active Dispatch Queue"
+  },
+  {
+    "file": "09_technician_app_earnings_payouts.png",
+    "relPath": "APP\\stitch_electricare_mobile_app_suite\\ALL_APP_SCREENS_FOR_FIGMA\\09_technician_app_earnings_payouts.png",
+    "role": "Technician App",
+    "category": "Earnings & Wallet",
+    "screenName": "70% Direct Net Earnings Breakdown & Instant Payout Wallet"
+  },
+  {
+    "file": "10_technician_app_job_details_navigation.png",
+    "relPath": "APP\\stitch_electricare_mobile_app_suite\\ALL_APP_SCREENS_FOR_FIGMA\\10_technician_app_job_details_navigation.png",
+    "role": "Technician App",
+    "category": "Navigation & Job Details",
+    "screenName": "Doorstep Turn-by-Turn GPS Navigation & Customer Contact"
+  },
+  {
+    "file": "11_technician_app_safety_verification_checklist.png",
+    "relPath": "APP\\stitch_electricare_mobile_app_suite\\ALL_APP_SCREENS_FOR_FIGMA\\11_technician_app_safety_verification_checklist.png",
+    "role": "Technician App",
+    "category": "Safety Protocols",
+    "screenName": "1000V Class 0 Gloves & Main MCB Isolation Safety Interlock"
+  },
+  {
+    "file": "12_technician_app_work_progress_completion_otp.png",
+    "relPath": "APP\\stitch_electricare_mobile_app_suite\\ALL_APP_SCREENS_FOR_FIGMA\\12_technician_app_work_progress_completion_otp.png",
+    "role": "Technician App",
+    "category": "Job Execution & Sign-off",
+    "screenName": "Post-Service Photographic Evidence & Handover OTP Verification"
+  }
+]

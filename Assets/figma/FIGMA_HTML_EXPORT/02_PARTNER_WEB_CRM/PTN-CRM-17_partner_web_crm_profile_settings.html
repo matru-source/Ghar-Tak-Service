@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ElectriCare - Partner Web CRM (Maharashtra Team)</title>
+<!-- Inter Google Font -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            },
+            surface: {
+              bg: '#f8fafc',
+              border: '#e2e8f0',
+              sidebar: '#ffffff'
+            }
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom CSS -->
+<style data-purpose="custom-enhancements">
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .chart-donut-ring {
+      stroke-dasharray: 440;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+      transition: stroke-dashoffset 0.5s ease;
+    }
+  </style>
+<!-- END: Custom CSS -->
+<meta content="web_dashboard" name="shell-type"/></head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 text-[13px]">
+<!-- BEGIN: TopBarBanner -->
+<!-- Context indicator for Regional Operations -->
+<div class="bg-brand-900 text-brand-100 text-xs px-6 py-1.5 flex items-center justify-between border-b border-brand-800">
+<div class="flex items-center space-x-2 font-medium">
+<span class="inline-flex items-center justify-center w-4 h-4 bg-emerald-500 text-white rounded-full text-[10px] font-bold">11</span>
+<span class="tracking-wide font-semibold text-white">Partner Web CRM</span>
+<span class="text-emerald-300">(Maharashtra Team)</span>
+</div>
+<div class="flex items-center space-x-4 text-[11px] text-emerald-200">
+<span>Regional Operations</span>
+<span class="text-emerald-500">•</span>
+<span>Manage Technicians</span>
+<span class="text-emerald-500">•</span>
+<span>Jobs</span>
+<span class="text-emerald-500">•</span>
+<span>Pincodes</span>
+<span class="text-emerald-500">•</span>
+<span>Finance</span>
+<span class="text-emerald-500">•</span>
+<span>Support</span>
+</div>
+</div>
+<!-- END: TopBarBanner -->
+<!-- BEGIN: MainLayoutWrapper -->
+<div class="flex flex-1 min-h-[calc(100vh-28px)]">
+<!-- BEGIN: LeftSidebar -->
+<aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 select-none">
+<div>
+<!-- Logo Section -->
+<div class="h-16 flex items-center px-6 border-b border-slate-100 gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-sm shadow-emerald-500/30">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<path d="M13 2L3 14h8v8l10-12h-8l0-8z"></path>
+</svg>
+</div>
+<div>
+<span class="text-base font-bold text-slate-900 tracking-tight flex items-center gap-1">
+              ElectriCare
+            </span>
+<span class="block text-[10px] font-medium uppercase tracking-wider text-emerald-600 -mt-1">Partner Portal</span>
+</div>
+</div>
+<!-- Navigation Menu -->
+<nav aria-label="Main Navigation" class="p-3 space-y-1">
+<!-- Dashboard - Active Item -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg bg-emerald-600 text-white font-medium shadow-sm shadow-emerald-600/20 transition-colors" href="#">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="9" rx="1" width="7" x="3" y="3"></rect>
+<rect height="5" rx="1" width="7" x="14" y="3"></rect>
+<rect height="9" rx="1" width="7" x="14" y="12"></rect>
+<rect height="5" rx="1" width="7" x="3" y="16"></rect>
+</svg>
+<span>Dashboard</span>
+</a>
+<!-- Technicians -->
+<a class="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<div class="flex items-center gap-3">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+<circle cx="9" cy="7" r="4"></circle>
+<path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+</svg>
+<span>Technicians</span>
+</div>
+<span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">24</span>
+</a>
+<!-- Job Management -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="14" rx="2" ry="2" width="20" x="2" y="7"></rect>
+<path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+</svg>
+<span>Job Management</span>
+</a>
+<!-- Pincode Coverage -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path>
+<circle cx="12" cy="10" r="3"></circle>
+</svg>
+<span>Pincode Coverage</span>
+</a>
+<!-- Finance / Payouts -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<line x1="12" x2="12" y1="1" y2="23"></line>
+<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+</svg>
+<span>Finance / Payouts</span>
+</a>
+<!-- Profile / Settings -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="3"></circle>
+<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+</svg>
+<span>Profile / Settings</span>
+</a>
+<!-- Support -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+<line x1="12" x2="12.01" y1="17" y2="17"></line>
+</svg>
+<span>Support</span>
+</a>
+</nav>
+</div>
+<!-- Partner Unit Card in Sidebar Footer -->
+<div class="p-3 border-t border-slate-100 bg-slate-50/50 m-2 rounded-xl">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 border border-emerald-300">
+            MT
+          </div>
+<div class="truncate">
+<p class="font-semibold text-slate-800 text-xs truncate leading-tight">Maharashtra Team</p>
+<span class="inline-flex items-center text-[10px] text-emerald-600 font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span> Partner Active
+            </span>
+</div>
+</div>
+</div>
+</aside>
+<!-- END: LeftSidebar -->
+<!-- BEGIN: MainContentArea -->
+<div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+<!-- BEGIN: HeaderNav -->
+<header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-20">
+<!-- Search bar input -->
+<div class="relative w-80">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="11" cy="11" r="8"></circle>
+<line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+</svg>
+</span>
+<input class="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 placeholder-slate-400 transition" placeholder="Search dashboard, jobs, technicians..." type="text"/>
+</div>
+<!-- Top Right Actions & User Profile -->
+<div class="flex items-center gap-3.5">
+<!-- Quick Status Pill -->
+<div class="hidden md:flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs px-2.5 py-1 rounded-full">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span class="font-medium text-[11px]">Region: MH Operations</span>
+</div>
+<!-- Notification Bell -->
+<button aria-label="Notifications" class="p-2 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100 relative" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+<path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+</svg>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+</button>
+<div class="h-5 w-px bg-slate-200"></div>
+<!-- Profile Badge -->
+<div class="flex items-center gap-2.5 pl-1 cursor-pointer">
+<div class="w-8 h-8 rounded-full bg-slate-800 text-white font-semibold flex items-center justify-center text-xs">
+              MH
+            </div>
+<div class="hidden sm:block text-left">
+<span class="block text-xs font-semibold text-slate-700 leading-tight">Maharashtra Ops</span>
+<span class="text-[10px] text-slate-400">admin-mh@electricare.in</span>
+</div>
+<svg class="w-3.5 h-3.5 text-slate-400 ml-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</div>
+</div>
+</header>
+<!-- END: HeaderNav -->
+<!-- Main Body Container -->
+<main class="p-6 space-y-6"><div class="flex flex-col w-full">
+<div class="relative w-full space-y-space-lg">
+<!-- Top Breadcrumb & Page Subtitle Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-sm pb-space-sm">
+<div class="space-y-space-xs">
+<div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm tracking-wider uppercase">
+<span>Operational Portal</span>
+<span class="material-symbols-outlined text-[13px] leading-none text-outline">chevron_right</span>
+<span class="text-primary font-semibold">Profile &amp; Regional Settings</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Profile / Settings</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-3xl">
+          Manage regional partner entity details, assigned service perimeters, banking settlement accounts, and portal security.
+        </p>
+</div>
+<div class="flex items-center gap-space-sm">
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container text-on-surface text-label-sm font-label-sm">
+<span class="material-symbols-outlined text-[15px] text-secondary">verified_user</span>
+<span>Compliance Tier: L3 Enterprise Partner</span>
+</div>
+</div>
+</div>
+<!-- Partner Summary Hero Card -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-lowest shadow-sm">
+<div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-secondary via-secondary-fixed to-primary"></div>
+<div class="p-space-lg flex flex-col xl:flex-row xl:items-center justify-between gap-space-lg">
+<div class="flex items-start md:items-center gap-space-md min-w-0">
+<div class="w-16 h-16 rounded-xl bg-secondary text-on-secondary font-headline-lg text-headline-lg flex items-center justify-center shrink-0 shadow-md">
+            MT
+          </div>
+<div class="space-y-1 min-w-0">
+<div class="flex flex-wrap items-center gap-2.5">
+<h2 class="font-headline-md text-headline-md text-on-surface truncate">
+                Maharashtra Team — Regional Franchise Partner
+              </h2>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm uppercase tracking-wider">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+                Active Partner
+              </span>
+</div>
+<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-on-surface-variant font-body-sm text-body-sm">
+<span class="font-mono text-on-surface font-label-sm">PTR-MH-2024-001</span>
+<span class="text-outline-variant">•</span>
+<span>State: <strong class="text-on-surface font-medium">Maharashtra</strong></span>
+<span class="text-outline-variant">•</span>
+<span>Region: <strong class="text-on-surface font-medium">Mumbai Metro &amp; Pune Division</strong></span>
+<span class="text-outline-variant">•</span>
+<span class="inline-flex items-center gap-1 text-secondary font-medium">
+<span class="material-symbols-outlined text-[14px]">my_location</span>
+                18 Pincodes Covered
+              </span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-sm shrink-0">
+<div class="flex flex-col items-start px-3.5 py-2 rounded-lg bg-surface-container-low">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">SLA Compliance</span>
+<span class="font-headline-sm text-headline-sm text-secondary font-bold">99.4%</span>
+</div>
+<div class="flex flex-col items-start px-3.5 py-2 rounded-lg bg-surface-container-low">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Active Crew</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold">42 Staff</span>
+</div>
+<div class="flex flex-col items-start px-3.5 py-2 rounded-lg bg-surface-container-low">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Contract Cycle</span>
+<span class="font-headline-sm text-headline-sm text-primary font-bold">2024-27</span>
+</div>
+</div>
+</div>
+<!-- Navigation Tabs Container -->
+<div class="px-space-lg flex items-center gap-2 bg-surface-container-low overflow-x-auto custom-scrollbar">
+<button class="tab-button active inline-flex items-center gap-2 py-3 px-3.5 font-label-lg text-label-lg transition-colors border-b-2 border-secondary text-secondary" id="tab-btn-business" onclick="switchSettingsTab('business')">
+<span class="material-symbols-outlined text-[18px]">business_center</span>
+<span>Business Details</span>
+</button>
+<button class="tab-button inline-flex items-center gap-2 py-3 px-3.5 font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors border-b-2 border-transparent" id="tab-btn-areas" onclick="switchSettingsTab('areas')">
+<span class="material-symbols-outlined text-[18px]">map</span>
+<span>Service Areas</span>
+<span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-surface-container-highest text-on-surface">18</span>
+</button>
+<button class="tab-button inline-flex items-center gap-2 py-3 px-3.5 font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors border-b-2 border-transparent" id="tab-btn-banking" onclick="switchSettingsTab('banking')">
+<span class="material-symbols-outlined text-[18px]">account_balance</span>
+<span>Bank Details</span>
+</button>
+<button class="tab-button inline-flex items-center gap-2 py-3 px-3.5 font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors border-b-2 border-transparent" id="tab-btn-security" onclick="switchSettingsTab('security')">
+<span class="material-symbols-outlined text-[18px]">security</span>
+<span>Account Settings</span>
+</button>
+</div>
+</div>
+<!-- TAB 1: Business Details & Contact Info -->
+<div class="tab-panel space-y-space-md" id="panel-business">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-space-md">
+<!-- Primary Form Box -->
+<div class="lg:col-span-2 rounded-xl bg-surface-container-lowest p-space-lg shadow-sm space-y-space-md">
+<div class="flex items-center justify-between">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Legal Entity &amp; Primary Representative</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Update core franchise information submitted for regional tax &amp; commercial compliance.</p>
+</div>
+<span class="px-2.5 py-1 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">
+              KYC Re-verified Q3
+            </span>
+</div>
+<form class="space-y-space-md" id="businessDetailsForm" onsubmit="event.preventDefault(); showNotice();">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+<!-- Business Entity Name -->
+<div class="space-y-1">
+<label class="block font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Business Entity Name</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[17px]">domain</span>
+<input class="w-full pl-9 pr-3 py-2 text-on-surface font-body-md text-body-md rounded-lg bg-surface-container-lowest shadow-sm focus:outline-none focus:bg-surface-container-low transition" type="text" value="Maharashtra ElectroCare Field Operations LLP"/>
+</div>
+</div>
+<!-- Partner ID (Disabled) -->
+<div class="space-y-1">
+<label class="block font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Partner ID (System Assigned)</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-outline text-[17px]">badge</span>
+<input class="w-full pl-9 pr-3 py-2 text-on-surface-variant font-mono font-label-sm text-label-sm rounded-lg bg-surface-container-low cursor-not-allowed select-none" disabled="" type="text" value="PTR-MH-2024-001"/>
+</div>
+</div>
+<!-- Primary Contact Person -->
+<div class="space-y-1">
+<label class="block font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Primary Contact Person</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[17px]">person</span>
+<input class="w-full pl-9 pr-3 py-2 text-on-surface font-body-md text-body-md rounded-lg bg-surface-container-lowest shadow-sm focus:outline-none focus:bg-surface-container-low transition" type="text" value="Vikramaditya Shinde"/>
+</div>
+</div>
+<!-- Official Email -->
+<div class="space-y-1">
+<label class="block font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Official Email Address</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[17px]">mail</span>
+<input class="w-full pl-9 pr-3 py-2 text-on-surface font-body-md text-body-md rounded-lg bg-surface-container-lowest shadow-sm focus:outline-none focus:bg-surface-container-low transition" type="email" value="admin-mh@electricare.in"/>
+</div>
+</div>
+<!-- Registered Mobile -->
+<div class="space-y-1">
+<label class="block font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Registered Mobile</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[17px]">call</span>
+<input class="w-full pl-9 pr-3 py-2 text-on-surface font-body-md text-body-md rounded-lg bg-surface-container-lowest shadow-sm focus:outline-none focus:bg-surface-container-low transition" type="text" value="+91 98200 XXXXX"/>
+</div>
+</div>
+<!-- GSTIN -->
+<div class="space-y-1">
+<label class="block font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">GST Identification Number (GSTIN)</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[17px]">receipt_long</span>
+<input class="w-full pl-9 pr-3 py-2 text-on-surface font-mono font-label-sm text-label-sm rounded-lg bg-surface-container-lowest shadow-sm focus:outline-none focus:bg-surface-container-low transition" type="text" value="27AABCE1234F1Z9"/>
+</div>
+</div>
+<!-- Operating Since -->
+<div class="space-y-1">
+<label class="block font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Operating Since</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[17px]">calendar_month</span>
+<input class="w-full pl-9 pr-3 py-2 text-on-surface font-body-md text-body-md rounded-lg bg-surface-container-lowest shadow-sm focus:outline-none focus:bg-surface-container-low transition" type="text" value="15 January 2024"/>
+</div>
+</div>
+<!-- Regional Authority Level -->
+<div class="space-y-1">
+<label class="block font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Franchise Authority Role</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[17px]">admin_panel_settings</span>
+<input class="w-full pl-9 pr-3 py-2 text-on-surface-variant font-body-md text-body-md rounded-lg bg-surface-container-low cursor-not-allowed select-none" disabled="" type="text" value="Tier 1 Master Contractor (West Zone)"/>
+</div>
+</div>
+<!-- Registered Office Address (Full Row) -->
+<div class="space-y-1 sm:col-span-2">
+<label class="block font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Registered Office Address</label>
+<div class="relative">
+<textarea class="w-full px-3 py-2 text-on-surface font-body-md text-body-md rounded-lg bg-surface-container-lowest shadow-sm focus:outline-none focus:bg-surface-container-low transition" rows="2">Office 402, Trade Centre, Bandra-Kurla Complex (BKC), Mumbai, MH - 400051</textarea>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-space-xs">
+<span class="font-body-sm text-body-sm text-secondary hidden" id="save-status-msg">
+<span class="material-symbols-outlined align-middle text-[16px]">check_circle</span> Changes saved successfully.
+              </span>
+<button class="ml-auto inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-secondary text-on-secondary font-label-lg text-label-lg shadow hover:opacity-95 transition-all" type="submit">
+<span class="material-symbols-outlined text-[18px]">save</span>
+<span>Save Business Details</span>
+</button>
+</div>
+</form>
+</div>
+<!-- Sidebar Entity Telemetry & Certifications -->
+<div class="space-y-space-md">
+<div class="rounded-xl bg-surface-container-lowest p-space-md shadow-sm space-y-space-sm">
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Regional Operational Hub</h4>
+<div class="space-y-2.5 font-body-sm text-body-sm text-on-surface-variant">
+<div class="flex justify-between items-center py-1">
+<span>Hub Code:</span>
+<span class="font-mono text-on-surface font-bold">HUB-BOM-04</span>
+</div>
+<div class="flex justify-between items-center py-1">
+<span>Active Dispatch Shift:</span>
+<span class="text-secondary font-medium">06:00 AM – 11:30 PM IST</span>
+</div>
+<div class="flex justify-between items-center py-1">
+<span>Escalation Desk:</span>
+<span class="font-mono text-on-surface">1800-202-099 (Ext 4)</span>
+</div>
+<div class="flex justify-between items-center py-1">
+<span>Contract Renewal:</span>
+<span class="text-on-surface">31 Dec 2026</span>
+</div>
+</div>
+</div>
+<div class="rounded-xl bg-surface-container-low p-space-md shadow-sm space-y-space-xs">
+<div class="flex items-center gap-2 text-primary font-label-lg text-label-lg">
+<span class="material-symbols-outlined text-[20px]">electric_meter</span>
+<span>Grid Safety Standard: CEA 2023</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              All field engineers assigned to this regional franchise possess Class-1 High Tension &amp; Domestic Electrical safety licenses approved by the State Electrical Inspectorate.
+            </p>
+</div>
+</div>
+</div>
+</div>
+<!-- TAB 2: Service Areas & Pincodes -->
+<div class="tab-panel space-y-space-md hidden" id="panel-areas">
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm space-y-space-md">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-sm">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Assigned Service Perimeters &amp; Jurisdiction</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Authorized coverage radius for rapid dispatch, regular servicing, and emergency restoration.</p>
+</div>
+<button class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-container text-primary font-label-lg text-label-lg hover:bg-surface-container-high transition" onclick="requestPerimeterModal()">
+<span class="material-symbols-outlined text-[18px]">add_location_alt</span>
+<span>Request Perimeter Expansion</span>
+</button>
+</div>
+<!-- Geographic Split Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<div class="p-4 rounded-xl bg-surface-container-low space-y-2">
+<div class="flex justify-between items-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Designated State</span>
+<span class="material-symbols-outlined text-primary text-[20px]">map</span>
+</div>
+<div class="font-headline-sm text-headline-sm text-on-surface font-bold">Maharashtra</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Western Regional Electricity Board (WREB) Territory</p>
+</div>
+<div class="p-4 rounded-xl bg-surface-container-low space-y-2">
+<div class="flex justify-between items-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Key Districts</span>
+<span class="material-symbols-outlined text-secondary text-[20px]">location_city</span>
+</div>
+<div class="font-headline-sm text-headline-sm text-on-surface font-bold">3 Core Zones</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Mumbai City, Mumbai Suburban, &amp; Pune Urban</p>
+</div>
+<div class="p-4 rounded-xl bg-surface-container-low space-y-2">
+<div class="flex justify-between items-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Fleet Deployment</span>
+<span class="material-symbols-outlined text-primary text-[20px]">engineering</span>
+</div>
+<div class="font-headline-sm text-headline-sm text-on-surface font-bold">42 Technicians</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">36 Mobile Vans, 6 Rapid Bike Responders</p>
+</div>
+</div>
+<!-- Authorized Pincodes Table Grid -->
+<div class="space-y-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="font-label-lg text-label-lg text-on-surface">Authorized Postal Codes (18 Active Hubs)</span>
+<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-secondary-fixed text-on-secondary-fixed">Live Sync</span>
+</div>
+<div class="text-on-surface-variant font-body-sm text-body-sm">Avg Dispatch Time: <strong>24.6 Mins</strong></div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div>
+<div class="font-mono font-bold text-on-surface">400001</div>
+<div class="text-[12px] text-on-surface-variant">Colaba / Fort / Nariman Pt</div>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-secondary" title="Active"></span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div>
+<div class="font-mono font-bold text-on-surface">400002</div>
+<div class="text-[12px] text-on-surface-variant">Kalbadevi / Marine Lines</div>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-secondary" title="Active"></span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div>
+<div class="font-mono font-bold text-on-surface">400005</div>
+<div class="text-[12px] text-on-surface-variant">Asvini / Colaba Market</div>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-secondary" title="Active"></span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div>
+<div class="font-mono font-bold text-on-surface">400018</div>
+<div class="text-[12px] text-on-surface-variant">Worli / Seaface Sector</div>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-secondary" title="Active"></span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div>
+<div class="font-mono font-bold text-on-surface">400050</div>
+<div class="text-[12px] text-on-surface-variant">Bandra West / Hill Road</div>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-secondary" title="Active"></span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div>
+<div class="font-mono font-bold text-on-surface">400051</div>
+<div class="text-[12px] text-on-surface-variant">Bandra-Kurla Complex (HQ)</div>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-secondary" title="Active"></span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div>
+<div class="font-mono font-bold text-on-surface">400053</div>
+<div class="text-[12px] text-on-surface-variant">Andheri West / Lokhandwala</div>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-secondary" title="Active"></span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div>
+<div class="font-mono font-bold text-on-surface">400069</div>
+<div class="text-[12px] text-on-surface-variant">Andheri East / MIDC</div>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-secondary" title="Active"></span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div>
+<div class="font-mono font-bold text-on-surface">400076</div>
+<div class="text-[12px] text-on-surface-variant">Powai / IIT Area / Hiranandani</div>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-secondary" title="Active"></span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div>
+<div class="font-mono font-bold text-on-surface">400092</div>
+<div class="text-[12px] text-on-surface-variant">Borivali West / Gorai Rd</div>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-secondary" title="Active"></span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div>
+<div class="font-mono font-bold text-on-surface">411001</div>
+<div class="text-[12px] text-on-surface-variant">Pune Central / Camp / Station</div>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-secondary" title="Active"></span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div>
+<div class="font-mono font-bold text-on-surface">411004</div>
+<div class="text-[12px] text-on-surface-variant">Deccan Gymkhana / FC Road</div>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-secondary" title="Active"></span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div>
+<div class="font-mono font-bold text-on-surface">411007</div>
+<div class="text-[12px] text-on-surface-variant">Aundh / University Road</div>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-secondary" title="Active"></span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div>
+<div class="font-mono font-bold text-on-surface">411014</div>
+<div class="text-[12px] text-on-surface-variant">Viman Nagar / Kharadi IT Hub</div>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-secondary" title="Active"></span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div>
+<div class="font-mono font-bold text-on-surface">411028</div>
+<div class="text-[12px] text-on-surface-variant">Hadapsar / Magarpatta City</div>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-secondary" title="Active"></span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div>
+<div class="font-mono font-bold text-on-surface">411057</div>
+<div class="text-[12px] text-on-surface-variant">Hinjawadi Phase 1 &amp; 2</div>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-secondary" title="Active"></span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div>
+<div class="font-mono font-bold text-on-surface">400703</div>
+<div class="text-[12px] text-on-surface-variant">Vashi / Navi Mumbai Sector 1-17</div>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-secondary" title="Active"></span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div>
+<div class="font-mono font-bold text-on-surface">400601</div>
+<div class="text-[12px] text-on-surface-variant">Thane West / Pachpakhadi</div>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-secondary" title="Active"></span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- TAB 3: Bank Details & Escrow Remittance -->
+<div class="tab-panel space-y-space-md hidden" id="panel-banking">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-space-md">
+<div class="lg:col-span-2 rounded-xl bg-surface-container-lowest p-space-lg shadow-sm space-y-space-md">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Direct Escrow Settlement Account</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Settlement account for daily Escrow releases and automated partner commission remittances.</p>
+</div>
+<!-- Escrow Info Notice Banner -->
+<div class="flex items-start gap-3 p-3.5 rounded-xl bg-surface-container-low text-on-surface">
+<span class="material-symbols-outlined text-secondary text-[22px] shrink-0 mt-0.5">verified</span>
+<div class="font-body-sm text-body-sm space-y-0.5">
+<span class="font-semibold block text-on-surface">Bank Verification Tier 1 Passed</span>
+<span class="text-on-surface-variant">All statutory GST TDS and operational retentions are settled directly via RBI-regulated National Automated Clearing House (NACH). Credentials below are encrypted.</span>
+</div>
+</div>
+<!-- Bank Credential Fields (Masked) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md pt-2">
+<div class="space-y-1">
+<label class="block font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Registered Bank Name</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[17px]">account_balance</span>
+<input class="w-full pl-9 pr-3 py-2 text-on-surface font-body-md text-body-md rounded-lg bg-surface-container-low cursor-not-allowed select-none" disabled="" type="text" value="•••••••• Bank (Designated Scheduled Commercial Bank)"/>
+</div>
+</div>
+<div class="space-y-1">
+<label class="block font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Account Number (Masked)</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[17px]">credit_card</span>
+<input class="w-full pl-9 pr-3 py-2 text-on-surface font-mono font-body-md text-body-md rounded-lg bg-surface-container-low cursor-not-allowed select-none" disabled="" type="text" value="•••• •••• •••• 4921"/>
+</div>
+</div>
+<div class="space-y-1">
+<label class="block font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">IFSC Code</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[17px]">pin</span>
+<input class="w-full pl-9 pr-3 py-2 text-on-surface font-mono font-body-md text-body-md rounded-lg bg-surface-container-low cursor-not-allowed select-none" disabled="" type="text" value="••••••123"/>
+</div>
+</div>
+<div class="space-y-1">
+<label class="block font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Designated Branch</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[17px]">location_on</span>
+<input class="w-full pl-9 pr-3 py-2 text-on-surface font-body-md text-body-md rounded-lg bg-surface-container-low cursor-not-allowed select-none" disabled="" type="text" value="Bandra Kurla Complex Branch"/>
+</div>
+</div>
+<div class="space-y-1 sm:col-span-2">
+<label class="block font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Settlement Cycle &amp; Method</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[17px]">sync_alt</span>
+<input class="w-full pl-9 pr-3 py-2 text-on-surface font-body-md text-body-md rounded-lg bg-surface-container-low cursor-not-allowed select-none" disabled="" type="text" value="Direct NEFT / RTGS (Automated Weekly Settlement every Monday 02:00 IST)"/>
+</div>
+</div>
+</div>
+<div class="pt-space-xs flex justify-end">
+<button class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-secondary text-on-secondary font-label-lg text-label-lg shadow hover:opacity-95 transition-all" onclick="requestBankUpdateModal()">
+<span class="material-symbols-outlined text-[18px]">lock_reset</span>
+<span>Update Settlement Account (Requires OTP Verification)</span>
+</button>
+</div>
+</div>
+<!-- Escrow Ledger Preview -->
+<div class="space-y-space-md">
+<div class="rounded-xl bg-surface-container-lowest p-space-md shadow-sm space-y-space-sm">
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Escrow Snapshot</h4>
+<div class="p-3.5 rounded-lg bg-surface-container-low space-y-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Current Retained Buffer</span>
+<div class="font-headline-lg text-headline-lg font-mono text-on-surface font-bold">₹ 4,50,000.00</div>
+<span class="font-body-sm text-body-sm text-secondary flex items-center gap-1 font-medium">
+<span class="material-symbols-outlined text-[14px]">check</span> Guaranteed Minimum Reserve Met
+              </span>
+</div>
+<div class="space-y-2 pt-1 font-body-sm text-body-sm text-on-surface-variant">
+<div class="flex justify-between items-center py-1">
+<span>Last Settlement:</span>
+<span class="font-mono text-on-surface">₹ 8,92,410.00</span>
+</div>
+<div class="flex justify-between items-center py-1">
+<span>UTR Reference:</span>
+<span class="font-mono text-on-surface">CMS78921890B</span>
+</div>
+<div class="flex justify-between items-center py-1">
+<span>Next Scheduled Cycle:</span>
+<span class="text-on-surface font-semibold">Upcoming Monday</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- TAB 4: Account Settings & Security -->
+<div class="tab-panel space-y-space-md hidden" id="panel-security">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-space-md">
+<!-- Notification Preferences -->
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm space-y-space-md">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Operational Notification Channels</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Manage automated trigger alerts for urgent regional incidents and financial summaries.</p>
+</div>
+<div class="space-y-4">
+<!-- Toggle 1 -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low">
+<div class="space-y-0.5">
+<div class="font-label-lg text-label-lg text-on-surface">Critical Job Escalations</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Instant SMS dispatch to regional leads &amp; Web Push on SLA danger warnings</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
+</label>
+</div>
+<!-- Toggle 2 -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low">
+<div class="space-y-0.5">
+<div class="font-label-lg text-label-lg text-on-surface">Daily Payout Digests</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Automated summary sheet delivered daily at 23:00 IST via encrypted Email</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
+</label>
+</div>
+<!-- Toggle 3 -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low">
+<div class="space-y-0.5">
+<div class="font-label-lg text-label-lg text-on-surface">Technician KYC Approvals</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Real-time mobile push notifications when background verification docs are cleared</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
+</label>
+</div>
+</div>
+</div>
+<!-- Security & Sessions -->
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm space-y-space-md flex flex-col justify-between">
+<div class="space-y-space-md">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Authentication &amp; Session Management</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Identity protection, hardware key tokens, and active regional supervisor logins.</p>
+</div>
+<!-- Two Factor Status -->
+<div class="p-3.5 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-secondary text-on-secondary flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">phonelink_lock</span>
+</div>
+<div>
+<div class="font-label-lg text-label-lg text-on-surface">Two-Factor Authentication</div>
+<div class="font-body-sm text-body-sm text-secondary font-medium">Enabled (Authenticator App: TOTP)</div>
+</div>
+</div>
+<button class="px-3 py-1.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm hover:bg-surface-container-high transition">Configure</button>
+</div>
+<!-- Active Session Details -->
+<div class="p-3.5 rounded-lg bg-surface-container-low space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Current Active Session</span>
+<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-secondary">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span> Online Now
+                </span>
+</div>
+<div class="font-body-md text-body-md text-on-surface font-medium">
+                Mumbai, Maharashtra, India — Chrome on macOS
+              </div>
+<div class="font-mono text-label-sm text-label-sm text-on-surface-variant flex items-center gap-2">
+<span>IP Address: 103.21.XX.XX</span>
+<span>•</span>
+<span>TLS 1.3 Strict</span>
+</div>
+</div>
+</div>
+<!-- Bottom Action Buttons -->
+<div class="pt-4 flex flex-wrap items-center justify-end gap-3">
+<button class="px-4 py-2 rounded-lg bg-surface-container text-on-surface font-label-lg text-label-lg hover:bg-surface-container-high transition" onclick="promptChangePassword()">
+              Change Password
+            </button>
+<button class="px-4 py-2 rounded-lg bg-error-container text-on-error-container font-label-lg text-label-lg hover:opacity-90 transition" onclick="promptLogoutAll()">
+              Logout from All Devices
+            </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  function switchSettingsTab(tabKey) {
+    const tabs = ['business', 'areas', 'banking', 'security'];
+    tabs.forEach(t => {
+      const btn = document.getElementById('tab-btn-' + t);
+      const panel = document.getElementById('panel-' + t);
+      if (t === tabKey) {
+        btn.classList.add('border-secondary', 'text-secondary');
+        btn.classList.remove('border-transparent', 'text-on-surface-variant');
+        panel.classList.remove('hidden');
+      } else {
+        btn.classList.remove('border-secondary', 'text-secondary');
+        btn.classList.add('border-transparent', 'text-on-surface-variant');
+        panel.classList.add('hidden');
+      }
+    });
+  }
+
+  function showNotice() {
+    const msg = document.getElementById('save-status-msg');
+    if (msg) {
+      msg.classList.remove('hidden');
+      setTimeout(() => {
+        msg.classList.add('hidden');
+      }, 3500);
+    }
+  }
+
+  function requestPerimeterModal() {
+    alert('Perimeter Expansion Request Initiated: Regional Operations desk will dispatch an audit agent within 48 hours for PIN expansion verification.');
+  }
+
+  function requestBankUpdateModal() {
+    alert('Security Notice: An encrypted OTP authorization token has been sent to the primary contact (+91 98200 XXXXX). Enter the token within 5 minutes.');
+  }
+
+  function promptChangePassword() {
+    alert('Password change workflow dispatched to registered admin: admin-mh@electricare.in');
+  }
+
+  function promptLogoutAll() {
+    if (confirm('Terminate all active CRM sessions across field terminals and desktop operators?')) {
+      alert('All foreign sessions invalidated successfully.');
+    }
+  }
+</script></main>
+<!-- END: Main Content Container -->
+<!-- Footer Info -->
+<footer class="mt-auto px-6 py-4 border-t border-slate-200 bg-white text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
+<p>© 2024 ElectriCare Inc. Regional Partner Portal. All rights reserved.</p>
+<div class="flex items-center gap-4 text-[11px] text-slate-500">
+<a class="hover:text-emerald-600" href="#">Privacy Policy</a>
+<a class="hover:text-emerald-600" href="#">Technician Guidelines</a>
+<a class="hover:text-emerald-600" href="#">Emergency Dispatch: 1800-202-099</a>
+</div>
+</footer>
+</div>
+<!-- END: MainContentArea -->
+</div>
+<!-- END: MainLayoutWrapper -->
+</body></html>

@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ElectriCare - Partner Web CRM (Maharashtra Team)</title>
+<!-- Inter Google Font -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            },
+            surface: {
+              bg: '#f8fafc',
+              border: '#e2e8f0',
+              sidebar: '#ffffff'
+            }
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom CSS -->
+<style data-purpose="custom-enhancements">
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .chart-donut-ring {
+      stroke-dasharray: 440;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+      transition: stroke-dashoffset 0.5s ease;
+    }
+  </style>
+<!-- END: Custom CSS -->
+<meta content="web_dashboard" name="shell-type"/></head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 text-[13px]">
+<!-- BEGIN: TopBarBanner -->
+<!-- Context indicator for Regional Operations -->
+<div class="bg-brand-900 text-brand-100 text-xs px-6 py-1.5 flex items-center justify-between border-b border-brand-800">
+<div class="flex items-center space-x-2 font-medium">
+<span class="inline-flex items-center justify-center w-4 h-4 bg-emerald-500 text-white rounded-full text-[10px] font-bold">11</span>
+<span class="tracking-wide font-semibold text-white">Partner Web CRM</span>
+<span class="text-emerald-300">(Maharashtra Team)</span>
+</div>
+<div class="flex items-center space-x-4 text-[11px] text-emerald-200">
+<span>Regional Operations</span>
+<span class="text-emerald-500">•</span>
+<span>Manage Technicians</span>
+<span class="text-emerald-500">•</span>
+<span>Jobs</span>
+<span class="text-emerald-500">•</span>
+<span>Pincodes</span>
+<span class="text-emerald-500">•</span>
+<span>Finance</span>
+<span class="text-emerald-500">•</span>
+<span>Support</span>
+</div>
+</div>
+<!-- END: TopBarBanner -->
+<!-- BEGIN: MainLayoutWrapper -->
+<div class="flex flex-1 min-h-[calc(100vh-28px)]">
+<!-- BEGIN: LeftSidebar -->
+<aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 select-none">
+<div>
+<!-- Logo Section -->
+<div class="h-16 flex items-center px-6 border-b border-slate-100 gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-sm shadow-emerald-500/30">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<path d="M13 2L3 14h8v8l10-12h-8l0-8z"></path>
+</svg>
+</div>
+<div>
+<span class="text-base font-bold text-slate-900 tracking-tight flex items-center gap-1">
+              ElectriCare
+            </span>
+<span class="block text-[10px] font-medium uppercase tracking-wider text-emerald-600 -mt-1">Partner Portal</span>
+</div>
+</div>
+<!-- Navigation Menu -->
+<nav aria-label="Main Navigation" class="p-3 space-y-1">
+<!-- Dashboard - Active Item -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg bg-emerald-600 text-white font-medium shadow-sm shadow-emerald-600/20 transition-colors" href="#">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="9" rx="1" width="7" x="3" y="3"></rect>
+<rect height="5" rx="1" width="7" x="14" y="3"></rect>
+<rect height="9" rx="1" width="7" x="14" y="12"></rect>
+<rect height="5" rx="1" width="7" x="3" y="16"></rect>
+</svg>
+<span>Dashboard</span>
+</a>
+<!-- Technicians -->
+<a class="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<div class="flex items-center gap-3">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+<circle cx="9" cy="7" r="4"></circle>
+<path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+</svg>
+<span>Technicians</span>
+</div>
+<span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">24</span>
+</a>
+<!-- Job Management -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="14" rx="2" ry="2" width="20" x="2" y="7"></rect>
+<path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+</svg>
+<span>Job Management</span>
+</a>
+<!-- Pincode Coverage -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path>
+<circle cx="12" cy="10" r="3"></circle>
+</svg>
+<span>Pincode Coverage</span>
+</a>
+<!-- Finance / Payouts -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<line x1="12" x2="12" y1="1" y2="23"></line>
+<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+</svg>
+<span>Finance / Payouts</span>
+</a>
+<!-- Profile / Settings -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="3"></circle>
+<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+</svg>
+<span>Profile / Settings</span>
+</a>
+<!-- Support -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+<line x1="12" x2="12.01" y1="17" y2="17"></line>
+</svg>
+<span>Support</span>
+</a>
+</nav>
+</div>
+<!-- Partner Unit Card in Sidebar Footer -->
+<div class="p-3 border-t border-slate-100 bg-slate-50/50 m-2 rounded-xl">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 border border-emerald-300">
+            MT
+          </div>
+<div class="truncate">
+<p class="font-semibold text-slate-800 text-xs truncate leading-tight">Maharashtra Team</p>
+<span class="inline-flex items-center text-[10px] text-emerald-600 font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span> Partner Active
+            </span>
+</div>
+</div>
+</div>
+</aside>
+<!-- END: LeftSidebar -->
+<!-- BEGIN: MainContentArea -->
+<div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+<!-- BEGIN: HeaderNav -->
+<header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-20">
+<!-- Search bar input -->
+<div class="relative w-80">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="11" cy="11" r="8"></circle>
+<line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+</svg>
+</span>
+<input class="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 placeholder-slate-400 transition" placeholder="Search dashboard, jobs, technicians..." type="text"/>
+</div>
+<!-- Top Right Actions & User Profile -->
+<div class="flex items-center gap-3.5">
+<!-- Quick Status Pill -->
+<div class="hidden md:flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs px-2.5 py-1 rounded-full">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span class="font-medium text-[11px]">Region: MH Operations</span>
+</div>
+<!-- Notification Bell -->
+<button aria-label="Notifications" class="p-2 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100 relative" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+<path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+</svg>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+</button>
+<div class="h-5 w-px bg-slate-200"></div>
+<!-- Profile Badge -->
+<div class="flex items-center gap-2.5 pl-1 cursor-pointer">
+<div class="w-8 h-8 rounded-full bg-slate-800 text-white font-semibold flex items-center justify-center text-xs">
+              MH
+            </div>
+<div class="hidden sm:block text-left">
+<span class="block text-xs font-semibold text-slate-700 leading-tight">Maharashtra Ops</span>
+<span class="text-[10px] text-slate-400">admin-mh@electricare.in</span>
+</div>
+<svg class="w-3.5 h-3.5 text-slate-400 ml-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</div>
+</div>
+</header>
+<!-- END: HeaderNav -->
+<!-- Main Body Container -->
+<main class="p-6 space-y-6"><div class="flex flex-col w-full relative">
+<!-- Backdrop Ledger (Dimmed Operational Background for context) -->
+<div class="w-full bg-surface-container-low rounded-xl p-space-md opacity-40 pointer-events-none select-none filter blur-[1px]">
+<div class="flex items-center justify-between mb-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-outline">receipt_long</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Regional Invoicing &amp; Settlement Ledger</span>
+</div>
+<div class="h-6 w-32 bg-surface-container-highest rounded"></div>
+</div>
+<div class="space-y-space-xs">
+<div class="h-10 bg-surface-container rounded-lg w-full"></div>
+<div class="h-10 bg-surface-container rounded-lg w-full"></div>
+<div class="h-10 bg-surface-container rounded-lg w-full"></div>
+</div>
+</div>
+<!-- Modal Screen Overlay -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-space-sm overflow-y-auto bg-slate-900/60 backdrop-blur-xs transition-opacity duration-200" id="invoiceModalOverlay">
+<div class="w-full max-w-4xl bg-surface-container-lowest rounded-xl shadow-xl flex flex-col my-auto overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+<!-- Top Action Navigation Bar -->
+<div class="px-space-md py-space-sm bg-surface-bright flex flex-wrap items-center justify-between gap-space-sm border-b border-surface-container">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-body-lg">receipt_long</span>
+</div>
+<div>
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-headline-sm text-headline-sm text-on-surface">Tax Invoice Preview</span>
+<span class="font-label-sm text-label-sm text-outline">/</span>
+<span class="font-label-lg text-label-lg text-primary-container">INV-2026-001</span>
+<!-- Status Pill -->
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed text-label-sm font-label-sm font-semibold tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                PAID &amp; SETTLED
+              </span>
+</div>
+<p class="font-body-sm text-body-sm text-outline">Maharashtra Regional Partner Cluster #MH-04 • Instant Escrow Clearance</p>
+</div>
+</div>
+<!-- Action Command Buttons -->
+<div class="flex items-center gap-space-xs flex-wrap">
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors shadow-sm" onclick="window.print()" type="button">
+<span class="material-symbols-outlined text-[16px]">print</span>
+<span>Print Invoice</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors shadow-sm" id="downloadPdfBtn" type="button">
+<span class="material-symbols-outlined text-[16px]">download</span>
+<span>Download PDF</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors shadow-sm" id="emailCustomerBtn" type="button">
+<span class="material-symbols-outlined text-[16px]">mail</span>
+<span>Send to Email</span>
+</button>
+<button aria-label="Close dialog" class="w-8 h-8 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface flex items-center justify-center transition-colors" id="closeModalCross" type="button">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+</div>
+<!-- Printable Clean Tax Invoice Document Body -->
+<div class="p-space-lg overflow-y-auto max-h-[768px] bg-surface-bright space-y-space-md" id="printableTaxDocument">
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-md">
+<!-- 1. Invoice Header: Organization & Meta Summary -->
+<div class="flex flex-col md:flex-row md:items-start justify-between gap-space-md pb-space-md border-b border-surface-container">
+<!-- Left Org Identity -->
+<div class="space-y-space-xs">
+<div class="flex items-center gap-2">
+<div class="w-9 h-9 rounded-lg bg-secondary text-on-secondary flex items-center justify-center font-bold">
+<span class="material-symbols-outlined text-body-lg">bolt</span>
+</div>
+<div>
+<span class="font-headline-md text-headline-md tracking-tight text-on-surface font-bold block">ElectriCare</span>
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider block -mt-1 font-semibold">Services India Pvt. Ltd.</span>
+</div>
+</div>
+<div class="text-body-sm font-body-sm text-on-surface-variant leading-relaxed max-w-sm pt-1">
+<p class="font-medium text-on-surface">Maharashtra Regional Operations Hub</p>
+<p>Level 4, Technopolis Knowledge Park, Andheri East, Mumbai, MH - 400093</p>
+<p class="mt-1 font-mono text-[11px] text-primary-container font-semibold">GSTIN: 27AABCE1234F1Z9</p>
+<p class="text-[11px] text-outline">State Code: 27 (Maharashtra) • Corporate CIN: U74999MH2021PTC362145</p>
+</div>
+</div>
+<!-- Right Tax Invoice Metadata Ledger -->
+<div class="text-left md:text-right space-y-1">
+<span class="inline-block px-2.5 py-0.5 rounded bg-surface-container text-primary font-headline-sm text-headline-sm uppercase tracking-wider font-bold">
+                Tax Invoice
+              </span>
+<div class="pt-2 grid grid-cols-2 md:block gap-x-4 text-body-sm font-body-sm">
+<div>
+<span class="text-outline text-label-sm font-label-sm uppercase">Invoice No:</span>
+<span class="font-mono font-semibold text-on-surface ml-1">INV-2026-001</span>
+</div>
+<div>
+<span class="text-outline text-label-sm font-label-sm uppercase">Invoice Date:</span>
+<span class="font-medium text-on-surface ml-1">02 Oct 2026</span>
+</div>
+<div>
+<span class="text-outline text-label-sm font-label-sm uppercase">Job Reference:</span>
+<span class="font-mono text-primary font-semibold ml-1">#J-1001</span>
+</div>
+<div>
+<span class="text-outline text-label-sm font-label-sm uppercase">Place of Supply:</span>
+<span class="text-on-surface ml-1">Maharashtra (27)</span>
+</div>
+<div class="col-span-2 pt-1">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-secondary-container/40 text-on-secondary-fixed text-label-sm font-label-sm font-medium">
+<span class="material-symbols-outlined text-[13px] text-secondary">verified_user</span>
+                    Online UPI (Escrow Settled)
+                  </span>
+</div>
+</div>
+</div>
+</div>
+<!-- 2. Customer & Assigned Technician Info Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<!-- Bill To Container -->
+<div class="p-space-md bg-surface-container-low rounded-xl space-y-1">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm uppercase tracking-wider text-outline">Billed To (Customer)</span>
+<span class="material-symbols-outlined text-outline text-[16px]">person</span>
+</div>
+<p class="font-headline-sm text-headline-sm text-on-surface font-semibold">Amit Sharma</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant leading-tight">
+                Flat 402, Sea View Apartments, Shahid Bhagat Singh Road,<br/>
+                Colaba, Mumbai, Maharashtra — 400001
+              </p>
+<div class="flex items-center gap-2 pt-1 text-label-md font-label-md text-on-surface">
+<span class="material-symbols-outlined text-secondary text-[15px]">call</span>
+<span>+91 98201 XXXXX</span>
+<span class="text-outline">•</span>
+<span class="text-outline font-body-sm text-body-sm">Pincode: 400001 (Zone MH-S1)</span>
+</div>
+</div>
+<!-- Assigned Service Provider Container -->
+<div class="p-space-md bg-surface-container-low rounded-xl space-y-1">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm uppercase tracking-wider text-outline">Assigned Service Provider</span>
+<span class="material-symbols-outlined text-secondary text-[16px]">verified</span>
+</div>
+<p class="font-headline-sm text-headline-sm text-on-surface font-semibold flex items-center gap-1.5">
+                Rajesh Kumar
+                <span class="text-label-sm font-label-sm bg-surface-container text-on-surface px-1.5 py-0.5 rounded font-mono font-medium">EMP-MH-108</span>
+</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant">
+                Grade 1 Certified Wireman &amp; High-Voltage Appliance Specialist
+              </p>
+<div class="pt-1 flex items-center gap-3 text-label-md font-label-md text-on-surface">
+<span class="inline-flex items-center text-secondary">
+<span class="material-symbols-outlined text-[15px] mr-1">workspace_premium</span>
+                  Lic: PWD/MH/WR/88492
+                </span>
+<span class="text-outline">•</span>
+<span class="text-secondary font-medium">On-Duty Dispatched</span>
+</div>
+</div>
+</div>
+<!-- 3. Line Items Table -->
+<div class="overflow-x-auto rounded-lg">
+<table class="w-full text-left text-body-sm font-body-sm">
+<thead class="bg-surface-container text-on-surface-variant text-label-sm font-label-sm uppercase tracking-wider">
+<tr>
+<th class="py-2.5 px-3 w-10 text-center" scope="col">#</th>
+<th class="py-2.5 px-3" scope="col">Description &amp; Scope of Work</th>
+<th class="py-2.5 px-3 text-center" scope="col">HSN / SAC</th>
+<th class="py-2.5 px-3 text-right" scope="col">Unit Rate</th>
+<th class="py-2.5 px-3 text-center" scope="col">Qty</th>
+<th class="py-2.5 px-3 text-right" scope="col">Taxable Value</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container text-on-surface">
+<!-- Line 1 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-3 text-center font-mono text-outline">01</td>
+<td class="py-3 px-3">
+<p class="font-medium text-on-surface">Heavy Duty Ceiling Fan Installation</p>
+<p class="text-[11px] text-outline">Orient 1200mm Aeroquiet Series with balance testing and downrod reinforcement</p>
+</td>
+<td class="py-3 px-3 text-center font-mono text-on-surface-variant">SAC 998714</td>
+<td class="py-3 px-3 text-right font-mono">₹950.00</td>
+<td class="py-3 px-3 text-center font-mono">1</td>
+<td class="py-3 px-3 text-right font-mono font-medium">₹950.00</td>
+</tr>
+<!-- Line 2 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-3 text-center font-mono text-outline">02</td>
+<td class="py-3 px-3">
+<p class="font-medium text-on-surface">Spare Parts: Ceiling Anchor &amp; Capacitor</p>
+<p class="text-[11px] text-outline">High-tensile forged ceiling hook + 2.50 MFD standard motor capacitor</p>
+</td>
+<td class="py-3 px-3 text-center font-mono text-on-surface-variant">HSN 853890</td>
+<td class="py-3 px-3 text-right font-mono">₹100.00</td>
+<td class="py-3 px-3 text-center font-mono">1</td>
+<td class="py-3 px-3 text-right font-mono font-medium">₹100.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- 4. Calculation & Tax Summary Split -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-space-md pt-space-xs">
+<!-- Left Side Terms, Guarantee & Notes -->
+<div class="md:col-span-6 p-space-sm bg-surface-container-low rounded-xl space-y-2 text-body-sm font-body-sm">
+<div class="flex items-center gap-1.5 text-secondary font-label-md font-label-md">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+<span>ElectriCare 30-Day Service Guarantee</span>
+</div>
+<p class="text-on-surface-variant text-[11px] leading-relaxed">
+                Workmanship covered against mechanical looseness or wiring defects for 30 calendar days. Original component warranty is honored directly by the respective OEM manufacturer (Orient Electric).
+              </p>
+<div class="pt-1 flex items-center gap-2 text-[11px] text-outline">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+<span>Encrypted digital invoice stamped under IT Act 2000.</span>
+</div>
+</div>
+<!-- Right Side Financial Calculation Box -->
+<div class="md:col-span-6 space-y-1.5 text-body-sm font-body-sm">
+<div class="flex justify-between py-1 px-2 text-on-surface-variant">
+<span>Subtotal (Taxable Amount):</span>
+<span class="font-mono font-medium text-on-surface">₹1,050.00</span>
+</div>
+<div class="flex justify-between py-1 px-2 text-on-surface-variant">
+<span class="flex items-center gap-1">
+                  CGST (Central Tax) 
+                  <span class="text-[10px] bg-surface-container px-1 rounded text-outline">9.0%</span>
+</span>
+<span class="font-mono font-medium text-on-surface">₹100.00</span>
+</div>
+<div class="flex justify-between py-1 px-2 text-on-surface-variant">
+<span class="flex items-center gap-1">
+                  SGST (State Tax - MH) 
+                  <span class="text-[10px] bg-surface-container px-1 rounded text-outline">9.0%</span>
+</span>
+<span class="font-mono font-medium text-on-surface">₹100.00</span>
+</div>
+<div class="flex justify-between py-1 px-2 bg-surface-container-low rounded font-medium text-on-surface">
+<span>Total Tax Component:</span>
+<span class="font-mono">₹200.00</span>
+</div>
+<!-- Grand Net Total -->
+<div class="flex justify-between items-center py-2 px-3 bg-secondary text-on-secondary rounded-lg shadow-sm">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider block opacity-90">Net Invoice Total</span>
+<span class="text-[11px] block font-light">All Taxes Included</span>
+</div>
+<span class="font-headline-lg text-headline-lg font-mono font-bold tracking-tight">₹1,250.00</span>
+</div>
+<!-- Amount in words -->
+<p class="text-right text-[11px] text-outline italic pt-0.5">
+                Indian Rupees One Thousand Two Hundred Fifty Only
+              </p>
+</div>
+</div>
+<!-- 5. Payment Status & Settlement Verification Ledger -->
+<div class="pt-space-sm border-t border-surface-container grid grid-cols-1 md:grid-cols-2 items-center gap-space-md">
+<!-- Payment Transaction Proof -->
+<div class="flex items-start gap-space-sm p-space-sm bg-surface-container rounded-lg">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+</div>
+<div class="min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Payment Status: Verified</span>
+<span class="px-1.5 py-0.2 rounded bg-surface-container-high text-primary font-mono text-[10px]">TX-92011</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Settled via Razorpay Escrow Direct on 02 Oct 2026, 10:15 AM IST</p>
+<p class="text-[10px] text-outline font-mono">Gateway Reference ID: pay_MH_20261002_0918449102</p>
+</div>
+</div>
+<!-- Authorized Digital Signature Stamp -->
+<div class="flex flex-col items-start md:items-end justify-center text-left md:text-right space-y-1">
+<div class="relative px-3 py-1.5 bg-surface-container-low rounded-lg inline-block">
+<div class="flex items-center gap-1.5 text-secondary">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider font-semibold">Digitally Stamped &amp; Validated</span>
+</div>
+<p class="text-[10px] text-outline font-mono">HASH: 7F8E-2A41-998C-MH01</p>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold block pt-0.5">
+                For ElectriCare Maharashtra Regional Partner Network
+              </span>
+<span class="text-body-sm font-body-sm text-outline block">
+                Authorized Signatory &amp; Finance Controller
+              </span>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Modal Sticky Footer Control Area -->
+<div class="px-space-md py-space-sm bg-surface-container-lowest border-t border-surface-container flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex items-center gap-2 text-outline text-body-sm font-body-sm">
+<span class="material-symbols-outlined text-secondary text-[16px]">health_and_safety</span>
+<span>Compliant with GST Rule 46 (Tax Invoice Standards, Government of India)</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<button class="px-4 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-colors" id="closePreviewBtn" type="button">
+            Close Preview
+          </button>
+<button class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary hover:bg-on-secondary-container text-on-secondary font-label-md text-label-md transition-colors shadow-sm" id="downloadOfficialCopyBtn" type="button">
+<span class="material-symbols-outlined text-[18px]">download</span>
+<span>Download Official Tax Copy (PDF)</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Notification Toast Container for Interactive actions -->
+<div class="fixed bottom-6 right-6 z-50 transform translate-y-12 opacity-0 pointer-events-none transition-all duration-300 bg-surface-container-lowest text-on-surface p-space-sm rounded-lg shadow-xl flex items-center gap-2.5" id="toastNotification">
+<div class="w-7 h-7 rounded-full bg-secondary-container text-on-secondary-fixed flex items-center justify-center" id="toastIconWrapper">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</div>
+<div>
+<p class="text-label-md font-label-md font-semibold text-on-surface" id="toastMessage">Action executed successfully</p>
+<p class="text-body-sm font-body-sm text-outline" id="toastSubMessage">INV-2026-001 updated in audit log.</p>
+</div>
+</div>
+</div>
+<script>
+  (function initInvoiceModalInteractions() {
+    const overlay = document.getElementById('invoiceModalOverlay');
+    const closeCross = document.getElementById('closeModalCross');
+    const closeBtn = document.getElementById('closePreviewBtn');
+    const toast = document.getElementById('toastNotification');
+    const toastMsg = document.getElementById('toastMessage');
+    const toastSub = document.getElementById('toastSubMessage');
+    const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+    const downloadOfficialBtn = document.getElementById('downloadOfficialCopyBtn');
+    const emailCustomerBtn = document.getElementById('emailCustomerBtn');
+
+    function showToast(message, subMessage) {
+      if (!toast) return;
+      toastMsg.textContent = message;
+      toastSub.textContent = subMessage;
+      toast.classList.remove('translate-y-12', 'opacity-0', 'pointer-events-none');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      
+      setTimeout(() => {
+        toast.classList.add('translate-y-12', 'opacity-0', 'pointer-events-none');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 3500);
+    }
+
+    function closeModal() {
+      if (overlay) {
+        overlay.classList.add('opacity-0');
+        setTimeout(() => {
+          overlay.style.display = 'none';
+        }, 200);
+      }
+    }
+
+    if (closeCross) closeCross.addEventListener('click', closeModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+
+    // Escape Key Listener
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+    });
+
+    // Interactive button triggers
+    if (downloadPdfBtn) {
+      downloadPdfBtn.addEventListener('click', () => {
+        showToast('PDF Generation Initiated', 'Preparing official INV-2026-001 with digital signature stamp...');
+      });
+    }
+
+    if (downloadOfficialBtn) {
+      downloadOfficialBtn.addEventListener('click', () => {
+        showToast('Downloading Tax Copy', 'Official GST-compliant copy saved to downloads.');
+      });
+    }
+
+    if (emailCustomerBtn) {
+      emailCustomerBtn.addEventListener('click', () => {
+        showToast('Invoice Dispatched', 'Tax invoice PDF dispatched to Amit Sharma (amit.sharma@example.com).');
+      });
+    }
+  })();
+</script></main>
+<!-- END: Main Content Container -->
+<!-- Footer Info -->
+<footer class="mt-auto px-6 py-4 border-t border-slate-200 bg-white text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
+<p>© 2024 ElectriCare Inc. Regional Partner Portal. All rights reserved.</p>
+<div class="flex items-center gap-4 text-[11px] text-slate-500">
+<a class="hover:text-emerald-600" href="#">Privacy Policy</a>
+<a class="hover:text-emerald-600" href="#">Technician Guidelines</a>
+<a class="hover:text-emerald-600" href="#">Emergency Dispatch: 1800-202-099</a>
+</div>
+</footer>
+</div>
+<!-- END: MainContentArea -->
+</div>
+<!-- END: MainLayoutWrapper -->
+</body></html>

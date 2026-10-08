@@ -78,10 +78,22 @@ class ServiceSignoffViewModel(
     fun downloadGstInvoicePdf(context: Context) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isDownloadingInvoice = true, downloadSuccessMessage = null)
-            delay(1000) // Simulated PDF compilation & saving to downloads
+            val state = _uiState.value
+            val data = com.ghartak.customer.util.PdfInvoiceGenerator.InvoiceData(
+                invoiceNumber = state.invoiceNumber,
+                ticketNumber = state.ticketNumber,
+                serviceTitle = state.serviceTitle,
+                customerName = "Amit Sharma",
+                technicianName = "${state.technicianName} (${state.technicianBadge})",
+                taxableCharges = state.taxableCharges,
+                cgstAmount = state.cgstAmount,
+                sgstAmount = state.sgstAmount,
+                totalAmount = state.totalAmount
+            )
+            com.ghartak.customer.util.PdfInvoiceGenerator.generateAndSaveGstInvoice(context, data)
             _uiState.value = _uiState.value.copy(
                 isDownloadingInvoice = false,
-                downloadSuccessMessage = "Tax Invoice ${_uiState.value.invoiceNumber}.pdf saved to Downloads folder."
+                downloadSuccessMessage = "Tax Invoice ${state.invoiceNumber}.pdf saved to Downloads folder."
             )
         }
     }

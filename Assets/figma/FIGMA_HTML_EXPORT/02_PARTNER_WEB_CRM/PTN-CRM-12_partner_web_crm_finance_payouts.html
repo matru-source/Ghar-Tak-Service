@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ElectriCare - Partner Web CRM (Maharashtra Team)</title>
+<!-- Inter Google Font -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            },
+            surface: {
+              bg: '#f8fafc',
+              border: '#e2e8f0',
+              sidebar: '#ffffff'
+            }
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom CSS -->
+<style data-purpose="custom-enhancements">
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .chart-donut-ring {
+      stroke-dasharray: 440;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+      transition: stroke-dashoffset 0.5s ease;
+    }
+  </style>
+<!-- END: Custom CSS -->
+<meta content="web_dashboard" name="shell-type"/></head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 text-[13px]">
+<!-- BEGIN: TopBarBanner -->
+<!-- Context indicator for Regional Operations -->
+<div class="bg-brand-900 text-brand-100 text-xs px-6 py-1.5 flex items-center justify-between border-b border-brand-800">
+<div class="flex items-center space-x-2 font-medium">
+<span class="inline-flex items-center justify-center w-4 h-4 bg-emerald-500 text-white rounded-full text-[10px] font-bold">11</span>
+<span class="tracking-wide font-semibold text-white">Partner Web CRM</span>
+<span class="text-emerald-300">(Maharashtra Team)</span>
+</div>
+<div class="flex items-center space-x-4 text-[11px] text-emerald-200">
+<span>Regional Operations</span>
+<span class="text-emerald-500">•</span>
+<span>Manage Technicians</span>
+<span class="text-emerald-500">•</span>
+<span>Jobs</span>
+<span class="text-emerald-500">•</span>
+<span>Pincodes</span>
+<span class="text-emerald-500">•</span>
+<span>Finance</span>
+<span class="text-emerald-500">•</span>
+<span>Support</span>
+</div>
+</div>
+<!-- END: TopBarBanner -->
+<!-- BEGIN: MainLayoutWrapper -->
+<div class="flex flex-1 min-h-[calc(100vh-28px)]">
+<!-- BEGIN: LeftSidebar -->
+<aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 select-none">
+<div>
+<!-- Logo Section -->
+<div class="h-16 flex items-center px-6 border-b border-slate-100 gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-sm shadow-emerald-500/30">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<path d="M13 2L3 14h8v8l10-12h-8l0-8z"></path>
+</svg>
+</div>
+<div>
+<span class="text-base font-bold text-slate-900 tracking-tight flex items-center gap-1">
+              ElectriCare
+            </span>
+<span class="block text-[10px] font-medium uppercase tracking-wider text-emerald-600 -mt-1">Partner Portal</span>
+</div>
+</div>
+<!-- Navigation Menu -->
+<nav aria-label="Main Navigation" class="p-3 space-y-1">
+<!-- Dashboard - Active Item -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg bg-emerald-600 text-white font-medium shadow-sm shadow-emerald-600/20 transition-colors" href="#">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="9" rx="1" width="7" x="3" y="3"></rect>
+<rect height="5" rx="1" width="7" x="14" y="3"></rect>
+<rect height="9" rx="1" width="7" x="14" y="12"></rect>
+<rect height="5" rx="1" width="7" x="3" y="16"></rect>
+</svg>
+<span>Dashboard</span>
+</a>
+<!-- Technicians -->
+<a class="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<div class="flex items-center gap-3">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+<circle cx="9" cy="7" r="4"></circle>
+<path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+</svg>
+<span>Technicians</span>
+</div>
+<span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">24</span>
+</a>
+<!-- Job Management -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="14" rx="2" ry="2" width="20" x="2" y="7"></rect>
+<path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+</svg>
+<span>Job Management</span>
+</a>
+<!-- Pincode Coverage -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path>
+<circle cx="12" cy="10" r="3"></circle>
+</svg>
+<span>Pincode Coverage</span>
+</a>
+<!-- Finance / Payouts -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<line x1="12" x2="12" y1="1" y2="23"></line>
+<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+</svg>
+<span>Finance / Payouts</span>
+</a>
+<!-- Profile / Settings -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="3"></circle>
+<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+</svg>
+<span>Profile / Settings</span>
+</a>
+<!-- Support -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+<line x1="12" x2="12.01" y1="17" y2="17"></line>
+</svg>
+<span>Support</span>
+</a>
+</nav>
+</div>
+<!-- Partner Unit Card in Sidebar Footer -->
+<div class="p-3 border-t border-slate-100 bg-slate-50/50 m-2 rounded-xl">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 border border-emerald-300">
+            MT
+          </div>
+<div class="truncate">
+<p class="font-semibold text-slate-800 text-xs truncate leading-tight">Maharashtra Team</p>
+<span class="inline-flex items-center text-[10px] text-emerald-600 font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span> Partner Active
+            </span>
+</div>
+</div>
+</div>
+</aside>
+<!-- END: LeftSidebar -->
+<!-- BEGIN: MainContentArea -->
+<div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+<!-- BEGIN: HeaderNav -->
+<header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-20">
+<!-- Search bar input -->
+<div class="relative w-80">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="11" cy="11" r="8"></circle>
+<line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+</svg>
+</span>
+<input class="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 placeholder-slate-400 transition" placeholder="Search dashboard, jobs, technicians..." type="text"/>
+</div>
+<!-- Top Right Actions & User Profile -->
+<div class="flex items-center gap-3.5">
+<!-- Quick Status Pill -->
+<div class="hidden md:flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs px-2.5 py-1 rounded-full">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span class="font-medium text-[11px]">Region: MH Operations</span>
+</div>
+<!-- Notification Bell -->
+<button aria-label="Notifications" class="p-2 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100 relative" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+<path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+</svg>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+</button>
+<div class="h-5 w-px bg-slate-200"></div>
+<!-- Profile Badge -->
+<div class="flex items-center gap-2.5 pl-1 cursor-pointer">
+<div class="w-8 h-8 rounded-full bg-slate-800 text-white font-semibold flex items-center justify-center text-xs">
+              MH
+            </div>
+<div class="hidden sm:block text-left">
+<span class="block text-xs font-semibold text-slate-700 leading-tight">Maharashtra Ops</span>
+<span class="text-[10px] text-slate-400">admin-mh@electricare.in</span>
+</div>
+<svg class="w-3.5 h-3.5 text-slate-400 ml-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</div>
+</div>
+</header>
+<!-- END: HeaderNav -->
+<!-- Main Body Container -->
+<main class="p-6 space-y-6"><div class="flex flex-col w-full space-y-6">
+<!-- Operational Context Breadcrumb & Action Row -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-surface-container-lowest p-6 rounded-xl shadow-sm">
+<div class="space-y-1">
+<div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<span>Maharashtra Operational Hub</span>
+<span>/</span>
+<span class="text-secondary font-semibold">Ledger &amp; Settlement</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Finance &amp; Regional Payouts</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Track partner revenue shares, technician disbursement settlements, and monthly payout schedules across MH cluster.</p>
+</div>
+<div class="flex items-center gap-3 flex-wrap">
+<button class="inline-flex items-center gap-2 px-3.5 py-2 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-colors shadow-sm cursor-pointer" type="button">
+<span class="material-symbols-outlined text-lg">download</span>
+<span>Export Transactions (CSV)</span>
+</button>
+<button class="inline-flex items-center gap-2 px-4 py-2 rounded bg-secondary hover:bg-on-secondary-fixed-variant text-on-secondary font-label-md text-label-md shadow-sm transition-colors cursor-pointer" type="button">
+<span class="material-symbols-outlined text-lg">picture_as_pdf</span>
+<span>Financial Statement (PDF)</span>
+</button>
+</div>
+</div>
+<!-- KPI Summary Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+<!-- Total Revenue -->
+<div class="bg-surface-container-lowest p-5 rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Gross Regional Billing</span>
+<div class="w-8 h-8 rounded bg-surface-container-low flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-base">bar_chart</span>
+</div>
+</div>
+<div class="mt-3">
+<div class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">₹42,00,000</div>
+<div class="flex items-center gap-1.5 mt-1 font-body-sm text-body-sm text-on-surface-variant">
+<span class="inline-flex items-center font-semibold text-secondary">
+<span class="material-symbols-outlined text-xs">arrow_upward</span> +14.2%
+          </span>
+<span>vs last quarter performance</span>
+</div>
+</div>
+<div class="mt-4 pt-3 bg-surface-container-low/50 -mx-5 -mb-5 px-5 py-2.5 rounded-b-xl">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Q3 MH Gross Volume (All Districts)</span>
+</div>
+</div>
+<!-- Partner Earnings -->
+<div class="bg-surface-container-lowest p-5 rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Partner Net Earnings</span>
+<div class="w-8 h-8 rounded bg-secondary-fixed flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-base">account_balance_wallet</span>
+</div>
+</div>
+<div class="mt-3">
+<div class="font-headline-lg text-headline-lg font-bold text-secondary tracking-tight">₹4,20,000</div>
+<div class="flex items-center gap-1.5 mt-1 font-body-sm text-body-sm text-on-surface-variant">
+<span class="inline-flex items-center font-semibold text-secondary">10.0%</span>
+<span>standard MH commission rate</span>
+</div>
+</div>
+<div class="mt-4 pt-3 bg-surface-container-low/50 -mx-5 -mb-5 px-5 py-2.5 rounded-b-xl">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Accrued margin before withholding tax</span>
+</div>
+</div>
+<!-- Pending Payout -->
+<div class="bg-surface-container-lowest p-5 rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Pending Disbursement</span>
+<div class="w-8 h-8 rounded bg-surface-container flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-base">schedule</span>
+</div>
+</div>
+<div class="mt-3">
+<div class="font-headline-lg text-headline-lg font-bold text-primary-container tracking-tight">₹85,000</div>
+<div class="flex items-center gap-1.5 mt-1 font-body-sm text-body-sm text-on-surface-variant">
+<span class="w-2 h-2 rounded-full bg-primary-container inline-block"></span>
+<span>Settling on 30 Sep 2024</span>
+</div>
+</div>
+<div class="mt-4 pt-3 bg-surface-container-low/50 -mx-5 -mb-5 px-5 py-2.5 rounded-b-xl">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Escrow cleared • Direct NEFT batch</span>
+</div>
+</div>
+<!-- Paid to Date -->
+<div class="bg-surface-container-lowest p-5 rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Disbursed to Date</span>
+<div class="w-8 h-8 rounded bg-surface-container flex items-center justify-center text-on-surface">
+<span class="material-symbols-outlined text-base">task_alt</span>
+</div>
+</div>
+<div class="mt-3">
+<div class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">₹3,35,000</div>
+<div class="flex items-center gap-1.5 mt-1 font-body-sm text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-xs text-secondary">verified</span>
+<span>HDFC Bank • Direct Deposit</span>
+</div>
+</div>
+<div class="mt-4 pt-3 bg-surface-container-low/50 -mx-5 -mb-5 px-5 py-2.5 rounded-b-xl">
+<span class="font-label-sm text-label-sm text-on-surface-variant">FY 2024-25 Q2 Settled Total</span>
+</div>
+</div>
+</div>
+<!-- Middle Visual Analytics (60/40 Split) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+<!-- Left 60%: Bi-Weekly Revenue & Earnings Trend -->
+<div class="lg:col-span-7 bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col justify-between space-y-6">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Bi-Weekly Revenue &amp; Earnings Trend</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Comparison between Total Gross Volume and Maharashtra Partner Share</p>
+</div>
+<div class="flex items-center gap-4 text-xs">
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded-sm bg-primary-container inline-block"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Gross (₹100k)</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded-sm bg-secondary inline-block"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Partner Share (₹10k)</span>
+</div>
+</div>
+</div>
+<!-- Telemetry Chart Vector -->
+<div class="relative w-full h-56 flex flex-col justify-end pt-4">
+<!-- SVG Grid & Bar chart -->
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 540 180">
+<!-- Horizontal dashed grid lines -->
+<line stroke="#E2E8F0" stroke-dasharray="3 3" stroke-width="1" x1="0" x2="540" y1="20" y2="20"></line>
+<line stroke="#E2E8F0" stroke-dasharray="3 3" stroke-width="1" x1="0" x2="540" y1="65" y2="65"></line>
+<line stroke="#E2E8F0" stroke-dasharray="3 3" stroke-width="1" x1="0" x2="540" y1="110" y2="110"></line>
+<line stroke="#E2E8F0" stroke-width="1" x1="0" x2="540" y1="155" y2="155"></line>
+<!-- Group 1: 01 Aug -->
+<rect fill="#1E40AF" height="85" rx="2" width="18" x="35" y="70"></rect>
+<rect fill="#006C4A" height="40" rx="2" width="18" x="57" y="115"></rect>
+<!-- Group 2: 08 Aug -->
+<rect fill="#1E40AF" height="103" rx="2" width="18" x="125" y="52"></rect>
+<rect fill="#006C4A" height="50" rx="2" width="18" x="147" y="105"></rect>
+<!-- Group 3: 15 Aug -->
+<rect fill="#1E40AF" height="117" rx="2" width="18" x="215" y="38"></rect>
+<rect fill="#006C4A" height="63" rx="2" width="18" x="237" y="92"></rect>
+<!-- Group 4: 22 Aug -->
+<rect fill="#1E40AF" height="111" rx="2" width="18" x="305" y="44"></rect>
+<rect fill="#006C4A" height="59" rx="2" width="18" x="327" y="96"></rect>
+<!-- Group 5: 31 Aug -->
+<rect fill="#1E40AF" height="127" rx="2" width="18" x="395" y="28"></rect>
+<rect fill="#006C4A" height="75" rx="2" width="18" x="417" y="80"></rect>
+<!-- Group 6: 15 Sep -->
+<rect fill="#1E40AF" height="133" rx="2" width="18" x="485" y="22"></rect>
+<rect fill="#006C4A" height="83" rx="2" width="18" x="507" y="72"></rect>
+</svg>
+<!-- Chart X-Axis Labels -->
+<div class="flex justify-between items-center px-4 pt-2 text-on-surface-variant font-label-sm text-label-sm">
+<span>01 Aug</span>
+<span>08 Aug</span>
+<span>15 Aug</span>
+<span>22 Aug</span>
+<span>31 Aug</span>
+<span>15 Sep</span>
+</div>
+</div>
+<!-- Quick Telemetry Footnote -->
+<div class="flex items-center justify-between text-on-surface-variant font-body-sm text-body-sm bg-surface-container-low px-4 py-2.5 rounded-lg">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-secondary">trending_up</span>
+<span>Highest surge recorded during Mumbai monsoon emergency wiring audits (+28% peak).</span>
+</div>
+<span class="font-semibold text-on-surface">Avg Margin: 10.0%</span>
+</div>
+</div>
+<!-- Right 40%: Payout Settlement & Bank Ledger Summary -->
+<div class="lg:col-span-5 bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col justify-between space-y-5">
+<div>
+<div class="flex items-center justify-between">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Payout Settlement Summary</h2>
+<span class="px-2.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-bold uppercase tracking-wider flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> Verified
+          </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Direct clearing details for scheduled batch remittance</p>
+</div>
+<!-- Settlement Breakdown Details -->
+<div class="space-y-3.5">
+<div class="bg-surface-container-low p-3.5 rounded-lg space-y-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Scheduled Release Date</span>
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">30 September 2024</span>
+<span class="px-2 py-0.5 bg-surface-container text-primary-container font-label-sm text-label-sm rounded font-medium">In 6 Days</span>
+</div>
+</div>
+<div class="bg-surface-container-low p-3.5 rounded-lg space-y-2">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Designated Payout Account</span>
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded bg-surface-container-highest flex items-center justify-center text-primary-container font-bold text-xs">
+              HDFC
+            </div>
+<div>
+<p class="font-label-lg text-label-lg font-semibold text-on-surface">HDFC Bank Ltd • Current A/c</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant font-mono">A/C: •••••••••••• 4402  |  IFSC: HDFC0000182</p>
+</div>
+</div>
+</div>
+<!-- Escrow & GST Compliance Info -->
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-surface-container-low p-3 rounded-lg">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant block mb-1">Escrow Status</span>
+<div class="flex items-center gap-1.5 text-secondary font-label-md text-label-md font-semibold">
+<span class="material-symbols-outlined text-sm">lock_open</span>
+<span>100% Cleared</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-[11px] mt-0.5">No disputes flagged</p>
+</div>
+<div class="bg-surface-container-low p-3 rounded-lg">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant block mb-1">GST Credit Ledger</span>
+<div class="flex items-center gap-1.5 text-primary-container font-label-md text-label-md font-semibold">
+<span class="material-symbols-outlined text-sm">receipt_long</span>
+<span>18% ITC Invoiced</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-[11px] mt-0.5">GSTIN: 27AABCE1234F1Z9</p>
+</div>
+</div>
+</div>
+<div class="pt-2">
+<button class="w-full py-2.5 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition flex items-center justify-center gap-2 cursor-pointer" type="button">
+<span class="material-symbols-outlined text-base">manage_accounts</span>
+<span>Update Bank Settlement Directives</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Recent Financial Transactions Section -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden space-y-4 p-6">
+<!-- Table Header & Controls -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Recent Financial Transactions</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Live audit ledger of customer invoices, partner commissions, and technician disbursements</p>
+</div>
+<!-- Segmented View Tabs -->
+<div class="inline-flex p-1 bg-surface-container-low rounded-lg font-label-sm text-label-sm">
+<button class="px-3 py-1.5 rounded-md bg-surface-container-lowest text-on-surface font-semibold shadow-sm cursor-pointer" type="button">All (148)</button>
+<button class="px-3 py-1.5 rounded-md text-on-surface-variant hover:text-on-surface transition cursor-pointer" type="button">Job Revenue</button>
+<button class="px-3 py-1.5 rounded-md text-on-surface-variant hover:text-on-surface transition cursor-pointer" type="button">Partner Commission</button>
+<button class="px-3 py-1.5 rounded-md text-on-surface-variant hover:text-on-surface transition cursor-pointer" type="button">Technician Payout</button>
+</div>
+</div>
+<!-- Data Table Container -->
+<div class="w-full overflow-x-auto">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<tr>
+<th class="py-3 px-4">Transaction ID</th>
+<th class="py-3 px-4">Job Reference</th>
+<th class="py-3 px-4">Timestamp</th>
+<th class="py-3 px-4">Ledger Type</th>
+<th class="py-3 px-4 text-right">Gross Billing</th>
+<th class="py-3 px-4 text-right">Partner Net</th>
+<th class="py-3 px-4">Settlement Status</th>
+<th class="py-3 px-4 text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-low">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4 font-mono font-medium text-on-surface">TX-91001</td>
+<td class="py-3.5 px-4">
+<a class="font-medium text-primary hover:underline" href="#">#J-1001</a>
+<span class="text-[11px] block text-on-surface-variant">Fan Installation • Amit Sharma</span>
+</td>
+<td class="py-3.5 px-4 text-on-surface-variant">24 Sep 2024, 10:15 AM</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-surface-container text-primary-container">
+                Partner Commission
+              </span>
+</td>
+<td class="py-3.5 px-4 text-right font-medium text-on-surface">₹1,250.00</td>
+<td class="py-3.5 px-4 text-right font-bold text-secondary">+₹125.00</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-surface-container text-primary-container">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse"></span>
+                Processing
+              </span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<button class="px-2.5 py-1 text-xs rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-medium transition cursor-pointer" type="button">Receipt</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4 font-mono font-medium text-on-surface">TX-91000</td>
+<td class="py-3.5 px-4">
+<a class="font-medium text-primary hover:underline" href="#">#J-1002</a>
+<span class="text-[11px] block text-on-surface-variant">MCB Repair • Priya Mehta</span>
+</td>
+<td class="py-3.5 px-4 text-on-surface-variant">24 Sep 2024, 09:30 AM</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-surface-container text-primary-container">
+                Partner Commission
+              </span>
+</td>
+<td class="py-3.5 px-4 text-right font-medium text-on-surface">₹850.00</td>
+<td class="py-3.5 px-4 text-right font-bold text-secondary">+₹85.00</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-secondary-fixed text-on-secondary-fixed">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                Settled
+              </span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<button class="px-2.5 py-1 text-xs rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-medium transition cursor-pointer" type="button">Invoice</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4 font-mono font-medium text-on-surface">TX-90998</td>
+<td class="py-3.5 px-4">
+<a class="font-medium text-primary hover:underline" href="#">#J-0988</a>
+<span class="text-[11px] block text-on-surface-variant">AC Repair • Disp. to Rajesh Kumar</span>
+</td>
+<td class="py-3.5 px-4 text-on-surface-variant">23 Sep 2024, 04:45 PM</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-surface-container-highest text-on-surface-variant">
+                Technician Disbursement
+              </span>
+</td>
+<td class="py-3.5 px-4 text-right font-medium text-on-surface">₹2,800.00</td>
+<td class="py-3.5 px-4 text-right font-bold text-error">-₹2,240.00</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-secondary-fixed text-on-secondary-fixed">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                Settled
+              </span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<button class="px-2.5 py-1 text-xs rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-medium transition cursor-pointer" type="button">Voucher</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4 font-mono font-medium text-on-surface">TX-90995</td>
+<td class="py-3.5 px-4">
+<a class="font-medium text-primary hover:underline" href="#">#J-0972</a>
+<span class="text-[11px] block text-on-surface-variant">Switch Replacement • Neha Kumar</span>
+</td>
+<td class="py-3.5 px-4 text-on-surface-variant">22 Sep 2024, 02:10 PM</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-surface-container text-primary-container">
+                Partner Commission
+              </span>
+</td>
+<td class="py-3.5 px-4 text-right font-medium text-on-surface">₹1,450.00</td>
+<td class="py-3.5 px-4 text-right font-bold text-secondary">+₹145.00</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-secondary-fixed text-on-secondary-fixed">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                Settled
+              </span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<button class="px-2.5 py-1 text-xs rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-medium transition cursor-pointer" type="button">Invoice</button>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4 font-mono font-medium text-on-surface">TX-90990</td>
+<td class="py-3.5 px-4">
+<a class="font-medium text-primary hover:underline" href="#">#J-0960</a>
+<span class="text-[11px] block text-on-surface-variant">Inverter Point Fix • Sneha Patel</span>
+</td>
+<td class="py-3.5 px-4 text-on-surface-variant">21 Sep 2024, 11:20 AM</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-surface-container text-primary-container">
+                Partner Commission
+              </span>
+</td>
+<td class="py-3.5 px-4 text-right font-medium text-on-surface">₹1,850.00</td>
+<td class="py-3.5 px-4 text-right font-bold text-secondary">+₹185.00</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-secondary-fixed text-on-secondary-fixed">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                Settled
+              </span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<button class="px-2.5 py-1 text-xs rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-medium transition cursor-pointer" type="button">Invoice</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination & Audit Meta -->
+<div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-on-surface-variant font-body-sm text-body-sm">
+<span>Showing 5 of 148 verified ledger records</span>
+<div class="inline-flex items-center gap-2">
+<button class="p-1.5 rounded bg-surface-container text-on-surface disabled:opacity-50 cursor-pointer" disabled="" type="button">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<span class="font-semibold text-on-surface px-2">Page 1 of 30</span>
+<button class="p-1.5 rounded bg-surface-container hover:bg-surface-container-high text-on-surface cursor-pointer" type="button">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div></main>
+<!-- END: Main Content Container -->
+<!-- Footer Info -->
+<footer class="mt-auto px-6 py-4 border-t border-slate-200 bg-white text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
+<p>© 2024 ElectriCare Inc. Regional Partner Portal. All rights reserved.</p>
+<div class="flex items-center gap-4 text-[11px] text-slate-500">
+<a class="hover:text-emerald-600" href="#">Privacy Policy</a>
+<a class="hover:text-emerald-600" href="#">Technician Guidelines</a>
+<a class="hover:text-emerald-600" href="#">Emergency Dispatch: 1800-202-099</a>
+</div>
+</footer>
+</div>
+<!-- END: MainContentArea -->
+</div>
+<!-- END: MainLayoutWrapper -->
+</body></html>

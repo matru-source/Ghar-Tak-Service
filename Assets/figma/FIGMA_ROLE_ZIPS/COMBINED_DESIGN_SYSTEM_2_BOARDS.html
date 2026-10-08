@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Design System Boards</title>
+  
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ElectriCare - Partner Web CRM (Maharashtra Team)</title>
+<!-- Inter Google Font -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            },
+            surface: {
+              bg: '#f8fafc',
+              border: '#e2e8f0',
+              sidebar: '#ffffff'
+            }
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom CSS -->
+<style data-purpose="custom-enhancements">
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .chart-donut-ring {
+      stroke-dasharray: 440;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+      transition: stroke-dashoffset 0.5s ease;
+    }
+  </style>
+<!-- END: Custom CSS -->
+<meta content="web_dashboard" name="shell-type"/>
+  <style>
+    body {
+      margin: 0;
+      padding: 40px;
+      background-color: #0f172a;
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
+</head>
+<body>
+  
+      <div style="display: flex; flex-direction: column; margin-bottom: 64px;">
+        <div style="margin-bottom: 14px; font-family: Inter, sans-serif; font-size: 18px; font-weight: 700; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.05em;">
+          SYS-01 partner web crm final design system board 1
+        </div>
+        <div class="web-frame" style="width: 1440px; height: 900px; position: relative; overflow-y: auto; overflow-x: hidden; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); border: 2px solid #334155; background: #faf8ff;">
+          
+<!-- BEGIN: TopBarBanner -->
+<!-- Context indicator for Regional Operations -->
+<div class="bg-brand-900 text-brand-100 text-xs px-6 py-1.5 flex items-center justify-between border-b border-brand-800">
+<div class="flex items-center space-x-2 font-medium">
+<span class="inline-flex items-center justify-center w-4 h-4 bg-emerald-500 text-white rounded-full text-[10px] font-bold">11</span>
+<span class="tracking-wide font-semibold text-white">Partner Web CRM</span>
+<span class="text-emerald-300">(Maharashtra Team)</span>
+</div>
+<div class="flex items-center space-x-4 text-[11px] text-emerald-200">
+<span>Regional Operations</span>
+<span class="text-emerald-500">•</span>
+<span>Manage Technicians</span>
+<span class="text-emerald-500">•</span>
+<span>Jobs</span>
+<span class="text-emerald-500">•</span>
+<span>Pincodes</span>
+<span class="text-emerald-500">•</span>
+<span>Finance</span>
+<span class="text-emerald-500">•</span>
+<span>Support</span>
+</div>
+</div>
+<!-- END: TopBarBanner -->
+<!-- BEGIN: MainLayoutWrapper -->
+<div class="flex flex-1 min-h-[calc(100vh-28px)]">
+<!-- BEGIN: LeftSidebar -->
+<aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 select-none">
+<div>
+<!-- Logo Section -->
+<div class="h-16 flex items-center px-6 border-b border-slate-100 gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-sm shadow-emerald-500/30">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<path d="M13 2L3 14h8v8l10-12h-8l0-8z"></path>
+</svg>
+</div>
+<div>
+<span class="text-base font-bold text-slate-900 tracking-tight flex items-center gap-1">
+              ElectriCare
+            </span>
+<span class="block text-[10px] font-medium uppercase tracking-wider text-emerald-600 -mt-1">Partner Portal</span>
+</div>
+</div>
+<!-- Navigation Menu -->
+<nav aria-label="Main Navigation" class="p-3 space-y-1">
+<!-- Dashboard - Active Item -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg bg-emerald-600 text-white font-medium shadow-sm shadow-emerald-600/20 transition-colors" href="#">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="9" rx="1" width="7" x="3" y="3"></rect>
+<rect height="5" rx="1" width="7" x="14" y="3"></rect>
+<rect height="9" rx="1" width="7" x="14" y="12"></rect>
+<rect height="5" rx="1" width="7" x="3" y="16"></rect>
+</svg>
+<span>Dashboard</span>
+</a>
+<!-- Technicians -->
+<a class="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<div class="flex items-center gap-3">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+<circle cx="9" cy="7" r="4"></circle>
+<path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+</svg>
+<span>Technicians</span>
+</div>
+<span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">24</span>
+</a>
+<!-- Job Management -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="14" rx="2" ry="2" width="20" x="2" y="7"></rect>
+<path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+</svg>
+<span>Job Management</span>
+</a>
+<!-- Pincode Coverage -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path>
+<circle cx="12" cy="10" r="3"></circle>
+</svg>
+<span>Pincode Coverage</span>
+</a>
+<!-- Finance / Payouts -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<line x1="12" x2="12" y1="1" y2="23"></line>
+<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+</svg>
+<span>Finance / Payouts</span>
+</a>
+<!-- Profile / Settings -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="3"></circle>
+<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+</svg>
+<span>Profile / Settings</span>
+</a>
+<!-- Support -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+<line x1="12" x2="12.01" y1="17" y2="17"></line>
+</svg>
+<span>Support</span>
+</a>
+</nav>
+</div>
+<!-- Partner Unit Card in Sidebar Footer -->
+<div class="p-3 border-t border-slate-100 bg-slate-50/50 m-2 rounded-xl">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 border border-emerald-300">
+            MT
+          </div>
+<div class="truncate">
+<p class="font-semibold text-slate-800 text-xs truncate leading-tight">Maharashtra Team</p>
+<span class="inline-flex items-center text-[10px] text-emerald-600 font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span> Partner Active
+            </span>
+</div>
+</div>
+</div>
+</aside>
+<!-- END: LeftSidebar -->
+<!-- BEGIN: MainContentArea -->
+<div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+<!-- BEGIN: HeaderNav -->
+<header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-20">
+<!-- Search bar input -->
+<div class="relative w-80">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="11" cy="11" r="8"></circle>
+<line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+</svg>
+</span>
+<input class="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 placeholder-slate-400 transition" placeholder="Search dashboard, jobs, technicians..." type="text"/>
+</div>
+<!-- Top Right Actions & User Profile -->
+<div class="flex items-center gap-3.5">
+<!-- Quick Status Pill -->
+<div class="hidden md:flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs px-2.5 py-1 rounded-full">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span class="font-medium text-[11px]">Region: MH Operations</span>
+</div>
+<!-- Notification Bell -->
+<button aria-label="Notifications" class="p-2 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100 relative" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+<path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+</svg>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+</button>
+<div class="h-5 w-px bg-slate-200"></div>
+<!-- Profile Badge -->
+<div class="flex items-center gap-2.5 pl-1 cursor-pointer">
+<div class="w-8 h-8 rounded-full bg-slate-800 text-white font-semibold flex items-center justify-center text-xs">
+              MH
+            </div>
+<div class="hidden sm:block text-left">
+<span class="block text-xs font-semibold text-slate-700 leading-tight">Maharashtra Ops</span>
+<span class="text-[10px] text-slate-400">admin-mh@electricare.in</span>
+</div>
+<svg class="w-3.5 h-3.5 text-slate-400 ml-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</div>
+</div>
+</header>
+<!-- END: HeaderNav -->
+<!-- Main Body Container -->
+<main class="p-6 space-y-6"><div class="flex flex-col w-full">
+<div class="relative overflow-hidden rounded-xl bg-surface-container-low shadow-sm p-6 mb-6">
+<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+<div class="space-y-1">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-full bg-secondary text-on-secondary font-label-sm text-label-sm tracking-wide uppercase">Client Approval Reference</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm font-medium">Design System v2.4 • Maharashtra Ops</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">ElectriCare Partner Web Design System</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-3xl">Comprehensive component library, token specifications, typography scales, and UI patterns established for the Partner Web CRM platform.</p>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<div class="px-3 py-1.5 rounded-lg bg-surface-container-lowest text-on-surface font-label-md text-label-md shadow-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-sm" style="font-variation-settings: 'FILL' 1;">verified</span>
+          Spec Standard: WCAG 2.1 AA
+        </div>
+<button class="px-3 py-1.5 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md shadow-sm hover:opacity-90 transition flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">download</span>
+          Export Token Map
+        </button>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+<section class="xl:col-span-12 rounded-xl bg-surface-container-lowest shadow-sm p-6 space-y-5">
+<div class="flex items-center justify-between pb-3 border-b-0">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">01. Architecture</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Brand &amp; System Color Palette</h2>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">HEX • RGB • Role Tokens</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
+<div class="rounded-lg p-3.5 bg-primary-container text-on-primary shadow-sm flex flex-col justify-between h-28">
+<div class="flex justify-between items-start">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-primary-container">Universal Brand</span>
+<span class="material-symbols-outlined text-sm">electric_bolt</span>
+</div>
+<div>
+<div class="font-headline-sm text-headline-sm">Brand Royal Blue</div>
+<div class="font-body-sm text-body-sm opacity-80 flex justify-between">
+<span>#1E40AF</span>
+<span>primary-container</span>
+</div>
+</div>
+</div>
+<div class="rounded-lg p-3.5 bg-secondary text-on-secondary shadow-sm flex flex-col justify-between h-28">
+<div class="flex justify-between items-start">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary-absolute">Partner Hub</span>
+<span class="material-symbols-outlined text-sm">handshake</span>
+</div>
+<div>
+<div class="font-headline-sm text-headline-sm">Partner Forest Green</div>
+<div class="font-body-sm text-body-sm opacity-80 flex justify-between">
+<span>#059669</span>
+<span>secondary</span>
+</div>
+</div>
+</div>
+<div class="rounded-lg p-3.5 bg-tertiary text-on-tertiary shadow-sm flex flex-col justify-between h-28">
+<div class="flex justify-between items-start">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-tertiary-absolute">Platform Admin</span>
+<span class="material-symbols-outlined text-sm">admin_panel_settings</span>
+</div>
+<div>
+<div class="font-headline-sm text-headline-sm">Admin Deep Purple</div>
+<div class="font-body-sm text-body-sm opacity-80 flex justify-between">
+<span>#7C3AED</span>
+<span>tertiary</span>
+</div>
+</div>
+</div>
+<div class="rounded-lg p-3.5 bg-error text-on-error shadow-sm flex flex-col justify-between h-28">
+<div class="flex justify-between items-start">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-error-container">Critical</span>
+<span class="material-symbols-outlined text-sm">crisis_alert</span>
+</div>
+<div>
+<div class="font-headline-sm text-headline-sm">Alert Emergency Red</div>
+<div class="font-body-sm text-body-sm opacity-80 flex justify-between">
+<span>#DC2626</span>
+<span>error</span>
+</div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+<div class="rounded-lg p-3 bg-secondary-container text-on-secondary-container">
+<div class="flex items-center gap-1.5 font-label-sm text-label-sm uppercase">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span>Success Green</span>
+</div>
+<p class="font-label-lg text-label-lg mt-1">#16A34A</p>
+<span class="font-body-sm text-body-sm opacity-75">Work order completed</span>
+</div>
+<div class="rounded-lg p-3 bg-surface-container-high text-on-surface">
+<div class="flex items-center gap-1.5 font-label-sm text-label-sm uppercase">
+<span class="w-2 h-2 rounded-full bg-amber-600"></span>
+<span>Warning Amber</span>
+</div>
+<p class="font-label-lg text-label-lg mt-1">#D97706</p>
+<span class="font-body-sm text-body-sm text-on-surface-variant">SLA risk threshold</span>
+</div>
+<div class="rounded-lg p-3 bg-surface-container-high text-on-surface">
+<div class="flex items-center gap-1.5 font-label-sm text-label-sm uppercase">
+<span class="w-2 h-2 rounded-full bg-sky-600"></span>
+<span>Info Sky</span>
+</div>
+<p class="font-label-lg text-label-lg mt-1">#0284C7</p>
+<span class="font-body-sm text-body-sm text-on-surface-variant">En-route tracking</span>
+</div>
+<div class="rounded-lg p-3 bg-surface-container-high text-on-surface">
+<div class="flex items-center gap-1.5 font-label-sm text-label-sm uppercase">
+<span class="w-2 h-2 rounded-full bg-slate-500"></span>
+<span>Neutral Base</span>
+</div>
+<p class="font-label-lg text-label-lg mt-1">#0F172A / #F8FAFC</p>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Slate canvas range</span>
+</div>
+</div>
+<div class="rounded-lg p-3 bg-surface-container flex flex-wrap items-center gap-2 text-on-surface">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant pr-2">Slate Scale:</span>
+<span class="px-2 py-1 rounded bg-slate-900 text-white font-body-sm text-body-sm">#0F172A</span>
+<span class="px-2 py-1 rounded bg-slate-700 text-white font-body-sm text-body-sm">#334155</span>
+<span class="px-2 py-1 rounded bg-slate-500 text-white font-body-sm text-body-sm">#64748B</span>
+<span class="px-2 py-1 rounded bg-slate-400 text-slate-900 font-body-sm text-body-sm">#94A3B8</span>
+<span class="px-2 py-1 rounded bg-slate-300 text-slate-900 font-body-sm text-body-sm">#CBD5E1</span>
+<span class="px-2 py-1 rounded bg-slate-100 text-slate-900 font-body-sm text-body-sm">#F1F5F9</span>
+<span class="px-2 py-1 rounded bg-white text-slate-900 shadow-sm font-body-sm text-body-sm">#FFFFFF</span>
+</div>
+</section>
+<section class="xl:col-span-6 rounded-xl bg-surface-container-lowest shadow-sm p-6 space-y-4">
+<div class="flex items-center justify-between pb-3">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">02. Hierarchy</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Inter Typography Scale</h2>
+</div>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container text-on-surface-variant">Tabular • Responsive</span>
+</div>
+<div class="space-y-3.5">
+<div class="p-3 rounded-lg bg-surface-container-low flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
+<div>
+<div class="font-headline-xl text-headline-xl text-on-surface">Maharashtra Ops 2024</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Display H1 • 28px Bold • Primary Page Header</p>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-mono shrink-0">headline-xl</span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
+<div>
+<div class="font-headline-lg text-headline-lg text-on-surface">Technician Dispatch Matrix</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">H2 Page Title • 22px SemiBold • Section Anchor</p>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-mono shrink-0">headline-lg</span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
+<div>
+<div class="font-headline-md text-headline-md text-on-surface">Substation Grid Load • Zone 04</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">H3 Section Header • 18px SemiBold • Sub-module Grouping</p>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-mono shrink-0">headline-md</span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
+<div>
+<div class="font-headline-sm text-headline-sm text-on-surface">Active Pincode 400076 (Powai East)</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">H4 Card Title • 15px Medium • Tile Headers</p>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-mono shrink-0">headline-sm</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+<div class="p-3 rounded-lg bg-surface-container">
+<p class="font-body-md text-body-md text-on-surface">Field service ticket assigned to lead electrician Rajesh Patil at 08:30 IST.</p>
+<span class="font-label-sm text-label-sm text-on-surface-variant block mt-1">Body Regular (14px/20px)</span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container">
+<p class="font-body-sm text-body-sm text-on-surface">Transformer inspection cycle standard SLA: 45 min response window.</p>
+<span class="font-label-sm text-label-sm text-on-surface-variant block mt-1">Body Compact / Caption (12px/16px)</span>
+</div>
+</div>
+</div>
+</section>
+<section class="xl:col-span-6 rounded-xl bg-surface-container-lowest shadow-sm p-6 space-y-4">
+<div class="flex items-center justify-between pb-3">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">03. Shell Elements</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Navigation Chrome</h2>
+</div>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container text-on-surface-variant">Mini Layout Prototype</span>
+</div>
+<div class="rounded-lg bg-surface-container p-3 space-y-3">
+<div class="rounded-lg bg-surface-container-lowest p-2.5 shadow-sm flex items-center justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">MH REGION</span>
+<div class="relative w-44">
+<span class="absolute inset-y-0 left-0 pl-2 flex items-center text-on-surface-variant">
+<span class="material-symbols-outlined text-xs">search</span>
+</span>
+<input class="w-full pl-6 pr-2 py-1 rounded bg-surface-container-low text-on-surface font-body-sm text-body-sm placeholder:text-on-surface-variant focus:outline-none" placeholder="Search jobs, tech ID..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="w-7 h-7 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface relative">
+<span class="material-symbols-outlined text-sm">notifications</span>
+<span class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-error"></span>
+</button>
+<div class="flex items-center gap-1.5 pl-1.5">
+<div class="w-6 h-6 rounded-full bg-secondary text-on-secondary font-label-sm text-label-sm flex items-center justify-center font-bold">MT</div>
+<span class="font-label-sm text-label-sm text-on-surface hidden sm:inline">Maha Team</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-2">
+<div class="col-span-5 rounded-lg bg-surface-container-lowest p-2 shadow-sm space-y-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant px-1.5">Sidebar Rail</span>
+<div class="flex items-center gap-2 px-2 py-1.5 rounded-md bg-secondary text-on-secondary font-label-md text-label-md">
+<span class="material-symbols-outlined text-sm">dashboard</span>
+<span>Dashboard</span>
+</div>
+<div class="flex items-center justify-between px-2 py-1.5 rounded-md text-on-surface-variant font-label-md text-label-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">engineering</span>
+<span>Technicians</span>
+</div>
+<span class="px-1.5 rounded bg-surface-container font-label-sm text-label-sm">24</span>
+</div>
+<div class="flex items-center gap-2 px-2 py-1.5 rounded-md text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-sm">assignment</span>
+<span>Work Orders</span>
+</div>
+<div class="flex items-center gap-2 px-2 py-1.5 rounded-md text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-sm">pin_drop</span>
+<span>Pincode Hub</span>
+</div>
+</div>
+<div class="col-span-7 rounded-lg bg-surface-container-lowest p-3 shadow-sm flex flex-col justify-between">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Live Context</span>
+<p class="font-headline-sm text-headline-sm text-on-surface mt-1">Thane &amp; Navi Mumbai Cluster</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">18 Active Electricians • 4 Emergency Inverters</p>
+</div>
+<div class="pt-2 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-secondary font-medium">Status: Optimal Routing</span>
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="xl:col-span-12 rounded-xl bg-surface-container-lowest shadow-sm p-6 space-y-4">
+<div class="flex items-center justify-between pb-3">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">04. Telemetry</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">KPI Summary Cards</h2>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Realtime Field Metrics</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="rounded-xl p-4 bg-surface-container-low shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant">Total Dispatched Jobs</span>
+<div class="w-8 h-8 rounded-lg bg-primary-container text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-sm">assignment_turned_in</span>
+</div>
+</div>
+<div class="my-3">
+<div class="font-headline-xl text-headline-xl text-on-surface">284</div>
+<div class="flex items-center gap-1.5 mt-1">
+<span class="px-1.5 py-0.5 rounded bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">+12% WoW</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">vs. prev 7 days</span>
+</div>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 78%;"></div>
+</div>
+</div>
+<div class="rounded-xl p-4 bg-surface-container-low shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant">Settled Partner Revenue</span>
+<div class="w-8 h-8 rounded-lg bg-secondary text-on-secondary flex items-center justify-center">
+<span class="material-symbols-outlined text-sm">payments</span>
+</div>
+</div>
+<div class="my-3">
+<div class="font-headline-xl text-headline-xl text-on-surface">₹4,20,500</div>
+<div class="flex items-center gap-1.5 mt-1">
+<span class="px-1.5 py-0.5 rounded bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">91% Target</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">₹4.6L Monthly goal</span>
+</div>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full rounded-full" style="width: 91%;"></div>
+</div>
+</div>
+<div class="rounded-xl p-4 bg-surface-container-low shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant">Escalation Priority</span>
+<div class="w-8 h-8 rounded-lg bg-error text-on-error flex items-center justify-center">
+<span class="material-symbols-outlined text-sm">warning</span>
+</div>
+</div>
+<div class="my-3">
+<div class="flex items-baseline gap-2">
+<span class="font-headline-xl text-headline-xl text-error">03</span>
+<span class="font-label-lg text-label-lg text-on-surface font-semibold">Critical Tickets</span>
+</div>
+<div class="flex items-center gap-1.5 mt-1">
+<span class="px-1.5 py-0.5 rounded bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">Action Required</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">&lt; 15m breach</span>
+</div>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-error h-full rounded-full" style="width: 65%;"></div>
+</div>
+</div>
+</div>
+</section>
+<section class="xl:col-span-6 rounded-xl bg-surface-container-lowest shadow-sm p-6 space-y-4">
+<div class="flex items-center justify-between pb-3">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">05. Actions</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Buttons &amp; Controls</h2>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">State Interactive</span>
+</div>
+<div class="space-y-4">
+<div>
+<span class="font-label-sm text-label-sm uppercase text-on-surface-variant block mb-2">Intent Variants</span>
+<div class="flex flex-wrap items-center gap-2.5">
+<button class="px-4 py-2 rounded-lg bg-secondary text-on-secondary font-label-md text-label-md shadow-sm hover:opacity-90 transition flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+              Acknowledge Dispatch
+            </button>
+<button class="px-4 py-2 rounded-lg bg-surface-container-low text-on-surface font-label-md text-label-md hover:bg-surface-container transition">
+              Secondary / Reassign
+            </button>
+<button class="px-4 py-2 rounded-lg bg-error text-on-error font-label-md text-label-md shadow-sm hover:opacity-90 transition flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">emergency</span>
+              Escalate to Regional Lead
+            </button>
+</div>
+</div>
+<div>
+<span class="font-label-sm text-label-sm uppercase text-on-surface-variant block mb-2">Icon Micro Controls</span>
+<div class="flex flex-wrap items-center gap-2">
+<button class="px-3 py-1.5 rounded-lg bg-primary-container text-on-primary font-label-sm text-label-sm flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-sm">person_add</span>
+              Add Electrician
+            </button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface font-label-sm text-label-sm flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">file_download</span>
+              Export CSV
+            </button>
+<button class="w-8 h-8 rounded-lg bg-surface-container-high text-on-surface flex items-center justify-center hover:bg-surface-container">
+<span class="material-symbols-outlined text-sm">print</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-surface-container-high text-on-surface flex items-center justify-center hover:bg-surface-container">
+<span class="material-symbols-outlined text-sm">filter_alt</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<section class="xl:col-span-6 rounded-xl bg-surface-container-lowest shadow-sm p-6 space-y-4">
+<div class="flex items-center justify-between pb-3">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">06. Inputs</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Form Elements &amp; Filters</h2>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Dense Operational Style</span>
+</div>
+<div class="space-y-3">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1">Target Pincode</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">pin_drop</span>
+</span>
+<input class="w-full pl-8 pr-3 py-1.5 rounded-lg bg-surface-container text-on-surface font-body-sm text-body-sm focus:outline-none" type="text" value="400001 (Mumbai South)"/>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1">Service Type Filter</label>
+<select class="w-full px-3 py-1.5 rounded-lg bg-surface-container text-on-surface font-body-sm text-body-sm focus:outline-none">
+<option>Industrial 3-Phase Meter</option>
+<option>Solar Inverter Sync</option>
+<option>EV Fast Charger Install</option>
+</select>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1">Dispatch Date Range</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+</span>
+<input class="w-full pl-8 pr-3 py-1.5 rounded-lg bg-surface-container text-on-surface font-body-sm text-body-sm focus:outline-none" type="text" value="01 May - 15 May 2024"/>
+</div>
+</div>
+<div class="flex items-end pb-1 gap-4">
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="w-4 h-4 rounded text-secondary focus:ring-0 cursor-pointer" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface">Auto-assign</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="w-4 h-4 rounded text-secondary focus:ring-0 cursor-pointer" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface">Overtime Alert</span>
+</label>
+</div>
+</div>
+</div>
+</section>
+<section class="xl:col-span-12 rounded-xl bg-surface-container-lowest shadow-sm p-6 space-y-4">
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-3">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">07. Data Presentation</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Data Table &amp; Status Badges</h2>
+</div>
+<div class="flex flex-wrap items-center gap-1.5">
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">Completed</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold">In Progress</span>
+<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-label-sm text-label-sm font-semibold">Assigned</span>
+<span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">Escalated</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-semibold">Cancelled</span>
+</div>
+</div>
+<div class="overflow-x-auto rounded-lg bg-surface-container-low shadow-sm">
+<table class="w-full text-left">
+<thead class="bg-surface-container text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<tr>
+<th class="px-4 py-3">Work Order #</th>
+<th class="px-4 py-3">Assigned Electrician</th>
+<th class="px-4 py-3">Area / Pincode</th>
+<th class="px-4 py-3">Service Code</th>
+<th class="px-4 py-3">Status</th>
+<th class="px-4 py-3 text-right">Fee (₹)</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-on-surface font-body-sm text-body-sm">
+<tr class="hover:bg-surface-container transition-colors">
+<td class="px-4 py-3 font-semibold text-primary">#EC-MH-9821</td>
+<td class="px-4 py-3">
+<div class="font-medium text-on-surface">Rajesh V. Patil</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Tech ID: MH-ET-042</div>
+</td>
+<td class="px-4 py-3">Vashi Sector 17 (400703)</td>
+<td class="px-4 py-3">Substation Capacitor Bank</td>
+<td class="px-4 py-3">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Completed
+                </span>
+</td>
+<td class="px-4 py-3 text-right font-medium">₹3,400.00</td>
+</tr>
+<tr class="hover:bg-surface-container transition-colors">
+<td class="px-4 py-3 font-semibold text-primary">#EC-MH-9822</td>
+<td class="px-4 py-3">
+<div class="font-medium text-on-surface">Amit K. Shinde</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Tech ID: MH-ET-019</div>
+</td>
+<td class="px-4 py-3">Bhiwandi Logistics Hub (421302)</td>
+<td class="px-4 py-3">DG Set Synchronization</td>
+<td class="px-4 py-3">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                  Escalated
+                </span>
+</td>
+<td class="px-4 py-3 text-right font-medium">₹5,850.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section class="xl:col-span-12 rounded-xl bg-surface-container-lowest shadow-sm p-6 space-y-4">
+<div class="flex items-center justify-between pb-3">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">08. Patterns</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Charts, Tabs, Pagination &amp; States</h2>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">UX Flow Kit</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="rounded-xl p-4 bg-surface-container-low shadow-sm flex flex-col justify-between">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Mini Revenue Trend</span>
+<p class="font-headline-sm text-headline-sm text-on-surface mt-1">₹14.8L Peak Cluster</p>
+</div>
+<div class="py-3">
+<svg class="w-full h-16" fill="none" viewbox="0 0 200 60">
+<rect class="fill-surface-container-high" height="36" rx="2" width="16" x="10" y="24"></rect>
+<rect class="fill-surface-container-high" height="44" rx="2" width="16" x="36" y="16"></rect>
+<rect class="fill-surface-container-high" height="30" rx="2" width="16" x="62" y="30"></rect>
+<rect class="fill-secondary" height="50" rx="2" width="16" x="88" y="10"></rect>
+<rect class="fill-surface-container-high" height="38" rx="2" width="16" x="114" y="22"></rect>
+<rect class="fill-primary-container" height="46" rx="2" width="16" x="140" y="14"></rect>
+<rect class="fill-surface-container-high" height="32" rx="2" width="16" x="166" y="28"></rect>
+</svg>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant flex justify-between">
+<span>Mon</span><span>Thu (Peak)</span><span>Sun</span>
+</span>
+</div>
+<div class="rounded-xl p-4 bg-surface-container-low shadow-sm flex flex-col justify-between">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Segmented Tabs</span>
+<p class="font-headline-sm text-headline-sm text-on-surface mt-1">Status Switching</p>
+</div>
+<div class="my-3 p-1 rounded-lg bg-surface-container flex items-center gap-1">
+<button class="flex-1 py-1.5 rounded-md bg-surface-container-lowest text-on-surface font-label-sm text-label-sm font-semibold shadow-sm text-center">Active (18)</button>
+<button class="flex-1 py-1.5 rounded-md text-on-surface-variant font-label-sm text-label-sm text-center hover:text-on-surface">Standby (6)</button>
+<button class="flex-1 py-1.5 rounded-md text-on-surface-variant font-label-sm text-label-sm text-center hover:text-on-surface">Off (2)</button>
+</div>
+<span class="font-body-sm text-body-sm text-secondary font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">sync</span> Auto-refreshes every 30s
+          </span>
+</div>
+<div class="rounded-xl p-4 bg-surface-container-low shadow-sm flex flex-col justify-between">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Table Pagination</span>
+<p class="font-headline-sm text-headline-sm text-on-surface mt-1">284 Total Entries</p>
+</div>
+<div class="my-3 flex items-center justify-center gap-1">
+<button class="w-7 h-7 rounded bg-surface-container text-on-surface flex items-center justify-center text-xs">
+<span class="material-symbols-outlined text-xs">chevron_left</span>
+</button>
+<button class="w-7 h-7 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">1</button>
+<button class="w-7 h-7 rounded bg-primary-container text-on-primary font-label-sm text-label-sm font-semibold shadow-sm">2</button>
+<button class="w-7 h-7 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">3</button>
+<button class="w-7 h-7 rounded bg-surface-container text-on-surface flex items-center justify-center text-xs">
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+</button>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-center">Showing rows 11 to 20</span>
+</div>
+<div class="rounded-xl p-4 bg-surface-container-low shadow-sm flex flex-col justify-center text-center">
+<div class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container mx-auto flex items-center justify-center mb-2">
+<span class="material-symbols-outlined text-base">task_alt</span>
+</div>
+<p class="font-headline-sm text-headline-sm text-on-surface">Queue Cleared</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">No unresolved escalations in this cluster today.</p>
+</div>
+</div>
+</section>
+</div>
+</div></main>
+<!-- END: Main Content Container -->
+<!-- Footer Info -->
+<footer class="mt-auto px-6 py-4 border-t border-slate-200 bg-white text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
+<p>© 2024 ElectriCare Inc. Regional Partner Portal. All rights reserved.</p>
+<div class="flex items-center gap-4 text-[11px] text-slate-500">
+<a class="hover:text-emerald-600" href="#">Privacy Policy</a>
+<a class="hover:text-emerald-600" href="#">Technician Guidelines</a>
+<a class="hover:text-emerald-600" href="#">Emergency Dispatch: 1800-202-099</a>
+</div>
+</footer>
+</div>
+<!-- END: MainContentArea -->
+</div>
+<!-- END: MainLayoutWrapper -->
+
+        </div>
+      </div>
+    
+      <div style="display: flex; flex-direction: column; margin-bottom: 64px;">
+        <div style="margin-bottom: 14px; font-family: Inter, sans-serif; font-size: 18px; font-weight: 700; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.05em;">
+          SYS-02 partner web crm final design system board 2
+        </div>
+        <div class="web-frame" style="width: 1440px; height: 900px; position: relative; overflow-y: auto; overflow-x: hidden; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); border: 2px solid #334155; background: #faf8ff;">
+          <aside class="absolute left-0 top-0 h-full w-72 bg-surface-container-lowest border-r border-outline-variant/30 shadow-[0_1px_3px_0_rgba(15,23,42,0.04)] z-50 flex flex-col justify-between"><div class="flex flex-col flex-1 overflow-y-auto"><div class="h-16 px-margin flex items-center gap-space-md border-b border-outline-variant/30"><div class="w-9 h-9 rounded-xl bg-primary-container flex items-center justify-center text-on-primary shadow-sm"><span class="material-symbols-outlined text-[20px]">bolt</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight leading-none">ElectriCare</span><div class="flex items-center gap-space-xs mt-space-xs"><span class="px-1.5 py-0.5 rounded bg-tertiary text-on-tertiary font-label-sm text-[10px] uppercase font-bold tracking-wider">Admin / Owner</span></div></div></div><div class="px-margin pt-space-lg pb-space-xs"><span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Platform Navigation</span></div><nav class="flex-1 px-space-md py-space-xs flex flex-col gap-space-xs" data-active-classes="bg-primary-container text-on-primary shadow-sm font-semibold rounded-lg"><a class="flex items-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-label-lg text-label-lg" data-path="dashboard" href="#">Dashboard</a><a class="flex items-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-label-lg text-label-lg" data-path="manage-partners" href="#">Manage Partners</a><a class="flex items-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-label-lg text-label-lg" data-path="manage-technicians" href="#">Manage Technicians</a><a class="flex items-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-label-lg text-label-lg" data-path="manage-customers" href="#">Manage Customers</a><a class="flex items-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-label-lg text-label-lg" data-path="finance-commission" href="#">Finance / Commission</a><a class="flex items-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-label-lg text-label-lg" data-path="subscription-modules" href="#">Subscription Modules</a><a class="flex items-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-label-lg text-label-lg" data-path="system-settings" href="#">System Settings</a><a class="flex items-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-label-lg text-label-lg" data-path="support" href="#">Support</a><a class="flex items-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-label-lg text-label-lg" data-path="audit-logs" href="#">Audit Logs</a></nav></div><div class="p-space-md border-t border-outline-variant/30 bg-surface-container-lowest"><div class="bg-surface-container-low rounded-xl p-space-sm mb-space-sm flex items-center justify-between border border-outline-variant/20"><div class="flex items-center gap-space-sm min-w-0"><div class="relative flex-shrink-0"><div class="w-9 h-9 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-label-md font-semibold text-[13px]">SA</div><span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-secondary border-2 border-surface-container-lowest"></span></div><div class="flex flex-col min-w-0"><span class="font-label-md text-label-md text-on-surface font-semibold truncate">Super Admin</span><span class="font-body-sm text-body-sm text-on-surface-variant truncate text-[11px]">admin@electricare.in</span></div></div><span class="flex h-2 w-2 relative flex-shrink-0"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span></span></div><div class="flex items-center justify-between gap-space-xs"><a class="flex items-center justify-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-all font-label-md text-label-md flex-1" data-path="login" href="#">Sign Out</a><span class="font-label-sm text-label-sm text-outline px-space-xs">v2.4.0</span></div></div></aside><div class="pl-72"><header class="absolute top-0 left-72 right-0 h-16 bg-surface-container-lowest border-b border-outline-variant/30 shadow-[0_1px_3px_0_rgba(15,23,42,0.04)] z-40 flex items-center justify-between px-margin"><div class="flex items-center gap-space-lg flex-1 max-w-2xl"><div class="relative w-full"><span class="material-symbols-outlined absolute left-space-md top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span><input class="w-full h-9 pl-10 pr-space-md bg-surface-container-low border border-outline-variant/40 rounded-lg text-on-surface placeholder:text-outline font-body-sm text-body-sm focus:outline-none focus:border-primary-container focus:bg-surface-container-lowest transition-all" placeholder="Search partners, technicians, customers, orders, tickets..." type="text"/></div><div class="hidden xl:flex items-center gap-space-xs px-space-sm py-1 bg-surface-container-high rounded border border-outline-variant/40 whitespace-nowrap"><span class="w-2 h-2 rounded-full bg-tertiary"></span><span class="font-label-sm text-label-sm text-tertiary font-bold tracking-wider">SCOPE: PLATFORM-WIDE / ALL INDIA</span></div></div><div class="flex items-center gap-space-md"><button class="relative w-9 h-9 flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all border border-transparent hover:border-outline-variant/30"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-error ring-2 ring-surface-container-lowest"></span></button><div class="h-5 w-px bg-outline-variant/40"></div><div class="flex items-center gap-space-sm pl-space-xs cursor-pointer group"><div class="w-9 h-9 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-label-md font-semibold text-[13px] shadow-sm">SA</div><div class="hidden sm:flex flex-col text-left"><span class="font-label-sm text-label-sm text-on-surface font-semibold group-hover:text-primary-container transition-colors">Super Admin</span><span class="font-body-sm text-body-sm text-on-surface-variant text-[11px] leading-tight">National Control</span></div><span class="material-symbols-outlined text-outline text-[18px] group-hover:text-on-surface transition-colors">expand_more</span></div></div></header><main class="relative pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- Interactive Top Status Bar -->
+<div class="w-full px-margin py-space-md bg-surface-container-lowest shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="flex flex-col gap-space-xs">
+<!-- Breadcrumb Navigation -->
+<nav class="flex items-center gap-space-xs font-label-sm text-label-sm text-outline">
+<span class="hover:text-primary transition-colors cursor-pointer">Platform Governance</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="hover:text-primary transition-colors cursor-pointer">UI/UX Standards</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-on-surface font-semibold">Admin Web CRM Final Design System</span>
+</nav>
+<!-- Title & Release Badge -->
+<div class="flex flex-wrap items-center gap-space-sm mt-0.5">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Admin Web CRM — Comprehensive UI/UX Design System Board</h1>
+<div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-tertiary-absolute text-on-tertiary-absolute-variant font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+<span>Version 2.4.0 (Client Approval Version)</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-4xl">
+        Master design token repository, typography scale, component library, and interaction states for the ElectriCare Platform Governance experience.
+      </p>
+</div>
+<!-- Quick Utilities & Action Dock -->
+<div class="flex items-center gap-space-sm self-start md:self-auto">
+<div class="flex items-center gap-space-xs px-space-sm py-1 rounded-lg bg-surface-container text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px] text-tertiary">verified</span>
+<span>WCAG 2.1 AA Compliant</span>
+</div>
+<button class="flex items-center gap-1 px-3 py-1.5 bg-surface-container-high hover:bg-surface-variant rounded-lg text-on-surface font-label-md text-label-md transition-colors shadow-sm" onclick="navigator.clipboard.writeText('ElectriCare Design System v2.4.0 - Active');">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+<span>Tokens JSON</span>
+</button>
+<button class="flex items-center gap-1.5 px-3 py-1.5 bg-tertiary-container hover:bg-tertiary text-on-tertiary rounded-lg font-label-md text-label-md shadow-sm transition-all">
+<span class="material-symbols-outlined text-[18px]">publish</span>
+<span>Publish to Figma</span>
+</button>
+</div>
+</div>
+<!-- Main System Content Stream -->
+<div class="w-full px-margin py-space-xl flex flex-col gap-space-xl">
+<!-- SECTION 1: BRAND & COLOR PALETTE -->
+<section class="flex flex-col gap-space-md">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between pb-space-xs">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-tertiary-container text-on-tertiary flex items-center justify-center font-bold text-label-sm">01</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Foundational Layer</span>
+<h2 class="font-headline-md text-headline-md text-on-surface tracking-tight">Brand &amp; System Color Palette</h2>
+</div>
+</div>
+<span class="font-body-sm text-body-sm text-outline mt-1 sm:mt-0">12 Token Tiers • Strict Hex/RGB Calibration</span>
+</div>
+<!-- Palette Grid Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Core Brand: Royal Blue -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between group hover:shadow-md transition-shadow">
+<div>
+<div class="w-full h-24 rounded-lg bg-primary-container p-space-sm flex flex-col justify-between text-on-primary shadow-inner">
+<span class="px-2 py-0.5 rounded bg-surface-container-lowest/20 backdrop-blur-sm font-label-sm text-label-sm w-fit">Primary Brand</span>
+<span class="font-headline-sm text-headline-sm">ElectriCare Royal Blue</span>
+</div>
+<div class="mt-space-md flex flex-col gap-1">
+<div class="flex justify-between items-center text-body-sm font-body-sm">
+<span class="text-outline">Hex / Token</span>
+<span class="font-semibold text-on-surface font-mono">#1E40AF (primary-container)</span>
+</div>
+<div class="flex justify-between items-center text-body-sm font-body-sm">
+<span class="text-outline">RGB Ratio</span>
+<span class="text-on-surface-variant font-mono">rgb(30, 64, 175)</span>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-xs bg-surface-container-low px-space-sm py-1.5 rounded-lg text-body-sm font-body-sm text-on-surface-variant">
+            Primary header anchors, operational grid focus lines, root actions.
+          </div>
+</div>
+<!-- Admin Role Accent: Deep Purple -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between group hover:shadow-md transition-shadow">
+<div>
+<div class="w-full h-24 rounded-lg bg-tertiary-container p-space-sm flex flex-col justify-between text-on-tertiary shadow-inner">
+<span class="px-2 py-0.5 rounded bg-surface-container-lowest/20 backdrop-blur-sm font-label-sm text-label-sm w-fit">Admin Signature</span>
+<span class="font-headline-sm text-headline-sm">Deep Purple Accent</span>
+</div>
+<div class="mt-space-md flex flex-col gap-1">
+<div class="flex justify-between items-center text-body-sm font-body-sm">
+<span class="text-outline">Hex / Token</span>
+<span class="font-semibold text-on-surface font-mono">#7C3AED / #5F00D1</span>
+</div>
+<div class="flex justify-between items-center text-body-sm font-body-sm">
+<span class="text-outline">RGB Ratio</span>
+<span class="text-on-surface-variant font-mono">rgb(124, 58, 237)</span>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-xs bg-surface-container-low px-space-sm py-1.5 rounded-lg text-body-sm font-body-sm text-on-surface-variant">
+            Governance overrides, Super Admin 2FA triggers, contract authorization.
+          </div>
+</div>
+<!-- Surface Neutrals -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between group hover:shadow-md transition-shadow">
+<div>
+<div class="w-full h-24 rounded-lg bg-surface-container flex flex-col justify-between p-space-sm shadow-inner">
+<span class="px-2 py-0.5 rounded bg-surface-container-lowest font-label-sm text-label-sm text-on-surface w-fit">Base Surfaces</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Pure / Slate Spectrum</span>
+</div>
+<div class="mt-space-md flex flex-col gap-1">
+<div class="flex justify-between items-center text-body-sm font-body-sm">
+<span class="text-outline">Canvas / Cards</span>
+<span class="font-semibold text-on-surface font-mono">#FFFFFF / #F2F3FF</span>
+</div>
+<div class="flex justify-between items-center text-body-sm font-body-sm">
+<span class="text-outline">Text Prime/Sec</span>
+<span class="text-on-surface-variant font-mono">#131B2E / #444653</span>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-xs bg-surface-container-low px-space-sm py-1.5 rounded-lg text-body-sm font-body-sm text-on-surface-variant">
+            Structural backdrop, clean elevation levels, ultra-dense telemetry readability.
+          </div>
+</div>
+<!-- Semantic Indicators -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between group hover:shadow-md transition-shadow">
+<div>
+<div class="w-full h-24 rounded-lg bg-surface-container-low p-2 grid grid-cols-4 gap-1.5 shadow-inner">
+<div class="bg-secondary rounded flex flex-col items-center justify-center text-on-secondary font-label-sm text-[10px] font-bold">#10B</div>
+<div class="bg-tertiary-absolute-dim rounded flex flex-col items-center justify-center text-on-tertiary-absolute font-label-sm text-[10px] font-bold">#F59</div>
+<div class="bg-error rounded flex flex-col items-center justify-center text-on-error font-label-sm text-[10px] font-bold">#BA1</div>
+<div class="bg-primary rounded flex flex-col items-center justify-center text-on-primary font-label-sm text-[10px] font-bold">#002</div>
+</div>
+<div class="mt-space-md flex flex-col gap-1">
+<div class="flex justify-between items-center text-body-sm font-body-sm">
+<span class="text-outline">Alert Tiers</span>
+<span class="font-semibold text-on-surface font-mono">Emerald, Amber, Crimson, Azure</span>
+</div>
+<div class="flex justify-between items-center text-body-sm font-body-sm">
+<span class="text-outline">Telemetry Range</span>
+<span class="text-on-surface-variant font-mono">SLA &amp; Dispatch Status</span>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-xs bg-surface-container-low px-space-sm py-1.5 rounded-lg text-body-sm font-body-sm text-on-surface-variant">
+            SLA breach timers, dispatch conflict highlights, live wallet payouts.
+          </div>
+</div>
+</div>
+</section>
+<!-- SECTION 2: TYPOGRAPHY SCALE -->
+<section class="flex flex-col gap-space-md">
+<div class="flex items-center gap-space-sm pb-space-xs">
+<div class="w-8 h-8 rounded-lg bg-tertiary-container text-on-tertiary flex items-center justify-center font-bold text-label-sm">02</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Geometric Clarity</span>
+<h2 class="font-headline-md text-headline-md text-on-surface tracking-tight">Typography Scale (Font: Inter)</h2>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<!-- Scale Row: Display Heading -->
+<div class="p-space-lg flex flex-col md:flex-row md:items-baseline justify-between gap-space-md hover:bg-surface-container-low/50 transition-colors">
+<div class="w-64 flex-shrink-0">
+<span class="px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant uppercase font-bold">Display Heading</span>
+<div class="text-outline font-body-sm text-body-sm mt-1">28px Bold / Leading: 36px</div>
+<div class="text-tertiary font-label-sm text-label-sm">Platform Titles, Command Board Hero</div>
+</div>
+<div class="flex-1">
+<span class="font-headline-xl-mobile text-headline-xl-mobile text-on-surface tracking-tight">
+              National Dispatch Overview &amp; Grid Load Telemetry
+            </span>
+</div>
+</div>
+<div class="h-px bg-surface-container"></div>
+<!-- Scale Row: Page Heading -->
+<div class="p-space-lg flex flex-col md:flex-row md:items-baseline justify-between gap-space-md hover:bg-surface-container-low/50 transition-colors">
+<div class="w-64 flex-shrink-0">
+<span class="px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant uppercase font-bold">Page Heading</span>
+<div class="text-outline font-body-sm text-body-sm mt-1">22px SemiBold / Leading: 28px</div>
+<div class="text-tertiary font-label-sm text-label-sm">CRM Modules, Tier Audit Views</div>
+</div>
+<div class="flex-1">
+<span class="font-headline-md text-headline-md text-on-surface">
+              Authorized Franchise Master Ledger &amp; SLA Compliance Metrics
+            </span>
+</div>
+</div>
+<div class="h-px bg-surface-container"></div>
+<!-- Scale Row: Section Subheading -->
+<div class="p-space-lg flex flex-col md:flex-row md:items-baseline justify-between gap-space-md hover:bg-surface-container-low/50 transition-colors">
+<div class="w-64 flex-shrink-0">
+<span class="px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant uppercase font-bold">Section Subheading</span>
+<div class="text-outline font-body-sm text-body-sm mt-1">16px SemiBold / Leading: 22px</div>
+<div class="text-tertiary font-label-sm text-label-sm">Cards, Modal Titles, Section Breaks</div>
+</div>
+<div class="flex-1">
+<span class="font-headline-sm text-headline-sm text-on-surface">
+              Live Commission Disbursals: Zone 4 (Delhi NCR Operational Node)
+            </span>
+</div>
+</div>
+<div class="h-px bg-surface-container"></div>
+<!-- Scale Row: Body Medium -->
+<div class="p-space-lg flex flex-col md:flex-row md:items-baseline justify-between gap-space-md hover:bg-surface-container-low/50 transition-colors">
+<div class="w-64 flex-shrink-0">
+<span class="px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant uppercase font-bold">Body Medium</span>
+<div class="text-outline font-body-sm text-body-sm mt-1">14px Regular / Leading: 20px</div>
+<div class="text-tertiary font-label-sm text-label-sm">General Text, Work Orders, Forms</div>
+</div>
+<div class="flex-1">
+<p class="font-body-md text-body-md text-on-surface-variant max-w-3xl leading-relaxed">
+              Super Admin approval is required for all automated payout batch settlements exceeding ₹2,50,000. Technicians must provide geo-stamped completion logs before billing tickets close.
+            </p>
+</div>
+</div>
+<div class="h-px bg-surface-container"></div>
+<!-- Scale Row: Label & Metadata -->
+<div class="p-space-lg flex flex-col md:flex-row md:items-baseline justify-between gap-space-md hover:bg-surface-container-low/50 transition-colors">
+<div class="w-64 flex-shrink-0">
+<span class="px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant uppercase font-bold">Label &amp; Metadata</span>
+<div class="text-outline font-body-sm text-body-sm mt-1">12px SemiBold / Leading: 16px</div>
+<div class="text-tertiary font-label-sm text-label-sm">Badges, Form Headers, Tabular Columns</div>
+</div>
+<div class="flex-1 flex flex-wrap items-center gap-space-md">
+<span class="font-label-md text-label-md text-on-surface uppercase tracking-wider">FRANCHISE ID: DL-8891-B</span>
+<span class="font-label-md text-label-md text-outline">ESCROW SETTLEMENT DATE: 24 OCT 2024</span>
+<span class="px-2 py-0.5 rounded bg-primary-absolute text-on-primary-absolute-variant font-label-md text-label-md font-bold">HIGH VOLTAGE GRID</span>
+</div>
+</div>
+<div class="h-px bg-surface-container"></div>
+<!-- Scale Row: Small Tag -->
+<div class="p-space-lg flex flex-col md:flex-row md:items-baseline justify-between gap-space-md hover:bg-surface-container-low/50 transition-colors">
+<div class="w-64 flex-shrink-0">
+<span class="px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant uppercase font-bold">Small Tag</span>
+<div class="text-outline font-body-sm text-body-sm mt-1">11px Medium / Leading: 14px</div>
+<div class="text-tertiary font-label-sm text-label-sm">Timestamps, Mini Status Pills, Micro-tags</div>
+</div>
+<div class="flex-1 flex flex-wrap items-center gap-space-sm">
+<span class="font-label-sm text-label-sm text-outline">LAST TELEMETRY PING: 1.4s AGO</span>
+<span class="px-1.5 py-0.5 rounded bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">CIRCUIT NORMAL</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm">NODE #429</span>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 3: ATOMIC COMPONENTS & INTERACTION STATES -->
+<section class="flex flex-col gap-space-md">
+<div class="flex items-center gap-space-sm pb-space-xs">
+<div class="w-8 h-8 rounded-lg bg-tertiary-container text-on-tertiary flex items-center justify-center font-bold text-label-sm">03</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Component Primitives</span>
+<h2 class="font-headline-md text-headline-md text-on-surface tracking-tight">Atomic Components &amp; Interaction States</h2>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
+<!-- Button Hierarchy Deck -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-lg">
+<div class="flex items-center justify-between">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Button State Matrix</h3>
+<span class="px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-outline">Interactive Playground</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+<!-- Admin Deep Purple Primary -->
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-outline uppercase">Primary Admin Action</span>
+<button class="h-9 px-4 rounded-lg bg-tertiary-container hover:bg-tertiary text-on-tertiary font-label-lg text-label-lg flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+<span>Authorize Override</span>
+</button>
+<span class="font-body-sm text-body-sm text-outline">bg-tertiary-container (#5F00D1)</span>
+</div>
+<!-- Brand Royal Blue -->
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-outline uppercase">Brand Core Action</span>
+<button class="h-9 px-4 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined text-[18px]">send</span>
+<span>Dispatch Tech</span>
+</button>
+<span class="font-body-sm text-body-sm text-outline">bg-primary-container (#1E40AF)</span>
+</div>
+<!-- Secondary Neutral Action -->
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-outline uppercase">Secondary Action</span>
+<button class="h-9 px-4 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-lg text-label-lg flex items-center justify-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+<span>Filter Records</span>
+</button>
+<span class="font-body-sm text-body-sm text-outline">Surface elevation lift</span>
+</div>
+<!-- Danger / Revocation -->
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-outline uppercase">Danger Action</span>
+<button class="h-9 px-4 rounded-lg bg-error hover:bg-error-container text-on-error hover:text-on-error-container font-label-lg text-label-lg flex items-center justify-center gap-1.5 shadow-sm transition-colors">
+<span class="material-symbols-outlined text-[18px]">block</span>
+<span>Revoke Access</span>
+</button>
+<span class="font-body-sm text-body-sm text-outline">bg-error / error-container</span>
+</div>
+<!-- Disabled State -->
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-outline uppercase">Disabled Hierarchy</span>
+<button class="h-9 px-4 rounded-lg bg-surface-container-highest text-outline cursor-not-allowed font-label-lg text-label-lg flex items-center justify-center gap-1.5" disabled="">
+<span class="material-symbols-outlined text-[18px]">lock</span>
+<span>Locked by Policy</span>
+</button>
+<span class="font-body-sm text-body-sm text-outline">Pointer-events inactive</span>
+</div>
+<!-- Partner Success Tier -->
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-outline uppercase">Partner Acknowledgment</span>
+<button class="h-9 px-4 rounded-lg bg-secondary hover:bg-on-secondary-container text-on-secondary font-label-lg text-label-lg flex items-center justify-center gap-1.5 shadow-sm transition-colors">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+<span>Confirm Delivery</span>
+</button>
+<span class="font-body-sm text-body-sm text-outline">bg-secondary (#006C4A)</span>
+</div>
+</div>
+</div>
+<!-- Form Elements Matrix -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-lg">
+<div class="flex items-center justify-between">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Form Controls &amp; Inputs</h3>
+<span class="px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-outline">Unified 36px Height</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+<!-- Standard Input (Purple Focus) -->
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface font-semibold">Standard Input Field</label>
+<input class="h-9 px-3 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-tertiary transition-all" type="text" value="Zone 3 - West Delhi Terminal"/>
+<span class="font-body-sm text-body-sm text-outline">Focus: Deep Purple Glow</span>
+</div>
+<!-- Error State Input -->
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-error font-semibold flex items-center justify-between">
+<span>Account GSTIN</span>
+<span class="text-[10px] uppercase font-bold">Invalid Format</span>
+</label>
+<input class="h-9 px-3 rounded-lg bg-error-container text-on-error-container font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-error transition-all" type="text" value="07AAAAA0000A1Z"/>
+<span class="font-body-sm text-body-sm text-error">GST checksum failed verification</span>
+</div>
+<!-- Select Dropdown -->
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface font-semibold">Region Filter Select</label>
+<div class="relative">
+<select class="w-full h-9 pl-3 pr-8 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-tertiary appearance-none cursor-pointer">
+<option>National Control (All India)</option>
+<option>North Zone (Delhi, Punjab, HR)</option>
+<option>South Zone (Karnataka, TN)</option>
+<option>West Zone (Maharashtra, Gujarat)</option>
+</select>
+<span class="material-symbols-outlined text-[18px] text-outline absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">unfold_more</span>
+</div>
+<span class="font-body-sm text-body-sm text-outline">Custom Styled Select dropdown</span>
+</div>
+<!-- Search Field with Shortcut Key -->
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface font-semibold">Omni Command Search</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-outline text-[18px]">manage_search</span>
+<input class="w-full h-9 pl-8 pr-12 rounded-lg bg-surface-container-low text-on-surface placeholder:text-outline font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-tertiary" placeholder="Jump to partner ID..." type="text"/>
+<kbd class="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-mono font-bold text-[10px]">⌘K</kbd>
+</div>
+<span class="font-body-sm text-body-sm text-outline">Global keyboard anchor</span>
+</div>
+</div>
+<!-- Toggles & Checkbox Row -->
+<div class="pt-space-sm bg-surface-container-low p-space-md rounded-xl flex flex-wrap items-center justify-between gap-space-md">
+<!-- Active Toggle -->
+<div class="flex items-center gap-space-sm">
+<button class="w-11 h-6 bg-tertiary-container rounded-full p-0.5 transition-colors relative" onclick="this.classList.toggle('bg-tertiary-container'); this.classList.toggle('bg-surface-container-highest'); this.firstElementChild.classList.toggle('translate-x-5');">
+<div class="w-5 h-5 bg-surface-container-lowest rounded-full shadow-md transform transition-transform translate-x-5"></div>
+</button>
+<span class="font-label-md text-label-md text-on-surface font-semibold">2FA Bypass Safeguard</span>
+</div>
+<!-- Inactive Toggle -->
+<div class="flex items-center gap-space-sm">
+<button class="w-11 h-6 bg-surface-container-highest rounded-full p-0.5 transition-colors relative" onclick="this.classList.toggle('bg-tertiary-container'); this.classList.toggle('bg-surface-container-highest'); this.firstElementChild.classList.toggle('translate-x-5');">
+<div class="w-5 h-5 bg-surface-container-lowest rounded-full shadow-md transform transition-transform"></div>
+</button>
+<span class="font-label-md text-label-md text-on-surface-variant">Maintenance Mode</span>
+</div>
+<!-- Checkbox Atoms -->
+<div class="flex items-center gap-space-md">
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="w-4 h-4 rounded text-tertiary-container focus:ring-tertiary accent-tertiary" type="checkbox"/>
+<span class="font-label-md text-label-md text-on-surface">Auto-Escalate</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="w-4 h-4 rounded text-tertiary focus:ring-tertiary accent-tertiary" type="checkbox"/>
+<span class="font-label-md text-label-md text-outline">Audit Snapshot</span>
+</label>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 4: DATA DISPLAY & TABLE ATOMS -->
+<section class="flex flex-col gap-space-md">
+<div class="flex items-center gap-space-sm pb-space-xs">
+<div class="w-8 h-8 rounded-lg bg-tertiary-container text-on-tertiary flex items-center justify-center font-bold text-label-sm">04</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Telemetry &amp; Records</span>
+<h2 class="font-headline-md text-headline-md text-on-surface tracking-tight">Data Display &amp; Table Atoms</h2>
+</div>
+</div>
+<!-- Metric KPI Cards Showcase (4 Variants) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- KPI 1: Revenue Metric with ₹ -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between text-outline">
+<span class="font-label-sm text-label-sm uppercase tracking-wider font-semibold">Total Escrow Pool</span>
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+</div>
+</div>
+<div class="my-space-sm">
+<div class="font-headline-xl text-headline-xl text-on-surface tracking-tight">₹48,92,300</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Live platform balance held</div>
+</div>
+<div class="flex items-center gap-1 font-label-sm text-label-sm text-secondary">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+<span class="font-bold">+14.2%</span>
+<span class="text-outline">vs past 30 days</span>
+</div>
+</div>
+<!-- KPI 2: Volume Metric with % -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between text-outline">
+<span class="font-label-sm text-label-sm uppercase tracking-wider font-semibold">SLA Adherence</span>
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</div>
+</div>
+<div class="my-space-sm">
+<div class="font-headline-xl text-headline-xl text-on-surface tracking-tight">98.4%</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">1,240 dispatch orders fulfilled</div>
+</div>
+<div class="flex items-center gap-1 font-label-sm text-label-sm text-secondary">
+<span class="material-symbols-outlined text-[16px]">arrow_upward</span>
+<span class="font-bold">+0.8%</span>
+<span class="text-outline">above 97.5% baseline</span>
+</div>
+</div>
+<!-- KPI 3: Status Metric with Dot -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between text-outline">
+<span class="font-label-sm text-label-sm uppercase tracking-wider font-semibold">Node Telemetry</span>
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[18px]">sensors</span>
+</div>
+</div>
+<div class="my-space-sm">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-secondary animate-pulse"></span>
+<span class="font-headline-xl text-headline-xl text-on-surface tracking-tight">All Active</span>
+</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">18 regional hubs synchronized</div>
+</div>
+<div class="flex items-center gap-1 font-label-sm text-label-sm text-outline">
+<span>Latency:</span>
+<span class="text-on-surface font-semibold">18ms average</span>
+</div>
+</div>
+<!-- KPI 4: SLA Metric with Countdown -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between text-outline">
+<span class="font-label-sm text-label-sm uppercase tracking-wider font-semibold">Next Settlement Cutoff</span>
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-[18px]">timer</span>
+</div>
+</div>
+<div class="my-space-sm">
+<div class="font-headline-xl text-headline-xl text-error tracking-tight font-mono">03h : 24m : 11s</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Daily automated clearing window</div>
+</div>
+<div class="flex items-center gap-1 font-label-sm text-label-sm text-error font-semibold">
+<span class="material-symbols-outlined text-[16px]">priority_high</span>
+<span>4 Payouts Require Admin Pin</span>
+</div>
+</div>
+</div>
+<!-- Status Badges Bar -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-space-md">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Status Badge Atom Spectrum:</span>
+<div class="flex flex-wrap items-center gap-space-sm">
+<!-- Active -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>ACTIVE</span>
+</div>
+<!-- In Progress -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary-absolute text-on-primary-absolute font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>IN PROGRESS</span>
+</div>
+<!-- Pending Review -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-highest text-on-surface font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+<span>PENDING REVIEW</span>
+</div>
+<!-- Escalated / High -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-ping"></span>
+<span>ESCALATED / HIGH</span>
+</div>
+<!-- Closed / Lapsed -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container text-outline font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+<span>CLOSED / LAPSED</span>
+</div>
+</div>
+</div>
+<!-- Data Table Atom Container -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<!-- Table Operations Bar -->
+<div class="p-space-md bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="font-headline-sm text-headline-sm text-on-surface">Data Table Pattern (Dense Operational)</span>
+<span class="px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-outline">Row Height: 44px</span>
+</div>
+<div class="flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
+<span>Showing 4 sample records</span>
+</div>
+</div>
+<!-- Dense Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-outline font-label-sm text-label-sm uppercase tracking-wider">
+<th class="py-2.5 px-space-md font-semibold">
+<div class="flex items-center gap-1 cursor-pointer hover:text-on-surface">
+<span>Timestamp</span>
+<span class="material-symbols-outlined text-[14px]">arrow_downward</span>
+</div>
+</th>
+<th class="py-2.5 px-space-md font-semibold">
+<div class="flex items-center gap-1 cursor-pointer hover:text-on-surface">
+<span>Target Entity / User</span>
+<span class="material-symbols-outlined text-[14px]">swap_vert</span>
+</div>
+</th>
+<th class="py-2.5 px-space-md font-semibold">
+<div class="flex items-center gap-1 cursor-pointer hover:text-on-surface">
+<span>Domain / Category</span>
+<span class="material-symbols-outlined text-[14px]">swap_vert</span>
+</div>
+</th>
+<th class="py-2.5 px-space-md font-semibold">
+<div class="flex items-center gap-1 cursor-pointer hover:text-on-surface">
+<span>Status</span>
+<span class="material-symbols-outlined text-[14px]">filter_list</span>
+</div>
+</th>
+<th class="py-2.5 px-space-md font-semibold text-right">Settlement Amt</th>
+<th class="py-2.5 px-space-md font-semibold text-right">Admin Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container font-body-sm text-body-sm text-on-surface">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low/70 transition-colors">
+<td class="py-2.5 px-space-md font-mono text-outline text-[11px]">24 Oct 14:32:09</td>
+<td class="py-2.5 px-space-md">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-primary-absolute text-on-primary-absolute flex items-center justify-center font-bold text-[10px]">RP</div>
+<span class="font-semibold text-on-surface">Rajesh Power Works (P-104)</span>
+</div>
+</td>
+<td class="py-2.5 px-space-md text-on-surface-variant">Grid Transformer Replacement</td>
+<td class="py-2.5 px-space-md">
+<div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-[11px] font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>ACTIVE</span>
+</div>
+</td>
+<td class="py-2.5 px-space-md text-right font-mono font-semibold">₹18,450.00</td>
+<td class="py-2.5 px-space-md text-right">
+<button class="px-2.5 py-1 rounded bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-sm text-label-sm font-semibold transition-colors">Inspect</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low/70 transition-colors bg-surface-container-lowest">
+<td class="py-2.5 px-space-md font-mono text-outline text-[11px]">24 Oct 14:28:44</td>
+<td class="py-2.5 px-space-md">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-tertiary-absolute text-on-tertiary-absolute flex items-center justify-center font-bold text-[10px]">SK</div>
+<span class="font-semibold text-on-surface">Suresh Kumar (Tech #881)</span>
+</div>
+</td>
+<td class="py-2.5 px-space-md text-on-surface-variant">Emergency HV Cable Repair</td>
+<td class="py-2.5 px-space-md">
+<div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-[11px] font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+<span>ESCALATED</span>
+</div>
+</td>
+<td class="py-2.5 px-space-md text-right font-mono font-semibold">₹6,200.00</td>
+<td class="py-2.5 px-space-md text-right">
+<button class="px-2.5 py-1 rounded bg-tertiary-container text-on-tertiary font-label-sm text-label-sm font-semibold hover:bg-tertiary transition-colors shadow-sm">Resolve</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low/70 transition-colors">
+<td class="py-2.5 px-space-md font-mono text-outline text-[11px]">24 Oct 13:50:11</td>
+<td class="py-2.5 px-space-md">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center font-bold text-[10px]">AP</div>
+<span class="font-semibold text-on-surface">Apex Industrial Corp (C-492)</span>
+</div>
+</td>
+<td class="py-2.5 px-space-md text-on-surface-variant">Annual Commercial AMC</td>
+<td class="py-2.5 px-space-md">
+<div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface font-label-sm text-[11px] font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+<span>PENDING REVIEW</span>
+</div>
+</td>
+<td class="py-2.5 px-space-md text-right font-mono font-semibold">₹1,12,000.00</td>
+<td class="py-2.5 px-space-md text-right">
+<button class="px-2.5 py-1 rounded bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-sm text-label-sm font-semibold transition-colors">Approve</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low/70 transition-colors bg-surface-container-lowest">
+<td class="py-2.5 px-space-md font-mono text-outline text-[11px]">24 Oct 12:15:30</td>
+<td class="py-2.5 px-space-md">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center font-bold text-[10px]">VN</div>
+<span class="font-semibold text-on-surface">Vikas Nagar Substation</span>
+</div>
+</td>
+<td class="py-2.5 px-space-md text-on-surface-variant">Capacitor Bank Calibration</td>
+<td class="py-2.5 px-space-md">
+<div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-container text-outline font-label-sm text-[11px] font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+<span>CLOSED</span>
+</div>
+</td>
+<td class="py-2.5 px-space-md text-right font-mono font-semibold">₹4,950.00</td>
+<td class="py-2.5 px-space-md text-right">
+<button class="px-2.5 py-1 rounded bg-surface-container-high hover:bg-surface-variant text-outline font-label-sm text-label-sm font-semibold transition-colors">Archived</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Attached Pagination Component Atom -->
+<div class="p-space-md bg-surface-container-low flex flex-col sm:flex-row items-center justify-between gap-space-sm">
+<div class="font-body-sm text-body-sm text-outline">
+            Showing <span class="font-semibold text-on-surface">1 - 4</span> of 248 platform records
+          </div>
+<div class="flex items-center gap-1">
+<button class="h-8 px-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-outline hover:text-on-surface font-label-sm text-label-sm transition-colors flex items-center">
+<span class="material-symbols-outlined text-[16px]">chevron_left</span>
+<span class="hidden sm:inline ml-0.5">Previous</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm">1</button>
+<button class="w-8 h-8 rounded-lg bg-tertiary-container text-on-tertiary font-label-sm text-label-sm font-bold shadow-sm">2</button>
+<button class="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm">3</button>
+<span class="px-1 text-outline font-body-sm">...</span>
+<button class="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm">10</button>
+<button class="h-8 px-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-outline hover:text-on-surface font-label-sm text-label-sm transition-colors flex items-center">
+<span class="hidden sm:inline mr-0.5">Next</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 5: FEEDBACK, MODALS & EMPTY STATES -->
+<section class="flex flex-col gap-space-md">
+<div class="flex items-center gap-space-sm pb-space-xs">
+<div class="w-8 h-8 rounded-lg bg-tertiary-container text-on-tertiary flex items-center justify-center font-bold text-label-sm">05</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">User Guidance</span>
+<h2 class="font-headline-md text-headline-md text-on-surface tracking-tight">Feedback Banners, Modal &amp; Empty States</h2>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-space-lg">
+<!-- Left: Alert Banners Column -->
+<div class="flex flex-col gap-space-md">
+<!-- Success Banner -->
+<div class="p-space-md rounded-xl bg-secondary-container text-on-secondary-container flex items-start gap-space-sm shadow-sm">
+<span class="material-symbols-outlined text-[20px] text-secondary flex-shrink-0 mt-0.5">check_circle</span>
+<div class="flex flex-col gap-0.5">
+<span class="font-label-lg text-label-lg font-bold">Partner Settlement Completed</span>
+<span class="font-body-sm text-body-sm opacity-90">₹1,42,800 transferred to Delhi Central franchise account via IMPS. Reference #TXN-90231.</span>
+</div>
+</div>
+<!-- Warning Escalation Banner -->
+<div class="p-space-md rounded-xl bg-surface-container-highest text-on-surface flex items-start gap-space-sm shadow-sm">
+<span class="material-symbols-outlined text-[20px] text-tertiary flex-shrink-0 mt-0.5">warning</span>
+<div class="flex flex-col gap-0.5">
+<span class="font-label-lg text-label-lg font-bold">SLA Escalation Window: 18m Left</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Ticket #T-8822 (Sector 62 Noida) will breach standard repair guarantee. Immediate override recommended.</span>
+</div>
+</div>
+<!-- Escrow Notice Banner -->
+<div class="p-space-md rounded-xl bg-primary-absolute text-on-primary-absolute flex items-start gap-space-sm shadow-sm">
+<span class="material-symbols-outlined text-[20px] text-primary flex-shrink-0 mt-0.5">info</span>
+<div class="flex flex-col gap-0.5">
+<span class="font-label-lg text-label-lg font-bold">Escrow Reserve Threshold Maintained</span>
+<span class="font-body-sm text-body-sm text-on-primary-absolute-variant">All 14 active vendor security deposits are above the statutory 15% reserve requirement.</span>
+</div>
+</div>
+</div>
+<!-- Center: Confirmation Dialog Card -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-space-sm text-tertiary mb-space-sm">
+<div class="w-10 h-10 rounded-full bg-tertiary-absolute text-on-tertiary-absolute flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">security</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase font-bold text-tertiary tracking-wider">High Security Action</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Super Admin 2FA Required</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
+              Review changes before saving. You are modifying contract commission splits for <strong class="text-on-surface">All North Zone Partners</strong> from 12.5% to 11.8%.
+            </p>
+<div class="bg-surface-container-low p-space-sm rounded-lg mb-space-md flex flex-col gap-1">
+<div class="flex justify-between text-body-sm font-body-sm">
+<span class="text-outline">Impacted Partners:</span>
+<span class="font-bold text-on-surface">42 Authorized Entities</span>
+</div>
+<div class="flex justify-between text-body-sm font-body-sm">
+<span class="text-outline">Effective Cycle:</span>
+<span class="font-bold text-on-surface">November 1st, 2024</span>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-outline uppercase font-semibold">Enter 6-Digit Authenticator Token</label>
+<div class="flex gap-2">
+<input class="w-10 h-10 text-center rounded-lg bg-surface-container font-headline-sm text-headline-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-tertiary" maxlength="1" type="text" value="4"/>
+<input class="w-10 h-10 text-center rounded-lg bg-surface-container font-headline-sm text-headline-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-tertiary" maxlength="1" type="text" value="8"/>
+<input class="w-10 h-10 text-center rounded-lg bg-surface-container font-headline-sm text-headline-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-tertiary" maxlength="1" type="text" value="1"/>
+<input class="w-10 h-10 text-center rounded-lg bg-surface-container font-headline-sm text-headline-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-tertiary" maxlength="1" type="text" value="9"/>
+<input class="w-10 h-10 text-center rounded-lg bg-surface-container font-headline-sm text-headline-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-tertiary" maxlength="1" placeholder="•" type="text"/>
+<input class="w-10 h-10 text-center rounded-lg bg-surface-container font-headline-sm text-headline-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-tertiary" maxlength="1" placeholder="•" type="text"/>
+</div>
+</div>
+</div>
+<div class="mt-space-lg flex items-center justify-end gap-space-sm pt-space-sm">
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-md text-label-md transition-colors">
+              Cancel
+            </button>
+<button class="px-4 py-1.5 rounded-lg bg-tertiary-container hover:bg-tertiary text-on-tertiary font-label-md text-label-md shadow-sm transition-all">
+              Verify &amp; Apply Changes
+            </button>
+</div>
+</div>
+<!-- Right: Empty State Graphic Card -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col items-center justify-center text-center">
+<div class="w-16 h-16 rounded-2xl bg-surface-container-low text-outline flex items-center justify-center mb-space-md shadow-inner">
+<span class="material-symbols-outlined text-[36px] text-tertiary">task_alt</span>
+</div>
+<span class="px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold mb-2">Queue Clear</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-1">No Unresolved Tickets in Queue</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-xs mb-space-lg">
+            All high-voltage grid disruptions and partner dispute arbitrations have been addressed for this dispatch window.
+          </p>
+<div class="flex items-center gap-space-sm">
+<button class="h-9 px-4 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-md text-label-md transition-colors">
+              View History
+            </button>
+<button class="h-9 px-4 rounded-lg bg-tertiary-container hover:bg-tertiary text-on-tertiary font-label-md text-label-md shadow-sm transition-all flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">add</span>
+<span>Create Ticket</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 6: CLIENT APPROVAL SIGN-OFF AUDIT STRIP -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col md:flex-row items-center justify-between gap-space-md mb-space-xl">
+<div class="flex items-center gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-tertiary-container text-on-tertiary flex items-center justify-center font-bold text-headline-sm shadow-sm">
+<span class="material-symbols-outlined text-[24px]">verified</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface">Client Approval &amp; Token Finalization</span>
+<span class="px-2 py-0.5 rounded bg-secondary-container text-on-secondary-container font-label-sm text-[10px] font-bold">READY FOR PROD STAGING</span>
+</div>
+<p class="font-body-sm text-body-sm text-outline">
+            Tokens locked: #1E40AF (Core Brand Royal Blue), #7C3AED (Admin Deep Purple), 4-tier semantic state palette, WCAG 2.1 AA certified.
+          </p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm w-full md:w-auto justify-end">
+<div class="text-right hidden sm:block">
+<div class="font-label-sm text-label-sm text-outline uppercase font-semibold">Audit Release ID</div>
+<div class="font-mono text-body-sm font-semibold text-on-surface">REL-2024-V2.4.0-ADM</div>
+</div>
+<button class="px-4 py-2 bg-primary-container hover:bg-primary text-on-primary font-label-md text-label-md rounded-lg shadow-sm transition-all flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]">download_for_offline</span>
+<span>Download Figma Master Kit</span>
+</button>
+</div>
+</div>
+</div>
+</div></main></div>
+        </div>
+      </div>
+    
+</body>
+</html>
