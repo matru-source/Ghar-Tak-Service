@@ -81,7 +81,7 @@ fun CustomerProfileView(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(20.dp),
-                    horizontalAlignment = Alignment.CenterVertically
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Box(
                         modifier = Modifier
@@ -144,17 +144,17 @@ fun CustomerProfileView(
                             .padding(vertical = 10.dp),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterVertically) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(text = "3", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = SapphireBlue800)
                             Text(text = "Orders", fontSize = 11.sp, color = TextDarkMuted)
                         }
                         Divider(modifier = Modifier.height(24.dp).width(1.dp), color = Color(0xFFCBD5E1))
-                        Column(horizontalAlignment = Alignment.CenterVertically) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(text = "Active", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = SuccessGreen)
                             Text(text = "AMC Shield", fontSize = 11.sp, color = TextDarkMuted)
                         }
                         Divider(modifier = Modifier.height(24.dp).width(1.dp), color = Color(0xFFCBD5E1))
-                        Column(horizontalAlignment = Alignment.CenterVertically) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(text = "5.0 ★", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = AmberAlert)
                             Text(text = "Rating", fontSize = 11.sp, color = TextDarkMuted)
                         }

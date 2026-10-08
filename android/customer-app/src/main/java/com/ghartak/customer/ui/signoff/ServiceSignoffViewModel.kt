@@ -85,10 +85,10 @@ class ServiceSignoffViewModel(
                 serviceTitle = state.serviceTitle,
                 customerName = "Amit Sharma",
                 technicianName = "${state.technicianName} (${state.technicianBadge})",
-                taxableCharges = state.taxableCharges,
-                cgstAmount = state.cgstAmount,
-                sgstAmount = state.sgstAmount,
-                totalAmount = state.totalAmount
+                taxableCharges = state.basePriceInr,
+                cgstAmount = state.cgstInr,
+                sgstAmount = state.sgstInr,
+                totalAmount = state.totalAmountInr
             )
             com.ghartak.customer.util.PdfInvoiceGenerator.generateAndSaveGstInvoice(context, data)
             _uiState.value = _uiState.value.copy(

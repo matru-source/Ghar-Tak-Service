@@ -28,6 +28,9 @@ val TextLightSecondary = Color(0xFFCBD5E1)
 
 // Accent & Status
 val SuccessGreen = Color(0xFF00C853)
+val SuccessGreenLight = Color(0xFFE8F5E9)
 val WarningAmber = Color(0xFFFFB300)
+val AmberAlert = Color(0xFFFFF8E1)
 val DangerRed = Color(0xFFE53935)
 val VerifiedGold = Color(0xFFFFD700)
+
