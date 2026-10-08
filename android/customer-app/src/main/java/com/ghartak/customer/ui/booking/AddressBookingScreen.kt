@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ghartak.customer.ui.theme.*
@@ -437,22 +438,14 @@ fun AddressBookingScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = "Like Rapido, our automated dispatch algorithm pairs the nearest available 1000V certified technician right to your doorstep.",
-                        fontSize = 11.sp,
-                        color = TextDarkMuted,
-                        lineHeight = 15.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     TechnicianRapidoCard(
                         name = "Rajesh Kumar",
                         badge = "GTS-TECH-4091",
                         rating = "4.9 ★ (240+ jobs)",
-                        distance = "1.2 km away",
-                        eta = "~8 mins",
+                        distance = "1.3 km away",
+                        eta = "8 mins",
                         specialty = "MCB Panel & Earthing Specialist",
                         isSelected = true
                     )
@@ -464,7 +457,7 @@ fun AddressBookingScreen(
                         badge = "GTS-TECH-1084",
                         rating = "4.8 ★ (180+ jobs)",
                         distance = "2.4 km away",
-                        eta = "~14 mins",
+                        eta = "14 mins",
                         specialty = "Wiring & High Load Installations",
                         isSelected = false
                     )
@@ -476,12 +469,12 @@ fun AddressBookingScreen(
                         badge = "GTS-TECH-2241",
                         rating = "4.9 ★ (310+ jobs)",
                         distance = "3.1 km away",
-                        eta = "~19 mins",
+                        eta = "19 mins",
                         specialty = "Appliance Anchor & Ceiling Fans",
                         isSelected = false
                     )
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(horizontal = 4.dp)
@@ -492,10 +485,10 @@ fun AddressBookingScreen(
                             tint = SapphireBlue800,
                             modifier = Modifier.size(13.dp)
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "Fastest technician automatically locked upon payment confirmation.",
-                            fontSize = 10.sp,
+                            text = "Fastest certified electrician automatically reserved upon checkout.",
+                            fontSize = 11.sp,
                             color = TextDarkMuted,
                             fontWeight = FontWeight.Medium
                         )
@@ -520,24 +513,29 @@ private fun TechnicianRapidoCard(
 ) {
     Surface(
         shape = RoundedCornerShape(12.dp),
-        color = if (isSelected) SapphireBlue800.copy(alpha = 0.05f) else Color(0xFFF8FAFC),
+        color = if (isSelected) Color(0xFFF0F7FF) else Color(0xFFFAFAFA),
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            if (isSelected) SapphireBlue800.copy(alpha = 0.4f) else SurfaceBorder
+            if (isSelected) SapphireBlue800.copy(alpha = 0.5f) else SurfaceBorder
         ),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            // Avatar with initials and green online indicator dot
+            Box(
+                modifier = Modifier.size(42.dp),
+                contentAlignment = Alignment.BottomEnd
+            ) {
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .fillMaxSize()
                         .clip(CircleShape)
-                        .background(SapphireBlue800),
+                        .background(if (isSelected) SapphireBlue800 else Color(0xFF334155)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -547,35 +545,99 @@ private fun TechnicianRapidoCard(
                         fontWeight = FontWeight.Bold
                     )
                 }
-
-                Spacer(modifier = Modifier.width(10.dp))
-
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = name, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextDarkPrimary)
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = rating, fontSize = 11.sp, color = Color(0xFFB45309), fontWeight = FontWeight.SemiBold)
-                    }
-                    Text(text = "$badge • $specialty", fontSize = 11.sp, color = TextDarkMuted)
-                }
+                Box(
+                    modifier = Modifier
+                        .size(11.dp)
+                        .clip(CircleShape)
+                        .background(SuccessGreen)
+                        .border(1.5.dp, Color.White, CircleShape)
+                )
             }
 
-            Column(horizontalAlignment = Alignment.End) {
-                Surface(
-                    color = Color.White,
-                    shape = RoundedCornerShape(6.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Center details (Name, Rating, Specialty)
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "⚡ $eta",
+                        text = name,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 11.sp,
-                        color = SapphireBlue800,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        fontSize = 13.sp,
+                        color = TextDarkPrimary
                     )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Surface(
+                        color = Color(0xFFFEF3C7),
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            text = rating,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF92400E),
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                        )
+                    }
                 }
+
                 Spacer(modifier = Modifier.height(2.dp))
-                Text(text = distance, fontSize = 10.sp, color = TextDarkMuted)
+
+                Text(
+                    text = "$badge • $specialty",
+                    fontSize = 11.sp,
+                    color = TextDarkMuted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Right column: ETA pill & Distance (Properly sized, never wraps)
+            Column(
+                horizontalAlignment = Alignment.End,
+                modifier = Modifier.widthIn(min = 68.dp)
+            ) {
+                Surface(
+                    color = if (isSelected) SapphireBlue800.copy(alpha = 0.12f) else Color.White,
+                    shape = RoundedCornerShape(6.dp),
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        if (isSelected) SapphireBlue800.copy(alpha = 0.35f) else SurfaceBorder
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "⚡",
+                            fontSize = 10.sp
+                        )
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Text(
+                            text = eta,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp,
+                            color = SapphireBlue800,
+                            maxLines = 1
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(3.dp))
+
+                Text(
+                    text = distance,
+                    fontSize = 10.sp,
+                    color = TextDarkMuted,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1
+                )
             }
         }
     }

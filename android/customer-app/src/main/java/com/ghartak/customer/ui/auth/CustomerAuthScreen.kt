@@ -91,33 +91,7 @@ fun CustomerAuthScreen(
                 letterSpacing = 0.6.sp
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Surface(
-                color = SapphireBlue800.copy(alpha = 0.07f),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Verified,
-                        contentDescription = null,
-                        tint = SapphireBlue800,
-                        modifier = Modifier.size(13.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Brevo Email Verification • 1000V Certified",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = SapphireBlue800
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             // Mode Selector: SIGN IN vs SIGN UP / REGISTER
             Row(
@@ -392,33 +366,7 @@ fun CustomerAuthScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // 1-Click Demo Shortcut for Matru Prasad Panda
-            OutlinedButton(
-                onClick = { viewModel.quickDemoLogin("matruprasadpanda497@gmail.com") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(44.dp),
-                shape = RoundedCornerShape(12.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, SapphireBlue800.copy(alpha = 0.4f)),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = SapphireBlue800)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Bolt,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = SapphireBlue800
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "⚡ 1-Click Demo (Matru Prasad Panda)",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -432,7 +380,7 @@ fun CustomerAuthScreen(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "Brevo Verified • 1000V Certified Safety",
+                    text = "Official Ghar Tak Services • 1000V Certified Safety",
                     color = TextDarkMuted,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Medium

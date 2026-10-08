@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,9 +20,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -129,89 +136,8 @@ fun CustomerTrackingScreen(
             // Lifecycle Progress Stepper
             TrackingLifecycleStepper(state)
 
-            // Vector Live Route Map Canvas
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(210.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = NavyDark900),
-                border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
-            ) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    Canvas(modifier = Modifier.fillMaxSize()) {
-                        val canvasWidth = size.width
-                        val canvasHeight = size.height
-
-                        // Grid map pattern
-                        val gridPaint = Color(0xFF1B2A4A)
-                        for (x in 0..canvasWidth.toInt() step 50) {
-                            drawLine(gridPaint, Offset(x.toFloat(), 0f), Offset(x.toFloat(), canvasHeight), strokeWidth = 1f)
-                        }
-                        for (y in 0..canvasHeight.toInt() step 50) {
-                            drawLine(gridPaint, Offset(0f, y.toFloat()), Offset(canvasWidth, y.toFloat()), strokeWidth = 1f)
-                        }
-
-                        // Path from Technician to Customer
-                        val startX = 60f + (canvasWidth - 140f) * (state.transitStep / 3f)
-                        val startY = canvasHeight - 50f - (canvasHeight - 100f) * (state.transitStep / 3f)
-                        val endX = canvasWidth - 70f
-                        val endY = 50f
-
-                        // Polyline route
-                        drawLine(
-                            color = ElectricCyan,
-                            start = Offset(startX, startY),
-                            end = Offset(endX, endY),
-                            strokeWidth = 6f,
-                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(15f, 15f), 0f)
-                        )
-
-                        // 50m Geofence around customer house
-                        drawCircle(
-                            color = SuccessGreen.copy(alpha = 0.2f),
-                            radius = 45f,
-                            center = Offset(endX, endY)
-                        )
-                        drawCircle(
-                            color = SuccessGreen,
-                            radius = 45f,
-                            center = Offset(endX, endY),
-                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f), 0f))
-                        )
-
-                        // Customer Pin
-                        drawCircle(color = SuccessGreen, radius = 12f, center = Offset(endX, endY))
-
-                        // Moving Technician Pin
-                        drawCircle(color = Color(0xFFE65100), radius = 14f, center = Offset(startX, startY))
-                        drawCircle(color = Color.White, radius = 6f, center = Offset(startX, startY))
-                    }
-
-                    // Floating Distance & ETA Overlay Pill
-                    Surface(
-                        color = Color.Black.copy(alpha = 0.75f),
-                        shape = RoundedCornerShape(20.dp),
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .padding(12.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(imageVector = Icons.Default.Navigation, contentDescription = null, tint = ElectricCyan, modifier = Modifier.size(14.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = if (state.distanceKm < 0.1) "30m AWAY • AT DOORSTEP" else "${state.distanceKm} km away • ETA ${state.etaMinutes} mins",
-                                color = Color.White,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-            }
+            // Realistic Live Route Map Canvas with City Road Network, GPS Navigation & Animated Pulse
+            LiveElectricianTrackingMap(state = state)
 
             // Assigned Electrician Profile Card
             Card(
@@ -479,5 +405,338 @@ fun StepPill(label: String, isDone: Boolean, isActive: Boolean) {
             fontWeight = if (isActive || isDone) FontWeight.Bold else FontWeight.Normal,
             color = if (isActive || isDone) TextDarkPrimary else TextDarkMuted
         )
+    }
+}
+
+@Composable
+fun LiveElectricianTrackingMap(state: CustomerTrackingUiState) {
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val pulseRadius by infiniteTransition.animateFloat(
+        initialValue = 10f,
+        targetValue = 38f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "pulseRadius"
+    )
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.7f,
+        targetValue = 0.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "pulseAlpha"
+    )
+    val dotAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "dotAlpha"
+    )
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(235.dp),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val canvasWidth = size.width
+                val canvasHeight = size.height
+
+                // 1. Draw Realistic City Map Background Elements
+                // Park 1 (Top Left)
+                drawRoundRect(
+                    color = Color(0xFF064E3B).copy(alpha = 0.4f),
+                    topLeft = Offset(24f, 18f),
+                    size = Size(100f, 60f),
+                    cornerRadius = CornerRadius(10f, 10f)
+                )
+                // Commercial Block (Bottom Left)
+                drawRoundRect(
+                    color = Color(0xFF1E293B),
+                    topLeft = Offset(24f, canvasHeight - 75f),
+                    size = Size(80f, 50f),
+                    cornerRadius = CornerRadius(8f, 8f)
+                )
+                // Park 2 (Bottom Center)
+                drawRoundRect(
+                    color = Color(0xFF064E3B).copy(alpha = 0.35f),
+                    topLeft = Offset(canvasWidth * 0.44f, canvasHeight - 70f),
+                    size = Size(110f, 48f),
+                    cornerRadius = CornerRadius(8f, 8f)
+                )
+                // Residential Block (Top Center)
+                drawRoundRect(
+                    color = Color(0xFF1E293B),
+                    topLeft = Offset(canvasWidth * 0.44f, 18f),
+                    size = Size(canvasWidth * 0.28f, 55f),
+                    cornerRadius = CornerRadius(8f, 8f)
+                )
+
+                // 2. City Road Network
+                val roadColor = Color(0xFF1E293B)
+                val roadEdgeColor = Color(0xFF334155).copy(alpha = 0.6f)
+
+                // Major Avenue 1 (Colaba Causeway - Upper Horizontal)
+                val road1Y = canvasHeight * 0.30f
+                drawRect(
+                    color = roadColor,
+                    topLeft = Offset(0f, road1Y - 14f),
+                    size = Size(canvasWidth, 28f)
+                )
+                drawLine(roadEdgeColor, Offset(0f, road1Y - 14f), Offset(canvasWidth, road1Y - 14f), 1f)
+                drawLine(roadEdgeColor, Offset(0f, road1Y + 14f), Offset(canvasWidth, road1Y + 14f), 1f)
+
+                // Major Avenue 2 (Lower Horizontal)
+                val road2Y = canvasHeight * 0.74f
+                drawRect(
+                    color = roadColor,
+                    topLeft = Offset(0f, road2Y - 14f),
+                    size = Size(canvasWidth, 28f)
+                )
+                drawLine(roadEdgeColor, Offset(0f, road2Y - 14f), Offset(canvasWidth, road2Y - 14f), 1f)
+                drawLine(roadEdgeColor, Offset(0f, road2Y + 14f), Offset(canvasWidth, road2Y + 14f), 1f)
+
+                // Vertical Avenue 1 (MG Road)
+                val road1X = canvasWidth * 0.36f
+                drawRect(
+                    color = roadColor,
+                    topLeft = Offset(road1X - 14f, 0f),
+                    size = Size(28f, canvasHeight)
+                )
+                drawLine(roadEdgeColor, Offset(road1X - 14f, 0f), Offset(road1X - 14f, canvasHeight), 1f)
+                drawLine(roadEdgeColor, Offset(road1X + 14f, 0f), Offset(road1X + 14f, canvasHeight), 1f)
+
+                // Vertical Cross Street 2 (Near Destination)
+                val road2X = canvasWidth * 0.82f
+                drawRect(
+                    color = roadColor,
+                    topLeft = Offset(road2X - 12f, 0f),
+                    size = Size(24f, canvasHeight)
+                )
+                drawLine(roadEdgeColor, Offset(road2X - 12f, 0f), Offset(road2X - 12f, canvasHeight), 1f)
+                drawLine(roadEdgeColor, Offset(road2X + 12f, 0f), Offset(road2X + 12f, canvasHeight), 1f)
+
+                // Dashed Road Dividers
+                val dashEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 10f), 0f)
+                drawLine(Color(0xFF475569), Offset(0f, road1Y), Offset(canvasWidth, road1Y), 1.5f, pathEffect = dashEffect)
+                drawLine(Color(0xFF475569), Offset(0f, road2Y), Offset(canvasWidth, road2Y), 1.5f, pathEffect = dashEffect)
+                drawLine(Color(0xFF475569), Offset(road1X, 0f), Offset(road1X, canvasHeight), 1.5f, pathEffect = dashEffect)
+                drawLine(Color(0xFF475569), Offset(road2X, 0f), Offset(road2X, canvasHeight), 1.5f, pathEffect = dashEffect)
+
+                // 3. Multi-Segment Realistic Navigation Polyline
+                val p0 = Offset(canvasWidth * 0.12f, road2Y) // Origin Dispatch Hub
+                val p1 = Offset(road1X, road2Y)               // Turn at MG Road
+                val p2 = Offset(road1X, road1Y)               // Turn at Colaba Causeway
+                val p3 = Offset(road2X, road1Y)               // Turn towards Residence
+                val p4 = Offset(road2X, canvasHeight * 0.22f) // Customer Doorstep
+
+                val fullPath = Path().apply {
+                    moveTo(p0.x, p0.y)
+                    lineTo(p1.x, p1.y)
+                    lineTo(p2.x, p2.y)
+                    lineTo(p3.x, p3.y)
+                    lineTo(p4.x, p4.y)
+                }
+
+                // Route Outer Glow
+                drawPath(
+                    path = fullPath,
+                    color = Color(0xFF0284C7).copy(alpha = 0.35f),
+                    style = Stroke(width = 10f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+                )
+
+                val isArrived = state.transitStep >= 3 || state.status == "ARRIVED" || state.status == "COMPLETED"
+                val progressFrac = when (state.transitStep) {
+                    0 -> 0.05f
+                    1 -> 0.40f
+                    2 -> 0.75f
+                    else -> 1.0f
+                }
+
+                // Vibrant Route Path
+                drawPath(
+                    path = fullPath,
+                    color = if (isArrived) SuccessGreen else ElectricCyan,
+                    style = Stroke(
+                        width = 4.5f,
+                        cap = StrokeCap.Round,
+                        join = StrokeJoin.Round,
+                        pathEffect = if (!isArrived) PathEffect.dashPathEffect(floatArrayOf(16f, 10f), 0f) else null
+                    )
+                )
+
+                // 4. Customer Doorstep Home Destination Pin at p4
+                // 50m Geofence circle
+                drawCircle(
+                    color = SuccessGreen.copy(alpha = 0.18f),
+                    radius = 36f,
+                    center = p4
+                )
+                drawCircle(
+                    color = SuccessGreen.copy(alpha = 0.8f),
+                    radius = 36f,
+                    center = p4,
+                    style = Stroke(width = 2f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f), 0f))
+                )
+                drawCircle(color = SuccessGreen, radius = 11f, center = p4)
+                drawCircle(color = Color.White, radius = 5f, center = p4)
+
+                // 5. Technician Live Marker
+                val techPos = when {
+                    progressFrac <= 0.25f -> {
+                        val t = progressFrac / 0.25f
+                        Offset(p0.x + (p1.x - p0.x) * t, p0.y)
+                    }
+                    progressFrac <= 0.65f -> {
+                        val t = (progressFrac - 0.25f) / 0.40f
+                        Offset(p1.x, p1.y + (p2.y - p1.y) * t)
+                    }
+                    progressFrac < 1.0f -> {
+                        val t = (progressFrac - 0.65f) / 0.35f
+                        Offset(p2.x + (p3.x - p2.x) * t, p2.y)
+                    }
+                    else -> p4
+                }
+
+                // Pulsing Radar Waves
+                drawCircle(
+                    color = (if (isArrived) SuccessGreen else Color(0xFFF97316)).copy(alpha = pulseAlpha),
+                    radius = pulseRadius,
+                    center = techPos
+                )
+                drawCircle(
+                    color = if (isArrived) SuccessGreen else Color(0xFFF97316),
+                    radius = 13f,
+                    center = techPos
+                )
+                drawCircle(
+                    color = Color.White,
+                    radius = 5f,
+                    center = techPos
+                )
+            }
+
+            // Floating Top-Left: Live GPS Status Pill
+            Surface(
+                color = Color(0xFF0F172A).copy(alpha = 0.88f),
+                shape = RoundedCornerShape(20.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF334155)),
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(10.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(7.dp)
+                            .clip(CircleShape)
+                            .background(SuccessGreen.copy(alpha = dotAlpha))
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "LIVE GPS • SSE ACTIVE",
+                        color = Color.White,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.5.sp
+                    )
+                }
+            }
+
+            // Floating Top-Right: Re-center target button
+            Surface(
+                color = Color(0xFF0F172A).copy(alpha = 0.88f),
+                shape = CircleShape,
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF334155)),
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(10.dp)
+                    .size(32.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.MyLocation,
+                        contentDescription = "My Location",
+                        tint = ElectricCyan,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+
+            // Floating Bottom Overlay: Live Status & Route ETA Banner
+            Surface(
+                color = Color(0xFF0F172A).copy(alpha = 0.92f),
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF334155)),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(10.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = if (state.transitStep >= 3 || state.status == "ARRIVED") Icons.Default.CheckCircle else Icons.Default.Navigation,
+                            contentDescription = null,
+                            tint = if (state.transitStep >= 3 || state.status == "ARRIVED") SuccessGreen else ElectricCyan,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = if (state.transitStep >= 3 || state.status == "ARRIVED")
+                                    "Electrician at Doorstep"
+                                else
+                                    "Rajesh Kumar En Route",
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = if (state.transitStep >= 3 || state.status == "ARRIVED")
+                                    "Safety interlock check in progress"
+                                else
+                                    "Traveling via MG Road • 1.3 km away",
+                                color = Color(0xFF94A3B8),
+                                fontSize = 10.sp
+                            )
+                        }
+                    }
+
+                    Surface(
+                        color = if (state.transitStep >= 3 || state.status == "ARRIVED") SuccessGreen.copy(alpha = 0.2f) else SapphireBlue800,
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Text(
+                            text = if (state.transitStep >= 3 || state.status == "ARRIVED") "0 MINS" else "8 MINS",
+                            color = if (state.transitStep >= 3 || state.status == "ARRIVED") SuccessGreen else Color.White,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Black,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+            }
+        }
     }
 }
