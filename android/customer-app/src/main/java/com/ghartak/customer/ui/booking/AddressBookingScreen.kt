@@ -394,7 +394,190 @@ fun AddressBookingScreen(
                 }
             }
 
+            // Nearby Certified Technicians (Rapido-Style Live Allocation Preview)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(SuccessGreen)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "AVAILABLE ELECTRICIANS NEAR YOU",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = SapphireBlue800,
+                                letterSpacing = 0.5.sp
+                            )
+                        }
+                        Surface(
+                            color = SuccessGreen.copy(alpha = 0.12f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(
+                                text = "3 Online in ${state.pincode}",
+                                color = SuccessGreen,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "Like Rapido, our automated dispatch algorithm pairs the nearest available 1000V certified technician right to your doorstep.",
+                        fontSize = 11.sp,
+                        color = TextDarkMuted,
+                        lineHeight = 15.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    TechnicianRapidoCard(
+                        name = "Rajesh Kumar",
+                        badge = "GTS-TECH-4091",
+                        rating = "4.9 ★ (240+ jobs)",
+                        distance = "1.2 km away",
+                        eta = "~8 mins",
+                        specialty = "MCB Panel & Earthing Specialist",
+                        isSelected = true
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    TechnicianRapidoCard(
+                        name = "Suresh Patil",
+                        badge = "GTS-TECH-1084",
+                        rating = "4.8 ★ (180+ jobs)",
+                        distance = "2.4 km away",
+                        eta = "~14 mins",
+                        specialty = "Wiring & High Load Installations",
+                        isSelected = false
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    TechnicianRapidoCard(
+                        name = "Vikram Singh",
+                        badge = "GTS-TECH-2241",
+                        rating = "4.9 ★ (310+ jobs)",
+                        distance = "3.1 km away",
+                        eta = "~19 mins",
+                        specialty = "Appliance Anchor & Ceiling Fans",
+                        isSelected = false
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ElectricBolt,
+                            contentDescription = null,
+                            tint = SapphireBlue800,
+                            modifier = Modifier.size(13.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Fastest technician automatically locked upon payment confirmation.",
+                            fontSize = 10.sp,
+                            color = TextDarkMuted,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(80.dp))
         }
     }
 }
+
+@Composable
+private fun TechnicianRapidoCard(
+    name: String,
+    badge: String,
+    rating: String,
+    distance: String,
+    eta: String,
+    specialty: String,
+    isSelected: Boolean
+) {
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = if (isSelected) SapphireBlue800.copy(alpha = 0.05f) else Color(0xFFF8FAFC),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (isSelected) SapphireBlue800.copy(alpha = 0.4f) else SurfaceBorder
+        ),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(SapphireBlue800),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = name.split(" ").mapNotNull { it.firstOrNull()?.toString() }.take(2).joinToString(""),
+                        color = Color.White,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(10.dp))
+
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = name, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextDarkPrimary)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(text = rating, fontSize = 11.sp, color = Color(0xFFB45309), fontWeight = FontWeight.SemiBold)
+                    }
+                    Text(text = "$badge • $specialty", fontSize = 11.sp, color = TextDarkMuted)
+                }
+            }
+
+            Column(horizontalAlignment = Alignment.End) {
+                Surface(
+                    color = Color.White,
+                    shape = RoundedCornerShape(6.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
+                ) {
+                    Text(
+                        text = "⚡ $eta",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.sp,
+                        color = SapphireBlue800,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(text = distance, fontSize = 10.sp, color = TextDarkMuted)
+            }
+        }
+    }
+}
+

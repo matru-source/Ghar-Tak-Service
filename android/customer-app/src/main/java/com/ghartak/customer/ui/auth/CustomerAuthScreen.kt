@@ -1,27 +1,30 @@
 package com.ghartak.customer.ui.auth
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ElectricBolt
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ghartak.customer.R
 import com.ghartak.customer.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,7 +34,7 @@ fun CustomerAuthScreen(
     onLoginSuccess: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
     val activity = context as? android.app.Activity
 
     LaunchedEffect(state.isLoggedIn) {
@@ -44,7 +47,7 @@ fun CustomerAuthScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(SurfaceLight)
-            .padding(24.dp),
+            .padding(horizontal = 20.dp, vertical = 24.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -53,136 +56,306 @@ fun CustomerAuthScreen(
                 .clip(RoundedCornerShape(24.dp))
                 .background(Color.White)
                 .border(1.dp, SurfaceBorder, RoundedCornerShape(24.dp))
-                .padding(28.dp),
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Sapphire Brand Logo
+            // Official GTS Logo
             Box(
                 modifier = Modifier
-                    .size(68.dp)
+                    .size(80.dp)
                     .clip(RoundedCornerShape(20.dp))
-                    .background(SapphireBlue800.copy(alpha = 0.12f))
-                    .border(1.5.dp, SapphireBlue800, RoundedCornerShape(20.dp)),
+                    .background(SapphireBlue900.copy(alpha = 0.08f))
+                    .border(1.5.dp, SapphireBlue800.copy(alpha = 0.2f), RoundedCornerShape(20.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.ElectricBolt,
-                    contentDescription = "Ghar Tak Electrical",
-                    tint = SapphireBlue800,
-                    modifier = Modifier.size(38.dp)
+                Image(
+                    painter = painterResource(id = R.drawable.logo_gts_nobg),
+                    contentDescription = "Ghar Tak Services Logo",
+                    modifier = Modifier.size(64.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             Text(
-                text = "GHAR TAK",
-                color = SapphireBlue900,
-                fontSize = 26.sp,
+                text = "GHAR TAK SERVICES",
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Black,
-                letterSpacing = 1.5.sp
+                color = SapphireBlue900,
+                letterSpacing = 0.8.sp
             )
 
             Text(
                 text = "ON-DEMAND ELECTRICAL & SAFETY",
-                color = ElectricCyan,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
+                color = ElectricCyan,
+                letterSpacing = 0.6.sp
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
-            // Trust Chip
             Surface(
-                color = SurfaceLight,
-                shape = RoundedCornerShape(8.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
+                color = SapphireBlue800.copy(alpha = 0.07f),
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(imageVector = Icons.Default.Verified, contentDescription = null, tint = SapphireBlue800, modifier = Modifier.size(14.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Icon(
+                        imageVector = Icons.Default.Verified,
+                        contentDescription = null,
+                        tint = SapphireBlue800,
+                        modifier = Modifier.size(13.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "1000V CERTIFIED ELECTRICIANS",
-                        color = TextDarkSecondary,
+                        text = "1000V Certified Electricians",
                         fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.SemiBold,
+                        color = SapphireBlue800
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(26.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Mobile Input
+            // Mode Selector: SIGN IN vs SIGN UP / REGISTER
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFFF1F5F9))
+                    .padding(4.dp)
+            ) {
+                Surface(
+                    onClick = { viewModel.setMode("LOGIN") },
+                    modifier = Modifier.weight(1f),
+                    color = if (state.mode == "LOGIN") Color.White else Color.Transparent,
+                    shape = RoundedCornerShape(10.dp),
+                    shadowElevation = if (state.mode == "LOGIN") 2.dp else 0.dp
+                ) {
+                    Box(
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Sign In",
+                            fontWeight = if (state.mode == "LOGIN") FontWeight.Bold else FontWeight.Medium,
+                            fontSize = 13.sp,
+                            color = if (state.mode == "LOGIN") SapphireBlue800 else TextDarkMuted
+                        )
+                    }
+                }
+
+                Surface(
+                    onClick = { viewModel.setMode("SIGN_UP") },
+                    modifier = Modifier.weight(1f),
+                    color = if (state.mode == "SIGN_UP") Color.White else Color.Transparent,
+                    shape = RoundedCornerShape(10.dp),
+                    shadowElevation = if (state.mode == "SIGN_UP") 2.dp else 0.dp
+                ) {
+                    Box(
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Register / Sign Up",
+                            fontWeight = if (state.mode == "SIGN_UP") FontWeight.Bold else FontWeight.Medium,
+                            fontSize = 13.sp,
+                            color = if (state.mode == "SIGN_UP") SapphireBlue800 else TextDarkMuted
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            // SIGN UP Fields
+            if (state.mode == "SIGN_UP" && !state.isOtpSent) {
+                OutlinedTextField(
+                    value = state.fullName,
+                    onValueChange = { viewModel.onFullNameChanged(it) },
+                    label = { Text("Full Name") },
+                    placeholder = { Text("e.g. Matru Prasad Panda") },
+                    leadingIcon = {
+                        Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = SapphireBlue800)
+                    },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = state.address,
+                    onValueChange = { viewModel.onAddressChanged(it) },
+                    label = { Text("Address / Flat No / Society") },
+                    placeholder = { Text("Flat 402, Sea Crest Towers, Colaba") },
+                    leadingIcon = {
+                        Icon(imageVector = Icons.Default.Home, contentDescription = null, tint = SapphireBlue800)
+                    },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = state.pincode,
+                    onValueChange = { viewModel.onPincodeChanged(it) },
+                    label = { Text("Pincode (6-Digits)") },
+                    placeholder = { Text("400001") },
+                    leadingIcon = {
+                        Icon(imageVector = Icons.Default.PinDrop, contentDescription = null, tint = SapphireBlue800)
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            // Mobile Number Input (Common to both)
             OutlinedTextField(
                 value = state.phoneNumber,
                 onValueChange = { viewModel.onPhoneChanged(it) },
-                label = { Text("Your Mobile Number") },
+                label = { Text("Mobile Number") },
                 placeholder = { Text("9876543210") },
-                leadingIcon = {
+                prefix = {
                     Text(
                         text = "+91 ",
-                        color = SapphireBlue800,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 12.dp)
+                        color = TextDarkPrimary
                     )
                 },
-                trailingIcon = {
-                    Icon(imageVector = Icons.Default.Phone, contentDescription = null, tint = TextDarkMuted)
+                leadingIcon = {
+                    Icon(imageVector = Icons.Default.Phone, contentDescription = null, tint = SapphireBlue800)
                 },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = SapphireBlue800,
-                    unfocusedBorderColor = SurfaceBorder,
-                    cursorColor = SapphireBlue800
-                )
+                enabled = !state.isOtpSent
             )
 
-            // OTP Input
-            if (state.isOtpSent) {
-                Spacer(modifier = Modifier.height(14.dp))
-                OutlinedTextField(
-                    value = state.otpCode,
-                    onValueChange = { viewModel.onOtpChanged(it) },
-                    label = { Text("6-Digit Login Code") },
-                    placeholder = { Text("123456") },
-                    leadingIcon = {
-                        Icon(imageVector = Icons.Default.Security, contentDescription = null, tint = SapphireBlue800)
-                    },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = SapphireBlue800,
-                        unfocusedBorderColor = SurfaceBorder,
-                        cursorColor = SapphireBlue800
+            // OTP Input (Shown when OTP has been dispatched)
+            AnimatedVisibility(visible = state.isOtpSent) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    OutlinedTextField(
+                        value = state.otpCode,
+                        onValueChange = { viewModel.onOtpChanged(it) },
+                        label = { Text("6-Digit OTP Code") },
+                        placeholder = { Text("123456") },
+                        leadingIcon = {
+                            Icon(imageVector = Icons.Default.Security, contentDescription = null, tint = SapphireBlue800)
+                        },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
                     )
-                )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Sent to +91 ${state.phoneNumber}",
+                            fontSize = 11.sp,
+                            color = TextDarkMuted
+                        )
+                        TextButton(
+                            onClick = { viewModel.sendOtp(activity) },
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text("Resend OTP", fontSize = 11.sp, color = SapphireBlue800, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
             }
 
-            if (state.errorMessage != null) {
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(
-                    text = state.errorMessage ?: "",
-                    color = DangerRed,
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center
-                )
+            // Information / Helpful Notice Banner
+            if (!state.infoMessage.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Surface(
+                    color = AmberAlert,
+                    shape = RoundedCornerShape(10.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, WarningAmber.copy(alpha = 0.5f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(imageVector = Icons.Default.Info, contentDescription = null, tint = WarningAmber, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = state.infoMessage!!,
+                            color = Color(0xFF78350F),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
+            // Error Alert Banner
+            if (!state.errorMessage.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Surface(
+                    color = Color(0xFFFFEBEE),
+                    shape = RoundedCornerShape(10.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, DangerRed.copy(alpha = 0.4f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(imageVector = Icons.Default.Warning, contentDescription = null, tint = DangerRed, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = state.errorMessage!!,
+                                color = DangerRed,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                        if (state.errorMessage!!.contains("switch to Sign Up", ignoreCase = true)) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Button(
+                                onClick = { viewModel.setMode("SIGN_UP") },
+                                colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.fillMaxWidth().height(36.dp)
+                            ) {
+                                Text("Switch to Sign Up Now", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                        }
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Primary Action
+            // Primary Action Button
             Button(
                 onClick = {
-                    if (state.isOtpSent) viewModel.verifyOtp() else viewModel.sendOtp(activity)
+                    if (state.isOtpSent) {
+                        viewModel.verifyOtp()
+                    } else {
+                        viewModel.sendOtp(activity)
+                    }
                 },
                 enabled = !state.isLoading,
                 modifier = Modifier
@@ -192,21 +365,31 @@ fun CustomerAuthScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
             ) {
                 if (state.isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
                 } else {
+                    val label = when {
+                        state.isOtpSent -> "VERIFY & PROCEED"
+                        state.mode == "SIGN_UP" -> "REGISTER & SEND OTP"
+                        else -> "SEND LOGIN OTP"
+                    }
                     Text(
-                        text = if (state.isOtpSent) "VERIFY OTP & ENTER" else "SEND LOGIN OTP",
+                        text = label,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        fontSize = 13.sp,
+                        letterSpacing = 0.5.sp
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            // Staging Demo Login
+            // 1-Click Demo Shortcut
             OutlinedButton(
-                onClick = { viewModel.quickStagingFill() },
+                onClick = { viewModel.quickDemoLogin() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(44.dp),
@@ -214,20 +397,38 @@ fun CustomerAuthScreen(
                 border = androidx.compose.foundation.BorderStroke(1.dp, SapphireBlue800.copy(alpha = 0.4f)),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = SapphireBlue800)
             ) {
-                Icon(imageVector = Icons.Default.ElectricBolt, contentDescription = null, modifier = Modifier.size(16.dp), tint = SapphireBlue800)
+                Icon(
+                    imageVector = Icons.Default.Bolt,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = SapphireBlue800
+                )
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(text = "1-CLICK DEMO (Amit Sharma)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "⚡ 1-Click Demo (Amit Sharma)",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp
+                )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(imageVector = Icons.Default.Shield, contentDescription = null, tint = SuccessGreen, modifier = Modifier.size(14.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Shield,
+                    contentDescription = null,
+                    tint = SuccessGreen,
+                    modifier = Modifier.size(14.dp)
+                )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = "VDE 1000V Certified • 60-Sec Emergency Dispatch",
                     color = TextDarkMuted,
-                    fontSize = 10.sp
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Medium
                 )
             }
         }

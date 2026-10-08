@@ -28,6 +28,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.ghartak.customer.R
+import com.ghartak.customer.ui.catalog.CustomerBookServicesView
 import com.ghartak.customer.data.model.ServiceItem
 import com.ghartak.customer.ui.catalog.CustomerCatalogViewModel
 import com.ghartak.customer.ui.theme.*
@@ -60,20 +64,40 @@ fun CustomerHomeScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
-                        Text(
-                            text = "Hello, ${state.userName}!",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "Welcome to ElectriCare",
-                            fontSize = 13.sp,
-                            color = Color(0xFFBBDEFB),
-                            fontWeight = FontWeight.Normal
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(46.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color.White)
+                                .padding(4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.logo_gts_nobg),
+                                contentDescription = "GTS Logo",
+                                modifier = Modifier.size(38.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column {
+                            val firstName = state.userName.trim().split(" ").firstOrNull() ?: state.userName
+                            Text(
+                                text = "Hello, $firstName!",
+                                fontSize = 19.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Welcome to Ghar Tak Services (GTS)",
+                                fontSize = 12.sp,
+                                color = Color(0xFFBBDEFB),
+                                fontWeight = FontWeight.Normal
+                            )
+                        }
                     }
 
                     // Notification Bell (Golden Yellow as in diagram)
@@ -167,13 +191,9 @@ fun CustomerHomeScreen(
 
                 NavigationBarItem(
                     selected = currentBottomTab == 1,
-                    onClick = {
-                        currentBottomTab = 1
-                        val firstService = state.filteredServices.firstOrNull()?.id ?: "srv_mcb_replace"
-                        onServiceSelected(firstService)
-                    },
+                    onClick = { currentBottomTab = 1 },
                     icon = { Icon(Icons.Default.Build, contentDescription = "Book") },
-                    label = { Text("Book", fontSize = 11.sp) },
+                    label = { Text("Book", fontSize = 11.sp, fontWeight = if (currentBottomTab == 1) FontWeight.Bold else FontWeight.Normal) },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = SapphireBlue800,
                         selectedTextColor = SapphireBlue800,
@@ -224,13 +244,19 @@ fun CustomerHomeScreen(
         containerColor = Color(0xFFF8FAFC)
     ) { innerPadding ->
         when (currentBottomTab) {
+            1 -> {
+                Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+                    CustomerBookServicesView(
+                        viewModel = viewModel,
+                        onServiceSelected = onServiceSelected
+                    )
+                }
+            }
             3 -> {
                 Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
                     CustomerHistoryView(
                         onBookServiceAgain = {
-                            currentBottomTab = 0
-                            val firstService = state.filteredServices.firstOrNull()?.id ?: "srv_mcb_replace"
-                            onServiceSelected(firstService)
+                            currentBottomTab = 1
                         }
                     )
                 }
@@ -279,8 +305,7 @@ fun CustomerHomeScreen(
                             iconTint = SapphireBlue800,
                             label = "Book Service",
                             onClick = {
-                                val firstService = state.filteredServices.firstOrNull()?.id ?: "srv_mcb_replace"
-                                onServiceSelected(firstService)
+                                currentBottomTab = 1
                             }
                         )
 

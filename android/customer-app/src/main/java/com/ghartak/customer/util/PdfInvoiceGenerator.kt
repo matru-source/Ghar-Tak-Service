@@ -68,7 +68,7 @@ object PdfInvoiceGenerator {
             paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
             paint.textSize = 10f
             paint.color = Color.parseColor("#BBDEFB")
-            canvas.drawText("ElectriCare Enterprise Platform • Mission-Critical Electrical Engineering", 36f, 62f, paint)
+            canvas.drawText("Ghar Tak Services (GTS) • Mission-Critical Electrical Engineering", 36f, 62f, paint)
             canvas.drawText("GSTIN: ${data.gstin} | SAC Code: 998713 | 100% Tax Compliant", 36f, 78f, paint)
 
             // Header Right - TAX INVOICE Badge

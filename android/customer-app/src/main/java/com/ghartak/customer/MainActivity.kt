@@ -71,6 +71,9 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("track/$jobId")
                                 },
                                 onLogout = {
+                                    authViewModel.logout()
+                                    catalogViewModel.logout()
+                                    sessionManager.clearSession()
                                     navController.navigate("auth") {
                                         popUpTo("home") { inclusive = true }
                                     }

@@ -24,20 +24,31 @@ import com.ghartak.customer.ui.theme.*
 @Composable
 fun CustomerProfileView(
     userName: String = "Amit Sharma",
+    userPhone: String = "+91 98765 43210",
+    userAddress: String = "Flat 402, Sea Green Apartments, Colaba, Mumbai 400001",
     onLogout: () -> Unit
 ) {
     val context = LocalContext.current
     var showLogoutDialog by remember { mutableStateOf(false) }
 
+    val initials = remember(userName) {
+        val parts = userName.trim().split(" ")
+        if (parts.size >= 2) {
+            "${parts[0].take(1)}${parts[1].take(1)}".uppercase()
+        } else {
+            userName.take(2).uppercase().ifEmpty { "GT" }
+        }
+    }
+
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
             title = {
-                Text("Log Out of ElectriCare?", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text("Log Out of Ghar Tak Services (GTS)?", fontWeight = FontWeight.Bold, fontSize = 16.sp)
             },
             text = {
                 Text(
-                    "You will need to verify your mobile number via OTP next time you sign in.",
+                    "You will need to verify your registered mobile number via OTP next time you sign in.",
                     fontSize = 13.sp,
                     color = TextDarkMuted
                 )
@@ -91,7 +102,7 @@ fun CustomerProfileView(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "AS",
+                            text = initials,
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -128,7 +139,7 @@ fun CustomerProfileView(
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
-                        text = "Colaba, Mumbai 400001 • +91 98765 43210",
+                        text = "$userAddress • $userPhone",
                         fontSize = 12.sp,
                         color = TextDarkMuted
                     )
@@ -217,8 +228,8 @@ fun CustomerProfileView(
                             Icon(Icons.Default.Home, contentDescription = null, tint = SapphireBlue800, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
-                                Text("Home (Primary)", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = TextDarkPrimary)
-                                Text("Flat 402, Sea Green Apartments, Colaba, Mumbai 400001", fontSize = 11.sp, color = TextDarkMuted)
+                                Text("Home (Registered Service Address)", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = TextDarkPrimary)
+                                Text(userAddress, fontSize = 11.sp, color = TextDarkMuted)
                             }
                         }
                     }
