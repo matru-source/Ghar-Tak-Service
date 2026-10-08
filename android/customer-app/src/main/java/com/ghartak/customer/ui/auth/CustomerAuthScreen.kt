@@ -21,7 +21,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ghartak.customer.R
@@ -34,8 +33,6 @@ fun CustomerAuthScreen(
     onLoginSuccess: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
-    val activity = context as? android.app.Activity
 
     LaunchedEffect(state.isLoggedIn) {
         if (state.isLoggedIn) {
@@ -112,7 +109,7 @@ fun CustomerAuthScreen(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "1000V Certified Electricians",
+                        text = "Brevo Email Verification • 1000V Certified",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = SapphireBlue800
@@ -191,10 +188,27 @@ fun CustomerAuthScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 OutlinedTextField(
+                    value = state.phoneNumber,
+                    onValueChange = { viewModel.onPhoneChanged(it) },
+                    label = { Text("Mobile Number (For Technician)") },
+                    placeholder = { Text("9348201604") },
+                    prefix = { Text("+91 ", fontWeight = FontWeight.Bold, color = TextDarkPrimary) },
+                    leadingIcon = {
+                        Icon(imageVector = Icons.Default.Phone, contentDescription = null, tint = SapphireBlue800)
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
                     value = state.address,
                     onValueChange = { viewModel.onAddressChanged(it) },
-                    label = { Text("Address / Flat No / Society") },
-                    placeholder = { Text("Flat 402, Sea Crest Towers, Colaba") },
+                    label = { Text("Service Address / Flat No") },
+                    placeholder = { Text("Flat 402, Sea Green Apts, Colaba") },
                     leadingIcon = {
                         Icon(imageVector = Icons.Default.Home, contentDescription = null, tint = SapphireBlue800)
                     },
@@ -222,30 +236,23 @@ fun CustomerAuthScreen(
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
-            // Mobile Number Input (Common to both)
+            // Email Address Input (Primary Authentication Identifier)
             OutlinedTextField(
-                value = state.phoneNumber,
-                onValueChange = { viewModel.onPhoneChanged(it) },
-                label = { Text("Mobile Number") },
-                placeholder = { Text("9876543210") },
-                prefix = {
-                    Text(
-                        text = "+91 ",
-                        fontWeight = FontWeight.Bold,
-                        color = TextDarkPrimary
-                    )
-                },
+                value = state.email,
+                onValueChange = { viewModel.onEmailChanged(it) },
+                label = { Text("Email Address") },
+                placeholder = { Text("matruprasadpanda497@gmail.com") },
                 leadingIcon = {
-                    Icon(imageVector = Icons.Default.Phone, contentDescription = null, tint = SapphireBlue800)
+                    Icon(imageVector = Icons.Default.Email, contentDescription = null, tint = SapphireBlue800)
                 },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.EmailAddress),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 enabled = !state.isOtpSent
             )
 
-            // OTP Input (Shown when OTP has been dispatched)
+            // OTP Input (Shown when Email code has been dispatched)
             AnimatedVisibility(visible = state.isOtpSent) {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Spacer(modifier = Modifier.height(14.dp))
@@ -253,8 +260,8 @@ fun CustomerAuthScreen(
                     OutlinedTextField(
                         value = state.otpCode,
                         onValueChange = { viewModel.onOtpChanged(it) },
-                        label = { Text("6-Digit OTP Code") },
-                        placeholder = { Text("123456") },
+                        label = { Text("6-Digit Email Code") },
+                        placeholder = { Text("e.g. 582914") },
                         leadingIcon = {
                             Icon(imageVector = Icons.Default.Security, contentDescription = null, tint = SapphireBlue800)
                         },
@@ -272,40 +279,40 @@ fun CustomerAuthScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Sent to +91 ${state.phoneNumber}",
+                            text = "Code sent to ${state.email}",
                             fontSize = 11.sp,
                             color = TextDarkMuted
                         )
                         TextButton(
-                            onClick = { viewModel.sendOtp(activity) },
+                            onClick = { viewModel.sendEmailOtp() },
                             contentPadding = PaddingValues(0.dp)
                         ) {
-                            Text("Resend OTP", fontSize = 11.sp, color = SapphireBlue800, fontWeight = FontWeight.Bold)
+                            Text("Resend Code", fontSize = 11.sp, color = SapphireBlue800, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
             }
 
-            // Information / Helpful Notice Banner
-            if (!state.infoMessage.isNullOrEmpty()) {
+            // Success Message Banner
+            if (!state.successMessage.isNullOrEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Surface(
-                    color = AmberAlert,
+                    color = SuccessGreenLight,
                     shape = RoundedCornerShape(10.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, WarningAmber.copy(alpha = 0.5f)),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, SuccessGreen.copy(alpha = 0.5f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
                         modifier = Modifier.padding(10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(imageVector = Icons.Default.Info, contentDescription = null, tint = WarningAmber, modifier = Modifier.size(16.dp))
+                        Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = SuccessGreen, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = state.infoMessage!!,
-                            color = Color(0xFF78350F),
+                            text = state.successMessage!!,
+                            color = Color(0xFF14532D),
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
@@ -339,7 +346,7 @@ fun CustomerAuthScreen(
                                 shape = RoundedCornerShape(8.dp),
                                 modifier = Modifier.fillMaxWidth().height(36.dp)
                             ) {
-                                Text("Switch to Sign Up Now", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                Text("Switch to Register / Sign Up Now", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
                             }
                         }
                     }
@@ -354,7 +361,7 @@ fun CustomerAuthScreen(
                     if (state.isOtpSent) {
                         viewModel.verifyOtp()
                     } else {
-                        viewModel.sendOtp(activity)
+                        viewModel.sendEmailOtp()
                     }
                 },
                 enabled = !state.isLoading,
@@ -372,9 +379,9 @@ fun CustomerAuthScreen(
                     )
                 } else {
                     val label = when {
-                        state.isOtpSent -> "VERIFY & PROCEED"
-                        state.mode == "SIGN_UP" -> "REGISTER & SEND OTP"
-                        else -> "SEND LOGIN OTP"
+                        state.isOtpSent -> "VERIFY CODE & PROCEED"
+                        state.mode == "SIGN_UP" -> "SEND VERIFICATION CODE TO EMAIL"
+                        else -> "SEND LOGIN CODE TO EMAIL"
                     }
                     Text(
                         text = label,
@@ -387,9 +394,9 @@ fun CustomerAuthScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // 1-Click Demo Shortcut
+            // 1-Click Demo Shortcut for Matru Prasad Panda
             OutlinedButton(
-                onClick = { viewModel.quickDemoLogin() },
+                onClick = { viewModel.quickDemoLogin("matruprasadpanda497@gmail.com") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(44.dp),
@@ -405,7 +412,7 @@ fun CustomerAuthScreen(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "⚡ 1-Click Demo (Amit Sharma)",
+                    text = "⚡ 1-Click Demo (Matru Prasad Panda)",
                     fontWeight = FontWeight.Bold,
                     fontSize = 12.sp
                 )
@@ -425,7 +432,7 @@ fun CustomerAuthScreen(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "VDE 1000V Certified • 60-Sec Emergency Dispatch",
+                    text = "Brevo Verified • 1000V Certified Safety",
                     color = TextDarkMuted,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Medium
