@@ -8,10 +8,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 data class CatalogUiState(
-    val userName: String = "Amit Sharma",
-    val selectedCategory: String = "All Services",
+    val userName: String = "John",
+    val selectedCategory: String = "All",
     val activePincode: String = "400001",
     val activePincodeCity: String = "Colaba, Mumbai",
+    val searchQuery: String = "",
+    val hasActiveJob: Boolean = true,
+    val activeJobId: String = "job_mh_live_01",
+    val activeJobTitle: String = "Fan Installation",
+    val activeJobTechnician: String = "Rajesh (En Route)",
+    val activeJobEta: String = "15 mins",
     val services: List<ServiceItem> = emptyList(),
     val filteredServices: List<ServiceItem> = emptyList(),
     val cartItems: List<ServiceItem> = emptyList(),
@@ -112,16 +118,41 @@ class CustomerCatalogViewModel(
         )
     }
 
+    fun setSearchQuery(query: String) {
+        _uiState.value = _uiState.value.copy(searchQuery = query)
+        applyFilters()
+    }
+
     fun selectCategory(category: String) {
-        val filtered = if (category == "All Services") {
-            _uiState.value.services
-        } else {
-            _uiState.value.services.filter { it.category == category }
+        val newCategory = if (_uiState.value.selectedCategory == category) "All" else category
+        _uiState.value = _uiState.value.copy(selectedCategory = newCategory)
+        applyFilters()
+    }
+
+    private fun applyFilters() {
+        val cat = _uiState.value.selectedCategory
+        val query = _uiState.value.searchQuery.trim().lowercase()
+        val all = _uiState.value.services
+
+        val filtered = all.filter { item ->
+            val matchesCategory = when (cat) {
+                "All" -> true
+                "Repair" -> item.category in listOf("MCB & Panels", "Emergency Tripping", "Wiring & Rewiring")
+                "Installation" -> item.category in listOf("Appliance Fix", "Wiring & Rewiring") || item.title.contains("Install", ignoreCase = true)
+                "Maintenance" -> item.category == "Safety Audit" || item.title.contains("Audit", ignoreCase = true)
+                "Emergency" -> item.category == "Emergency Tripping" || item.isHighVoltageProtocol
+                else -> item.category.equals(cat, ignoreCase = true)
+            }
+
+            val matchesQuery = query.isEmpty() ||
+                item.title.lowercase().contains(query) ||
+                item.description.lowercase().contains(query) ||
+                item.category.lowercase().contains(query)
+
+            matchesCategory && matchesQuery
         }
-        _uiState.value = _uiState.value.copy(
-            selectedCategory = category,
-            filteredServices = filtered
-        )
+
+        _uiState.value = _uiState.value.copy(filteredServices = filtered)
     }
 
     fun addToCart(service: ServiceItem) {

@@ -67,6 +67,9 @@ class MainActivity : ComponentActivity() {
                                 onServiceSelected = { serviceId ->
                                     navController.navigate("booking/$serviceId")
                                 },
+                                onTrackSelected = { jobId ->
+                                    navController.navigate("track/$jobId")
+                                },
                                 onLogout = {
                                     navController.navigate("auth") {
                                         popUpTo("home") { inclusive = true }
