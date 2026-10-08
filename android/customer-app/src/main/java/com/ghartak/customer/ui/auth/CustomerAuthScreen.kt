@@ -245,7 +245,7 @@ fun CustomerAuthScreen(
                 leadingIcon = {
                     Icon(imageVector = Icons.Default.Email, contentDescription = null, tint = SapphireBlue800)
                 },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.EmailAddress),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
