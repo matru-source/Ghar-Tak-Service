@@ -250,10 +250,11 @@ object PdfInvoiceGenerator {
 
             Toast.makeText(context, "✅ Downloaded: $fileName", Toast.LENGTH_LONG).show()
 
-            if (openImmediately) {
+            val uriToOpen = savedUri
+            if (openImmediately && uriToOpen != null) {
                 try {
                     val viewIntent = Intent(Intent.ACTION_VIEW).apply {
-                        setDataAndType(savedUri, "application/pdf")
+                        setDataAndType(uriToOpen, "application/pdf")
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     }

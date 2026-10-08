@@ -160,7 +160,7 @@ class CustomerAuthViewModel(
             auth.signInWithCredential(credential)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
-                        val firebaseUser = task.result?.user
+                        val firebaseUser = auth.currentUser
                         val uid = firebaseUser?.uid ?: "cust_amit_01"
                         completeSuccessfulLogin(fullPhoneNumber, uid)
                     } else {

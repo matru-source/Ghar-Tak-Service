@@ -36,7 +36,7 @@ data class PastOrderItem(
 
 @Composable
 fun CustomerHistoryView(
-    onBookServiceAgain: (serviceTitle: String) -> Unit = {}
+    onBookServiceAgain: () -> Unit = {}
 ) {
     val context = LocalContext.current
 

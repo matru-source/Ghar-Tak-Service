@@ -88,7 +88,7 @@ class PaymentViewModel(
 
             try {
                 val api = ApiClient.getService(context)
-                val response = kotlinx.coroutines.withTimeoutOrNull(2000) {
+                val response = kotlinx.coroutines.withTimeoutOrNull(2000L) {
                     api.createJob(
                         CreateJobRequest(
                             serviceId = _uiState.value.serviceId,
