@@ -317,11 +317,20 @@ fun CustomerAuthScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = "Code sent to ${state.email}",
-                                    fontSize = 11.sp,
-                                    color = TextDarkMuted
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Code sent to ${state.email}",
+                                        fontSize = 11.sp,
+                                        color = TextDarkMuted
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    TextButton(
+                                        onClick = { viewModel.backToSignUpStep1() },
+                                        contentPadding = PaddingValues(0.dp)
+                                    ) {
+                                        Text("(Edit)", fontSize = 11.sp, color = SapphireBlue800, fontWeight = FontWeight.Bold)
+                                    }
+                                }
                                 TextButton(
                                     onClick = { viewModel.sendSignUpOtp() },
                                     contentPadding = PaddingValues(0.dp)
@@ -612,8 +621,15 @@ fun CustomerAuthScreen(
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        TextButton(
+                            onClick = { viewModel.setMode("FORGOT_PASSWORD") },
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text("← Change Email", fontSize = 11.sp, color = TextDarkMuted)
+                        }
                         TextButton(
                             onClick = { viewModel.sendForgotPasswordOtp() },
                             contentPadding = PaddingValues(0.dp)

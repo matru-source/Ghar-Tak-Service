@@ -24,20 +24,61 @@ object BrevoEmailService {
         bytes.map { (it xor 42).toChar() }.joinToString("")
     }
 
-    private const val SENDER_EMAIL = "support@ghartakservices.com"
+    // Runtime decoded fallback for verified sender
+    private val FALLBACK_SENDER_EMAIL: String by lazy {
+        val bytes = intArrayOf(71, 75, 94, 88, 95, 90, 88, 75, 89, 75, 78, 90, 75, 68, 78, 75, 30, 19, 29, 106, 77, 71, 75, 67, 70, 4, 73, 69, 71)
+        bytes.map { (it xor 42).toChar() }.joinToString("")
+    }
+
     private const val SENDER_NAME = "Ghar Tak Services (GTS)"
+
+    @Volatile
+    private var cachedSenderEmail: String? = null
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(15, TimeUnit.SECONDS)
         .build()
 
+    private fun getActiveSenderEmail(): String {
+        cachedSenderEmail?.let { return it }
+
+        return try {
+            val request = Request.Builder()
+                .url("https://api.brevo.com/v3/senders")
+                .addHeader("accept", "application/json")
+                .addHeader("api-key", BREVO_API_KEY)
+                .get()
+                .build()
+
+            val response = client.newCall(request).execute()
+            if (response.isSuccessful) {
+                val json = JSONObject(response.body?.string() ?: "{}")
+                val senders = json.optJSONArray("senders")
+                if (senders != null && senders.length() > 0) {
+                    val verifiedEmail = senders.getJSONObject(0).optString("email")
+                    if (verifiedEmail.isNotBlank()) {
+                        cachedSenderEmail = verifiedEmail
+                        Log.d("BREVO_EMAIL", "Retrieved active verified sender from Brevo API")
+                        return verifiedEmail
+                    }
+                }
+            }
+            FALLBACK_SENDER_EMAIL
+        } catch (e: Exception) {
+            Log.e("BREVO_EMAIL", "Error querying active sender: ${e.message}")
+            FALLBACK_SENDER_EMAIL
+        }
+    }
+
     suspend fun sendOtpEmail(toEmail: String, toName: String, otpCode: String): Result<String> = withContext(Dispatchers.IO) {
         try {
+            val verifiedSender = getActiveSenderEmail()
+
             val json = JSONObject().apply {
                 put("sender", JSONObject().apply {
                     put("name", SENDER_NAME)
-                    put("email", SENDER_EMAIL)
+                    put("email", verifiedSender)
                 })
                 put("to", JSONArray().apply {
                     put(JSONObject().apply {
@@ -105,13 +146,13 @@ object BrevoEmailService {
                 <div class="content">
                   <div class="badge">🛡️ OFFICIAL SECURITY VERIFICATION</div>
                   <div class="greeting">Hello, $userName</div>
-                  <div class="desc">Please use the one-time security code below to complete your registration or login to the Ghar Tak Customer App.</div>
+                  <div class="desc">Please use the one-time security verification code below for your Ghar Tak Services account:</div>
                   <div class="otp-box">
                     <div class="otp-code">$otpCode</div>
                   </div>
-                  <div class="desc">This code expires in <strong>10 minutes</strong>. Never share this code with anyone, including GTS technicians.</div>
+                  <div class="desc">This code expires in <strong>10 minutes</strong>. Never share this code with anyone.</div>
                   <div class="notice">
-                    If you did not request this verification code, please ignore this email or contact our 24/7 Security Desk at <strong>1800-GTS-HELP</strong>.
+                    If you did not request this verification code, please ignore this email or contact our Security Desk at <strong>1800-GTS-HELP</strong>.
                   </div>
                 </div>
                 <div class="footer">
