@@ -265,6 +265,9 @@ fun CustomerHomeScreen(
                 Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
                     CustomerProfileView(
                         userName = state.userName,
+                        userPhone = state.userPhone,
+                        userEmail = state.userEmail,
+                        userAddress = state.userAddress,
                         onLogout = {
                             viewModel.logout()
                             onLogout()

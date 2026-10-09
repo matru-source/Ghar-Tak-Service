@@ -23,42 +23,14 @@ class SessionManager(context: Context) {
     }
 
     init {
-        // Pre-seed default accounts (Matru Prasad and Amit Sharma)
-        val registryStr = prefs.getString(KEY_USERS_REGISTRY, null)
-        val json = if (registryStr != null) {
-            try { JSONObject(registryStr) } catch (e: Exception) { JSONObject() }
-        } else JSONObject()
-
-        var updated = false
-
-        if (!json.has("matruprasadpanda497@gmail.com")) {
-            val matruObj = JSONObject().apply {
-                put("name", "Matru Prasad Panda")
-                put("email", "matruprasadpanda497@gmail.com")
-                put("phone", "+91 93482 01604")
-                put("address", "Flat 402, Sea Green Apartments, Colaba, Mumbai")
-                put("pincode", "400001")
-            }
-            json.put("matruprasadpanda497@gmail.com", matruObj)
-            json.put("9348201604", matruObj)
-            updated = true
-        }
-
-        if (!json.has("amit.sharma@example.com")) {
-            val amitObj = JSONObject().apply {
-                put("name", "Amit Sharma")
-                put("email", "amit.sharma@example.com")
-                put("phone", "+91 98765 43210")
-                put("address", "Flat 101, Galaxy Heights, Colaba, Mumbai")
-                put("pincode", "400001")
-            }
-            json.put("amit.sharma@example.com", amitObj)
-            json.put("9876543210", amitObj)
-            updated = true
-        }
-
-        if (updated) {
-            prefs.edit().putString(KEY_USERS_REGISTRY, json.toString()).apply()
+        val schemaVer = prefs.getInt("key_schema_version", 1)
+        if (schemaVer < 2) {
+            // Fresh clean schema: wipe any legacy demo sessions and accounts completely
+            clearSession()
+            prefs.edit()
+                .remove(KEY_USERS_REGISTRY)
+                .putInt("key_schema_version", 2)
+                .apply()
         }
     }
 
@@ -88,7 +60,8 @@ class SessionManager(context: Context) {
         fullName: String,
         email: String,
         phone: String,
-        address: String = "Colaba, Mumbai",
+        password: String,
+        address: String = "",
         pincode: String = "400001"
     ) {
         val cleanEmail = email.trim().lowercase()
@@ -99,9 +72,10 @@ class SessionManager(context: Context) {
             val userObj = JSONObject().apply {
                 put("name", fullName.trim())
                 put("email", cleanEmail)
-                put("phone", if (phone.startsWith("+")) phone else "+91 $cleanPhone")
+                put("phone", if (phone.startsWith("+")) phone.trim() else if (cleanPhone.isNotEmpty()) "+91 $cleanPhone" else "")
+                put("password", password.trim())
                 put("address", address.trim())
-                put("pincode", pincode.trim())
+                put("pincode", pincode.trim().ifEmpty { "400001" })
             }
             json.put(cleanEmail, userObj)
             if (cleanPhone.isNotEmpty()) {
@@ -110,6 +84,20 @@ class SessionManager(context: Context) {
             prefs.edit().putString(KEY_USERS_REGISTRY, json.toString()).apply()
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    fun validatePassword(rawEmail: String, rawPassword: String): Boolean {
+        val cleanEmail = rawEmail.trim().lowercase()
+        val registryStr = prefs.getString(KEY_USERS_REGISTRY, "{}") ?: "{}"
+        return try {
+            val json = JSONObject(registryStr)
+            if (!json.has(cleanEmail)) return false
+            val userObj = json.getJSONObject(cleanEmail)
+            val savedPassword = userObj.optString("password", "")
+            savedPassword == rawPassword.trim()
+        } catch (e: Exception) {
+            false
         }
     }
 
@@ -127,7 +115,7 @@ class SessionManager(context: Context) {
     fun saveSession(
         token: String,
         user: UserProfile,
-        address: String = "Flat 402, Sea Green Apartments, Colaba, Mumbai 400001",
+        address: String = "",
         pincode: String = "400001"
     ) {
         prefs.edit().apply {
@@ -147,18 +135,18 @@ class SessionManager(context: Context) {
 
     fun getUserId(): String = prefs.getString(KEY_USER_ID, "cust_01") ?: "cust_01"
 
-    fun getUserName(): String = prefs.getString(KEY_USER_NAME, "Matru Prasad Panda") ?: "Matru Prasad Panda"
+    fun getUserName(): String = prefs.getString(KEY_USER_NAME, "Customer") ?: "Customer"
 
     fun getUserFirstName(): String {
         val full = getUserName().trim()
         return full.split(" ").firstOrNull() ?: full
     }
 
-    fun getUserEmail(): String = prefs.getString(KEY_USER_EMAIL, "matruprasadpanda497@gmail.com") ?: "matruprasadpanda497@gmail.com"
+    fun getUserEmail(): String = prefs.getString(KEY_USER_EMAIL, "") ?: ""
 
-    fun getUserPhone(): String = prefs.getString(KEY_USER_PHONE, "+91 93482 01604") ?: "+91 93482 01604"
+    fun getUserPhone(): String = prefs.getString(KEY_USER_PHONE, "") ?: ""
 
-    fun getUserAddress(): String = prefs.getString(KEY_USER_ADDRESS, "Flat 402, Sea Green Apartments, Colaba, Mumbai 400001") ?: "Flat 402, Sea Green Apartments, Colaba, Mumbai 400001"
+    fun getUserAddress(): String = prefs.getString(KEY_USER_ADDRESS, "") ?: ""
 
     fun getUserPincode(): String = prefs.getString(KEY_USER_PINCODE, "400001") ?: "400001"
 

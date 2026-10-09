@@ -8,7 +8,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 data class CatalogUiState(
-    val userName: String = "John",
+    val userName: String = "Customer",
+    val userPhone: String = "",
+    val userEmail: String = "",
+    val userAddress: String = "",
     val selectedCategory: String = "All",
     val activePincode: String = "400001",
     val activePincodeCity: String = "Colaba, Mumbai",
@@ -36,6 +39,12 @@ class CustomerCatalogViewModel(
     }
 
     fun loadCatalog() {
+        val currentName = sessionManager.getUserName()
+        val currentPhone = sessionManager.getUserPhone()
+        val currentEmail = sessionManager.getUserEmail()
+        val currentAddress = sessionManager.getUserAddress()
+        val currentPincode = sessionManager.getUserPincode()
+
         val allServices = listOf(
             ServiceItem(
                 id = "srv_mcb_replace",
@@ -112,7 +121,11 @@ class CustomerCatalogViewModel(
         )
 
         _uiState.value = _uiState.value.copy(
-            userName = sessionManager.getUserName(),
+            userName = currentName,
+            userPhone = currentPhone,
+            userEmail = currentEmail,
+            userAddress = currentAddress,
+            activePincode = currentPincode.ifEmpty { "400001" },
             services = allServices,
             filteredServices = allServices
         )

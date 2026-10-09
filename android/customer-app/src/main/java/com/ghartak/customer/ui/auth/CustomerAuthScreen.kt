@@ -17,10 +17,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ghartak.customer.R
@@ -144,13 +145,13 @@ fun CustomerAuthScreen(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // SIGN UP Fields
-            if (state.mode == "SIGN_UP" && !state.isOtpSent) {
+            // ================= REGISTER / SIGN UP FIELDS =================
+            if (state.mode == "SIGN_UP") {
                 OutlinedTextField(
                     value = state.fullName,
                     onValueChange = { viewModel.onFullNameChanged(it) },
-                    label = { Text("Full Name") },
-                    placeholder = { Text("e.g. Matru Prasad Panda") },
+                    label = { Text("Full Name *") },
+                    placeholder = { Text("Enter your full name") },
                     leadingIcon = {
                         Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = SapphireBlue800)
                     },
@@ -162,10 +163,26 @@ fun CustomerAuthScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 OutlinedTextField(
+                    value = state.email,
+                    onValueChange = { viewModel.onEmailChanged(it) },
+                    label = { Text("Email Address *") },
+                    placeholder = { Text("name@example.com") },
+                    leadingIcon = {
+                        Icon(imageVector = Icons.Default.Email, contentDescription = null, tint = SapphireBlue800)
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
                     value = state.phoneNumber,
                     onValueChange = { viewModel.onPhoneChanged(it) },
-                    label = { Text("Mobile Number (For Technician)") },
-                    placeholder = { Text("9348201604") },
+                    label = { Text("Mobile Number (For Dispatch) *") },
+                    placeholder = { Text("9876543210") },
                     prefix = { Text("+91 ", fontWeight = FontWeight.Bold, color = TextDarkPrimary) },
                     leadingIcon = {
                         Icon(imageVector = Icons.Default.Phone, contentDescription = null, tint = SapphireBlue800)
@@ -179,10 +196,53 @@ fun CustomerAuthScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 OutlinedTextField(
+                    value = state.password,
+                    onValueChange = { viewModel.onPasswordChanged(it) },
+                    label = { Text("Create Password *") },
+                    placeholder = { Text("At least 4 characters") },
+                    leadingIcon = {
+                        Icon(imageVector = Icons.Default.Lock, contentDescription = null, tint = SapphireBlue800)
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = { viewModel.togglePasswordVisibility() }) {
+                            Icon(
+                                imageVector = if (state.isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = if (state.isPasswordVisible) "Hide password" else "Show password",
+                                tint = TextDarkMuted
+                            )
+                        }
+                    },
+                    visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = state.confirmPassword,
+                    onValueChange = { viewModel.onConfirmPasswordChanged(it) },
+                    label = { Text("Confirm Password *") },
+                    placeholder = { Text("Re-enter your password") },
+                    leadingIcon = {
+                        Icon(imageVector = Icons.Default.Lock, contentDescription = null, tint = SapphireBlue800)
+                    },
+                    visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
                     value = state.address,
                     onValueChange = { viewModel.onAddressChanged(it) },
-                    label = { Text("Service Address / Flat No") },
-                    placeholder = { Text("Flat 402, Sea Green Apts, Colaba") },
+                    label = { Text("Service Address (Flat / House / Area)") },
+                    placeholder = { Text("e.g. Flat 101, Green Heights") },
                     leadingIcon = {
                         Icon(imageVector = Icons.Default.Home, contentDescription = null, tint = SapphireBlue800)
                     },
@@ -206,65 +266,49 @@ fun CustomerAuthScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 )
-
-                Spacer(modifier = Modifier.height(12.dp))
             }
 
-            // Email Address Input (Primary Authentication Identifier)
-            OutlinedTextField(
-                value = state.email,
-                onValueChange = { viewModel.onEmailChanged(it) },
-                label = { Text("Email Address") },
-                placeholder = { Text("name@example.com") },
-                leadingIcon = {
-                    Icon(imageVector = Icons.Default.Email, contentDescription = null, tint = SapphireBlue800)
-                },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                enabled = !state.isOtpSent
-            )
+            // ================= SIGN IN FIELDS =================
+            if (state.mode == "LOGIN") {
+                OutlinedTextField(
+                    value = state.email,
+                    onValueChange = { viewModel.onEmailChanged(it) },
+                    label = { Text("Registered Email Address") },
+                    placeholder = { Text("name@example.com") },
+                    leadingIcon = {
+                        Icon(imageVector = Icons.Default.Email, contentDescription = null, tint = SapphireBlue800)
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
 
-            // OTP Input (Shown when Email code has been dispatched)
-            AnimatedVisibility(visible = state.isOtpSent) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-                    OutlinedTextField(
-                        value = state.otpCode,
-                        onValueChange = { viewModel.onOtpChanged(it) },
-                        label = { Text("6-Digit Email Code") },
-                        placeholder = { Text("e.g. 582914") },
-                        leadingIcon = {
-                            Icon(imageVector = Icons.Default.Security, contentDescription = null, tint = SapphireBlue800)
-                        },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Code sent to ${state.email}",
-                            fontSize = 11.sp,
-                            color = TextDarkMuted
-                        )
-                        TextButton(
-                            onClick = { viewModel.sendEmailOtp() },
-                            contentPadding = PaddingValues(0.dp)
-                        ) {
-                            Text("Resend Code", fontSize = 11.sp, color = SapphireBlue800, fontWeight = FontWeight.Bold)
+                OutlinedTextField(
+                    value = state.password,
+                    onValueChange = { viewModel.onPasswordChanged(it) },
+                    label = { Text("Password") },
+                    placeholder = { Text("Enter your password") },
+                    leadingIcon = {
+                        Icon(imageVector = Icons.Default.Lock, contentDescription = null, tint = SapphireBlue800)
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = { viewModel.togglePasswordVisibility() }) {
+                            Icon(
+                                imageVector = if (state.isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = if (state.isPasswordVisible) "Hide password" else "Show password",
+                                tint = TextDarkMuted
+                            )
                         }
-                    }
-                }
+                    },
+                    visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
             }
 
             // Success Message Banner
@@ -312,7 +356,8 @@ fun CustomerAuthScreen(
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
-                        if (state.errorMessage!!.contains("switch to Sign Up", ignoreCase = true)) {
+                        if (state.errorMessage!!.contains("switch to Register", ignoreCase = true) ||
+                            state.errorMessage!!.contains("create your account", ignoreCase = true)) {
                             Spacer(modifier = Modifier.height(6.dp))
                             Button(
                                 onClick = { viewModel.setMode("SIGN_UP") },
@@ -329,13 +374,13 @@ fun CustomerAuthScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Primary Action Button
+            // Primary Action Button (SIGN IN or REGISTER & SIGN IN)
             Button(
                 onClick = {
-                    if (state.isOtpSent) {
-                        viewModel.verifyOtp()
+                    if (state.mode == "LOGIN") {
+                        viewModel.loginWithPassword()
                     } else {
-                        viewModel.sendEmailOtp()
+                        viewModel.registerWithPassword()
                     }
                 },
                 enabled = !state.isLoading,
@@ -352,11 +397,7 @@ fun CustomerAuthScreen(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    val label = when {
-                        state.isOtpSent -> "VERIFY CODE & PROCEED"
-                        state.mode == "SIGN_UP" -> "SEND VERIFICATION CODE TO EMAIL"
-                        else -> "SEND LOGIN CODE TO EMAIL"
-                    }
+                    val label = if (state.mode == "LOGIN") "SIGN IN" else "CREATE ACCOUNT & SIGN IN"
                     Text(
                         text = label,
                         fontWeight = FontWeight.Bold,
@@ -366,7 +407,32 @@ fun CustomerAuthScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Switch Mode Text Button
+            TextButton(
+                onClick = {
+                    if (state.mode == "LOGIN") {
+                        viewModel.setMode("SIGN_UP")
+                    } else {
+                        viewModel.setMode("LOGIN")
+                    }
+                }
+            ) {
+                val switchText = if (state.mode == "LOGIN") {
+                    "Don't have an account? Register / Sign Up"
+                } else {
+                    "Already have an account? Sign In"
+                }
+                Text(
+                    text = switchText,
+                    fontSize = 12.sp,
+                    color = SapphireBlue800,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,

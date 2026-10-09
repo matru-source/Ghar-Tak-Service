@@ -24,7 +24,7 @@ object BrevoEmailService {
         bytes.map { (it xor 42).toChar() }.joinToString("")
     }
 
-    private const val SENDER_EMAIL = "matruprasadpanda497@gmail.com"
+    private const val SENDER_EMAIL = "support@ghartakservices.com"
     private const val SENDER_NAME = "Ghar Tak Services (GTS)"
 
     private val client = OkHttpClient.Builder()

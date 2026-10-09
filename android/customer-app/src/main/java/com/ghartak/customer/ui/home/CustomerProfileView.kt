@@ -23,9 +23,10 @@ import com.ghartak.customer.ui.theme.*
 
 @Composable
 fun CustomerProfileView(
-    userName: String = "Amit Sharma",
-    userPhone: String = "+91 98765 43210",
-    userAddress: String = "Flat 402, Sea Green Apartments, Colaba, Mumbai 400001",
+    userName: String = "Customer",
+    userPhone: String = "",
+    userAddress: String = "",
+    userEmail: String = "",
     onLogout: () -> Unit
 ) {
     val context = LocalContext.current
@@ -48,7 +49,7 @@ fun CustomerProfileView(
             },
             text = {
                 Text(
-                    "You will need to verify your registered mobile number via OTP next time you sign in.",
+                    "You will need to sign in with your registered email and password next time.",
                     fontSize = 13.sp,
                     color = TextDarkMuted
                 )
@@ -136,13 +137,20 @@ fun CustomerProfileView(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                    val detailsSummary = listOfNotNull(
+                        userEmail.ifBlank { null },
+                        userPhone.ifBlank { null },
+                        userAddress.ifBlank { null }
+                    ).joinToString(" • ")
 
-                    Text(
-                        text = "$userAddress • $userPhone",
-                        fontSize = 12.sp,
-                        color = TextDarkMuted
-                    )
+                    if (detailsSummary.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = detailsSummary,
+                            fontSize = 12.sp,
+                            color = TextDarkMuted
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
