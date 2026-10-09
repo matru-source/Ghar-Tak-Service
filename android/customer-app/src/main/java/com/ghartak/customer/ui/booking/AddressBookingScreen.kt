@@ -268,29 +268,12 @@ fun AddressBookingScreen(
                 border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "SERVICE ADDRESS",
-                            color = TextDarkPrimary,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        // 1-Tap Fast Demo Fill
-                        OutlinedButton(
-                            onClick = { viewModel.quickFillDemoAddress(context) },
-                            shape = RoundedCornerShape(6.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, SapphireBlue800.copy(alpha = 0.4f)),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = SapphireBlue800),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                        ) {
-                            Text("1-TAP DEMO ADDRESS", fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
+                    Text(
+                        text = "SERVICE ADDRESS",
+                        color = TextDarkPrimary,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
 
                     Spacer(modifier = Modifier.height(14.dp))
 
@@ -440,57 +423,33 @@ fun AddressBookingScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    TechnicianRapidoCard(
-                        name = "Rajesh Kumar",
-                        badge = "GTS-TECH-4091",
-                        rating = "4.9 ★ (240+ jobs)",
-                        distance = "1.3 km away",
-                        eta = "8 mins",
-                        specialty = "MCB Panel & Earthing Specialist",
-                        isSelected = true
-                    )
+                    state.nearbyTechnicians.forEach { tech ->
+                        TechnicianRapidoCard(
+                            technician = tech,
+                            isSelected = state.selectedTechnicianId == tech.id,
+                            isShortestDistance = tech.id == "GTS-TECH-4091",
+                            onSelect = { viewModel.selectTechnician(tech.id) }
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    TechnicianRapidoCard(
-                        name = "Suresh Patil",
-                        badge = "GTS-TECH-1084",
-                        rating = "4.8 ★ (180+ jobs)",
-                        distance = "2.4 km away",
-                        eta = "14 mins",
-                        specialty = "Wiring & High Load Installations",
-                        isSelected = false
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    TechnicianRapidoCard(
-                        name = "Vikram Singh",
-                        badge = "GTS-TECH-2241",
-                        rating = "4.9 ★ (310+ jobs)",
-                        distance = "3.1 km away",
-                        eta = "19 mins",
-                        specialty = "Appliance Anchor & Ceiling Fans",
-                        isSelected = false
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(horizontal = 4.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.ElectricBolt,
+                            imageVector = Icons.Default.CheckCircle,
                             contentDescription = null,
                             tint = SapphireBlue800,
                             modifier = Modifier.size(13.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "Fastest certified electrician automatically reserved upon checkout.",
+                            text = "Selected: ${state.selectedTechnician.name} (${state.selectedTechnician.eta} • ${state.selectedTechnician.distance}) reserved upon payment.",
                             fontSize = 11.sp,
-                            color = TextDarkMuted,
-                            fontWeight = FontWeight.Medium
+                            color = TextDarkPrimary,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
@@ -503,20 +462,18 @@ fun AddressBookingScreen(
 
 @Composable
 private fun TechnicianRapidoCard(
-    name: String,
-    badge: String,
-    rating: String,
-    distance: String,
-    eta: String,
-    specialty: String,
-    isSelected: Boolean
+    technician: NearbyTechnician,
+    isSelected: Boolean,
+    isShortestDistance: Boolean,
+    onSelect: () -> Unit
 ) {
     Surface(
+        onClick = onSelect,
         shape = RoundedCornerShape(12.dp),
-        color = if (isSelected) Color(0xFFF0F7FF) else Color(0xFFFAFAFA),
+        color = if (isSelected) Color(0xFFEFF6FF) else Color(0xFFFAFAFA),
         border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            if (isSelected) SapphireBlue800.copy(alpha = 0.5f) else SurfaceBorder
+            if (isSelected) 1.5.dp else 1.dp,
+            if (isSelected) SapphireBlue800 else SurfaceBorder
         ),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -539,7 +496,7 @@ private fun TechnicianRapidoCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = name.split(" ").mapNotNull { it.firstOrNull()?.toString() }.take(2).joinToString(""),
+                        text = technician.name.split(" ").mapNotNull { it.firstOrNull()?.toString() }.take(2).joinToString(""),
                         color = Color.White,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
@@ -556,7 +513,7 @@ private fun TechnicianRapidoCard(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Center details (Name, Rating, Specialty)
+            // Center details (Name, Badges, Rating, Specialty)
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -564,7 +521,7 @@ private fun TechnicianRapidoCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = name,
+                        text = technician.name,
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp,
                         color = TextDarkPrimary
@@ -575,7 +532,7 @@ private fun TechnicianRapidoCard(
                         shape = RoundedCornerShape(4.dp)
                     ) {
                         Text(
-                            text = rating,
+                            text = "${technician.rating} (${technician.completedJobs})",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF92400E),
@@ -586,28 +543,45 @@ private fun TechnicianRapidoCard(
 
                 Spacer(modifier = Modifier.height(2.dp))
 
-                Text(
-                    text = "$badge • $specialty",
-                    fontSize = 11.sp,
-                    color = TextDarkMuted,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (isShortestDistance) {
+                        Surface(
+                            color = Color(0xFFDCFCE7),
+                            shape = RoundedCornerShape(3.dp),
+                            modifier = Modifier.padding(end = 6.dp)
+                        ) {
+                            Text(
+                                text = "FASTEST",
+                                color = Color(0xFF15803D),
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Black,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                            )
+                        }
+                    }
+                    Text(
+                        text = "${technician.badge} • ${technician.specialty}",
+                        fontSize = 11.sp,
+                        color = TextDarkMuted,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Right column: ETA pill & Distance (Properly sized, never wraps)
+            // Right column: ETA pill & Distance + Selection Indicator
             Column(
                 horizontalAlignment = Alignment.End,
-                modifier = Modifier.widthIn(min = 68.dp)
+                modifier = Modifier.widthIn(min = 72.dp)
             ) {
                 Surface(
-                    color = if (isSelected) SapphireBlue800.copy(alpha = 0.12f) else Color.White,
+                    color = if (isSelected) SapphireBlue800 else Color.White,
                     shape = RoundedCornerShape(6.dp),
                     border = androidx.compose.foundation.BorderStroke(
                         1.dp,
-                        if (isSelected) SapphireBlue800.copy(alpha = 0.35f) else SurfaceBorder
+                        if (isSelected) SapphireBlue800 else SurfaceBorder
                     )
                 ) {
                     Row(
@@ -620,10 +594,10 @@ private fun TechnicianRapidoCard(
                         )
                         Spacer(modifier = Modifier.width(2.dp))
                         Text(
-                            text = eta,
+                            text = technician.eta,
                             fontWeight = FontWeight.Bold,
                             fontSize = 11.sp,
-                            color = SapphireBlue800,
+                            color = if (isSelected) Color.White else SapphireBlue800,
                             maxLines = 1
                         )
                     }
@@ -631,15 +605,27 @@ private fun TechnicianRapidoCard(
 
                 Spacer(modifier = Modifier.height(3.dp))
 
-                Text(
-                    text = distance,
-                    fontSize = 10.sp,
-                    color = TextDarkMuted,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (isSelected) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = "Selected",
+                            tint = SapphireBlue800,
+                            modifier = Modifier.size(11.dp)
+                        )
+                        Spacer(modifier = Modifier.width(3.dp))
+                    }
+                    Text(
+                        text = technician.distance,
+                        fontSize = 10.sp,
+                        color = if (isSelected) SapphireBlue800 else TextDarkMuted,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        maxLines = 1
+                    )
+                }
             }
         }
     }
 }
+
 

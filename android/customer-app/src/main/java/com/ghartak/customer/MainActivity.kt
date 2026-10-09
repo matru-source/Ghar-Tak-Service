@@ -116,7 +116,16 @@ class MainActivity : ComponentActivity() {
                                 viewModel = paymentViewModel,
                                 onBack = { navController.popBackStack() },
                                 onBookingSuccess = { jobId ->
-                                    Toast.makeText(this@MainActivity, "⚡ Work Order Dispatched! Live Tracking Connected", Toast.LENGTH_LONG).show()
+                                    val selectedTech = bookingViewModel.uiState.value.selectedTechnician
+                                    trackingViewModel.setAssignedTechnician(
+                                        name = selectedTech.name,
+                                        badge = selectedTech.badge,
+                                        phone = selectedTech.phone,
+                                        rating = selectedTech.ratingValue,
+                                        distanceKm = selectedTech.distanceKm,
+                                        etaMinutes = selectedTech.etaMinutes
+                                    )
+                                    Toast.makeText(this@MainActivity, "⚡ Work Order Dispatched to ${selectedTech.name}!", Toast.LENGTH_LONG).show()
                                     navController.navigate("track/$jobId") {
                                         popUpTo("home")
                                     }

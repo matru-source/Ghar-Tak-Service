@@ -12,6 +12,21 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+data class NearbyTechnician(
+    val id: String,
+    val name: String,
+    val badge: String,
+    val rating: String,
+    val ratingValue: Double,
+    val distance: String,
+    val distanceKm: Double,
+    val eta: String,
+    val etaMinutes: Int,
+    val specialty: String,
+    val phone: String = "+91 98201 44091",
+    val completedJobs: String = "240+ jobs"
+)
+
 data class AddressBookingUiState(
     val serviceId: String = "srv_mcb_replace",
     val serviceTitle: String = "Full Home MCB Panel Replacement & Earth Leakage Fix",
@@ -28,8 +43,56 @@ data class AddressBookingUiState(
     val etaMinutes: Int = 15,
     val bookingPriority: String = "EMERGENCY_60S",
     val selectedSlot: String = "Within 15-30 Mins (Emergency Dispatch)",
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val nearbyTechnicians: List<NearbyTechnician> = listOf(
+        NearbyTechnician(
+            id = "GTS-TECH-4091",
+            name = "Rajesh Kumar",
+            badge = "GTS-TECH-4091",
+            rating = "4.9 ★ (240+ jobs)",
+            ratingValue = 4.9,
+            distance = "1.3 km away",
+            distanceKm = 1.3,
+            eta = "8 mins",
+            etaMinutes = 8,
+            specialty = "MCB Panel & Earthing Specialist",
+            phone = "+91 98201 44091",
+            completedJobs = "240+ jobs"
+        ),
+        NearbyTechnician(
+            id = "GTS-TECH-1084",
+            name = "Suresh Patil",
+            badge = "GTS-TECH-1084",
+            rating = "4.8 ★ (180+ jobs)",
+            ratingValue = 4.8,
+            distance = "2.4 km away",
+            distanceKm = 2.4,
+            eta = "14 mins",
+            etaMinutes = 14,
+            specialty = "Wiring & High Load Installations",
+            phone = "+91 98201 11084",
+            completedJobs = "180+ jobs"
+        ),
+        NearbyTechnician(
+            id = "GTS-TECH-2241",
+            name = "Vikram Singh",
+            badge = "GTS-TECH-2241",
+            rating = "4.9 ★ (310+ jobs)",
+            ratingValue = 4.9,
+            distance = "3.1 km away",
+            distanceKm = 3.1,
+            eta = "19 mins",
+            etaMinutes = 19,
+            specialty = "Appliance Anchor & Ceiling Fans",
+            phone = "+91 98201 22241",
+            completedJobs = "310+ jobs"
+        )
+    ),
+    val selectedTechnicianId: String = "GTS-TECH-4091" // Default is shortest distance (Rajesh Kumar 1.3km)
 ) {
+    val selectedTechnician: NearbyTechnician
+        get() = nearbyTechnicians.find { it.id == selectedTechnicianId } ?: nearbyTechnicians.first()
+
     val canProceed: Boolean
         get() = isPincodeServiceable && flatNumber.isNotBlank() && streetName.isNotBlank() && pincode.length == 6
 }
@@ -40,6 +103,10 @@ class AddressBookingViewModel(
 
     private val _uiState = MutableStateFlow(AddressBookingUiState())
     val uiState: StateFlow<AddressBookingUiState> = _uiState.asStateFlow()
+
+    fun selectTechnician(id: String) {
+        _uiState.value = _uiState.value.copy(selectedTechnicianId = id)
+    }
 
     fun initService(id: String, title: String = "Full Home MCB Panel Replacement & Earth Leakage Fix", price: Double = 2499.0) {
         val gst = price * 0.18

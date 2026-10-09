@@ -52,6 +52,24 @@ class CustomerTrackingViewModel(
         }
     }
 
+    fun setAssignedTechnician(
+        name: String,
+        badge: String,
+        phone: String,
+        rating: Double,
+        distanceKm: Double,
+        etaMinutes: Int
+    ) {
+        _uiState.value = _uiState.value.copy(
+            technicianName = name,
+            technicianBadge = badge,
+            technicianPhone = phone,
+            technicianRating = rating,
+            distanceKm = distanceKm,
+            etaMinutes = etaMinutes
+        )
+    }
+
     private fun handleRealtimeEvent(eventType: String, data: JSONObject) {
         Log.d("GTS_CUST_TRACK", "Received SSE event: $eventType with $data")
 

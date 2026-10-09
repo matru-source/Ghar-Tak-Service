@@ -215,7 +215,7 @@ fun CustomerAuthScreen(
                 value = state.email,
                 onValueChange = { viewModel.onEmailChanged(it) },
                 label = { Text("Email Address") },
-                placeholder = { Text("matruprasadpanda497@gmail.com") },
+                placeholder = { Text("name@example.com") },
                 leadingIcon = {
                     Icon(imageVector = Icons.Default.Email, contentDescription = null, tint = SapphireBlue800)
                 },
