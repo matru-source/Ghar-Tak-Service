@@ -235,7 +235,7 @@ fun ServiceSignoffScreen(
                     }
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text(text = "GSTIN / State:", color = TextDarkMuted, fontSize = 11.sp)
-                        Text(text = "${state.gstin} (27-MH)", color = TextDarkSecondary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        Text(text = state.gstin, color = TextDarkSecondary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                     }
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text(text = "SAC / HSN Code:", color = TextDarkMuted, fontSize = 11.sp)
@@ -365,7 +365,7 @@ fun ServiceSignoffScreen(
                     OutlinedTextField(
                         value = state.reviewText,
                         onValueChange = { viewModel.onReviewTextChanged(it) },
-                        label = { Text("Share feedback for Rajesh Kumar") },
+                        label = { Text("Share feedback for ${state.technicianName}") },
                         modifier = Modifier.fillMaxWidth(),
                         maxLines = 3,
                         colors = OutlinedTextFieldDefaults.colors(

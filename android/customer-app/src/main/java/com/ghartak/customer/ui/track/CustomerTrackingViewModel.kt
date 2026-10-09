@@ -17,12 +17,13 @@ data class CustomerTrackingUiState(
     val serviceTitle: String = "Full Home MCB Panel Replacement & Earth Leakage Fix",
     val status: String = "EN_ROUTE",
     val technicianName: String = "Rajesh Kumar",
-    val technicianPhone: String = "+919811223344",
+    val technicianPhone: String = "+91 98201 44091",
     val technicianBadge: String = "GTS-TECH-4091",
     val technicianRating: Double = 4.9,
+    val technicianCompletedJobs: String = "240+ jobs",
     val handoverOtp: String = "4819",
-    val distanceKm: Double = 1.4,
-    val etaMinutes: Int = 6,
+    val distanceKm: Double = 1.3,
+    val etaMinutes: Int = 8,
     val isDoorstepArrived: Boolean = false,
     val isSafetyInterlockVerified: Boolean = false,
     val isJobCompleted: Boolean = false,
@@ -58,15 +59,19 @@ class CustomerTrackingViewModel(
         phone: String,
         rating: Double,
         distanceKm: Double,
-        etaMinutes: Int
+        etaMinutes: Int,
+        completedJobs: String = "180+ jobs",
+        ticketNumber: String? = null
     ) {
         _uiState.value = _uiState.value.copy(
             technicianName = name,
             technicianBadge = badge,
             technicianPhone = phone,
             technicianRating = rating,
+            technicianCompletedJobs = completedJobs,
             distanceKm = distanceKm,
-            etaMinutes = etaMinutes
+            etaMinutes = etaMinutes,
+            ticketNumber = ticketNumber ?: _uiState.value.ticketNumber
         )
     }
 

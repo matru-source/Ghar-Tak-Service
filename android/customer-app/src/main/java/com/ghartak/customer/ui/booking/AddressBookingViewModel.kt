@@ -37,6 +37,9 @@ data class AddressBookingUiState(
     val streetName: String = "",
     val landmark: String = "",
     val pincode: String = "400001",
+    val stateName: String = "Maharashtra",
+    val stateCode: String = "MH",
+    val gstinStateCode: String = "27AAACG1234F1Z5 (27-MH)",
     val isCheckingPincode: Boolean = false,
     val isPincodeServiceable: Boolean = true,
     val hubName: String = "MH-01 Maharashtra Regional Hub",
@@ -104,6 +107,33 @@ class AddressBookingViewModel(
     private val _uiState = MutableStateFlow(AddressBookingUiState())
     val uiState: StateFlow<AddressBookingUiState> = _uiState.asStateFlow()
 
+    init {
+        val savedPin = sessionManager.getUserPincode().filter { it.isDigit() }.take(6).ifEmpty { "400001" }
+        val savedAddress = sessionManager.getUserAddress()
+        val instant = com.ghartak.customer.util.IndianPincodeResolver.getOfflineFallback(savedPin)
+        _uiState.value = _uiState.value.copy(
+            pincode = savedPin,
+            streetName = savedAddress,
+            hubName = instant.hubName,
+            stateName = instant.state,
+            stateCode = instant.stateCode,
+            gstinStateCode = instant.gstinStateCode,
+            isPincodeServiceable = true
+        )
+        viewModelScope.launch {
+            val details = com.ghartak.customer.util.IndianPincodeResolver.resolvePincode(savedPin)
+            _uiState.value = _uiState.value.copy(
+                isCheckingPincode = false,
+                isPincodeServiceable = details.isServiceable,
+                hubName = details.hubName,
+                stateName = details.state,
+                stateCode = details.stateCode,
+                gstinStateCode = details.gstinStateCode,
+                etaMinutes = details.etaMinutes
+            )
+        }
+    }
+
     fun selectTechnician(id: String) {
         _uiState.value = _uiState.value.copy(selectedTechnicianId = id)
     }
@@ -137,6 +167,14 @@ class AddressBookingViewModel(
         _uiState.value = _uiState.value.copy(pincode = sanitized)
 
         if (sanitized.length == 6) {
+            val instant = com.ghartak.customer.util.IndianPincodeResolver.getOfflineFallback(sanitized)
+            _uiState.value = _uiState.value.copy(
+                hubName = instant.hubName,
+                stateName = instant.state,
+                stateCode = instant.stateCode,
+                gstinStateCode = instant.gstinStateCode,
+                isPincodeServiceable = true
+            )
             checkPincodeServiceability(context, sanitized)
         }
     }
@@ -144,39 +182,16 @@ class AddressBookingViewModel(
     fun checkPincodeServiceability(context: Context, pin: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isCheckingPincode = true, errorMessage = null)
-            try {
-                val api = ApiClient.getService(context)
-                val response = api.checkPincode(pin)
-
-                if (response.isSuccessful) {
-                    val data = response.body()?.data
-                    val serviceable = data?.get("serviceable") as? Boolean ?: true
-                    val hub = data?.get("assignedPartnerName") as? String ?: "MH-01 Maharashtra Regional Hub"
-                    val eta = (data?.get("targetEtaMinutes") as? Double)?.toInt() ?: 15
-
-                    _uiState.value = _uiState.value.copy(
-                        isCheckingPincode = false,
-                        isPincodeServiceable = serviceable,
-                        hubName = hub,
-                        etaMinutes = eta
-                    )
-                } else {
-                    _uiState.value = _uiState.value.copy(
-                        isCheckingPincode = false,
-                        isPincodeServiceable = true,
-                        hubName = "MH-01 Maharashtra Regional Hub",
-                        etaMinutes = 15
-                    )
-                }
-            } catch (e: Exception) {
-                Log.w("GTS_PINCODE", "Fallback verification: ${e.message}")
-                _uiState.value = _uiState.value.copy(
-                    isCheckingPincode = false,
-                    isPincodeServiceable = true,
-                    hubName = "MH-01 Maharashtra Regional Hub",
-                    etaMinutes = 15
-                )
-            }
+            val details = com.ghartak.customer.util.IndianPincodeResolver.resolvePincode(pin)
+            _uiState.value = _uiState.value.copy(
+                isCheckingPincode = false,
+                isPincodeServiceable = details.isServiceable,
+                hubName = details.hubName,
+                stateName = details.state,
+                stateCode = details.stateCode,
+                gstinStateCode = details.gstinStateCode,
+                etaMinutes = details.etaMinutes
+            )
         }
     }
 

@@ -140,6 +140,15 @@ fun CustomerTrackingScreen(
             LiveElectricianTrackingMap(state = state)
 
             // Assigned Electrician Profile Card
+            val techInitials = remember(state.technicianName) {
+                val parts = state.technicianName.trim().split(" ").filter { it.isNotEmpty() }
+                when {
+                    parts.size >= 2 -> "${parts[0].first().uppercaseChar()}${parts[1].first().uppercaseChar()}"
+                    parts.isNotEmpty() -> parts[0].take(2).uppercase()
+                    else -> "GT"
+                }
+            }
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -162,7 +171,7 @@ fun CustomerTrackingScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "RK",
+                                    text = techInitials,
                                     color = Color(0xFFE65100),
                                     fontWeight = FontWeight.Black,
                                     fontSize = 16.sp
@@ -181,7 +190,7 @@ fun CustomerTrackingScreen(
                                     Icon(imageVector = Icons.Default.Verified, contentDescription = null, tint = SuccessGreen, modifier = Modifier.size(16.dp))
                                 }
                                 Text(
-                                    text = "${state.technicianBadge} • ${state.technicianRating} ★ (48 Completed)",
+                                    text = "${state.technicianBadge} • ${state.technicianRating} ★ (${state.technicianCompletedJobs})",
                                     color = TextDarkMuted,
                                     fontSize = 12.sp
                                 )
@@ -257,7 +266,7 @@ fun CustomerTrackingScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "🔒 DO NOT SHARE THIS OTP NOW.\nShare with Rajesh Kumar ONLY after inspecting your panel and verifying restored power.",
+                        text = "🔒 DO NOT SHARE THIS OTP NOW.\nShare with ${state.technicianName} ONLY after inspecting your panel and verifying restored power.",
                         color = TextDarkSecondary,
                         fontSize = 11.sp,
                         textAlign = TextAlign.Center,
@@ -707,7 +716,7 @@ fun LiveElectricianTrackingMap(state: CustomerTrackingUiState) {
                                 text = if (state.transitStep >= 3 || state.status == "ARRIVED")
                                     "Electrician at Doorstep"
                                 else
-                                    "Rajesh Kumar En Route",
+                                    "${state.technicianName} En Route",
                                 color = Color.White,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold
@@ -716,7 +725,7 @@ fun LiveElectricianTrackingMap(state: CustomerTrackingUiState) {
                                 text = if (state.transitStep >= 3 || state.status == "ARRIVED")
                                     "Safety interlock check in progress"
                                 else
-                                    "Traveling via MG Road • 1.3 km away",
+                                    "Traveling via Main Road • ${"%.1f".format(state.distanceKm)} km away",
                                 color = Color(0xFF94A3B8),
                                 fontSize = 10.sp
                             )
@@ -728,7 +737,7 @@ fun LiveElectricianTrackingMap(state: CustomerTrackingUiState) {
                         shape = RoundedCornerShape(6.dp)
                     ) {
                         Text(
-                            text = if (state.transitStep >= 3 || state.status == "ARRIVED") "0 MINS" else "8 MINS",
+                            text = if (state.transitStep >= 3 || state.status == "ARRIVED") "0 MINS" else "${state.etaMinutes} MINS",
                             color = if (state.transitStep >= 3 || state.status == "ARRIVED") SuccessGreen else Color.White,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Black,

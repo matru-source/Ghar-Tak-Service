@@ -270,8 +270,7 @@ fun CustomerAuthScreen(
                         },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        enabled = !state.isOtpSent
+                        shape = RoundedCornerShape(12.dp)
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -287,8 +286,7 @@ fun CustomerAuthScreen(
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        enabled = !state.isOtpSent
+                        shape = RoundedCornerShape(12.dp)
                     )
 
                     // If OTP has been sent, show the 6-Digit OTP field
@@ -317,25 +315,20 @@ fun CustomerAuthScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = "Code sent to ${state.email}",
-                                        fontSize = 11.sp,
-                                        color = TextDarkMuted
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    TextButton(
-                                        onClick = { viewModel.backToSignUpStep1() },
-                                        contentPadding = PaddingValues(0.dp)
-                                    ) {
-                                        Text("(Edit)", fontSize = 11.sp, color = SapphireBlue800, fontWeight = FontWeight.Bold)
-                                    }
-                                }
+                                Text(
+                                    text = "Code sent to ${state.email}",
+                                    fontSize = 11.sp,
+                                    color = TextDarkMuted,
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f, fill = false)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
                                 TextButton(
                                     onClick = { viewModel.sendSignUpOtp() },
-                                    contentPadding = PaddingValues(0.dp)
+                                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
                                 ) {
-                                    Text("Resend OTP", fontSize = 11.sp, color = SapphireBlue800, fontWeight = FontWeight.Bold)
+                                    Text("Resend OTP", fontSize = 12.sp, color = SapphireBlue800, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }

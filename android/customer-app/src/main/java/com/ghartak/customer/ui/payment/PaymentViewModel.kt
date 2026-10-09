@@ -26,6 +26,9 @@ data class PaymentUiState(
     val addressText: String = "Flat 402, Sea Crest Towers, Colaba, Mumbai",
     val priority: String = "EMERGENCY_60S",
     val selectedPaymentMethod: String = "UPI_GPAY",
+    val technicianId: String = "GTS-TECH-4091",
+    val technicianName: String = "Rajesh Kumar",
+    val stateCode: String = "MH",
     val isProcessing: Boolean = false,
     val createdJob: Job? = null,
     val createdJobId: String? = null,
@@ -45,7 +48,10 @@ class PaymentViewModel(
         basePrice: Double,
         pincode: String,
         addressText: String,
-        priority: String
+        priority: String,
+        technicianId: String = "GTS-TECH-4091",
+        technicianName: String = "Rajesh Kumar",
+        stateCode: String = "MH"
     ) {
         val gst = basePrice * 0.18
         val total = basePrice + gst
@@ -57,7 +63,10 @@ class PaymentViewModel(
             totalAmountInr = total,
             pincode = pincode.ifEmpty { "400001" },
             addressText = addressText.ifEmpty { "Flat 402, Sea Crest Towers, Colaba, Mumbai" },
-            priority = priority
+            priority = priority,
+            technicianId = technicianId,
+            technicianName = technicianName,
+            stateCode = stateCode
         )
     }
 
@@ -124,18 +133,19 @@ class PaymentViewModel(
     }
 
     private fun handleFallbackSuccess(onSuccess: (jobId: String) -> Unit) {
-        val fallbackJobId = "job_mh_live_01"
+        val cleanState = _uiState.value.stateCode.ifEmpty { "MH" }
+        val fallbackJobId = "job_${cleanState.lowercase()}_live_01"
         val fallbackJob = Job(
             id = fallbackJobId,
-            jobTicketNumber = "GTS-MH-" + (1000..9999).random(),
+            jobTicketNumber = "GTS-$cleanState-" + (1000..9999).random(),
             serviceTitle = _uiState.value.serviceTitle,
             pincode = _uiState.value.pincode,
             customerAddressText = _uiState.value.addressText,
             status = "DISPATCHED",
             priority = _uiState.value.priority,
             totalAmountInr = _uiState.value.totalAmountInr,
-            technicianId = "tech_rajesh_01",
-            technicianName = "Rajesh Kumar",
+            technicianId = _uiState.value.technicianId,
+            technicianName = _uiState.value.technicianName,
             handoverOtp = "4819"
         )
         _uiState.value = _uiState.value.copy(

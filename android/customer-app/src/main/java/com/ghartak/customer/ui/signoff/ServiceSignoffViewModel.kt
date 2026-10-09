@@ -16,10 +16,11 @@ data class ServiceSignoffUiState(
     val serviceTitle: String = "Full Home MCB Panel Replacement & Earth Leakage Fix",
     val technicianName: String = "Rajesh Kumar",
     val technicianBadge: String = "GTS-TECH-4091",
+    val stateCode: String = "MH",
     val invoiceNumber: String = "INV-2026-MH-4091",
     val invoiceDate: String = "Oct 07, 2026",
     val hsnSacCode: String = "998713",
-    val gstin: String = "27AAACG1234F1Z5",
+    val gstin: String = "27AAACG1234F1Z5 (27-MH)",
     val basePriceInr: Double = 2499.0,
     val cgstInr: Double = 224.91,
     val sgstInr: Double = 224.91,
@@ -41,11 +42,38 @@ class ServiceSignoffViewModel(
     private val _uiState = MutableStateFlow(ServiceSignoffUiState())
     val uiState: StateFlow<ServiceSignoffUiState> = _uiState.asStateFlow()
 
-    fun initSignoff(jobId: String) {
+    fun initSignoff(
+        jobId: String,
+        technicianName: String = "Rajesh Kumar",
+        technicianBadge: String = "GTS-TECH-4091",
+        stateCode: String = "MH",
+        gstin: String = "27AAACG1234F1Z5 (27-MH)",
+        serviceTitle: String = "Full Home MCB Panel Replacement & Earth Leakage Fix",
+        basePrice: Double = 2499.0,
+        cgst: Double = 224.91,
+        sgst: Double = 224.91,
+        total: Double = 2948.82,
+        ticketNumber: String? = null
+    ) {
+        val techFirstName = technicianName.trim().split(" ").firstOrNull() ?: "Technician"
+        val cleanState = stateCode.ifEmpty { "MH" }
+        val randomNum = (1000..9999).random()
+        val defaultReview = "$techFirstName arrived in 15 minutes, used insulated gloves, and restored our MCB panel cleanly. Earth leakage test passed at 0.0V."
+
         _uiState.value = _uiState.value.copy(
             jobId = jobId,
-            ticketNumber = "GTS-MH-" + (1000..9999).random(),
-            invoiceNumber = "INV-2026-MH-" + (1000..9999).random()
+            technicianName = technicianName,
+            technicianBadge = technicianBadge,
+            stateCode = cleanState,
+            gstin = gstin,
+            serviceTitle = serviceTitle,
+            basePriceInr = basePrice,
+            cgstInr = cgst,
+            sgstInr = sgst,
+            totalAmountInr = total,
+            ticketNumber = ticketNumber ?: "GTS-$cleanState-$randomNum",
+            invoiceNumber = "INV-2026-$cleanState-$randomNum",
+            reviewText = defaultReview
         )
     }
 
@@ -87,6 +115,7 @@ class ServiceSignoffViewModel(
                 customerPhone = sessionManager.getUserPhone(),
                 customerAddress = sessionManager.getUserAddress(),
                 technicianName = "${state.technicianName} (${state.technicianBadge})",
+                gstin = state.gstin,
                 taxableCharges = state.basePriceInr,
                 cgstAmount = state.cgstInr,
                 sgstAmount = state.sgstInr,
