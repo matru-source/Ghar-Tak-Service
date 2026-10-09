@@ -112,6 +112,22 @@ class SessionManager(context: Context) {
         }
     }
 
+    fun updatePassword(rawEmail: String, newPassword: String): Boolean {
+        val cleanEmail = rawEmail.trim().lowercase()
+        val registryStr = prefs.getString(KEY_USERS_REGISTRY, "{}") ?: "{}"
+        return try {
+            val json = JSONObject(registryStr)
+            if (!json.has(cleanEmail)) return false
+            val userObj = json.getJSONObject(cleanEmail)
+            userObj.put("password", newPassword.trim())
+            json.put(cleanEmail, userObj)
+            prefs.edit().putString(KEY_USERS_REGISTRY, json.toString()).apply()
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     fun saveSession(
         token: String,
         user: UserProfile,
