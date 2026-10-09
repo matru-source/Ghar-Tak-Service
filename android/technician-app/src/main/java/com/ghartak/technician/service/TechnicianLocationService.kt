@@ -48,7 +48,7 @@ class TechnicianLocationService : Service() {
         if (isRunning) return
         isRunning = true
 
-        val notification = buildForegroundNotification("Active Doorstep Navigation", "Streaming live GPS telemetry to customer & partner hub")
+        val notification = buildForegroundNotification("Active Doorstep Navigation", "Streaming live GPS telemetry to customer & dispatch console")
         startForeground(NOTIFICATION_ID, notification)
 
         serviceScope.launch {
