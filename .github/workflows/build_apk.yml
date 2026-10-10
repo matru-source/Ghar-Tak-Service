@@ -10,6 +10,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     env:
       ANDROID_HOME: /usr/local/lib/android/sdk
@@ -47,10 +49,13 @@ jobs:
       - name: Report Build Failure Diagnostics
         if: failure()
         run: |
-          echo "=== GRADLE ERRORS ==="
-          grep -E "(e: |error:|FAILED)" ../tech_build.log | head -n 30 | while IFS= read -r line; do
-            echo "::error::$line"
-          done
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B ci-error-log
+          cp tech_build.log ./tech_error.log
+          git add ./tech_error.log
+          git commit -m "ci: dump technician build error log" || true
+          git push origin ci-error-log --force || true
 
       - name: Upload Customer App Debug APK Artifact
         if: always()
