@@ -1,4 +1,4 @@
-﻿package com.ghartak.technician.ui.safety
+package com.ghartak.technician.ui.safety
 
 import android.content.Context
 import android.graphics.Bitmap

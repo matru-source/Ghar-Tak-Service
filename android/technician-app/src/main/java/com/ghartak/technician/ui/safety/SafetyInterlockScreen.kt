@@ -1,4 +1,4 @@
-﻿package com.ghartak.technician.ui.safety
+package com.ghartak.technician.ui.safety
 
 import android.Manifest
 import android.content.Context

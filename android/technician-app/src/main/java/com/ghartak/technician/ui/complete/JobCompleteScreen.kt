@@ -1,4 +1,4 @@
-﻿package com.ghartak.technician.ui.complete
+package com.ghartak.technician.ui.complete
 
 import android.Manifest
 import android.content.pm.PackageManager

@@ -1,4 +1,4 @@
-﻿package com.ghartak.technician.ui.dashboard
+package com.ghartak.technician.ui.dashboard
 
 import com.ghartak.technician.ui.nav.launchTurnByTurnNavigation
 

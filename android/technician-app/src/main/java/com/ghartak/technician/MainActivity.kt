@@ -1,4 +1,4 @@
-﻿package com.ghartak.technician
+package com.ghartak.technician
 
 import android.os.Bundle
 import android.widget.Toast

@@ -1,4 +1,4 @@
-﻿package com.ghartak.technician.ui.nav
+package com.ghartak.technician.ui.nav
 
 import android.content.Context
 import android.content.Intent

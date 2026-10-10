@@ -1,4 +1,4 @@
-﻿package com.ghartak.technician.data.api
+package com.ghartak.technician.data.api
 
 import android.content.Context
 import android.os.Build

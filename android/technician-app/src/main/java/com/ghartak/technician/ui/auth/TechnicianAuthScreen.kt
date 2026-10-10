@@ -1,4 +1,4 @@
-﻿package com.ghartak.technician.ui.auth
+package com.ghartak.technician.ui.auth
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image

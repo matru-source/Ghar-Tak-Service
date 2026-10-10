@@ -1,4 +1,4 @@
-﻿package com.ghartak.technician.data.session
+package com.ghartak.technician.data.session
 
 import android.content.Context
 import android.content.SharedPreferences

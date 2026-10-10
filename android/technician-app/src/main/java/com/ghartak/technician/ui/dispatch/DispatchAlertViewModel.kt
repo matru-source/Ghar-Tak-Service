@@ -1,4 +1,4 @@
-﻿package com.ghartak.technician.ui.dispatch
+package com.ghartak.technician.ui.dispatch
 
 import android.content.Context
 import android.os.Build

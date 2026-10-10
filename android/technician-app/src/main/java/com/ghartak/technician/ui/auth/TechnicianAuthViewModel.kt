@@ -1,4 +1,4 @@
-﻿package com.ghartak.technician.ui.auth
+package com.ghartak.technician.ui.auth
 
 import android.util.Patterns
 import androidx.lifecycle.ViewModel

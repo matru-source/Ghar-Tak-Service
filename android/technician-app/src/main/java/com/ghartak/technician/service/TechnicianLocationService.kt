@@ -1,4 +1,4 @@
-﻿package com.ghartak.technician.service
+package com.ghartak.technician.service
 
 import android.app.*
 import android.content.Context
