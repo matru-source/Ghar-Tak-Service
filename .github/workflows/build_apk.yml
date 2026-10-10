@@ -7,9 +7,14 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     env:
       ANDROID_HOME: /usr/local/lib/android/sdk
@@ -18,6 +23,8 @@ jobs:
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -49,15 +56,27 @@ jobs:
         run: |
           LOG_FILE="tech_build.log"
           if [ -f "$LOG_FILE" ]; then
-            echo "Log file exists at $LOG_FILE"
-            grep -E "(e: |error:|FAILED|FAILURE:)" "$LOG_FILE" | head -n 25 | while IFS= read -r line; do
-              echo "::error::$line"
-            done
-            LINK=$(curl -s -F "file=@$LOG_FILE" https://0x0.st || curl -s -T "$LOG_FILE" https://transfer.sh/tech.log || true)
-            echo "::notice title=LogDownloadLink::$LINK"
-          else
-            echo "::error::Log file not found at $LOG_FILE"
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git checkout -B ci-error-log
+            cp "$LOG_FILE" ./tech_error.log
+            git add ./tech_error.log
+            git commit -m "ci: dump technician build error log" || true
+            git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ci-error-log --force || true
           fi
+
+      - name: Push APKs to Dist Branch
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B apk-dist
+          mkdir -p apks
+          cp android/customer-app/build/outputs/apk/debug/*.apk apks/ || true
+          cp android/technician-app/build/outputs/apk/debug/*.apk apks/ || true
+          git add apks/*.apk
+          git commit -m "dist: latest debug APKs" || true
+          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" apk-dist --force || true
 
       - name: Upload Customer App Debug APK Artifact
         if: always()
