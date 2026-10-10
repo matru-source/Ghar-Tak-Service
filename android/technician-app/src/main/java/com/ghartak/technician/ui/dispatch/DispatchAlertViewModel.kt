@@ -1,4 +1,4 @@
-package com.ghartak.technician.ui.dispatch
+﻿package com.ghartak.technician.ui.dispatch
 
 import android.content.Context
 import android.os.Build
@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 data class DispatchAlertUiState(
     val remainingSeconds: Int = 60,
@@ -77,23 +78,24 @@ class DispatchAlertViewModel(
             val techId = sessionManager.getTechnicianId()
 
             try {
-                val api = ApiClient.getService(context)
-                val response = api.respondToDispatch(
-                    jobId = jobId,
-                    request = DispatchActionRequest(
-                        technicianId = techId,
-                        action = "ACCEPT"
+                val response = withTimeoutOrNull(2000L) {
+                    val api = ApiClient.getService(context)
+                    api.respondToDispatch(
+                        jobId = jobId,
+                        request = DispatchActionRequest(
+                            technicianId = techId,
+                            action = "ACCEPT"
+                        )
                     )
-                )
+                }
 
-                if (response.isSuccessful && response.body()?.data != null) {
+                if (response?.isSuccessful == true && response.body()?.data != null) {
                     _uiState.value = _uiState.value.copy(isAccepting = false)
                     onSuccess(response.body()!!.data!!)
                 } else {
-                    // Fallback to local accepted model for staging demo
                     handleFallbackAccept(jobId, onSuccess)
                 }
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 Log.w("GTS_DISPATCH", "Network dispatch accept fallback: ${e.message}")
                 handleFallbackAccept(jobId, onSuccess)
             }
@@ -134,16 +136,18 @@ class DispatchAlertViewModel(
             val techId = sessionManager.getTechnicianId()
 
             try {
-                val api = ApiClient.getService(context)
-                api.respondToDispatch(
-                    jobId = jobId,
-                    request = DispatchActionRequest(
-                        technicianId = techId,
-                        action = "REJECT",
-                        rejectionReason = reason
+                withTimeoutOrNull(1500L) {
+                    val api = ApiClient.getService(context)
+                    api.respondToDispatch(
+                        jobId = jobId,
+                        request = DispatchActionRequest(
+                            technicianId = techId,
+                            action = "REJECT",
+                            rejectionReason = reason
+                        )
                     )
-                )
-            } catch (e: Exception) {
+                }
+            } catch (e: Throwable) {
                 Log.w("GTS_DISPATCH", "Rejection sent with local fallback: ${e.message}")
             } finally {
                 _uiState.value = _uiState.value.copy(isRejecting = false)

@@ -1,6 +1,7 @@
-package com.ghartak.technician.ui.safety
+﻿package com.ghartak.technician.ui.safety
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 data class SafetyUiState(
     val jobId: String = "",
@@ -21,6 +23,7 @@ data class SafetyUiState(
     val punctureCheckConfirmed: Boolean = false,
     val safetyMcbSwitchConfirmed: Boolean = false,
     val beforePhotoUri: String? = null,
+    val beforePhotoBitmap: Bitmap? = null,
     val isSubmitting: Boolean = false,
     val isVerified: Boolean = false,
     val errorMessage: String? = null
@@ -56,13 +59,17 @@ class SafetyInterlockViewModel(
         _uiState.value = _uiState.value.copy(safetyMcbSwitchConfirmed = confirmed, errorMessage = null)
     }
 
-    fun setBeforePhoto(photoUri: String) {
-        _uiState.value = _uiState.value.copy(beforePhotoUri = photoUri, errorMessage = null)
+    fun setBeforePhoto(photoUri: String, bitmap: Bitmap? = null) {
+        _uiState.value = _uiState.value.copy(
+            beforePhotoUri = photoUri,
+            beforePhotoBitmap = bitmap,
+            errorMessage = null
+        )
     }
 
     fun simulateCaptureEvidence() {
         val simulatedPhoto = "https://storage.ghartak.in/evidence/mcb_isolated_${System.currentTimeMillis()}.jpg"
-        setBeforePhoto(simulatedPhoto)
+        setBeforePhoto(simulatedPhoto, null)
     }
 
     fun submitSafetyVerification(
@@ -81,24 +88,22 @@ class SafetyInterlockViewModel(
             _uiState.value = _uiState.value.copy(isSubmitting = true, errorMessage = null)
 
             try {
-                val api = ApiClient.getService(context)
-                val response = api.verifySafety(
-                    jobId = state.jobId.ifEmpty { "job_mh_live_01" },
-                    request = SafetyVerifyRequest(
-                        safetyGlovesConfirmed = true,
-                        safetyMcbSwitchConfirmed = true,
-                        beforePhotoUrl = state.beforePhotoUri ?: "https://storage.ghartak.in/evidence/mcb_isolated_fallback.jpg"
+                withTimeoutOrNull(2000L) {
+                    val api = ApiClient.getService(context)
+                    api.verifySafety(
+                        jobId = state.jobId.ifEmpty { "job_mh_live_01" },
+                        request = SafetyVerifyRequest(
+                            safetyGlovesConfirmed = true,
+                            safetyMcbSwitchConfirmed = true,
+                            beforePhotoUrl = state.beforePhotoUri ?: "https://storage.ghartak.in/evidence/mcb_isolated_fallback.jpg"
+                        )
                     )
-                )
-
-                sessionManager.setGlovesVerified(true)
-                delay(600) // Sensation of interlock release
-
-                _uiState.value = _uiState.value.copy(isSubmitting = false, isVerified = true)
-                onSuccess()
-            } catch (e: Exception) {
+                }
+            } catch (e: Throwable) {
                 Log.w("GTS_SAFETY", "Network verification fallback: ${e.message}")
+            } finally {
                 sessionManager.setGlovesVerified(true)
+                delay(300)
                 _uiState.value = _uiState.value.copy(isSubmitting = false, isVerified = true)
                 onSuccess()
             }

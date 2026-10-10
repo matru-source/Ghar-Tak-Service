@@ -1,6 +1,7 @@
-package com.ghartak.technician.ui.complete
+﻿package com.ghartak.technician.ui.complete
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 data class JobCompleteUiState(
     val jobId: String = "job_mh_live_01",
@@ -23,6 +25,7 @@ data class JobCompleteUiState(
     val technicianPayoutInr: Double = 1749.30,
     val enteredOtp: String = "",
     val afterPhotoUri: String? = null,
+    val afterPhotoBitmap: Bitmap? = null,
     val rating: Int = 5,
     val feedback: String = "Excellent high-voltage isolation, neat wiring layout, and spotless cleanup.",
     val isSubmitting: Boolean = false,
@@ -52,6 +55,7 @@ class JobCompleteViewModel(
             technicianPayoutInr = payout,
             enteredOtp = "",
             afterPhotoUri = null,
+            afterPhotoBitmap = null,
             isCompleted = false,
             errorMessage = null
         )
@@ -66,13 +70,17 @@ class JobCompleteViewModel(
         _uiState.value = _uiState.value.copy(enteredOtp = otp, errorMessage = null)
     }
 
-    fun setAfterPhoto(photoUri: String) {
-        _uiState.value = _uiState.value.copy(afterPhotoUri = photoUri, errorMessage = null)
+    fun setAfterPhoto(photoUri: String, bitmap: Bitmap? = null) {
+        _uiState.value = _uiState.value.copy(
+            afterPhotoUri = photoUri,
+            afterPhotoBitmap = bitmap,
+            errorMessage = null
+        )
     }
 
     fun simulateCaptureAfterPhoto() {
         val simulatedPhoto = "https://storage.ghartak.in/evidence/after_work_completed_${System.currentTimeMillis()}.jpg"
-        setAfterPhoto(simulatedPhoto)
+        setAfterPhoto(simulatedPhoto, null)
     }
 
     fun onRatingChanged(stars: Int) {
@@ -99,31 +107,27 @@ class JobCompleteViewModel(
             _uiState.value = _uiState.value.copy(isSubmitting = true, errorMessage = null)
 
             try {
-                val api = ApiClient.getService(context)
-                val response = api.completeJob(
-                    jobId = state.jobId.ifEmpty { "job_mh_live_01" },
-                    request = JobCompleteRequest(
-                        handoverOtp = state.enteredOtp,
-                        afterPhotoUrl = state.afterPhotoUri ?: "https://storage.ghartak.in/evidence/restored_panel_9821.jpg",
-                        customerRating = state.rating,
-                        customerFeedback = state.feedback
+                // Responsive fast timeout (2.0s) so physical phones never get frozen on unreachable local backend
+                withTimeoutOrNull(2000L) {
+                    val api = ApiClient.getService(context)
+                    api.completeJob(
+                        jobId = state.jobId.ifEmpty { "job_mh_live_01" },
+                        request = JobCompleteRequest(
+                            handoverOtp = state.enteredOtp,
+                            afterPhotoUrl = state.afterPhotoUri ?: "local_restored_panel.jpg",
+                            customerRating = state.rating,
+                            customerFeedback = state.feedback
+                        )
                     )
-                )
-
-                delay(700) // Sensation of ledger distribution
+                }
+            } catch (e: Throwable) {
+                Log.w("GTS_COMPLETE", "Network completion fallback handled: ${e.message}")
+            } finally {
+                delay(400) // Fast snappy transition
                 _uiState.value = _uiState.value.copy(
                     isSubmitting = false,
                     isCompleted = true,
                     invoiceNumber = "INV-2026-MH-" + (1000..9999).random()
-                )
-                onSuccess()
-            } catch (e: Exception) {
-                Log.w("GTS_COMPLETE", "Network completion fallback: ${e.message}")
-                delay(700)
-                _uiState.value = _uiState.value.copy(
-                    isSubmitting = false,
-                    isCompleted = true,
-                    invoiceNumber = "INV-2026-MH-4091"
                 )
                 onSuccess()
             }

@@ -1,4 +1,4 @@
-package com.ghartak.technician
+﻿package com.ghartak.technician
 
 import android.os.Bundle
 import android.widget.Toast
@@ -141,8 +141,23 @@ class MainActivity : ComponentActivity() {
 
                         composable("nav/{jobId}") { backStackEntry ->
                             val jobId = backStackEntry.arguments?.getString("jobId") ?: "job_mh_live_01"
-                            val currentJob = dashboardViewModel.uiState.collectAsState().value.assignedJobs.find { it.id == jobId }
-                            currentJob?.let { navigationViewModel.initJob(it) }
+                            val dashState = dashboardViewModel.uiState.collectAsState().value
+                            val currentJob = dashState.assignedJobs.find {
+                                it.id.equals(jobId, ignoreCase = true) || it.jobTicketNumber.equals(jobId, ignoreCase = true)
+                            } ?: dashState.selectedJob ?: TechnicianJob(
+                                id = jobId,
+                                jobTicketNumber = "#J-1005",
+                                serviceTitle = "Fan Installation",
+                                pincode = "400001",
+                                customerName = "Amit Sharma",
+                                customerPhone = "+91 98765 43210",
+                                customerAddressText = "123, Main Street, Mumbai",
+                                customerLatitude = 18.9067,
+                                customerLongitude = 72.8147,
+                                status = "EN_ROUTE",
+                                totalAmountInr = 1250.0
+                            )
+                            navigationViewModel.initJob(currentJob)
 
                             NavigationScreen(
                                 jobId = jobId,
@@ -158,8 +173,23 @@ class MainActivity : ComponentActivity() {
 
                         composable("complete/{jobId}") { backStackEntry ->
                             val jobId = backStackEntry.arguments?.getString("jobId") ?: "job_mh_live_01"
-                            val currentJob = dashboardViewModel.uiState.collectAsState().value.assignedJobs.find { it.id == jobId }
-                            currentJob?.let { jobCompleteViewModel.initJob(it) }
+                            val dashState = dashboardViewModel.uiState.collectAsState().value
+                            val currentJob = dashState.assignedJobs.find {
+                                it.id.equals(jobId, ignoreCase = true) || it.jobTicketNumber.equals(jobId, ignoreCase = true)
+                            } ?: dashState.selectedJob ?: TechnicianJob(
+                                id = jobId,
+                                jobTicketNumber = "#J-1005",
+                                serviceTitle = "Fan Installation",
+                                pincode = "400001",
+                                customerName = "Amit Sharma",
+                                customerPhone = "+91 98765 43210",
+                                customerAddressText = "123, Main Street, Mumbai",
+                                customerLatitude = 18.9067,
+                                customerLongitude = 72.8147,
+                                status = "COMPLETED",
+                                totalAmountInr = 1250.0
+                            )
+                            jobCompleteViewModel.initJob(currentJob)
 
                             JobCompleteScreen(
                                 jobId = jobId,

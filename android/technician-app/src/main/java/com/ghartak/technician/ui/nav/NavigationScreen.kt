@@ -1,7 +1,13 @@
-package com.ghartak.technician.ui.nav
+﻿package com.ghartak.technician.ui.nav
 
+import android.Manifest
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Canvas
@@ -27,7 +33,40 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.ghartak.technician.ui.theme.*
+
+fun launchTurnByTurnNavigation(context: Context, lat: Double, lng: Double, customerName: String, address: String) {
+    try {
+        // 1. Direct Turn-by-Turn Driving Navigation in Google Maps
+        val navUri = Uri.parse("google.navigation:q=$lat,$lng&mode=d")
+        val navIntent = Intent(Intent.ACTION_VIEW, navUri).apply {
+            setPackage("com.google.android.apps.maps")
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        context.startActivity(navIntent)
+    } catch (e: Exception) {
+        try {
+            // 2. Generic Geo intent
+            val geoUri = Uri.parse("geo:$lat,$lng?q=$lat,$lng(${Uri.encode(customerName)})")
+            val geoIntent = Intent(Intent.ACTION_VIEW, geoUri).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            context.startActivity(geoIntent)
+        } catch (e2: Exception) {
+            try {
+                // 3. Fallback Web Google Maps
+                val webUri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=$lat,$lng")
+                val webIntent = Intent(Intent.ACTION_VIEW, webUri).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                context.startActivity(webIntent)
+            } catch (e3: Exception) {
+                Toast.makeText(context, "No map navigation app installed.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,8 +79,25 @@ fun NavigationScreen(
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
+    // Safe permission launcher to prevent Android 14 SecurityException crash
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            viewModel.startForegroundService(context)
+        }
+    }
+
     LaunchedEffect(jobId) {
-        viewModel.startForegroundService(context)
+        val hasFine = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        if (hasFine) {
+            viewModel.startForegroundService(context)
+        } else {
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
     }
 
     DisposableEffect(Unit) {
@@ -62,7 +118,7 @@ fun NavigationScreen(
                             color = TextPrimary
                         )
                         Text(
-                            text = "Ticket: ${state.ticketNumber} • 50m Geofence Active",
+                            text = "Ticket: ${state.ticketNumber} â€¢ 50m Geofence Active",
                             fontSize = 11.sp,
                             color = FlameOrange
                         )
@@ -121,116 +177,144 @@ fun NavigationScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = CardBackground),
-                border = androidx.compose.foundation.BorderStroke(1.5.dp, FlameOrange.copy(alpha = 0.5f))
+                border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Box(
                             modifier = Modifier
-                                .size(48.dp)
+                                .size(44.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(FlameOrange.copy(alpha = 0.2f)),
+                                .background(FlameOrange.copy(alpha = 0.15f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = if (state.hasArrivedDoorstep) Icons.Default.CheckCircle else Icons.Default.Navigation,
                                 contentDescription = null,
                                 tint = if (state.hasArrivedDoorstep) SafetyGreen else FlameOrange,
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(24.dp)
                             )
                         }
+
                         Spacer(modifier = Modifier.width(14.dp))
+
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = state.currentManeuver,
+                                text = if (state.hasArrivedDoorstep) "ARRIVED AT DOORSTEP" else state.currentManeuver,
                                 color = TextPrimary,
-                                fontSize = 15.sp,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
                             )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = state.nextManeuver,
-                                color = TextSecondary,
-                                fontSize = 12.sp
-                            )
+                            if (!state.hasArrivedDoorstep) {
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = state.nextManeuver,
+                                    color = TextMuted,
+                                    fontSize = 11.sp
+                                )
+                            }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(14.dp))
-                    Divider(color = SurfaceBorder, thickness = 1.dp)
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    // Transit Metrics Row
+                    // Transit Metrics HUD
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(SlateDark800)
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         MetricBlock(
                             label = "DISTANCE",
-                            value = if (state.distanceRemainingKm < 0.1) "${(state.distanceRemainingKm * 1000).toInt()} m" else "${state.distanceRemainingKm} km",
-                            color = FlameOrangeLight
+                            value = "${"%.2f".format(state.distanceRemainingKm)} km",
+                            color = if (state.hasArrivedDoorstep) SafetyGreen else TextPrimary
                         )
+
+                        Divider(
+                            color = SurfaceBorder,
+                            modifier = Modifier
+                                .height(26.dp)
+                                .width(1.dp)
+                        )
+
                         MetricBlock(
-                            label = "ESTIMATED ETA",
-                            value = "${state.etaMinutes} mins",
-                            color = SafetyGreen
+                            label = "EST. TIME",
+                            value = if (state.hasArrivedDoorstep) "Now" else "${state.etaMinutes} mins",
+                            color = FlameOrange
                         )
+
+                        Divider(
+                            color = SurfaceBorder,
+                            modifier = Modifier
+                                .height(26.dp)
+                                .width(1.dp)
+                        )
+
                         MetricBlock(
                             label = "SPEED",
-                            value = "${state.speedKmh.toInt()} km/h",
+                            value = "${"%.0f".format(state.speedKmh)} km/h",
                             color = TextPrimary
-                        )
-                        MetricBlock(
-                            label = "GEOFENCE",
-                            value = "50m Active",
-                            color = SafetyBlue
                         )
                     }
                 }
             }
 
-            // Stylized Transit Route Vector Canvas
+            // High-Tech Transit Radar Canvas
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = SlateDark800),
+                colors = CardDefaults.cardColors(containerColor = SlateDark950),
                 border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    // Vector Route Line Canvas
                     Canvas(modifier = Modifier.fillMaxSize()) {
                         val canvasWidth = size.width
                         val canvasHeight = size.height
 
-                        // Draw Grid Lines (Map illusion)
-                        val gridPaint = Color(0xFF21262D)
-                        for (x in 0..canvasWidth.toInt() step 60) {
-                            drawLine(gridPaint, Offset(x.toFloat(), 0f), Offset(x.toFloat(), canvasHeight), strokeWidth = 1f)
-                        }
-                        for (y in 0..canvasHeight.toInt() step 60) {
-                            drawLine(gridPaint, Offset(0f, y.toFloat()), Offset(canvasWidth, y.toFloat()), strokeWidth = 1f)
+                        // Grid lines
+                        for (i in 1..4) {
+                            drawLine(
+                                color = SlateDark700.copy(alpha = 0.35f),
+                                start = Offset(0f, canvasHeight * (i / 5f)),
+                                end = Offset(canvasWidth, canvasHeight * (i / 5f)),
+                                strokeWidth = 1f
+                            )
+                            drawLine(
+                                color = SlateDark700.copy(alpha = 0.35f),
+                                start = Offset(canvasWidth * (i / 5f), 0f),
+                                end = Offset(canvasWidth * (i / 5f), canvasHeight),
+                                strokeWidth = 1f
+                            )
                         }
 
-                        // Path from Technician to Customer
-                        val startX = 60f + (canvasWidth - 140f) * (state.transitStep / 3f)
-                        val startY = canvasHeight - 50f - (canvasHeight - 100f) * (state.transitStep / 3f)
-                        val endX = canvasWidth - 70f
-                        val endY = 50f
+                        // Transit Route Curve
+                        val startX = canvasWidth * 0.18f + (canvasWidth * 0.60f * (state.transitStep / 3f))
+                        val startY = canvasHeight * 0.78f - (canvasHeight * 0.55f * (state.transitStep / 3f))
 
-                        // Dotted remaining route
+                        val endX = canvasWidth * 0.82f
+                        val endY = canvasHeight * 0.22f
+
+                        // Route Vector Line
                         drawLine(
-                            color = FlameOrange.copy(alpha = 0.5f),
+                            color = FlameOrange,
                             start = Offset(startX, startY),
                             end = Offset(endX, endY),
-                            strokeWidth = 6f,
-                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(15f, 15f), 0f)
+                            strokeWidth = 4f,
+                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 10f), 0f)
                         )
 
-                        // 50m Geofence Radius Circle around Customer Destination
+                        // Customer Geofence Circle (50m pulse)
                         drawCircle(
-                            color = SafetyGreen.copy(alpha = 0.15f),
+                            color = SafetyGreen.copy(alpha = 0.18f),
                             radius = 45f,
                             center = Offset(endX, endY)
                         )
@@ -263,7 +347,7 @@ fun NavigationScreen(
                                 .background(FlameOrange)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = "Rajesh (Scooter)", color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text(text = "Electrician", color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.width(16.dp))
                         Box(
                             modifier = Modifier
@@ -272,12 +356,12 @@ fun NavigationScreen(
                                 .background(SafetyGreen)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = "Customer Destination (50m)", color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text(text = "Customer Doorstep (50m)", color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
 
-            // Customer Contact & Action Card
+            // Customer Contact & Navigation Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -314,8 +398,14 @@ fun NavigationScreen(
                         // Call Customer
                         Button(
                             onClick = {
-                                val callIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${state.customerPhone}"))
-                                context.startActivity(callIntent)
+                                try {
+                                    val callIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${state.customerPhone}")).apply {
+                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                    }
+                                    context.startActivity(callIntent)
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Could not open dialer", Toast.LENGTH_SHORT).show()
+                                }
                             },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(10.dp),
@@ -326,26 +416,30 @@ fun NavigationScreen(
                             Text("CALL", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                         }
 
-                        // Open External Google Maps
+                        // Open Google Maps Turn-by-Turn Navigation
                         Button(
                             onClick = {
-                                val mapUri = Uri.parse("geo:${state.customerLat},${state.customerLng}?q=${state.customerLat},${state.customerLng}(${state.customerName})")
-                                val mapIntent = Intent(Intent.ACTION_VIEW, mapUri)
-                                context.startActivity(mapIntent)
+                                launchTurnByTurnNavigation(
+                                    context = context,
+                                    lat = state.customerLat,
+                                    lng = state.customerLng,
+                                    customerName = state.customerName,
+                                    address = state.customerAddress
+                                )
                             },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = SlateDark700)
+                            colors = ButtonDefaults.buttonColors(containerColor = ActionNavigateBlue)
                         ) {
-                            Icon(imageVector = Icons.Default.Map, contentDescription = null, modifier = Modifier.size(16.dp), tint = FlameOrange)
+                            Icon(imageVector = Icons.Default.Directions, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("MAPS APP", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                            Text("MAPS TURN-BY-TURN", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         }
                     }
                 }
             }
 
-            // Staging Demo: Simulated Transit Movement
+            // Transit Movement Simulator (Safe step progression)
             Surface(
                 color = SlateDark800,
                 shape = RoundedCornerShape(12.dp),
@@ -360,13 +454,13 @@ fun NavigationScreen(
                     ) {
                         Column {
                             Text(
-                                text = "TRANSIT SIMULATOR (STAGING / DEMO)",
+                                text = "DOORSTEP GPS TRANSIT SIMULATOR",
                                 color = FlameOrange,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Moves GPS closer & sends real telemetry pings to backend",
+                                text = "Updates GPS coordinates & broadcasts telemetry to customer",
                                 color = TextMuted,
                                 fontSize = 10.sp
                             )
@@ -441,7 +535,7 @@ fun NavigationScreen(
                         Spacer(modifier = Modifier.height(6.dp))
 
                         Text(
-                            text = "Customer and Regional Hub MH-01 have been notified of your arrival. Next: verify 1000V high-voltage safety interlock before opening consumer unit.",
+                            text = "Customer has been notified of your arrival. Next: confirm 1000V high-voltage safety interlock before opening consumer unit.",
                             color = TextSecondary,
                             fontSize = 11.sp,
                             textAlign = TextAlign.Center

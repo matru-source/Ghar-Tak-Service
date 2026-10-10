@@ -1,6 +1,7 @@
-package com.ghartak.technician.data.api
+﻿package com.ghartak.technician.data.api
 
 import android.content.Context
+import android.os.Build
 import com.ghartak.technician.data.session.SessionManager
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -16,6 +17,17 @@ object ApiClient {
 
     private var retrofit: Retrofit? = null
     private var technicianApiService: TechnicianApiService? = null
+
+    val isEmulator: Boolean by lazy {
+        Build.FINGERPRINT.startsWith("generic") ||
+                Build.FINGERPRINT.startsWith("unknown") ||
+                Build.MODEL.contains("google_sdk") ||
+                Build.MODEL.contains("Emulator") ||
+                Build.MODEL.contains("Android SDK built for x86") ||
+                Build.MANUFACTURER.contains("Genymotion") ||
+                (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")) ||
+                "google_sdk" == Build.PRODUCT
+    }
 
     fun getService(context: Context): TechnicianApiService {
         if (technicianApiService == null) {
@@ -35,12 +47,16 @@ object ApiClient {
                 level = HttpLoggingInterceptor.Level.BODY
             }
 
+            // Quick responsive timeout (3s) to prevent hanging physical devices on unreachable localhost
+            val timeoutSec = if (isEmulator) 5L else 2L
+
             val okHttpClient = OkHttpClient.Builder()
                 .addInterceptor(authInterceptor)
                 .addInterceptor(loggingInterceptor)
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS)
+                .connectTimeout(timeoutSec, TimeUnit.SECONDS)
+                .readTimeout(timeoutSec, TimeUnit.SECONDS)
+                .writeTimeout(timeoutSec, TimeUnit.SECONDS)
+                .retryOnConnectionFailure(false)
                 .build()
 
             retrofit = Retrofit.Builder()

@@ -1,4 +1,6 @@
-package com.ghartak.technician.ui.dashboard
+﻿package com.ghartak.technician.ui.dashboard
+
+import com.ghartak.technician.ui.nav.launchTurnByTurnNavigation
 
 import android.content.Intent
 import android.net.Uri
@@ -575,6 +577,71 @@ fun TechnicianJobDetailsContent(
     onStartJob: () -> Unit,
     onCompleteJob: () -> Unit
 ) {
+    val context = LocalContext.current
+    var showNavigationDialog by remember { mutableStateOf(false) }
+
+    if (showNavigationDialog) {
+        AlertDialog(
+            onDismissRequest = { showNavigationDialog = false },
+            icon = {
+                Icon(imageVector = Icons.Default.Navigation, contentDescription = null, tint = ActionNavigateBlue, modifier = Modifier.size(32.dp))
+            },
+            title = {
+                Text("Select Navigation Mode", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextDarkPrimary)
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = "Destination: ${job.customerName}\n${job.customerAddressText}",
+                        fontSize = 12.sp,
+                        color = TextDarkSecondary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Button(
+                        onClick = {
+                            showNavigationDialog = false
+                            onNavigate()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = ActionNavigateBlue),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(imageVector = Icons.Default.DirectionsRun, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("In-App Doorstep Transit & Geofence", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
+
+                    Button(
+                        onClick = {
+                            showNavigationDialog = false
+                            launchTurnByTurnNavigation(
+                                context = context,
+                                lat = job.customerLatitude ?: 18.9067,
+                                lng = job.customerLongitude ?: 72.8147,
+                                customerName = job.customerName,
+                                address = job.customerAddressText
+                            )
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(imageVector = Icons.Default.Directions, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Google Maps Turn-by-Turn (Driving)", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showNavigationDialog = false }) {
+                    Text("Cancel", color = TextDarkMuted)
+                }
+            }
+        )
+    }
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -742,11 +809,13 @@ fun TechnicianJobDetailsContent(
                 ) {
                     // Navigate (Blue)
                     Button(
-                        onClick = onNavigate,
+                        onClick = { showNavigationDialog = true },
                         colors = ButtonDefaults.buttonColors(containerColor = ActionNavigateBlue),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.weight(1f)
                     ) {
+                        Icon(imageVector = Icons.Default.Navigation, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.White)
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text("Navigate", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
 

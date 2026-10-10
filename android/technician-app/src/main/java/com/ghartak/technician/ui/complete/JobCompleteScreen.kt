@@ -1,6 +1,15 @@
-package com.ghartak.technician.ui.complete
+﻿package com.ghartak.technician.ui.complete
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,13 +27,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.ghartak.technician.ui.theme.*
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +51,61 @@ fun JobCompleteScreen(
     val context = LocalContext.current
     var showSuccessDialog by remember { mutableStateOf(false) }
 
+    // Real Camera & Gallery Launchers
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap: Bitmap? ->
+        if (bitmap != null) {
+            try {
+                val file = File(context.cacheDir, "postwork_panel_${System.currentTimeMillis()}.jpg")
+                file.outputStream().use { out ->
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 85, out)
+                }
+                viewModel.setAfterPhoto(file.absolutePath, bitmap)
+                Toast.makeText(context, "Post-work evidence photo saved!", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                viewModel.setAfterPhoto("local_captured_panel.jpg", bitmap)
+            }
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            cameraLauncher.launch(null)
+        } else {
+            Toast.makeText(context, "Camera permission required to capture post-work evidence", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            try {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val bitmap = BitmapFactory.decodeStream(inputStream)
+                val file = File(context.cacheDir, "postwork_gallery_${System.currentTimeMillis()}.jpg")
+                file.outputStream().use { out ->
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 85, out)
+                }
+                viewModel.setAfterPhoto(file.absolutePath, bitmap)
+                Toast.makeText(context, "Evidence photo uploaded from gallery", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                viewModel.setAfterPhoto(uri.toString(), null)
+            }
+        }
+    }
+
+    val triggerCamera = {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            cameraLauncher.launch(null)
+        } else {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -50,7 +118,7 @@ fun JobCompleteScreen(
                             color = TextPrimary
                         )
                         Text(
-                            text = "Ticket: ${state.ticketNumber} • 70% Split Settlement",
+                            text = "Ticket: ${state.ticketNumber} â€¢ 70% Split Settlement",
                             fontSize = 11.sp,
                             color = FlameOrange
                         )
@@ -78,61 +146,38 @@ fun JobCompleteScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Payout Earnings Highlight Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
+            // Earnings Settlement Banner
+            Surface(
+                color = SlateDark800,
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = CardBackground),
-                border = androidx.compose.foundation.BorderStroke(1.5.dp, SafetyGreen.copy(alpha = 0.5f))
+                border = androidx.compose.foundation.BorderStroke(1.dp, SafetyGreen.copy(alpha = 0.4f)),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "YOUR 70% DIRECT WALLET EARNING",
-                            color = SafetyGreen,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.sp
-                        )
-
-                        Surface(
-                            color = SafetyGreenMuted.copy(alpha = 0.3f),
-                            shape = RoundedCornerShape(6.dp)
-                        ) {
-                            Text(
-                                text = "INSTANT SPLIT",
-                                color = SafetyGreen,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
                     Text(
-                        text = "₹${"%,.2f".format(state.technicianPayoutInr)}",
+                        text = "TECHNICIAN PAYOUT CREDIT",
+                        color = SafetyGreen,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "â‚¹${"%,.2f".format(state.technicianPayoutInr)}",
                         color = TextPrimary,
-                        fontSize = 32.sp,
+                        fontSize = 28.sp,
                         fontWeight = FontWeight.Black
                     )
-
                     Spacer(modifier = Modifier.height(4.dp))
-
                     Text(
-                        text = "Total Customer Bill: ₹${"%,.2f".format(state.totalAmountInr)} • Credited to wallet upon OTP verification",
+                        text = "Total Customer Bill: â‚¹${"%,.2f".format(state.totalAmountInr)} â€¢ Credited to wallet upon OTP verification",
                         color = TextMuted,
                         fontSize = 11.sp
                     )
                 }
             }
 
-            // Section 1: Post-Work Photo Evidence (Restored Circuit Proof)
+            // Section 1: REAL Post-Work Photo Evidence
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -140,31 +185,29 @@ fun JobCompleteScreen(
                 border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Box(
                             modifier = Modifier
                                 .size(28.dp)
                                 .clip(CircleShape)
-                                .background(if (state.afterPhotoUri != null) SafetyGreen.copy(alpha = 0.2f) else SlateDark700),
+                                .background(SlateDark700),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = "1",
-                                color = if (state.afterPhotoUri != null) SafetyGreen else TextMuted,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp
-                            )
+                            Text("1", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         }
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = "POST-WORK SITE PHOTO EVIDENCE",
                             color = TextPrimary,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     if (state.afterPhotoUri == null) {
                         Surface(
@@ -181,31 +224,44 @@ fun JobCompleteScreen(
                                     imageVector = Icons.Default.CameraAlt,
                                     contentDescription = null,
                                     tint = FlameOrange,
-                                    modifier = Modifier.size(34.dp)
+                                    modifier = Modifier.size(36.dp)
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = "Capture Restored Panel / Restored Power",
+                                    text = "Capture Restored Panel Evidence",
                                     color = TextPrimary,
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Text(
-                                    text = "Mandatory proof of neat wiring, restored circuit, and clean worksite",
+                                    text = "Clear photo of restored wiring, closed covers, and neat installation",
                                     color = TextMuted,
                                     fontSize = 11.sp,
                                     textAlign = TextAlign.Center
                                 )
                                 Spacer(modifier = Modifier.height(14.dp))
 
-                                Button(
-                                    onClick = { viewModel.simulateCaptureAfterPhoto() },
-                                    colors = ButtonDefaults.buttonColors(containerColor = FlameOrange),
-                                    shape = RoundedCornerShape(8.dp)
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Icon(imageVector = Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(text = "SNAP PHOTO EVIDENCE (CAMERAX)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Button(
+                                        onClick = triggerCamera,
+                                        colors = ButtonDefaults.buttonColors(containerColor = FlameOrange),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Icon(imageVector = Icons.Default.PhotoCamera, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(text = "SNAP PHOTO (CAMERA)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    }
+
+                                    OutlinedButton(
+                                        onClick = { galleryLauncher.launch("image/*") },
+                                        shape = RoundedCornerShape(8.dp),
+                                        colors = ButtonDefaults.outlinedButtonColors(contentColor = FlameOrange),
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, FlameOrange)
+                                    ) {
+                                        Text(text = "GALLERY", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    }
                                 }
                             }
                         }
@@ -217,18 +273,35 @@ fun JobCompleteScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Row(
-                                modifier = Modifier.padding(14.dp),
+                                modifier = Modifier.padding(12.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = Icons.Default.CheckCircle,
-                                        contentDescription = null,
-                                        tint = SafetyGreen,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(10.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    if (state.afterPhotoBitmap != null) {
+                                        Image(
+                                            bitmap = state.afterPhotoBitmap!!.asImageBitmap(),
+                                            contentDescription = "Captured Panel Photo",
+                                            modifier = Modifier
+                                                .size(52.dp)
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .border(1.dp, SafetyGreen, RoundedCornerShape(8.dp)),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Default.CheckCircle,
+                                            contentDescription = null,
+                                            tint = SafetyGreen,
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                    }
+
                                     Column {
                                         Text(
                                             text = "RESTORED PANEL EVIDENCE LOGGED",
@@ -244,7 +317,7 @@ fun JobCompleteScreen(
                                     }
                                 }
 
-                                TextButton(onClick = { viewModel.simulateCaptureAfterPhoto() }) {
+                                TextButton(onClick = triggerCamera) {
                                     Text("RETAKE", color = FlameOrange, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
@@ -271,34 +344,34 @@ fun JobCompleteScreen(
                                 modifier = Modifier
                                     .size(28.dp)
                                     .clip(CircleShape)
-                                    .background(if (state.enteredOtp.length == 4) SafetyGreen.copy(alpha = 0.2f) else SlateDark700),
+                                    .background(SlateDark700),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = "2",
-                                    color = if (state.enteredOtp.length == 4) SafetyGreen else TextMuted,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp
-                                )
+                                Text("2", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                             }
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(
                                 text = "CUSTOMER 4-DIGIT HANDOVER OTP",
                                 color = TextPrimary,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
                             )
                         }
 
-                        // Staging Demo Fast-Fill Button
-                        OutlinedButton(
-                            onClick = { viewModel.quickFillDemoOtp("4819") },
+                        // Demo Quick Fill 1-Tap Chip
+                        Surface(
+                            color = FlameOrange.copy(alpha = 0.15f),
                             shape = RoundedCornerShape(6.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, FlameOrange.copy(alpha = 0.5f)),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = FlameOrangeLight),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                            border = androidx.compose.foundation.BorderStroke(1.dp, FlameOrange.copy(alpha = 0.4f)),
+                            modifier = Modifier.clickable { viewModel.quickFillDemoOtp("4819") }
                         ) {
-                            Text("1-TAP OTP (4819)", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = "1-TAP OTP (4819)",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = FlameOrange,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                            )
                         }
                     }
 
@@ -316,7 +389,7 @@ fun JobCompleteScreen(
                     OutlinedTextField(
                         value = state.enteredOtp,
                         onValueChange = { viewModel.onOtpChanged(it) },
-                        placeholder = { Text("• • • •", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(), fontSize = 24.sp) },
+                        placeholder = { Text("â€¢ â€¢ â€¢ â€¢", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(), fontSize = 24.sp) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier
@@ -479,8 +552,8 @@ fun JobCompleteScreen(
                             textAlign = TextAlign.Center
                         )
                         Text(
-                            text = "Ticket: ${state.ticketNumber} Settled",
-                            color = TextSecondary,
+                            text = state.ticketNumber,
+                            color = TextMuted,
                             fontSize = 12.sp
                         )
                     }
@@ -490,49 +563,41 @@ fun JobCompleteScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        Text(
+                            text = "â‚¹${"%,.2f".format(state.technicianPayoutInr)}",
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Black,
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = "CREDITED TO GTS ELECTRICIAN WALLET",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = SafetyGreen
+                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
                         Surface(
                             color = SlateDark800,
-                            shape = RoundedCornerShape(12.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder),
+                            shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Column(modifier = Modifier.padding(14.dp)) {
-                                Text(
-                                    text = "70% DIRECT WALLET PAYOUT",
-                                    color = TextMuted,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    letterSpacing = 0.5.sp
-                                )
-                                Text(
-                                    text = "₹${"%,.2f".format(state.technicianPayoutInr)}",
-                                    color = SafetyGreen,
-                                    fontSize = 26.sp,
-                                    fontWeight = FontWeight.Black
-                                )
-                                Spacer(modifier = Modifier.height(10.dp))
-                                Divider(color = SurfaceBorder, thickness = 1.dp)
-                                Spacer(modifier = Modifier.height(10.dp))
+                            Column(modifier = Modifier.padding(12.dp)) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text(text = "Hub MH-01 Split (15%):", color = TextMuted, fontSize = 11.sp)
-                                    Text(text = "₹${"%,.2f".format(state.totalAmountInr * 0.15)}", color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    Text("GST Invoice:", color = TextMuted, fontSize = 11.sp)
+                                    Text(state.invoiceNumber, color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 }
+                                Spacer(modifier = Modifier.height(4.dp))
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text(text = "Platform Royalty (15%):", color = TextMuted, fontSize = 11.sp)
-                                    Text(text = "₹${"%,.2f".format(state.totalAmountInr * 0.15)}", color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                }
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(text = "18% GST Invoice:", color = TextMuted, fontSize = 11.sp)
-                                    Text(text = state.invoiceNumber, color = FlameOrange, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    Text("Customer Handover:", color = TextMuted, fontSize = 11.sp)
+                                    Text("OTP Verified (${state.enteredOtp})", color = SafetyGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -548,7 +613,7 @@ fun JobCompleteScreen(
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("RETURN TO SHIFT DASHBOARD", fontWeight = FontWeight.Bold, color = Color.White)
+                        Text("RETURN TO ACTIVE DISPATCH HUB", fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
             )

@@ -1,9 +1,11 @@
-package com.ghartak.technician.ui.nav
+﻿package com.ghartak.technician.ui.nav
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ghartak.technician.data.api.ApiClient
@@ -15,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 data class NavigationUiState(
     val jobId: String = "job_mh_live_01",
@@ -90,7 +93,7 @@ class NavigationViewModel(
             currentLng = newLng
         )
 
-        // Ping real backend telemetry endpoint
+        // Ping backend telemetry endpoint with fast timeout
         pingBackendTelemetry(context, newLat, newLng, speed)
     }
 
@@ -98,25 +101,27 @@ class NavigationViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isPinging = true)
             try {
-                val api = ApiClient.getService(context)
-                val response = api.sendTelemetry(
-                    TelemetryPingRequest(
-                        technicianId = sessionManager.getTechnicianId(),
-                        jobId = _uiState.value.jobId,
-                        latitude = lat,
-                        longitude = lng,
-                        heading = _uiState.value.heading,
-                        speedKmh = speed,
-                        batteryLevelPct = 85,
-                        isOnline = true
+                withTimeoutOrNull(2000L) {
+                    val api = ApiClient.getService(context)
+                    val response = api.sendTelemetry(
+                        TelemetryPingRequest(
+                            technicianId = sessionManager.getTechnicianId(),
+                            jobId = _uiState.value.jobId,
+                            latitude = lat,
+                            longitude = lng,
+                            heading = _uiState.value.heading,
+                            speedKmh = speed,
+                            batteryLevelPct = 85,
+                            isOnline = true
+                        )
                     )
-                )
 
-                if (response.isSuccessful && response.body()?.data?.isDoorstepNearby == true) {
-                    _uiState.value = _uiState.value.copy(hasArrivedDoorstep = true)
+                    if (response.isSuccessful && response.body()?.data?.isDoorstepNearby == true) {
+                        _uiState.value = _uiState.value.copy(hasArrivedDoorstep = true)
+                    }
                 }
-            } catch (e: Exception) {
-                Log.w("GTS_NAV", "Telemetry ping sync: ${e.message}")
+            } catch (e: Throwable) {
+                Log.w("GTS_NAV", "Telemetry ping sync warning: ${e.message}")
             } finally {
                 _uiState.value = _uiState.value.copy(isPinging = false)
             }
@@ -135,6 +140,20 @@ class NavigationViewModel(
 
     fun startForegroundService(context: Context) {
         try {
+            // Check location permission before attempting foreground service on Android 14
+            val hasLocation = ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+
+            if (!hasLocation) {
+                Log.i("GTS_NAV", "Location permission not yet granted; skipping foreground service to prevent OS crash")
+                return
+            }
+
             val intent = Intent(context, TechnicianLocationService::class.java).apply {
                 action = TechnicianLocationService.ACTION_START
                 putExtra(TechnicianLocationService.EXTRA_JOB_ID, _uiState.value.jobId)
@@ -144,8 +163,8 @@ class NavigationViewModel(
             } else {
                 context.startService(intent)
             }
-        } catch (e: Exception) {
-            Log.w("GTS_NAV", "Foreground service start: ${e.message}")
+        } catch (e: Throwable) {
+            Log.w("GTS_NAV", "Foreground service start prevented error: ${e.message}")
         }
     }
 
@@ -155,7 +174,7 @@ class NavigationViewModel(
                 action = TechnicianLocationService.ACTION_STOP
             }
             context.startService(intent)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             // Ignore
         }
     }
