@@ -44,6 +44,7 @@ val TextDarkSecondary = Color(0xFF475569)
 val TextDarkMuted = Color(0xFF94A3B8)
 
 // Backward Compatibility Aliases
+val SlateDark950 = Color(0xFF0F172A)
 val SlateDark900 = Color(0xFFF8F9FA)
 val SlateDark800 = Color(0xFFFFFFFF)
 val SlateDark700 = Color(0xFFF1F5F9)

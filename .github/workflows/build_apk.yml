@@ -7,14 +7,9 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     env:
       ANDROID_HOME: /usr/local/lib/android/sdk
@@ -23,8 +18,6 @@ jobs:
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -48,45 +41,15 @@ jobs:
       - name: Build Technician App Debug APK
         run: |
           cd android
-          set -o pipefail
-          ./gradlew :technician-app:assembleDebug --no-daemon --stacktrace 2>&1 | tee ../tech_build.log
-
-      - name: Report Build Failure Diagnostics
-        if: failure()
-        run: |
-          LOG_FILE="tech_build.log"
-          if [ -f "$LOG_FILE" ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git checkout -B ci-error-log
-            cp "$LOG_FILE" ./tech_error.log
-            git add ./tech_error.log
-            git commit -m "ci: dump technician build error log" || true
-            git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ci-error-log --force || true
-          fi
-
-      - name: Push APKs to Dist Branch
-        if: success()
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -B apk-dist
-          mkdir -p apks
-          cp android/customer-app/build/outputs/apk/debug/*.apk apks/ || true
-          cp android/technician-app/build/outputs/apk/debug/*.apk apks/ || true
-          git add apks/*.apk
-          git commit -m "dist: latest debug APKs" || true
-          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" apk-dist --force || true
+          ./gradlew :technician-app:assembleDebug --no-daemon --stacktrace
 
       - name: Upload Customer App Debug APK Artifact
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: customer-app-debug-apk
           path: android/customer-app/build/outputs/apk/debug/*.apk
 
       - name: Upload Technician App Debug APK Artifact
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: technician-app-debug-apk
