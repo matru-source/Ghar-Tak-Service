@@ -78,6 +78,9 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("dispatch_alert/$jobId")
                                 },
                                 onLogout = {
+                                    authViewModel.logout()
+                                    dashboardViewModel.logout()
+                                    Toast.makeText(this@MainActivity, "Signed out from technician console", Toast.LENGTH_SHORT).show()
                                     navController.navigate("auth") {
                                         popUpTo("dashboard") { inclusive = true }
                                     }

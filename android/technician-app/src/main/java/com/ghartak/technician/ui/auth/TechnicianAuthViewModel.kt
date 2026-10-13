@@ -359,4 +359,18 @@ class TechnicianAuthViewModel(
             }
         }
     }
+
+    fun logout() {
+        sessionManager.clearSession()
+        _uiState.value = TechnicianAuthUiState(
+            mode = "LOGIN",
+            isLoggedIn = false,
+            email = "",
+            password = "",
+            confirmPassword = "",
+            otpCode = "",
+            errorMessage = null,
+            successMessage = null
+        )
+    }
 }

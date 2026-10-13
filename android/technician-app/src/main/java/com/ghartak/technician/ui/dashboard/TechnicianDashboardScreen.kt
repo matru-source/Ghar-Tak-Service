@@ -1200,6 +1200,44 @@ fun TechnicianProfileContent(
     onToggleDuty: () -> Unit,
     onLogout: () -> Unit
 ) {
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Logout,
+                    contentDescription = null,
+                    tint = Color(0xFFD32F2F),
+                    modifier = Modifier.size(32.dp)
+                )
+            },
+            title = {
+                Text(text = "Sign Out", fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Text(text = "Are you sure you want to sign out from the technician console? You will need to sign in again to receive live job dispatches.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showLogoutDialog = false
+                        onLogout()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
+                ) {
+                    Text("Sign Out", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showLogoutDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
         Surface(color = ElectricOrangeHeader, modifier = Modifier.fillMaxWidth()) {
             Text(
@@ -1279,7 +1317,7 @@ fun TechnicianProfileContent(
 
             item {
                 OutlinedButton(
-                    onClick = onLogout,
+                    onClick = { showLogoutDialog = true },
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD32F2F)),
                     border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFD32F2F)),
                     shape = RoundedCornerShape(10.dp),
