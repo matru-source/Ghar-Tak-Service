@@ -20,26 +20,19 @@ export interface NavSection {
 
 const PARTNER_NAVIGATION: NavSection[] = [
   {
-    title: 'REGIONAL OPERATIONS',
+    title: 'OPERATIONS CORE',
     items: [
-      { name: 'Regional Command Hub', href: '/partner', icon: '⚡' },
-      { name: 'Territory Dispatch Queue', href: '/partner/dispatch', icon: '🛰️', badge: 'Live', badgeColor: 'bg-emerald-500' },
-      { name: 'Critical SLA Escalations', href: '/partner/escalations', icon: '🚨', badge: '1 Breach', badgeColor: 'bg-rose-500 animate-pulse' },
-    ],
-  },
-  {
-    title: 'FLEET & CAPACITY',
-    items: [
-      { name: 'Technician Fleet Roster', href: '/partner/fleet', icon: '👷', badge: '2 Online', badgeColor: 'bg-emerald-600' },
-      { name: 'Pincode Capacity Heatmap', href: '/partner/capacity', icon: '📍' },
+      { name: 'Dashboard', href: '/partner', icon: '📊' },
+      { name: 'Manage Technicians', href: '/partner/fleet', icon: '👷', badge: '18 Active', badgeColor: 'bg-emerald-600' },
+      { name: 'Job Management', href: '/partner/jobs', icon: '⚡', badge: '3 Escalated', badgeColor: 'bg-amber-600' },
     ],
   },
   {
     title: 'FINANCE & GOVERNANCE',
     items: [
-      { name: 'GST Invoices & Ledgers', href: '/partner/invoices', icon: '🧾' },
-      { name: 'Franchise Bank Profile', href: '/partner/profile', icon: '🏦' },
-      { name: 'Partner Operations Helpdesk', href: '/partner/support', icon: '🎧', badge: '2 Open', badgeColor: 'bg-amber-500' },
+      { name: 'Finance & Payouts', href: '/partner/invoices', icon: '🧾', badge: '₹4.2L', badgeColor: 'bg-emerald-700' },
+      { name: 'Profile & Settings', href: '/partner/profile', icon: '🏢' },
+      { name: 'Support & Zex Cyber', href: '/partner/support', icon: '🛡️', badge: '3 Mo Free', badgeColor: 'bg-amber-500' },
     ],
   },
 ];

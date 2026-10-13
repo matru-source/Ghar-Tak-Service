@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { BrandMark } from '@/components/ui/brand-logo';
+import { usePathname } from 'next/navigation';
+import { Zap, ShieldCheck } from '@/components/ui/icons';
 
 export function PartnerTopbar() {
+  const pathname = usePathname();
   const [timeStr, setTimeStr] = useState('');
 
   useEffect(() => {
@@ -25,44 +27,72 @@ export function PartnerTopbar() {
     return () => clearInterval(interval);
   }, []);
 
+  const navLinks = [
+    { name: 'Dashboard', href: '/partner' },
+    { name: 'Technicians', href: '/partner/fleet' },
+    { name: 'Jobs', href: '/partner/jobs' },
+    { name: 'Finance', href: '/partner/invoices' },
+  ];
+
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white/90 px-4 lg:px-8 backdrop-blur-md">
-      {/* Territory Indicator & Mobile Brand Mark */}
-      <div className="flex items-center gap-3 pl-12 lg:pl-0">
-        <Link href="/partner" className="lg:hidden shrink-0" title="GTS Partner Hub">
-          <BrandMark size="xs" badgeBg="bg-emerald-50 border border-emerald-200" />
+    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between bg-[#1B5E20] text-white px-4 lg:px-8 shadow-md">
+      {/* Brand Title: ElectricCare | Partner Portal */}
+      <div className="flex items-center gap-6 pl-10 lg:pl-0">
+        <Link href="/partner" className="flex items-center gap-2 group">
+          <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center border border-white/20 group-hover:bg-white/25 transition-colors">
+            <Zap className="h-5 w-5 text-amber-300" />
+          </div>
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-black text-lg tracking-tight text-white">ElectricCare</span>
+            <span className="text-emerald-200/80 text-xs font-semibold">| Partner Portal</span>
+          </div>
         </Link>
-        <div className="flex items-center gap-2">
-          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="font-bold text-sm text-slate-900">
-            Maharashtra Operations Hub (MH-01)
-          </span>
-        </div>
-        <span className="hidden sm:inline-block rounded-full bg-slate-50 px-2.5 py-0.5 text-[11px] font-mono text-slate-700 border border-slate-200">
-          Dir: Suresh Patil &bull; GSTIN: 27AABCU9603R1ZM
-        </span>
+
+        {/* Center Navigation Links (Matching Client Mockup) */}
+        <nav className="hidden md:flex items-center gap-1 ml-4">
+          {navLinks.map((link) => {
+            const isActive =
+              link.href === '/partner'
+                ? pathname === '/partner'
+                : pathname.startsWith(link.href);
+            return (
+              <Link
+                key={link.name}
+                href={link.href}
+                className={`px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                  isActive
+                    ? 'bg-white/20 text-white shadow-xs underline decoration-2 underline-offset-8'
+                    : 'text-emerald-100 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                {link.name}
+              </Link>
+            );
+          })}
+        </nav>
       </div>
 
       {/* Right controls */}
-      <div className="flex items-center gap-4">
-        {/* Live IST clock */}
-        <div className="hidden md:flex items-center gap-2 rounded-lg bg-slate-50 border border-slate-200 px-3 py-1.5 text-xs text-slate-700 font-mono shadow-xs">
-          <span className="text-emerald-600">⏱️</span>
-          <span>{timeStr || 'Loading IST...'}</span>
+      <div className="flex items-center gap-3">
+        {/* State Hub Pill */}
+        <div className="hidden sm:flex items-center gap-2 rounded-full bg-black/20 border border-white/15 px-3 py-1 text-xs text-emerald-100">
+          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="font-semibold">Maharashtra Hub</span>
         </div>
 
-        {/* Quick Persona Switcher */}
-        <div className="flex items-center gap-2 text-xs">
-          <Link
-            href="/admin"
-            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 hover:text-purple-700 hover:border-purple-300 hover:bg-purple-50 transition-all font-semibold shadow-xs"
-          >
-            👑 Super Admin
-          </Link>
-          <span className="rounded-lg bg-[#1B5E20] border border-emerald-600 px-2.5 py-1 text-white font-bold shadow-xs">
-            🏢 Partner
-          </span>
+        {/* Live IST clock */}
+        <div className="hidden xl:flex items-center gap-1.5 rounded-lg bg-black/15 border border-white/10 px-2.5 py-1 text-xs text-emerald-200 font-mono">
+          <span>{timeStr || 'Loading...'}</span>
         </div>
+
+        {/* Mobile companion shortcut */}
+        <Link
+          href="/partner-app"
+          className="rounded-lg bg-emerald-700 hover:bg-emerald-600 border border-emerald-500/50 px-2.5 py-1 text-xs font-bold text-white transition-colors shadow-xs"
+          title="Switch to Mobile CRM App"
+        >
+          📱 Mobile View
+        </Link>
       </div>
     </header>
   );
