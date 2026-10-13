@@ -12,22 +12,22 @@
   },
   "dependencies": {
     "@prisma/client": "6.4.1",
-    "jose": "^6.2.12",
-    "next": "16.3.8",
-    "prisma": "6.4.1",
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
-  },
-  "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.3.8",
+    "jose": "^6.2.12",
+    "next": "16.3.8",
+    "prisma": "6.4.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5"
+  },
+  "devDependencies": {
+    "eslint": "^9",
+    "eslint-config-next": "16.3.8"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
