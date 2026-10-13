@@ -68,6 +68,8 @@ export default function PartnerDashboardPage() {
     escalatedJobs: 3,
   });
 
+  const [apiConnected, setApiConnected] = useState(false);
+
   // Recent Jobs matching Client Mockup
   const [jobs, setJobs] = useState<JobItem[]>([
     {
@@ -126,23 +128,69 @@ export default function PartnerDashboardPage() {
   ]);
 
   // Standby Technicians for Manual Assignment (Module 2 & 3)
-  const availableTechnicians = [
+  const [availableTechnicians, setAvailableTechnicians] = useState([
     { id: 'tech_suresh_01', name: 'Suresh Patil', badge: 'TECH-1025', rating: 4.9, distance: '0.8 km', pincode: '400001', status: 'Online' },
     { id: 'tech_rajesh_01', name: 'Rajesh Kumar', badge: 'TECH-1024', rating: 4.8, distance: '1.2 km', pincode: '400001', status: 'Online' },
     { id: 'tech_pradeep_04', name: 'Pradeep Jadhav', badge: 'TECH-1028', rating: 4.7, distance: '1.5 km', pincode: '400002', status: 'Online' },
     { id: 'tech_ankit_02', name: 'Ankit Verma', badge: 'TECH-1026', rating: 4.8, distance: '2.1 km', pincode: '400001', status: 'Online' },
-  ];
+  ]);
 
-  // Handle manual assignment
-  const handleAssignTechnician = (techName: string) => {
+  // Connect to live API endpoints on mount
+  useEffect(() => {
+    async function syncBackendData() {
+      try {
+        const [fleetRes, escRes] = await Promise.all([
+          fetch('/api/partner/fleet?partnerId=ptnr_mah_01').then((r) => r.json()).catch(() => null),
+          fetch('/api/partner/escalations?partnerId=ptnr_mah_01').then((r) => r.json()).catch(() => null),
+        ]);
+
+        if (fleetRes?.success) {
+          setApiConnected(true);
+          if (fleetRes.technicians && fleetRes.technicians.length > 0) {
+            const onlineTechs = fleetRes.technicians
+              .filter((t: any) => t.isOnline)
+              .map((t: any) => ({
+                id: t.id,
+                name: t.fullName,
+                badge: t.badgeNumber,
+                rating: t.rating || 4.8,
+                distance: '1.1 km',
+                pincode: t.assignedPincode || '400001',
+                status: 'Online',
+              }));
+            if (onlineTechs.length > 0) {
+              setAvailableTechnicians(onlineTechs);
+            }
+          }
+        }
+
+        if (escRes?.success && escRes.counts) {
+          setKpiStats((prev) => ({
+            ...prev,
+            escalatedJobs: escRes.counts.totalEscalated ?? prev.escalatedJobs,
+          }));
+        }
+      } catch (err) {
+        console.warn('Live API connection check:', err);
+      }
+    }
+
+    syncBackendData();
+  }, []);
+
+  // Handle manual assignment connected to live API
+  const handleAssignTechnician = async (tech: { id: string; name: string }) => {
     if (!selectedAssignJob) return;
 
+    const currentJob = selectedAssignJob;
+
+    // Optimistic UI update
     setJobs((prev) =>
       prev.map((j) =>
-        j.id === selectedAssignJob.id
+        j.id === currentJob.id
           ? {
               ...j,
-              technicianName: `${techName} (Assigned)`,
+              technicianName: `${tech.name} (Assigned)`,
               status: 'EN_ROUTE',
             }
           : j
@@ -155,8 +203,23 @@ export default function PartnerDashboardPage() {
       escalatedJobs: Math.max(0, prev.escalatedJobs - 1),
     }));
 
-    showToast(`⚡ ${selectedAssignJob.jobTicketNumber} manually assigned to ${techName}! SLA timer reset.`);
+    showToast(`⚡ ${currentJob.jobTicketNumber} manually assigned to ${tech.name}! SLA timer reset.`);
     setSelectedAssignJob(null);
+
+    // Sync with Live Backend Reassign Endpoint
+    try {
+      await fetch(`/api/jobs/${currentJob.id}/reassign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetTechnicianId: tech.id,
+          reason: 'Manual partner dispatch reassignment via Regional Web CRM',
+          slaExtensionMinutes: 20,
+        }),
+      });
+    } catch (err) {
+      console.warn('Reassign backend sync notification:', err);
+    }
   };
 
   return (
@@ -527,7 +590,7 @@ export default function PartnerDashboardPage() {
                       </div>
 
                       <button
-                        onClick={() => handleAssignTechnician(tech.name)}
+                        onClick={() => handleAssignTechnician(tech)}
                         className="px-3.5 py-1.5 rounded-lg bg-[#1B5E20] hover:bg-emerald-800 text-white font-bold text-xs transition-colors shadow-2xs"
                       >
                         Assign Now

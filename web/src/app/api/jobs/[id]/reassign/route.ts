@@ -13,10 +13,11 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await request.json().catch(() => ({}));
-    const { targetTechnicianId, reason, slaExtensionMinutes } = body;
+    const { targetTechnicianId, newTechnicianId, reason, slaExtensionMinutes } = body;
+    const resolvedTargetId = targetTechnicianId || newTechnicianId;
 
     const result = await db.reassignJobProximity(id, {
-      targetTechnicianId,
+      targetTechnicianId: resolvedTargetId,
       reason,
       slaExtensionMinutes: typeof slaExtensionMinutes === 'number' ? slaExtensionMinutes : 20,
     });

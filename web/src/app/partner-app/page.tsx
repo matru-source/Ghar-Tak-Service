@@ -115,22 +115,62 @@ export default function PartnerAppOverviewPage() {
     },
   ]);
 
-  const availableTechnicians = [
+  const [availableTechnicians, setAvailableTechnicians] = useState([
     { id: 'tech_suresh_01', name: 'Suresh Patil', badge: 'TECH-1025', rating: 4.9, distance: '0.8 km' },
     { id: 'tech_rajesh_01', name: 'Rajesh Kumar', badge: 'TECH-1024', rating: 4.8, distance: '1.2 km' },
     { id: 'tech_pradeep_04', name: 'Pradeep Jadhav', badge: 'TECH-1028', rating: 4.7, distance: '1.5 km' },
     { id: 'tech_ankit_02', name: 'Ankit Verma', badge: 'TECH-1026', rating: 4.8, distance: '2.1 km' },
-  ];
+  ]);
 
-  const handleAssignTechnician = (techName: string) => {
+  // Connect to live API endpoints on mount
+  React.useEffect(() => {
+    async function syncBackendData() {
+      try {
+        const [fleetRes, escRes] = await Promise.all([
+          fetch('/api/partner/fleet?partnerId=ptnr_mah_01').then((r) => r.json()).catch(() => null),
+          fetch('/api/partner/escalations?partnerId=ptnr_mah_01').then((r) => r.json()).catch(() => null),
+        ]);
+
+        if (fleetRes?.success && fleetRes.technicians?.length > 0) {
+          const onlineTechs = fleetRes.technicians
+            .filter((t: any) => t.isOnline)
+            .map((t: any) => ({
+              id: t.id,
+              name: t.fullName,
+              badge: t.badgeNumber,
+              rating: t.rating || 4.8,
+              distance: '1.2 km',
+            }));
+          if (onlineTechs.length > 0) {
+            setAvailableTechnicians(onlineTechs);
+          }
+        }
+
+        if (escRes?.success && escRes.counts) {
+          setKpiStats((prev) => ({
+            ...prev,
+            escalatedJobs: escRes.counts.totalEscalated ?? prev.escalatedJobs,
+          }));
+        }
+      } catch (err) {
+        console.warn('Mobile CRM API sync:', err);
+      }
+    }
+
+    syncBackendData();
+  }, []);
+
+  const handleAssignTechnician = async (tech: { id: string; name: string }) => {
     if (!selectedAssignJob) return;
+
+    const currentJob = selectedAssignJob;
 
     setJobs((prev) =>
       prev.map((j) =>
-        j.id === selectedAssignJob.id
+        j.id === currentJob.id
           ? {
               ...j,
-              technicianName: `${techName} (Assigned)`,
+              technicianName: `${tech.name} (Assigned)`,
               status: 'EN_ROUTE',
             }
           : j
@@ -142,8 +182,23 @@ export default function PartnerAppOverviewPage() {
       escalatedJobs: Math.max(0, prev.escalatedJobs - 1),
     }));
 
-    showToast(`⚡ ${selectedAssignJob.jobTicketNumber} assigned to ${techName}!`);
+    showToast(`⚡ ${currentJob.jobTicketNumber} assigned to ${tech.name}!`);
     setSelectedAssignJob(null);
+
+    // Call live backend reassign API
+    try {
+      await fetch(`/api/jobs/${currentJob.id}/reassign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetTechnicianId: tech.id,
+          reason: 'Mobile partner app quick manual dispatch',
+          slaExtensionMinutes: 20,
+        }),
+      });
+    } catch (err) {
+      console.warn('Mobile dispatch reassign sync:', err);
+    }
   };
 
   return (
@@ -421,7 +476,7 @@ export default function PartnerAppOverviewPage() {
                     <div className="text-[10px] text-slate-500">{t.distance} &bull; ★ {t.rating}</div>
                   </div>
                   <button
-                    onClick={() => handleAssignTechnician(t.name)}
+                    onClick={() => handleAssignTechnician(t)}
                     className="px-2.5 py-1 rounded bg-[#1B5E20] text-white font-bold text-xs"
                   >
                     Assign
