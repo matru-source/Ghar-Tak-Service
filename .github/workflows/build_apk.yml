@@ -36,12 +36,24 @@ jobs:
       - name: Build Customer App Debug APK
         run: |
           cd android
-          ./gradlew :customer-app:assembleDebug --no-daemon --stacktrace
+          ./gradlew :customer-app:assembleDebug --no-daemon --stacktrace 2>&1 | tee /tmp/customer_build.log || {
+            echo "## ❌ Customer App Build Log (Failure)" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -n 120 /tmp/customer_build.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            exit 1
+          }
 
       - name: Build Technician App Debug APK
         run: |
           cd android
-          ./gradlew :technician-app:assembleDebug --no-daemon --stacktrace
+          ./gradlew :technician-app:assembleDebug --no-daemon --stacktrace 2>&1 | tee /tmp/technician_build.log || {
+            echo "## ❌ Technician App Build Log (Failure)" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -n 120 /tmp/technician_build.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            exit 1
+          }
 
       - name: Upload Customer App Debug APK Artifact
         uses: actions/upload-artifact@v4
