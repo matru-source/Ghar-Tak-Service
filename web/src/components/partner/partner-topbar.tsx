@@ -3,9 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Zap, ShieldCheck } from '@/components/ui/icons';
+import { Zap } from '@/components/ui/icons';
 
-export function PartnerTopbar() {
+interface PartnerTopbarProps {
+  onToggleSidebar?: () => void;
+}
+
+export function PartnerTopbar({ onToggleSidebar }: PartnerTopbarProps) {
   const pathname = usePathname();
   const [timeStr, setTimeStr] = useState('');
 
@@ -35,16 +39,27 @@ export function PartnerTopbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between bg-[#1B5E20] text-white px-4 lg:px-8 shadow-md">
+    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between bg-[#1B5E20] text-white px-3 sm:px-6 lg:px-8 shadow-md">
       {/* Brand Title: ElectricCare | Partner Portal */}
-      <div className="flex items-center gap-6 pl-10 lg:pl-0">
+      <div className="flex items-center gap-2 sm:gap-4 lg:gap-6">
+        {onToggleSidebar && (
+          <button
+            type="button"
+            onClick={onToggleSidebar}
+            className="lg:hidden p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/15"
+            aria-label="Toggle Navigation Drawer"
+          >
+            <span className="text-lg leading-none">☰</span>
+          </button>
+        )}
+
         <Link href="/partner" className="flex items-center gap-2 group">
           <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center border border-white/20 group-hover:bg-white/25 transition-colors">
             <Zap className="h-5 w-5 text-amber-300" />
           </div>
           <div className="flex items-baseline gap-1.5">
-            <span className="font-black text-lg tracking-tight text-white">ElectricCare</span>
-            <span className="text-emerald-200/80 text-xs font-semibold">| Partner Portal</span>
+            <span className="font-black text-base sm:text-lg tracking-tight text-white">ElectricCare</span>
+            <span className="hidden sm:inline text-emerald-200/80 text-xs font-semibold">| Partner Portal</span>
           </div>
         </Link>
 
@@ -73,26 +88,17 @@ export function PartnerTopbar() {
       </div>
 
       {/* Right controls */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         {/* State Hub Pill */}
-        <div className="hidden sm:flex items-center gap-2 rounded-full bg-black/20 border border-white/15 px-3 py-1 text-xs text-emerald-100">
+        <div className="flex items-center gap-1.5 sm:gap-2 rounded-full bg-black/20 border border-white/15 px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs text-emerald-100">
           <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
           <span className="font-semibold">Maharashtra Hub</span>
         </div>
 
         {/* Live IST clock */}
-        <div className="hidden xl:flex items-center gap-1.5 rounded-lg bg-black/15 border border-white/10 px-2.5 py-1 text-xs text-emerald-200 font-mono">
+        <div className="hidden sm:flex items-center gap-1.5 rounded-lg bg-black/15 border border-white/10 px-2.5 py-1 text-xs text-emerald-200 font-mono">
           <span>{timeStr || 'Loading...'}</span>
         </div>
-
-        {/* Mobile companion shortcut */}
-        <Link
-          href="/partner-app"
-          className="rounded-lg bg-emerald-700 hover:bg-emerald-600 border border-emerald-500/50 px-2.5 py-1 text-xs font-bold text-white transition-colors shadow-xs"
-          title="Switch to Mobile CRM App"
-        >
-          📱 Mobile View
-        </Link>
       </div>
     </header>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { BrandLogo, BrandMark } from '@/components/ui/brand-logo';
@@ -37,57 +37,59 @@ const PARTNER_NAVIGATION: NavSection[] = [
   },
 ];
 
-export function PartnerSidebar() {
+interface PartnerSidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function PartnerSidebar({ isOpen = false, onClose }: PartnerSidebarProps) {
   const pathname = usePathname();
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   return (
     <>
-      {/* Mobile Toggle Button */}
-      <button
-        type="button"
-        onClick={() => setIsMobileOpen(!isMobileOpen)}
-        className="lg:hidden fixed top-3 left-4 z-50 p-2 rounded-lg bg-slate-900 border border-slate-700 text-white shadow-lg"
-        aria-label="Toggle Navigation Drawer"
-      >
-        <span className="text-xl">{isMobileOpen ? '✕' : '☰'}</span>
-      </button>
-
       {/* Backdrop for mobile */}
-      {isMobileOpen && (
+      {isOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
-          onClick={() => setIsMobileOpen(false)}
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 lg:hidden"
+          onClick={onClose}
+          aria-hidden="true"
         />
       )}
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed top-0 left-0 bottom-0 z-40 w-72 bg-white text-slate-800 border-r border-slate-200 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-          isMobileOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed top-0 left-0 bottom-0 z-50 w-72 bg-white text-slate-800 border-r border-slate-200 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+          isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
         }`}
       >
         {/* Brand Header */}
-        <div className="p-4 border-b border-slate-200">
-          <Link href="/partner" className="flex flex-col gap-2.5 group">
-            <div className="flex items-center justify-between">
+        <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+          <Link href="/partner" onClick={onClose} className="flex flex-col gap-1 group">
+            <div className="flex items-center gap-2">
               <BrandLogo variant="on-light" size="sm" priority />
-              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-[#1B5E20] border border-emerald-200 shadow-2xs">
-                PARTNER HUB
+              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-[#1B5E20] border border-emerald-200">
+                PARTNER
               </span>
             </div>
-            <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium">
-              <span>Maharashtra Regional Hub MH-01</span>
-              <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                Active
-              </span>
+            <div className="text-[11px] text-slate-500 font-medium">
+              Maharashtra Regional Hub MH-01
             </div>
           </Link>
+
+          {/* Close button on mobile */}
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+              aria-label="Close navigation"
+            >
+              <span className="text-xl leading-none">✕</span>
+            </button>
+          )}
         </div>
 
         {/* Territory Status Quick Chip */}
-        <div className="mx-4 mt-4 p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+        <div className="mx-4 mt-3.5 p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
           <div>
             <div className="text-[10px] uppercase font-bold text-slate-400">Jurisdiction</div>
             <div className="font-bold text-slate-800">Mumbai City &bull; 400001</div>
@@ -99,7 +101,7 @@ export function PartnerSidebar() {
         </div>
 
         {/* Navigation Sections */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
           {PARTNER_NAVIGATION.map((section) => (
             <div key={section.title} className="space-y-1">
               <div className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -111,7 +113,7 @@ export function PartnerSidebar() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    onClick={() => setIsMobileOpen(false)}
+                    onClick={onClose}
                     className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                       isActive
                         ? 'bg-emerald-50 text-[#1B5E20] font-bold border border-emerald-200 shadow-xs'
@@ -158,6 +160,7 @@ export function PartnerSidebar() {
           </div>
           <Link
             href="/partner/login"
+            onClick={onClose}
             className="text-xs text-slate-400 hover:text-slate-700 p-1.5 rounded hover:bg-slate-200/60 transition font-bold"
             title="Switch Hub / Sign Out"
           >

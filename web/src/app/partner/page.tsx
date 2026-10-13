@@ -251,63 +251,63 @@ export default function PartnerDashboardPage() {
       </div>
 
       {/* 4 KPI Cards matching Client Mockup */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         {/* Card 1: Total Jobs */}
-        <div className="rounded-2xl border-2 border-[#A5D6A7] bg-[#E8F5E9] p-5 shadow-xs flex flex-col justify-between">
+        <div className="rounded-xl sm:rounded-2xl border-2 border-[#A5D6A7] bg-[#E8F5E9] p-3.5 sm:p-5 shadow-xs flex flex-col justify-between">
           <div className="text-center">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#2E7D32]">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#2E7D32]">
               Total Jobs
             </span>
-            <div className="text-4xl font-black text-[#1B5E20] mt-1">
+            <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#1B5E20] mt-0.5 sm:mt-1">
               {kpiStats.totalJobs}
             </div>
-            <div className="text-xs font-semibold text-[#2E7D32] mt-1 flex items-center justify-center gap-1">
+            <div className="text-[10px] sm:text-xs font-semibold text-[#2E7D32] mt-0.5 sm:mt-1 flex items-center justify-center gap-1">
               <span>&uarr; {kpiStats.totalJobsTrend}</span>
             </div>
           </div>
         </div>
 
         {/* Card 2: Active Technicians */}
-        <div className="rounded-2xl border-2 border-[#A5D6A7] bg-[#E8F5E9] p-5 shadow-xs flex flex-col justify-between">
+        <div className="rounded-xl sm:rounded-2xl border-2 border-[#A5D6A7] bg-[#E8F5E9] p-3.5 sm:p-5 shadow-xs flex flex-col justify-between">
           <div className="text-center">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#2E7D32]">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#2E7D32]">
               Active Technicians
             </span>
-            <div className="text-4xl font-black text-[#1B5E20] mt-1">
+            <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#1B5E20] mt-0.5 sm:mt-1">
               {kpiStats.activeTechnicians}
             </div>
-            <div className="text-xs font-semibold text-[#2E7D32] mt-1">
+            <div className="text-[10px] sm:text-xs font-semibold text-[#2E7D32] mt-0.5 sm:mt-1">
               {kpiStats.onlineNow} online now
             </div>
           </div>
         </div>
 
         {/* Card 3: Revenue */}
-        <div className="rounded-2xl border-2 border-[#A5D6A7] bg-[#E8F5E9] p-5 shadow-xs flex flex-col justify-between">
+        <div className="rounded-xl sm:rounded-2xl border-2 border-[#A5D6A7] bg-[#E8F5E9] p-3.5 sm:p-5 shadow-xs flex flex-col justify-between">
           <div className="text-center">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#2E7D32]">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#2E7D32]">
               Revenue
             </span>
-            <div className="text-4xl font-black text-[#1B5E20] mt-1">
+            <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#1B5E20] mt-0.5 sm:mt-1">
               {kpiStats.revenueText}
             </div>
-            <div className="text-xs font-semibold text-[#2E7D32] mt-1 flex items-center justify-center gap-1">
+            <div className="text-[10px] sm:text-xs font-semibold text-[#2E7D32] mt-0.5 sm:mt-1 flex items-center justify-center gap-1">
               <span>&uarr; {kpiStats.revenueTrend}</span>
             </div>
           </div>
         </div>
 
         {/* Card 4: Escalated Jobs (Warning Card) */}
-        <div className="rounded-2xl border-2 border-[#FFB74D] bg-[#FFF3E0] p-5 shadow-xs flex flex-col justify-between">
+        <div className="rounded-xl sm:rounded-2xl border-2 border-[#FFB74D] bg-[#FFF3E0] p-3.5 sm:p-5 shadow-xs flex flex-col justify-between">
           <div className="text-center">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#E65100]">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#E65100]">
               Escalated Jobs
             </span>
-            <div className="text-4xl font-black text-[#D84315] mt-1">
+            <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#D84315] mt-0.5 sm:mt-1">
               {kpiStats.escalatedJobs}
             </div>
-            <div className="text-xs font-bold text-[#E65100] mt-1 flex items-center justify-center gap-1">
-              <AlertTriangle className="h-3.5 w-3.5 text-[#E65100]" />
+            <div className="text-[10px] sm:text-xs font-bold text-[#E65100] mt-0.5 sm:mt-1 flex items-center justify-center gap-1">
+              <AlertTriangle className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#E65100]" />
               <span>Needs attention</span>
             </div>
           </div>
@@ -315,40 +315,40 @@ export default function PartnerDashboardPage() {
       </div>
 
       {/* Quick Action Operations Bar (Modules 2, 4, 5, 6) */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 sm:p-3.5 rounded-2xl border border-slate-200 shadow-2xs">
         <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
           <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 uppercase text-[10px]">Territory Hub</span>
-          <span>Maharashtra &bull; Pincodes: 400001, 400002, 400005, 400020</span>
+          <span className="truncate">Maharashtra &bull; Pincodes: 400001, 400002, 400005, 400020</span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             onClick={() => setShowOnboardModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1B5E20] text-white text-xs font-bold hover:bg-emerald-800 transition-colors shadow-2xs"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-xl bg-[#1B5E20] text-white text-xs font-bold hover:bg-emerald-800 transition-colors shadow-2xs"
           >
             <Plus className="h-3.5 w-3.5" />
-            <span>Onboard Technician</span>
+            <span>Onboard Tech</span>
           </button>
 
           <button
             onClick={() => setShowZexClaimModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold hover:bg-amber-100 transition-colors shadow-2xs"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold hover:bg-amber-100 transition-colors shadow-2xs"
           >
             <ShieldCheck className="h-3.5 w-3.5 text-amber-600" />
-            <span>Claim Zex Cyber (3 Mo)</span>
+            <span>Claim Zex (3 Mo)</span>
           </button>
         </div>
       </div>
 
       {/* Recent Jobs in Maharashtra (Matching Client Mockup Table) */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+        <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-extrabold text-[#1B5E20]">
+            <h2 className="text-base sm:text-lg font-extrabold text-[#1B5E20]">
               Recent Jobs in Maharashtra
             </h2>
-            <p className="text-xs text-slate-500">
-              Live dispatch feed &bull; Handled via State Level Partner Operations
+            <p className="text-[11px] sm:text-xs text-slate-500">
+              Live dispatch feed &bull; State Jurisdiction: MH-01
             </p>
           </div>
 
@@ -356,13 +356,13 @@ export default function PartnerDashboardPage() {
             href="/partner/jobs"
             className="text-xs font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1"
           >
-            <span>View All Jobs</span>
+            <span>View All</span>
             <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 
-        {/* Table matching mockup */}
-        <div className="overflow-x-auto">
+        {/* Desktop Table (Hidden on small screens) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="bg-[#E8F5E9] text-[#1B5E20] border-b border-[#C8E6C9] font-black uppercase text-[11px] tracking-wider">
@@ -457,14 +457,102 @@ export default function PartnerDashboardPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile Feed Cards (Visible only on mobile screens < md) */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {jobs.map((job) => {
+            const isUnassigned = job.technicianName?.toLowerCase().includes('unassigned');
+            return (
+              <div key={job.id} className="p-3.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-xs text-slate-900 bg-slate-100 px-2 py-0.5 rounded">
+                      {job.jobTicketNumber}
+                    </span>
+                    <span className="font-bold text-xs text-slate-900">{job.customerName}</span>
+                  </div>
+
+                  {/* Status Badge */}
+                  <div>
+                    {job.status === 'EN_ROUTE' && (
+                      <span className="inline-flex items-center gap-1 font-bold text-emerald-700 text-[11px] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span>En Route</span>
+                      </span>
+                    )}
+                    {job.status === 'PENDING' && (
+                      <span className="inline-flex items-center gap-1 font-bold text-amber-700 text-[11px] bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                        <span>Pending</span>
+                      </span>
+                    )}
+                    {job.status === 'DONE' && (
+                      <span className="inline-flex items-center gap-1 font-bold text-slate-800 text-[11px] bg-slate-100 px-2 py-0.5 rounded-full">
+                        <Check className="h-3 w-3 text-emerald-600 stroke-[3]" />
+                        <span>Done</span>
+                      </span>
+                    )}
+                    {job.status === 'STARTED' && (
+                      <span className="inline-flex items-center gap-1 font-bold text-orange-700 text-[11px] bg-orange-50 px-2 py-0.5 rounded-full border border-orange-200">
+                        <span className="h-1.5 w-1.5 rounded-full bg-orange-500 animate-ping" />
+                        <span>Started</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="text-[11px] text-slate-600 line-clamp-1">
+                  {job.serviceTitle}
+                </div>
+
+                <div className="flex items-center justify-between pt-1 border-t border-slate-50 text-xs">
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase font-semibold block">Technician</span>
+                    {isUnassigned ? (
+                      <span className="font-extrabold text-red-600">Unassigned</span>
+                    ) : (
+                      <span className="text-slate-800 font-medium">{job.technicianName}</span>
+                    )}
+                  </div>
+
+                  {/* Action Button */}
+                  <div>
+                    {isUnassigned ? (
+                      <button
+                        onClick={() => setSelectedAssignJob(job)}
+                        className="px-3 py-1.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-[#1B5E20] font-bold text-xs transition-colors shadow-2xs border border-emerald-300"
+                      >
+                        [Assign]
+                      </button>
+                    ) : job.status === 'DONE' ? (
+                      <button
+                        onClick={() => setSelectedInvoiceJob(job)}
+                        className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors shadow-2xs border border-slate-300"
+                      >
+                        [Invoice]
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setSelectedTrackJob(job)}
+                        className="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-[#1B5E20] font-bold text-xs transition-colors shadow-2xs border border-emerald-200"
+                      >
+                        [Track]
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* ========================================================================= */}
       {/* MODAL 1: LIVE GPS TRACKING MODAL ([Track] Action)                         */}
       {/* ========================================================================= */}
       {selectedTrackJob && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2 text-emerald-800">
                 <Navigation className="h-5 w-5 text-emerald-600" />
@@ -536,8 +624,8 @@ export default function PartnerDashboardPage() {
       {/* MODAL 2: MANUAL ASSIGN MODAL ([Assign] Action for Escalated Jobs)         */}
       {/* ========================================================================= */}
       {selectedAssignJob && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2 text-[#D84315]">
                 <AlertTriangle className="h-5 w-5 text-[#E65100]" />
@@ -617,8 +705,8 @@ export default function PartnerDashboardPage() {
       {/* MODAL 3: INVOICE & GST MODAL ([Invoice] Action)                            */}
       {/* ========================================================================= */}
       {selectedInvoiceJob && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2 text-slate-900">
                 <Receipt className="h-5 w-5 text-emerald-600" />
@@ -701,8 +789,8 @@ export default function PartnerDashboardPage() {
       {/* MODAL 4: ONBOARD NEW TECHNICIAN (Module 2)                                */}
       {/* ========================================================================= */}
       {showOnboardModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2 text-[#1B5E20]">
                 <Plus className="h-5 w-5 text-emerald-600" />
@@ -787,8 +875,8 @@ export default function PartnerDashboardPage() {
       {/* MODAL 5: CLAIM ZEX CYBER SUBSCRIPTION (Module 6)                          */}
       {/* ========================================================================= */}
       {showZexClaimModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2 text-amber-900">
                 <ShieldCheck className="h-5 w-5 text-amber-600" />
