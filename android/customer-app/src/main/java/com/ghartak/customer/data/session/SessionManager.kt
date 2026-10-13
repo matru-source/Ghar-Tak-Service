@@ -20,9 +20,16 @@ class SessionManager(context: Context) {
         private const val KEY_USER_PINCODE = "key_user_pincode"
         private const val KEY_IS_LOGGED_IN = "key_is_logged_in"
         private const val KEY_USERS_REGISTRY = "key_users_registry"
+        private const val KEY_CUSTOM_BASE_URL = "key_custom_base_url"
+        const val DEFAULT_BASE_URL = "https://ghartak-api.onrender.com/api/"
     }
 
     init {
+        val savedBaseUrl = prefs.getString(KEY_CUSTOM_BASE_URL, null)
+        if (!savedBaseUrl.isNullOrBlank()) {
+            com.ghartak.customer.data.api.ApiClient.updateBaseUrl(savedBaseUrl)
+        }
+
         val schemaVer = prefs.getInt("key_schema_version", 1)
         if (schemaVer < 2) {
             // Fresh clean schema: wipe any legacy demo sessions and accounts completely
@@ -32,6 +39,16 @@ class SessionManager(context: Context) {
                 .putInt("key_schema_version", 2)
                 .apply()
         }
+    }
+
+    fun getCustomBaseUrl(): String {
+        return prefs.getString(KEY_CUSTOM_BASE_URL, DEFAULT_BASE_URL) ?: DEFAULT_BASE_URL
+    }
+
+    fun setCustomBaseUrl(url: String) {
+        val sanitized = if (url.trim().endsWith("/")) url.trim() else "${url.trim()}/"
+        prefs.edit().putString(KEY_CUSTOM_BASE_URL, sanitized).apply()
+        com.ghartak.customer.data.api.ApiClient.updateBaseUrl(sanitized)
     }
 
     fun isEmailRegistered(rawEmail: String): Boolean {

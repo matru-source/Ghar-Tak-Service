@@ -24,9 +24,16 @@ class SessionManager(context: Context) {
         private const val KEY_IS_LOGGED_IN = "key_is_logged_in"
         private const val KEY_TECHNICIANS_REGISTRY = "key_technicians_registry"
         private const val KEY_SCHEMA_VERSION = "key_schema_version"
+        private const val KEY_CUSTOM_BASE_URL = "key_custom_base_url"
+        const val DEFAULT_BASE_URL = "https://ghartak-api.onrender.com/api/"
     }
 
     init {
+        val savedBaseUrl = prefs.getString(KEY_CUSTOM_BASE_URL, null)
+        if (!savedBaseUrl.isNullOrBlank()) {
+            com.ghartak.technician.data.api.ApiClient.updateBaseUrl(savedBaseUrl)
+        }
+
         // Pre-seed default electrician if registry is fresh
         val registryStr = prefs.getString(KEY_TECHNICIANS_REGISTRY, "")
         if (registryStr.isNullOrBlank()) {
@@ -45,6 +52,16 @@ class SessionManager(context: Context) {
             json.put("9811223344", defaultTech)
             prefs.edit().putString(KEY_TECHNICIANS_REGISTRY, json.toString()).apply()
         }
+    }
+
+    fun getCustomBaseUrl(): String {
+        return prefs.getString(KEY_CUSTOM_BASE_URL, DEFAULT_BASE_URL) ?: DEFAULT_BASE_URL
+    }
+
+    fun setCustomBaseUrl(url: String) {
+        val sanitized = if (url.trim().endsWith("/")) url.trim() else "${url.trim()}/"
+        prefs.edit().putString(KEY_CUSTOM_BASE_URL, sanitized).apply()
+        com.ghartak.technician.data.api.ApiClient.updateBaseUrl(sanitized)
     }
 
     fun isEmailRegistered(rawEmail: String): Boolean {

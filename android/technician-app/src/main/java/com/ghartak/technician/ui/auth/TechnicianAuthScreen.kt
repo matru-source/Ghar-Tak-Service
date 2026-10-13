@@ -25,7 +25,11 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.platform.LocalContext
 import com.ghartak.technician.R
+import com.ghartak.technician.data.session.SessionManager
+import com.ghartak.technician.ui.components.EnvironmentSwitcherDialog
 import com.ghartak.technician.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,11 +39,26 @@ fun TechnicianAuthScreen(
     onLoginSuccess: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+    var logoClickCount by remember { mutableStateOf(0) }
+    var lastClickTime by remember { mutableStateOf(0L) }
+    var showEnvSwitcher by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.isLoggedIn) {
         if (state.isLoggedIn) {
             onLoginSuccess()
         }
+    }
+
+    if (showEnvSwitcher) {
+        EnvironmentSwitcherDialog(
+            currentUrl = sessionManager.getCustomBaseUrl(),
+            onDismiss = { showEnvSwitcher = false },
+            onApply = { newUrl ->
+                sessionManager.setCustomBaseUrl(newUrl)
+            }
+        )
     }
 
     Box(
@@ -59,13 +78,27 @@ fun TechnicianAuthScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // GTS Logo
+            // GTS Logo (Secret 6-Tap Developer Environment Switcher)
             Box(
                 modifier = Modifier
                     .size(76.dp)
                     .clip(RoundedCornerShape(20.dp))
                     .background(ElectricOrangeHeader.copy(alpha = 0.08f))
-                    .border(1.5.dp, ElectricOrangeHeader.copy(alpha = 0.25f), RoundedCornerShape(20.dp)),
+                    .border(1.5.dp, ElectricOrangeHeader.copy(alpha = 0.25f), RoundedCornerShape(20.dp))
+                    .clickable {
+                        val now = System.currentTimeMillis()
+                        if (now - lastClickTime < 1500) {
+                            logoClickCount++
+                        } else {
+                            logoClickCount = 1
+                        }
+                        lastClickTime = now
+
+                        if (logoClickCount >= 6) {
+                            logoClickCount = 0
+                            showEnvSwitcher = true
+                        }
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Image(

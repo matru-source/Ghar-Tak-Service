@@ -33,7 +33,8 @@ import androidx.compose.ui.res.painterResource
 import com.ghartak.customer.R
 import com.ghartak.customer.ui.catalog.CustomerBookServicesView
 import com.ghartak.customer.data.model.ServiceItem
-import com.ghartak.customer.ui.catalog.CustomerCatalogViewModel
+import com.ghartak.customer.data.session.SessionManager
+import com.ghartak.customer.ui.components.EnvironmentSwitcherDialog
 import com.ghartak.customer.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,8 +47,22 @@ fun CustomerHomeScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
     val focusManager = LocalFocusManager.current
     var currentBottomTab by remember { mutableStateOf(0) }
+    var logoClickCount by remember { mutableStateOf(0) }
+    var lastClickTime by remember { mutableStateOf(0L) }
+    var showEnvSwitcher by remember { mutableStateOf(false) }
+
+    if (showEnvSwitcher) {
+        EnvironmentSwitcherDialog(
+            currentUrl = sessionManager.getCustomBaseUrl(),
+            onDismiss = { showEnvSwitcher = false },
+            onApply = { newUrl ->
+                sessionManager.setCustomBaseUrl(newUrl)
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -70,6 +85,20 @@ fun CustomerHomeScreen(
                                 .size(46.dp)
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(Color.White)
+                                .clickable {
+                                    val now = System.currentTimeMillis()
+                                    if (now - lastClickTime < 1500) {
+                                        logoClickCount++
+                                    } else {
+                                        logoClickCount = 1
+                                    }
+                                    lastClickTime = now
+
+                                    if (logoClickCount >= 6) {
+                                        logoClickCount = 0
+                                        showEnvSwitcher = true
+                                    }
+                                }
                                 .padding(4.dp),
                             contentAlignment = Alignment.Center
                         ) {

@@ -28,6 +28,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ghartak.technician.data.model.TechnicianJob
+import com.ghartak.technician.data.session.SessionManager
+import com.ghartak.technician.ui.components.EnvironmentSwitcherDialog
 import com.ghartak.technician.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1200,7 +1202,22 @@ fun TechnicianProfileContent(
     onToggleDuty: () -> Unit,
     onLogout: () -> Unit
 ) {
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
     var showLogoutDialog by remember { mutableStateOf(false) }
+    var showEnvSwitcher by remember { mutableStateOf(false) }
+    var avatarClickCount by remember { mutableStateOf(0) }
+    var lastClickTime by remember { mutableStateOf(0L) }
+
+    if (showEnvSwitcher) {
+        EnvironmentSwitcherDialog(
+            currentUrl = sessionManager.getCustomBaseUrl(),
+            onDismiss = { showEnvSwitcher = false },
+            onApply = { newUrl ->
+                sessionManager.setCustomBaseUrl(newUrl)
+            }
+        )
+    }
 
     if (showLogoutDialog) {
         AlertDialog(
@@ -1269,7 +1286,21 @@ fun TechnicianProfileContent(
                                     .size(50.dp)
                                     .clip(CircleShape)
                                     .background(ElectricOrangeHeader.copy(alpha = 0.15f))
-                                    .border(1.5.dp, ElectricOrangeHeader, CircleShape),
+                                    .border(1.5.dp, ElectricOrangeHeader, CircleShape)
+                                    .clickable {
+                                        val now = System.currentTimeMillis()
+                                        if (now - lastClickTime < 1500) {
+                                            avatarClickCount++
+                                        } else {
+                                            avatarClickCount = 1
+                                        }
+                                        lastClickTime = now
+
+                                        if (avatarClickCount >= 6) {
+                                            avatarClickCount = 0
+                                            showEnvSwitcher = true
+                                        }
+                                    },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(text = "RK", color = ElectricOrangeDark, fontWeight = FontWeight.Black, fontSize = 18.sp)
