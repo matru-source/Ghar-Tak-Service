@@ -35,6 +35,7 @@ jobs:
 
       - name: Build Customer App Debug APK
         run: |
+          set -e -o pipefail
           cd android
           ./gradlew :customer-app:assembleDebug --no-daemon --stacktrace 2>&1 | tee /tmp/customer_build.log || {
             echo "## ❌ Customer App Build Log (Failure)" >> $GITHUB_STEP_SUMMARY
@@ -46,6 +47,7 @@ jobs:
 
       - name: Build Technician App Debug APK
         run: |
+          set -e -o pipefail
           cd android
           ./gradlew :technician-app:assembleDebug --no-daemon --stacktrace 2>&1 | tee /tmp/technician_build.log || {
             echo "## ❌ Technician App Build Log (Failure)" >> $GITHUB_STEP_SUMMARY
@@ -60,9 +62,11 @@ jobs:
         with:
           name: customer-app-debug-apk
           path: android/customer-app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
 
       - name: Upload Technician App Debug APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: technician-app-debug-apk
           path: android/technician-app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error

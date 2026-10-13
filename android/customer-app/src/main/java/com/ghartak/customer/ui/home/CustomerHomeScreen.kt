@@ -33,6 +33,7 @@ import androidx.compose.ui.res.painterResource
 import com.ghartak.customer.R
 import com.ghartak.customer.ui.catalog.CustomerBookServicesView
 import com.ghartak.customer.data.model.ServiceItem
+import com.ghartak.customer.ui.catalog.CustomerCatalogViewModel
 import com.ghartak.customer.data.session.SessionManager
 import com.ghartak.customer.ui.components.EnvironmentSwitcherDialog
 import com.ghartak.customer.ui.theme.*
