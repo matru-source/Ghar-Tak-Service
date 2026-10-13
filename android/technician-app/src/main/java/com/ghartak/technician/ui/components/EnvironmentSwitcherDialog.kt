@@ -1,17 +1,15 @@
 package com.ghartak.technician.ui.components
 
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Dns
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -52,7 +50,7 @@ fun EnvironmentSwitcherDialog(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Dns,
+                        imageVector = Icons.Default.Settings,
                         contentDescription = "Environment Switcher",
                         tint = ElectricOrangeHeader,
                         modifier = Modifier.size(20.dp)
@@ -93,7 +91,7 @@ fun EnvironmentSwitcherDialog(
                 Surface(
                     color = Color(0xFFF1F5F9),
                     shape = RoundedCornerShape(10.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorderLight),
+                    border = BorderStroke(1.dp, SurfaceBorderLight),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(10.dp)) {
@@ -121,31 +119,27 @@ fun EnvironmentSwitcherDialog(
                 )
 
                 // Preset 1: Render Production (Client Demo)
-                OutlinedCard(
+                Surface(
                     onClick = {
                         inputUrl = SessionManager.DEFAULT_BASE_URL
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
-                    colors = CardDefaults.outlinedCardColors(
-                        containerColor = if (inputUrl == SessionManager.DEFAULT_BASE_URL)
-                            ElectricOrangeHeader.copy(alpha = 0.08f)
-                        else Color.White
-                    ),
-                    border = androidx.compose.foundation.BorderStroke(
+                    color = if (inputUrl == SessionManager.DEFAULT_BASE_URL)
+                        ElectricOrangeHeader.copy(alpha = 0.08f)
+                    else Color.White,
+                    border = BorderStroke(
                         1.dp,
                         if (inputUrl == SessionManager.DEFAULT_BASE_URL) ElectricOrangeHeader else SurfaceBorderLight
                     )
                 ) {
-                    Column(modifier = Modifier.padding(10.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "☁️ Production (Client Demo)",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp,
-                                color = TextDarkPrimary
-                            )
-                        }
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(
+                            text = "☁️ Production (Client Demo)",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            color = TextDarkPrimary
+                        )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = SessionManager.DEFAULT_BASE_URL,
@@ -157,31 +151,27 @@ fun EnvironmentSwitcherDialog(
 
                 // Preset 2: Local Emulator
                 val emulatorUrl = "http://10.0.2.2:3000/api/"
-                OutlinedCard(
+                Surface(
                     onClick = {
                         inputUrl = emulatorUrl
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
-                    colors = CardDefaults.outlinedCardColors(
-                        containerColor = if (inputUrl == emulatorUrl)
-                            ElectricOrangeHeader.copy(alpha = 0.08f)
-                        else Color.White
-                    ),
-                    border = androidx.compose.foundation.BorderStroke(
+                    color = if (inputUrl == emulatorUrl)
+                        ElectricOrangeHeader.copy(alpha = 0.08f)
+                    else Color.White,
+                    border = BorderStroke(
                         1.dp,
                         if (inputUrl == emulatorUrl) ElectricOrangeHeader else SurfaceBorderLight
                     )
                 ) {
-                    Column(modifier = Modifier.padding(10.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "⚡ Local Emulator (10.0.2.2)",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp,
-                                color = TextDarkPrimary
-                            )
-                        }
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(
+                            text = "⚡ Local Emulator (10.0.2.2)",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            color = TextDarkPrimary
+                        )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = emulatorUrl,
@@ -204,7 +194,7 @@ fun EnvironmentSwitcherDialog(
                     trailingIcon = {
                         if (inputUrl.isNotBlank()) {
                             IconButton(onClick = { inputUrl = "" }) {
-                                Icon(imageVector = Icons.Default.Clear, contentDescription = "Clear")
+                                Icon(imageVector = Icons.Default.Close, contentDescription = "Clear")
                             }
                         }
                     }
