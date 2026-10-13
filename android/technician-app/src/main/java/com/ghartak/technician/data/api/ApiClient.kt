@@ -12,8 +12,8 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
 
-    // Default to Android Emulator loopback to host port 3000; can be overridden for physical WiFi testing
-    var baseUrl: String = "http://10.0.2.2:3000/api/"
+    // Live Cloud Hosted Backend API on Render
+    var baseUrl: String = "https://ghartak-api.onrender.com/api/"
 
     private var retrofit: Retrofit? = null
     private var technicianApiService: TechnicianApiService? = null
@@ -47,8 +47,8 @@ object ApiClient {
                 level = HttpLoggingInterceptor.Level.BODY
             }
 
-            // Quick responsive timeout (3s) to prevent hanging physical devices on unreachable localhost
-            val timeoutSec = if (isEmulator) 5L else 2L
+            // Production cloud timeout (30s)
+            val timeoutSec = 30L
 
             val okHttpClient = OkHttpClient.Builder()
                 .addInterceptor(authInterceptor)
@@ -56,7 +56,7 @@ object ApiClient {
                 .connectTimeout(timeoutSec, TimeUnit.SECONDS)
                 .readTimeout(timeoutSec, TimeUnit.SECONDS)
                 .writeTimeout(timeoutSec, TimeUnit.SECONDS)
-                .retryOnConnectionFailure(false)
+                .retryOnConnectionFailure(true)
                 .build()
 
             retrofit = Retrofit.Builder()

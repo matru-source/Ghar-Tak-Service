@@ -11,8 +11,8 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
 
-    // Default to Android Emulator loopback to host port 3000; can be overridden for physical WiFi testing
-    var baseUrl: String = "http://10.0.2.2:3000/api/"
+    // Live Cloud Hosted Backend API on Render
+    var baseUrl: String = "https://ghartak-api.onrender.com/api/"
 
     private var retrofit: Retrofit? = null
     private var customerApiService: CustomerApiService? = null
