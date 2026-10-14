@@ -42,6 +42,14 @@ jobs:
             echo '```' >> $GITHUB_STEP_SUMMARY
             tail -n 120 /tmp/customer_build.log >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "=== FAILED CUSTOMER BUILD LOG TAIL ==="
+            tail -n 120 /tmp/customer_build.log
+            while IFS= read -r line; do
+              echo "::error title=Compiler::$line"
+            done < <(grep -E 'e: |FAILURE:|Caused by:|Compilation error' /tmp/customer_build.log | head -n 25)
+            while IFS= read -r line; do
+              echo "::error title=LogTail::$line"
+            done < <(tail -n 15 /tmp/customer_build.log)
             exit 1
           }
 

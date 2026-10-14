@@ -497,6 +497,10 @@ class CustomerAuthViewModel(
         }
     }
 
+    fun completeSignUp() = completeRegistration()
+    fun sendForgotOtp() = sendForgotPasswordOtp()
+    fun verifyForgotOtpAndResetPassword() = resetPasswordWithOtp()
+
     fun logout() {
         sessionManager.clearSession()
         _uiState.value = CustomerAuthUiState()

@@ -316,7 +316,7 @@ fun CustomerAuthScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.ErrorOutline,
+                                    imageVector = Icons.Default.Warning,
                                     contentDescription = null,
                                     tint = Color(0xFFDC2626),
                                     modifier = Modifier.size(18.dp)
@@ -737,7 +737,7 @@ fun CustomerAuthScreen(
                             )
                             Spacer(modifier = Modifier.height(14.dp))
                             Button(
-                                onClick = { viewModel.completeSignUp() },
+                                onClick = { viewModel.completeRegistration() },
                                 enabled = !state.isLoading,
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -815,9 +815,9 @@ fun CustomerAuthScreen(
                         Button(
                             onClick = {
                                 if (state.forgotStep == 1) {
-                                    viewModel.sendForgotOtp()
+                                    viewModel.sendForgotPasswordOtp()
                                 } else {
-                                    viewModel.verifyForgotOtpAndResetPassword()
+                                    viewModel.resetPasswordWithOtp()
                                 }
                             },
                             enabled = !state.isLoading,
@@ -877,7 +877,7 @@ fun CustomerAuthScreen(
                         // Trust 2: 24/7 Emergency Support
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
-                                imageVector = Icons.Default.SupportAgent,
+                                imageVector = Icons.Default.Phone,
                                 contentDescription = null,
                                 tint = SapphireBlue800,
                                 modifier = Modifier.size(18.dp)
