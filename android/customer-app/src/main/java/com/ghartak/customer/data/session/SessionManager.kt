@@ -21,6 +21,7 @@ class SessionManager(context: Context) {
         private const val KEY_IS_LOGGED_IN = "key_is_logged_in"
         private const val KEY_USERS_REGISTRY = "key_users_registry"
         private const val KEY_CUSTOM_BASE_URL = "key_custom_base_url"
+        private const val KEY_USER_PROFILE_IMAGE = "key_user_profile_image"
         const val DEFAULT_BASE_URL = "https://ghartak-api.onrender.com/api/"
     }
 
@@ -182,6 +183,19 @@ class SessionManager(context: Context) {
     fun getUserAddress(): String = prefs.getString(KEY_USER_ADDRESS, "") ?: ""
 
     fun getUserPincode(): String = prefs.getString(KEY_USER_PINCODE, "400001") ?: "400001"
+
+    fun getProfileImageUri(): String? = prefs.getString(KEY_USER_PROFILE_IMAGE, null)
+
+    fun setProfileImageUri(uri: String?) {
+        prefs.edit().apply {
+            if (uri != null) {
+                putString(KEY_USER_PROFILE_IMAGE, uri)
+            } else {
+                remove(KEY_USER_PROFILE_IMAGE)
+            }
+            apply()
+        }
+    }
 
     fun isLoggedIn(): Boolean = prefs.getBoolean(KEY_IS_LOGGED_IN, false)
 

@@ -469,30 +469,60 @@ class CustomerAuthViewModel(
         }
     }
 
-    fun loginWithGoogle() {
+    fun loginWithGoogle(
+        selectedEmail: String = "matrumatru2003@gmail.com",
+        selectedName: String = "Matru ji"
+    ) {
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
             delay(400)
-            val email = "matrumatru2003@gmail.com"
-            val name = "Matru ji"
+            val cleanEmail = selectedEmail.trim().lowercase()
+            val existingUserJson = sessionManager.getUserByEmail(cleanEmail)
+
+            val name = if (existingUserJson != null && existingUserJson.optString("name", "").isNotBlank()) {
+                existingUserJson.optString("name")
+            } else {
+                selectedName.trim()
+            }
+            val phone = existingUserJson?.optString("phone", "+91 98201 44091") ?: "+91 98201 44091"
+            val address = existingUserJson?.optString("address", "Plot No. 215, Sri Vihar, Berhampur, Ganjam, Odisha - 760004") ?: "Plot No. 215, Sri Vihar, Berhampur, Ganjam, Odisha - 760004"
+            val pincode = existingUserJson?.optString("pincode", "760004") ?: "760004"
+
             val uid = "cust_google_${System.currentTimeMillis() % 10000}"
             val profile = UserProfile(
                 id = uid,
-                phone = "+91 98201 44091",
+                phone = phone,
                 fullName = name,
-                email = email,
+                email = cleanEmail,
                 role = "CUSTOMER"
             )
+
+            // If account was not in registry, register it now
+            if (existingUserJson == null) {
+                sessionManager.registerUser(
+                    fullName = name,
+                    email = cleanEmail,
+                    phone = phone,
+                    password = "google_auth_${System.currentTimeMillis()}",
+                    address = address,
+                    pincode = pincode
+                )
+            }
+
             sessionManager.saveSession(
                 token = "gts_google_token_${uid}",
                 user = profile,
-                address = "Plot No. 215, Sri Vihar, Berhampur, Ganjam, Odisha - 760004",
-                pincode = "760004"
+                address = address,
+                pincode = pincode
             )
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
                 isLoggedIn = true,
-                successMessage = "Signed in with Google as $name!"
+                successMessage = if (existingUserJson != null) {
+                    "Welcome back, $name! Signed in via Google."
+                } else {
+                    "Welcome to Ghar Tak, $name! Google account linked."
+                }
             )
         }
     }

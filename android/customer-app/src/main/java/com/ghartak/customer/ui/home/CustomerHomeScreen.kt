@@ -55,6 +55,8 @@ fun CustomerHomeScreen(
     var logoClickCount by remember { mutableStateOf(0) }
     var lastClickTime by remember { mutableStateOf(0L) }
     var showEnvSwitcher by remember { mutableStateOf(false) }
+    var showNotificationCenter by remember { mutableStateOf(false) }
+    var unreadNotificationCount by remember { mutableStateOf(3) }
 
     if (showEnvSwitcher) {
         EnvironmentSwitcherDialog(
@@ -62,6 +64,21 @@ fun CustomerHomeScreen(
             onDismiss = { showEnvSwitcher = false },
             onApply = { newUrl ->
                 sessionManager.setCustomBaseUrl(newUrl)
+            }
+        )
+    }
+
+    if (showNotificationCenter) {
+        NotificationCenterDialog(
+            unreadCount = unreadNotificationCount,
+            onDismiss = { showNotificationCenter = false },
+            onClearAll = {
+                unreadNotificationCount = 0
+                showNotificationCenter = false
+            },
+            onTrackLive = {
+                showNotificationCenter = false
+                onNavigate("track")
             }
         )
     }
@@ -136,7 +153,7 @@ fun CustomerHomeScreen(
                         Box {
                             IconButton(
                                 onClick = {
-                                    Toast.makeText(context, "⚡ 1 Dispatch Alert: Rajesh Kumar is En Route", Toast.LENGTH_SHORT).show()
+                                    showNotificationCenter = true
                                 }
                             ) {
                                 Icon(
@@ -146,15 +163,17 @@ fun CustomerHomeScreen(
                                     modifier = Modifier.size(26.dp)
                                 )
                             }
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .align(Alignment.TopEnd)
-                                    .offset(x = (-6).dp, y = 6.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFFEF4444))
-                                    .border(1.5.dp, Color.White, CircleShape)
-                            )
+                            if (unreadNotificationCount > 0) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(9.dp)
+                                        .align(Alignment.TopEnd)
+                                        .offset(x = (-6).dp, y = 6.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFFEF4444))
+                                        .border(1.5.dp, Color.White, CircleShape)
+                                )
+                            }
                         }
                     }
 
@@ -1108,6 +1127,193 @@ fun ServiceItemRow(
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
             ) {
                 Text("BOOK", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            }
+        }
+    }
+}
+
+// -------------------------------------------------------------
+// Component: Notification Center Dialog
+// -------------------------------------------------------------
+@Composable
+fun NotificationCenterDialog(
+    unreadCount: Int,
+    onDismiss: () -> Unit,
+    onClearAll: () -> Unit,
+    onTrackLive: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(GtsHeaderGradientStart.copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = null,
+                            tint = SapphireBlue800,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Notifications",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextDarkPrimary
+                    )
+                }
+
+                if (unreadCount > 0) {
+                    TextButton(onClick = onClearAll) {
+                        Text("Clear All", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = SapphireBlue800)
+                    }
+                }
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                if (unreadCount == 0) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = SuccessGreen,
+                                modifier = Modifier.size(40.dp)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "All caught up!",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextDarkPrimary
+                            )
+                            Text(
+                                text = "No new service alerts right now.",
+                                fontSize = 12.sp,
+                                color = TextDarkMuted
+                            )
+                        }
+                    }
+                } else {
+                    // Notification Item 1: Dispatch Alert
+                    NotificationCard(
+                        icon = Icons.Default.Bolt,
+                        iconTint = SapphireBlue800,
+                        iconBg = Color(0xFFEFF6FF),
+                        title = "Technician En Route",
+                        subtitle = "Rajesh Kumar (Master Electrician) is on the way to your doorstep. ETA ~15 mins.",
+                        time = "10 mins ago",
+                        actionLabel = "Track Live >",
+                        onAction = onTrackLive
+                    )
+
+                    // Notification Item 2: Security Interlock OTP
+                    NotificationCard(
+                        icon = Icons.Default.Shield,
+                        iconTint = SuccessGreen,
+                        iconBg = Color(0xFFDCFCE7),
+                        title = "Safety Handover OTP: #8492",
+                        subtitle = "Share this 4-digit security code with technician only upon arrival and equipment inspection.",
+                        time = "22 mins ago"
+                    )
+
+                    // Notification Item 3: AMC Benefit
+                    NotificationCard(
+                        icon = Icons.Default.Star,
+                        iconTint = Color(0xFFD97706),
+                        iconBg = Color(0xFFFEF3C7),
+                        title = "ZEX-Shield AMC Active",
+                        subtitle = "Your comprehensive home electrical protection is active. You have 2 free scheduled audits remaining.",
+                        time = "2 hours ago"
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDismiss,
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Close", fontWeight = FontWeight.Bold)
+            }
+        },
+        shape = RoundedCornerShape(20.dp),
+        containerColor = Color.White
+    )
+}
+
+@Composable
+private fun NotificationCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconTint: Color,
+    iconBg: Color,
+    title: String,
+    subtitle: String,
+    time: String,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null
+) {
+    Surface(
+        color = Color(0xFFF8FAFC),
+        shape = RoundedCornerShape(12.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(30.dp)
+                        .clip(CircleShape)
+                        .background(iconBg),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(imageVector = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(16.dp))
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = title, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextDarkPrimary)
+                    Text(text = time, fontSize = 10.sp, color = TextDarkMuted)
+                }
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(text = subtitle, fontSize = 11.5.sp, color = Color(0xFF475569), lineHeight = 16.sp)
+
+            if (actionLabel != null && onAction != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = onAction,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                    modifier = Modifier.height(28.dp),
+                    shape = RoundedCornerShape(6.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
+                ) {
+                    Text(text = actionLabel, fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                }
             }
         }
     }

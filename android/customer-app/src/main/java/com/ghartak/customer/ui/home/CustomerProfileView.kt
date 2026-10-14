@@ -23,6 +23,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.ghartak.customer.data.session.SessionManager
 import com.ghartak.customer.ui.theme.*
 
 @Composable
@@ -36,6 +42,20 @@ fun CustomerProfileView(
     onLogout: () -> Unit
 ) {
     val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+    var profileImageUri by remember { mutableStateOf(sessionManager.getProfileImageUri()) }
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            val uriStr = uri.toString()
+            sessionManager.setProfileImageUri(uriStr)
+            profileImageUri = uriStr
+            Toast.makeText(context, "Profile photo updated successfully!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var showAmcDialog by remember { mutableStateOf(false) }
@@ -320,24 +340,36 @@ fun CustomerProfileView(
                                 .background(GtsHeaderGradientStart),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = initials,
-                                fontSize = 26.sp,
-                                fontWeight = FontWeight.Black,
-                                color = Color.White
-                            )
+                            if (!profileImageUri.isNullOrBlank()) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(context)
+                                        .data(Uri.parse(profileImageUri))
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = "Profile Photo",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else {
+                                Text(
+                                    text = initials,
+                                    fontSize = 26.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = Color.White
+                                )
+                            }
                         }
 
                         // Floating camera badge for quick photo change
                         Box(
                             modifier = Modifier
-                                .size(26.dp)
+                                .size(28.dp)
                                 .align(Alignment.BottomEnd)
                                 .clip(CircleShape)
                                 .background(Color.White)
                                 .border(1.5.dp, SurfaceBorder, CircleShape)
                                 .clickable {
-                                    Toast.makeText(context, "Profile photo update available in Settings", Toast.LENGTH_SHORT).show()
+                                    photoPickerLauncher.launch("image/*")
                                 },
                             contentAlignment = Alignment.Center
                         ) {
@@ -345,7 +377,7 @@ fun CustomerProfileView(
                                 imageVector = Icons.Default.PhotoCamera,
                                 contentDescription = "Change photo",
                                 tint = SapphireBlue800,
-                                modifier = Modifier.size(15.dp)
+                                modifier = Modifier.size(16.dp)
                             )
                         }
                     }

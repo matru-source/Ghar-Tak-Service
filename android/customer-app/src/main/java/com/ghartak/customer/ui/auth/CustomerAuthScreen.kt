@@ -51,6 +51,7 @@ fun CustomerAuthScreen(
     var logoClickCount by remember { mutableStateOf(0) }
     var lastClickTime by remember { mutableStateOf(0L) }
     var showEnvSwitcher by remember { mutableStateOf(false) }
+    var showGoogleAccountChooser by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.isLoggedIn) {
         if (state.isLoggedIn) {
@@ -68,6 +69,16 @@ fun CustomerAuthScreen(
         )
     }
 
+    if (showGoogleAccountChooser) {
+        GoogleAccountChooserDialog(
+            onDismiss = { showGoogleAccountChooser = false },
+            onAccountSelected = { email, name ->
+                showGoogleAccountChooser = false
+                viewModel.loginWithGoogle(selectedEmail = email, selectedName = name)
+            }
+        )
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         // Full bleed background: Luxury villa, blue sky with sunburst, and curved waves
         Image(
@@ -78,26 +89,25 @@ fun CustomerAuthScreen(
         )
 
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+            modifier = Modifier.fillMaxSize()
         ) {
             // ==========================================
-            // TOP HERO SECTION: Logo, Slogan, Badges & Electrician
+            // TOP HERO SECTION: Logo, Slogan, Badges & Electrician Cutout (170.dp)
             // ==========================================
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(235.dp)
+                    .height(170.dp)
             ) {
-                // Electrician in uniform with toolbelt standing on the right overlooking the villa
+                // Electrician transparent cutout standing on the right overlooking the villa
                 Image(
                     painter = painterResource(id = R.drawable.img_auth_electrician),
                     contentDescription = "GTS Electrician",
-                    contentScale = ContentScale.Crop,
+                    contentScale = ContentScale.Fit,
+                    alignment = Alignment.BottomEnd,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .width(170.dp)
+                        .width(155.dp)
                         .fillMaxHeight()
                 )
 
@@ -105,7 +115,7 @@ fun CustomerAuthScreen(
                 Column(
                     modifier = Modifier
                         .align(Alignment.TopStart)
-                        .padding(start = 16.dp, top = 28.dp)
+                        .padding(start = 16.dp, top = 20.dp)
                         .fillMaxWidth(0.62f)
                 ) {
                     // Logo with secret 6-tap developer environment switcher
@@ -129,26 +139,26 @@ fun CustomerAuthScreen(
                         Image(
                             painter = painterResource(id = R.drawable.logo_gts_nobg),
                             contentDescription = "GTS Logo",
-                            modifier = Modifier.height(42.dp)
+                            modifier = Modifier.height(38.dp)
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
                         text = "ON-DEMAND ELECTRICAL & SAFETY",
-                        fontSize = 9.5.sp,
+                        fontSize = 9.sp,
                         fontWeight = FontWeight.Black,
                         color = SapphireBlue900,
                         letterSpacing = 0.5.sp
                     )
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     // 3 Translucent Trust Chips Row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
                         HeroTrustChip(
                             icon = Icons.Default.Shield,
@@ -167,18 +177,22 @@ fun CustomerAuthScreen(
             }
 
             // ==========================================
-            // MAIN FLOATING CARD (Curved 28.dp Top)
+            // MAIN FLOATING CARD (Fills 100% to bottom, no awkward cutoff)
             // ==========================================
             Surface(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
                 shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
                 color = Color.White,
-                shadowElevation = 14.dp
+                shadowElevation = 16.dp
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 22.dp, vertical = 20.dp)
+                        .fillMaxSize()
+                        .padding(horizontal = 22.dp, vertical = 14.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     // 1. Dual Capsule Pill Mode Switcher (Sign In vs Register / Sign Up)
                     if (state.mode != "FORGOT_PASSWORD") {
@@ -187,7 +201,7 @@ fun CustomerAuthScreen(
                             shape = RoundedCornerShape(50.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(46.dp)
+                                .height(42.dp)
                         ) {
                             Row(
                                 modifier = Modifier
@@ -519,13 +533,13 @@ fun CustomerAuthScreen(
 
                         // "Continue with Google" Button
                         Surface(
-                            onClick = { viewModel.loginWithGoogle() },
+                            onClick = { showGoogleAccountChooser = true },
                             shape = RoundedCornerShape(12.dp),
                             border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0)),
                             color = Color.White,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(48.dp),
+                                .height(46.dp),
                             shadowElevation = 0.5.dp
                         ) {
                             Row(
@@ -533,7 +547,11 @@ fun CustomerAuthScreen(
                                 horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                GoogleLogoIcon(modifier = Modifier.size(20.dp))
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_google_logo),
+                                    contentDescription = "Google Logo",
+                                    modifier = Modifier.size(20.dp)
+                                )
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Text(
                                     text = "Continue with Google",
@@ -955,50 +973,230 @@ private fun HeroTrustChip(
 // -------------------------------------------------------------
 @Composable
 fun GoogleLogoIcon(modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier) {
-        val w = size.width
-        val h = size.height
-        val strokeW = w * 0.22f
-        val center = Offset(w / 2f, h / 2f)
+    Image(
+        painter = painterResource(id = R.drawable.ic_google_logo),
+        contentDescription = "Google Logo",
+        modifier = modifier
+    )
+}
 
-        // Red Arc (Top)
-        drawArc(
-            color = Color(0xFFEA4335),
-            startAngle = -45f,
-            sweepAngle = -135f,
-            useCenter = false,
-            style = Stroke(width = strokeW, cap = StrokeCap.Butt)
-        )
-        // Yellow Arc (Bottom-Left)
-        drawArc(
-            color = Color(0xFFFBBC05),
-            startAngle = 180f,
-            sweepAngle = -90f,
-            useCenter = false,
-            style = Stroke(width = strokeW, cap = StrokeCap.Butt)
-        )
-        // Green Arc (Bottom-Right)
-        drawArc(
-            color = Color(0xFF34A853),
-            startAngle = 90f,
-            sweepAngle = -90f,
-            useCenter = false,
-            style = Stroke(width = strokeW, cap = StrokeCap.Butt)
-        )
-        // Blue Arc (Right)
-        drawArc(
-            color = Color(0xFF4285F4),
-            startAngle = 0f,
-            sweepAngle = -45f,
-            useCenter = false,
-            style = Stroke(width = strokeW, cap = StrokeCap.Butt)
-        )
-        // Blue Center Bar
-        drawLine(
-            color = Color(0xFF4285F4),
-            start = Offset(center.x, center.y),
-            end = Offset(w - strokeW / 2f, center.y),
-            strokeWidth = strokeW
-        )
+// -------------------------------------------------------------
+// Component: Google Account Chooser Dialog
+// -------------------------------------------------------------
+@Composable
+fun GoogleAccountChooserDialog(
+    onDismiss: () -> Unit,
+    onAccountSelected: (email: String, name: String) -> Unit
+) {
+    var showCustomInput by remember { mutableStateOf(false) }
+    var customEmail by remember { mutableStateOf("") }
+    var customName by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_google_logo),
+                    contentDescription = "Google",
+                    modifier = Modifier.size(32.dp)
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = "Choose an account",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextDarkPrimary
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "to continue to Ghar Tak Services",
+                    fontSize = 12.sp,
+                    color = TextDarkMuted
+                )
+            }
+        },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Divider(color = Color(0xFFE2E8F0), thickness = 1.dp)
+                Spacer(modifier = Modifier.height(10.dp))
+
+                if (!showCustomInput) {
+                    // Account 1: Matru Prasad
+                    GoogleAccountRow(
+                        avatarInitial = "M",
+                        avatarBg = SapphireBlue800,
+                        name = "Matru Prasad",
+                        email = "matrumatru2003@gmail.com",
+                        onClick = {
+                            onAccountSelected("matrumatru2003@gmail.com", "Matru Prasad")
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Account 2: Matru Ji (Work)
+                    GoogleAccountRow(
+                        avatarInitial = "M",
+                        avatarBg = Color(0xFF0D9488),
+                        name = "Matru Ji (Work)",
+                        email = "matru.work@gmail.com",
+                        onClick = {
+                            onAccountSelected("matru.work@gmail.com", "Matru Ji (Work)")
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Account 3: Use another account
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { showCustomInput = true }
+                            .padding(horizontal = 8.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFF1F5F9)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PersonAdd,
+                                contentDescription = null,
+                                tint = Color(0xFF475569),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "Use another account",
+                            fontSize = 13.5.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = TextDarkPrimary
+                        )
+                    }
+                } else {
+                    // Custom Google account input
+                    Text(
+                        text = "Enter Google Account Details",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextDarkPrimary
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = customName,
+                        onValueChange = { customName = it },
+                        label = { Text("Full Name") },
+                        placeholder = { Text("Your name") },
+                        singleLine = true,
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = customEmail,
+                        onValueChange = { customEmail = it },
+                        label = { Text("Gmail Address") },
+                        placeholder = { Text("name@gmail.com") },
+                        singleLine = true,
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = { showCustomInput = false }) {
+                            Text("Back", color = Color(0xFF64748B))
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = {
+                                val email = if (customEmail.isNotBlank()) customEmail.trim() else "user@gmail.com"
+                                val name = if (customName.isNotBlank()) customName.trim() else "Google User"
+                                onAccountSelected(email, name)
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
+                        ) {
+                            Text("Sign In")
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+                Divider(color = Color(0xFFE2E8F0), thickness = 1.dp)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "To continue, Google will share your name, email address, and language preference with Ghar Tak Services.",
+                    fontSize = 10.5.sp,
+                    color = Color(0xFF94A3B8),
+                    lineHeight = 14.sp
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = Color(0xFF64748B), fontWeight = FontWeight.Bold)
+            }
+        },
+        shape = RoundedCornerShape(20.dp),
+        containerColor = Color.White
+    )
+}
+
+@Composable
+private fun GoogleAccountRow(
+    avatarInitial: String,
+    avatarBg: Color,
+    name: String,
+    email: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(avatarBg),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = avatarInitial,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column {
+            Text(
+                text = name,
+                fontSize = 13.5.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextDarkPrimary
+            )
+            Text(
+                text = email,
+                fontSize = 11.5.sp,
+                color = TextDarkMuted
+            )
+        }
     }
 }
