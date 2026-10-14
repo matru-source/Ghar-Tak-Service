@@ -146,7 +146,7 @@ fun TechnicianAuthScreen(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "DISPATCH HUB â€¢ ACTIVE ELECTRICIAN FLEET",
+                        text = "DISPATCH HUB • ACTIVE ELECTRICIAN FLEET",
                         color = SuccessActiveGreen,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold
@@ -745,7 +745,7 @@ fun TechnicianAuthScreen(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "VDE 1000V Certified Safety Standard â€¢ Official Fleet",
+                    text = "VDE 1000V Certified Safety Standard • Official Fleet",
                     color = TextDarkMuted,
                     fontSize = 10.sp
                 )

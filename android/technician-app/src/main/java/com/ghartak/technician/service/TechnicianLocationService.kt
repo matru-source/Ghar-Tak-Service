@@ -60,7 +60,7 @@ class TechnicianLocationService : Service() {
 
         val notification = buildForegroundNotification(
             "Active Doorstep Navigation",
-            "Doorstep transit active â€¢ Real-time GPS telemetry"
+            "Doorstep transit active • Real-time GPS telemetry"
         )
 
         try {
@@ -104,7 +104,7 @@ class TechnicianLocationService : Service() {
                         val data = response.body()?.data
                         val dist = data?.distanceRemainingKm ?: 1.2
                         val eta = data?.etaMinutes ?: 4
-                        updateNotification("Doorstep Transit â€¢ ${dist} km away", "ETA: ${eta} mins â€¢ Live GPS Synced")
+                        updateNotification("Doorstep Transit • ${dist} km away", "ETA: ${eta} mins • Live GPS Synced")
                     }
                 } catch (e: Throwable) {
                     Log.w("GTS_LOC_SVC", "Telemetry ping exception: ${e.message}")

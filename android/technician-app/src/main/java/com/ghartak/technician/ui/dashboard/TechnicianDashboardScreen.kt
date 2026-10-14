@@ -677,15 +677,26 @@ fun TechnicianJobDetailsContent(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // Status Bar (Green Pill)
+            // Status Bar (Dynamic Pill)
             item {
+                val isCompleted = job.status == "COMPLETED"
+                val isStarted = job.status == "STARTED" || job.status == "IN_PROGRESS"
+
                 Surface(
-                    color = Color(0xFF2E7D32),
+                    color = when {
+                        isCompleted -> Color(0xFF1B5E20)
+                        isStarted -> Color(0xFFE65100)
+                        else -> Color(0xFF2E7D32)
+                    },
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Status: ${if (job.status == "STARTED") "In Progress at Customer Site" else "En Route to Customer"}",
+                        text = when {
+                            isCompleted -> "Status: Completed & Handover Verified ✅"
+                            isStarted -> "Status: In Progress at Customer Site (Safety Verified ⚡)"
+                            else -> "Status: En Route to Customer"
+                        },
                         color = Color.White,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
@@ -795,67 +806,171 @@ fun TechnicianJobDetailsContent(
                 }
             }
 
-            // 3. Job Actions Section (4 Buttons)
+            // 3. Job Actions Section (Status-Driven Lifecycle)
             item {
-                Text(
-                    text = "Job Actions",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp,
-                    color = TextDarkPrimary
-                )
-                Spacer(modifier = Modifier.height(10.dp))
+                val isCompleted = job.status == "COMPLETED"
+                val isStarted = job.status == "STARTED" || job.status == "IN_PROGRESS"
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    // Navigate (Blue)
-                    Button(
-                        onClick = { showNavigationDialog = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = ActionNavigateBlue),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.weight(1f)
+                if (isCompleted) {
+                    Surface(
+                        color = Color(0xFFE8F5E9),
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF81C784)),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Icon(imageVector = Icons.Default.Navigation, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.White)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Navigate", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = Color(0xFF2E7D32),
+                                modifier = Modifier.size(36.dp)
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "WORK ORDER COMPLETED",
+                                fontWeight = FontWeight.Black,
+                                fontSize = 15.sp,
+                                color = Color(0xFF1B5E20)
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Payout Credited: ₹${"%,.0f".format(job.totalAmountInr * 0.7)} to Electrician Wallet",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                color = Color(0xFF2E7D32)
+                            )
+                            Text(
+                                text = "Customer OTP Verified • 5-Star Handover Logged",
+                                fontSize = 11.sp,
+                                color = TextDarkSecondary
+                            )
+                        }
                     }
 
-                    // Call Customer (Green)
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Button(
+                        onClick = onBack,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                    ) {
+                        Text("Return to Active Dispatch Hub", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color.White)
+                    }
+                } else if (isStarted) {
+                    Text(
+                        text = "Job Actions (Work in Progress)",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        color = TextDarkPrimary
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Surface(
+                        color = Color(0xFFFFF3E0),
+                        shape = RoundedCornerShape(8.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFB74D)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "⚡ 1000V Safety Interlock Disengaged! High-voltage circuit work active on site.",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFFE65100)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     Button(
                         onClick = onCall,
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
                         shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp)
                     ) {
+                        Icon(imageVector = Icons.Default.Call, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text("Call Customer", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
-                }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
+                    Button(
+                        onClick = onCompleteJob,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Proceed to Complete & Handover", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color.White)
+                    }
+                } else {
+                    Text(
+                        text = "Job Actions",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        color = TextDarkPrimary
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        // Navigate (Blue)
+                        Button(
+                            onClick = { showNavigationDialog = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = ActionNavigateBlue),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(imageVector = Icons.Default.Navigation, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.White)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Navigate", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
+
+                        // Call Customer (Green)
+                        Button(
+                            onClick = onCall,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(imageVector = Icons.Default.Call, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.White)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Call Customer", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
                     // Start Job (Orange) -> Safety Interlock
                     Button(
                         onClick = onStartJob,
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFB8C00)),
                         shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
                     ) {
-                        Text("Start Job", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                    }
-
-                    // Complete Job (Green)
-                    Button(
-                        onClick = onCompleteJob,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Complete", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.White)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Start Job (1000V Safety Interlock)", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color.White)
                     }
                 }
             }

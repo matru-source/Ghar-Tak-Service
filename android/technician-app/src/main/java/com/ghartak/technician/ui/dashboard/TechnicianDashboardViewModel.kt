@@ -232,7 +232,71 @@ class TechnicianDashboardViewModel(
             profile = profile,
             isOnline = isOnline,
             customerRating = rating.toFloat(),
-            assignedJobs = getInitialMockJobs()
+            assignedJobs = if (_uiState.value.assignedJobs.isEmpty()) getInitialMockJobs() else _uiState.value.assignedJobs
+        )
+    }
+
+    fun markJobStarted(jobId: String) {
+        val updatedJobs = _uiState.value.assignedJobs.map { job ->
+            if (job.id.equals(jobId, ignoreCase = true) || job.jobTicketNumber.equals(jobId, ignoreCase = true) || jobId.contains(job.id, ignoreCase = true)) {
+                job.copy(
+                    status = "STARTED",
+                    safetyGlovesConfirmed = true,
+                    safetyMcbSwitchConfirmed = true
+                )
+            } else {
+                job
+            }
+        }
+        val currentSelected = _uiState.value.selectedJob
+        val updatedSelected = updatedJobs.find {
+            it.id.equals(jobId, ignoreCase = true) || it.jobTicketNumber.equals(jobId, ignoreCase = true) || jobId.contains(it.id, ignoreCase = true)
+        } ?: currentSelected?.copy(
+            status = "STARTED",
+            safetyGlovesConfirmed = true,
+            safetyMcbSwitchConfirmed = true
+        )
+        _uiState.value = _uiState.value.copy(
+            assignedJobs = updatedJobs,
+            selectedJob = updatedSelected,
+            currentTab = "JOB_DETAILS"
+        )
+    }
+
+    fun markJobCompleted(jobId: String, payoutInr: Double = 1400.0) {
+        val updatedJobs = _uiState.value.assignedJobs.map { job ->
+            if (job.id.equals(jobId, ignoreCase = true) || job.jobTicketNumber.equals(jobId, ignoreCase = true) || jobId.contains(job.id, ignoreCase = true)) {
+                job.copy(status = "COMPLETED")
+            } else {
+                job
+            }
+        }
+        val completedJob = updatedJobs.find {
+            it.id.equals(jobId, ignoreCase = true) || it.jobTicketNumber.equals(jobId, ignoreCase = true) || jobId.contains(it.id, ignoreCase = true)
+        } ?: _uiState.value.selectedJob
+
+        val finalPayout = if (completedJob != null && completedJob.totalAmountInr > 0) completedJob.totalAmountInr * 0.7 else payoutInr
+        val ticket = completedJob?.jobTicketNumber ?: "#J-1006"
+        val service = completedJob?.serviceTitle ?: "AC Installation"
+
+        val newTx = EarningsTransaction(
+            id = "tx_${System.currentTimeMillis()}",
+            jobTicketNumber = ticket,
+            serviceTitle = service,
+            completedTime = "Completed just now",
+            amountInr = finalPayout,
+            isPending = false
+        )
+
+        _uiState.value = _uiState.value.copy(
+            assignedJobs = updatedJobs,
+            selectedJob = completedJob?.copy(status = "COMPLETED"),
+            todayEarningsInr = _uiState.value.todayEarningsInr + finalPayout,
+            availableWithdrawalInr = _uiState.value.availableWithdrawalInr + finalPayout,
+            jobsCompletedCount = _uiState.value.jobsCompletedCount + 1,
+            jobsPendingCount = maxOf(0, _uiState.value.jobsPendingCount - 1),
+            recentTransactions = listOf(newTx) + _uiState.value.recentTransactions,
+            currentTab = "HOME"
         )
     }
 

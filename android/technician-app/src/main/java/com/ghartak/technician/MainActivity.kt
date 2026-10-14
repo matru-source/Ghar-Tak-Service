@@ -134,7 +134,7 @@ class MainActivity : ComponentActivity() {
                                 onBack = { navController.popBackStack() },
                                 onSafetyPassed = {
                                     Toast.makeText(this@MainActivity, "⚡ 1000V Safety Interlock Disengaged! Circuit Work Unlocked", Toast.LENGTH_LONG).show()
-                                    dashboardViewModel.loadProfileFromSession()
+                                    dashboardViewModel.markJobStarted(jobId)
                                     navController.navigate("dashboard") {
                                         popUpTo("dashboard") { inclusive = true }
                                     }
@@ -199,7 +199,7 @@ class MainActivity : ComponentActivity() {
                                 viewModel = jobCompleteViewModel,
                                 onBack = { navController.popBackStack() },
                                 onReturnToDashboard = {
-                                    dashboardViewModel.loadProfileFromSession()
+                                    dashboardViewModel.markJobCompleted(jobId)
                                     navController.navigate("dashboard") {
                                         popUpTo("dashboard") { inclusive = true }
                                     }

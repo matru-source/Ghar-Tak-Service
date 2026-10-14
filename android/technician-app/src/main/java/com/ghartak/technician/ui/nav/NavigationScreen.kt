@@ -118,7 +118,7 @@ fun NavigationScreen(
                             color = TextPrimary
                         )
                         Text(
-                            text = "Ticket: ${state.ticketNumber} â€¢ 50m Geofence Active",
+                            text = "Ticket: ${state.ticketNumber} • 50m Geofence Active",
                             fontSize = 11.sp,
                             color = FlameOrange
                         )

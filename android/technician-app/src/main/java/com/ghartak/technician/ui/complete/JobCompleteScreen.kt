@@ -118,7 +118,7 @@ fun JobCompleteScreen(
                             color = TextPrimary
                         )
                         Text(
-                            text = "Ticket: ${state.ticketNumber} â€¢ 70% Split Settlement",
+                            text = "Ticket: ${state.ticketNumber} • 70% Split Settlement",
                             fontSize = 11.sp,
                             color = FlameOrange
                         )
@@ -163,14 +163,14 @@ fun JobCompleteScreen(
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "â‚¹${"%,.2f".format(state.technicianPayoutInr)}",
+                        text = "₹${"%,.2f".format(state.technicianPayoutInr)}",
                         color = TextPrimary,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Black
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Total Customer Bill: â‚¹${"%,.2f".format(state.totalAmountInr)} â€¢ Credited to wallet upon OTP verification",
+                        text = "Total Customer Bill: ₹${"%,.2f".format(state.totalAmountInr)} • Credited to wallet upon OTP verification",
                         color = TextMuted,
                         fontSize = 11.sp
                     )
@@ -389,7 +389,7 @@ fun JobCompleteScreen(
                     OutlinedTextField(
                         value = state.enteredOtp,
                         onValueChange = { viewModel.onOtpChanged(it) },
-                        placeholder = { Text("â€¢ â€¢ â€¢ â€¢", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(), fontSize = 24.sp) },
+                        placeholder = { Text("• • • •", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(), fontSize = 24.sp) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier
@@ -564,7 +564,7 @@ fun JobCompleteScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "â‚¹${"%,.2f".format(state.technicianPayoutInr)}",
+                            text = "₹${"%,.2f".format(state.technicianPayoutInr)}",
                             fontSize = 32.sp,
                             fontWeight = FontWeight.Black,
                             color = TextPrimary

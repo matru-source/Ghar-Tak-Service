@@ -121,7 +121,7 @@ fun SafetyInterlockScreen(
                             color = TextPrimary
                         )
                         Text(
-                            text = "Ticket: ${state.ticketNumber} â€¢ VDE Compliance",
+                            text = "Ticket: ${state.ticketNumber} • VDE Compliance",
                             fontSize = 11.sp,
                             color = FlameOrange
                         )
@@ -391,7 +391,7 @@ fun SafetyInterlockScreen(
                                             fontSize = 12.sp
                                         )
                                         Text(
-                                            text = "Timestamped & Geotagged â€¢ Ready for Audit",
+                                            text = "Timestamped & Geotagged • Ready for Audit",
                                             color = TextMuted,
                                             fontSize = 10.sp
                                         )
@@ -436,9 +436,9 @@ fun SafetyInterlockScreen(
                     Column {
                         Text(
                             text = if (state.isInterlockClear)
-                                "INTERLOCK DISENGAGED â€¢ READY TO COMMENCE WORK"
+                                "INTERLOCK DISENGAGED • READY TO COMMENCE WORK"
                             else
-                                "INTERLOCK ACTIVE â€¢ 3 OF 3 PROTOCOLS REQUIRED",
+                                "INTERLOCK ACTIVE • 3 OF 3 PROTOCOLS REQUIRED",
                             color = if (state.isInterlockClear) SafetyGreen else SafetyAmber,
                             fontWeight = FontWeight.Bold,
                             fontSize = 12.sp
