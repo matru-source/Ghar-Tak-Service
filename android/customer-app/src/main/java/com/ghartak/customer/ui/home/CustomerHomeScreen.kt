@@ -2,6 +2,7 @@ package com.ghartak.customer.ui.home
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,18 +24,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.Image
-import androidx.compose.ui.res.painterResource
 import com.ghartak.customer.R
-import com.ghartak.customer.ui.catalog.CustomerBookServicesView
 import com.ghartak.customer.data.model.ServiceItem
-import com.ghartak.customer.ui.catalog.CustomerCatalogViewModel
 import com.ghartak.customer.data.session.SessionManager
+import com.ghartak.customer.ui.catalog.CustomerBookServicesView
+import com.ghartak.customer.ui.catalog.CustomerCatalogViewModel
 import com.ghartak.customer.ui.components.EnvironmentSwitcherDialog
 import com.ghartak.customer.ui.theme.*
 
@@ -67,141 +68,222 @@ fun CustomerHomeScreen(
 
     Scaffold(
         topBar = {
-            // Top Sapphire Blue Header conforming strictly to gts.drawio.pdf
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(SapphireBlue800)
-                    .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 18.dp)
-            ) {
-                // Greeting Row with Yellow Notification Bell
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+            if (currentBottomTab == 0) {
+                // GTS 2.0 Header Banner with Gradient, Greeting, and Voice Search Pill
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(brush = gtsHeaderGradient())
+                        .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 18.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(46.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color.White)
-                                .clickable {
-                                    val now = System.currentTimeMillis()
-                                    if (now - lastClickTime < 1500) {
-                                        logoClickCount++
-                                    } else {
-                                        logoClickCount = 1
-                                    }
-                                    lastClickTime = now
-
-                                    if (logoClickCount >= 6) {
-                                        logoClickCount = 0
-                                        showEnvSwitcher = true
-                                    }
-                                }
-                                .padding(4.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.logo_gts_nobg),
-                                contentDescription = "GTS Logo",
-                                modifier = Modifier.size(38.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(12.dp))
-
-                        Column {
-                            val firstName = state.userName.trim().split(" ").firstOrNull() ?: state.userName
-                            Text(
-                                text = "Hello, $firstName!",
-                                fontSize = 19.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "Welcome to Ghar Tak Services (GTS)",
-                                fontSize = 12.sp,
-                                color = Color(0xFFBBDEFB),
-                                fontWeight = FontWeight.Normal
-                            )
-                        }
-                    }
-
-                    // Notification Bell (Golden Yellow as in diagram)
-                    IconButton(
-                        onClick = {
-                            Toast.makeText(context, "⚡ 1 Dispatch Alert: Rajesh Kumar is En Route", Toast.LENGTH_SHORT).show()
-                        }
+                    // 1. Logo, Brand & Notification Bell
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = "Notifications",
-                            tint = Color(0xFFFFD54F),
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.clickable {
+                                val now = System.currentTimeMillis()
+                                if (now - lastClickTime < 1500) {
+                                    logoClickCount++
+                                } else {
+                                    logoClickCount = 1
+                                }
+                                lastClickTime = now
 
-                Spacer(modifier = Modifier.height(14.dp))
+                                if (logoClickCount >= 6) {
+                                    logoClickCount = 0
+                                    showEnvSwitcher = true
+                                }
+                            }
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(ShapeCardSmall)
+                                    .background(Color.White)
+                                    .padding(4.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.logo_gts_nobg),
+                                    contentDescription = "GTS Logo",
+                                    modifier = Modifier.size(36.dp)
+                                )
+                            }
 
-                // Search Bar ("🔍 Search for electrical services...")
-                Surface(
-                    color = Color.White,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    shadowElevation = 2.dp
-                ) {
-                    TextField(
-                        value = state.searchQuery,
-                        onValueChange = { viewModel.setSearchQuery(it) },
-                        placeholder = {
-                            Text(
-                                text = "Search for electrical services...",
-                                fontSize = 13.sp,
-                                color = Color(0xFF9E9E9E)
+                            Spacer(modifier = Modifier.width(10.dp))
+
+                            Column {
+                                Text(
+                                    text = "Ghar Tak Services",
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                                Text(
+                                    text = "24/7 Verified Electricians",
+                                    fontSize = 11.sp,
+                                    color = Color(0xFFBBDEFB),
+                                    fontWeight = FontWeight.Normal
+                                )
+                            }
+                        }
+
+                        // Notification Bell with Red Badge Dot
+                        Box {
+                            IconButton(
+                                onClick = {
+                                    Toast.makeText(context, "⚡ 1 Dispatch Alert: Rajesh Kumar is En Route", Toast.LENGTH_SHORT).show()
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Notifications,
+                                    contentDescription = "Notifications",
+                                    tint = Color(0xFFFFD54F),
+                                    modifier = Modifier.size(26.dp)
+                                )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .align(Alignment.TopEnd)
+                                    .offset(x = (-6).dp, y = 6.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFEF4444))
+                                    .border(1.5.dp, Color.White, CircleShape)
                             )
-                        },
-                        leadingIcon = {
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // 2. Greeting Headline & Subtitle
+                    val firstName = remember(state.userName) {
+                        state.userName.trim().split(" ").firstOrNull() ?: state.userName
+                    }
+                    Text(
+                        text = "Hello, $firstName!",
+                        style = GreetingHeadlineStyle
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Professional Electrical Services at Your Doorstep",
+                        style = SubGreetingStyle
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // 3. Floating Rounded Search Pill with Mic Icon
+                    Surface(
+                        color = Color.White,
+                        shape = ShapeSearchPill,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        shadowElevation = 3.dp
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.Search,
                                 contentDescription = "Search",
-                                tint = SapphireBlue800,
+                                tint = GtsHeaderGradientStart,
                                 modifier = Modifier.size(20.dp)
                             )
-                        },
-                        trailingIcon = {
+
+                            TextField(
+                                value = state.searchQuery,
+                                onValueChange = { viewModel.setSearchQuery(it) },
+                                placeholder = {
+                                    Text(
+                                        text = "Search for electrical services...",
+                                        fontSize = 13.sp,
+                                        color = Color(0xFF9E9E9E)
+                                    )
+                                },
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent,
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent,
+                                    focusedTextColor = TextDarkPrimary,
+                                    unfocusedTextColor = TextDarkPrimary
+                                ),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(horizontal = 4.dp)
+                            )
+
                             if (state.searchQuery.isNotEmpty()) {
-                                IconButton(onClick = { viewModel.setSearchQuery("") }) {
+                                IconButton(
+                                    onClick = { viewModel.setSearchQuery("") },
+                                    modifier = Modifier.size(24.dp)
+                                ) {
                                     Icon(
                                         imageVector = Icons.Default.Close,
                                         contentDescription = "Clear",
                                         tint = Color.Gray,
-                                        modifier = Modifier.size(18.dp)
+                                        modifier = Modifier.size(16.dp)
                                     )
                                 }
+                                Spacer(modifier = Modifier.width(4.dp))
                             }
-                        },
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            focusedTextColor = TextDarkPrimary,
-                            unfocusedTextColor = TextDarkPrimary
-                        ),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                        keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
-                        modifier = Modifier.fillMaxWidth()
-                    )
+
+                            // Voice Search Mic Icon
+                            IconButton(
+                                onClick = {
+                                    Toast.makeText(context, "🎤 Voice Search: Listening for electrical query...", Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Mic,
+                                    contentDescription = "Voice Search",
+                                    tint = GtsHeaderGradientStart,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    }
                 }
+            } else {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = when (currentBottomTab) {
+                                1 -> "Book Electrical Services"
+                                3 -> "Order History & Invoices"
+                                4 -> "Customer Profile"
+                                else -> "Ghar Tak Services"
+                            },
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { currentBottomTab = 0 }) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Home", tint = Color.White)
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = SapphireBlue800
+                    )
+                )
             }
         },
         bottomBar = {
-            // Fixed 5-Tab Navigation Bar conforming to diagram: Home, Book, Track, History, Profile
+            // Fixed 5-Tab Navigation Bar: Home, Book, Track, History, Profile
             NavigationBar(
                 containerColor = Color.White,
                 tonalElevation = 8.dp,
@@ -315,325 +397,592 @@ fun CustomerHomeScreen(
                 ) {
                     item { Spacer(modifier = Modifier.height(4.dp)) }
 
-            // ==========================================
-            // 1. SECTION: Quick Actions (3 Cards)
-            // ==========================================
-            item {
-                Column {
-                    Text(
-                        text = "Quick Actions",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextDarkPrimary
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        // 1. Book Service Card
-                        QuickActionCard(
-                            modifier = Modifier.weight(1f),
-                            icon = Icons.Default.Build,
-                            iconTint = SapphireBlue800,
-                            label = "Book Service",
-                            onClick = {
-                                currentBottomTab = 1
-                            }
-                        )
-
-                        // 2. Track Service Card
-                        QuickActionCard(
-                            modifier = Modifier.weight(1f),
-                            icon = Icons.Default.LocationOn,
-                            iconTint = Color(0xFFE53935), // Red location pin as in diagram
-                            label = "Track Service",
-                            onClick = {
-                                onTrackSelected(state.activeJobId)
-                            }
-                        )
-
-                        // 3. History Card
-                        QuickActionCard(
-                            modifier = Modifier.weight(1f),
-                            icon = Icons.Default.Assignment,
-                            iconTint = Color(0xFFD97706),
-                            label = "History",
-                            onClick = {
-                                currentBottomTab = 3
-                            }
-                        )
-                    }
-                }
-            }
-
-            // ==========================================
-            // 2. SECTION: Service Categories (4 Cards)
-            // ==========================================
-            item {
-                Column {
-                    Text(
-                        text = "Service Categories",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextDarkPrimary
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        // 1. Repair (Lightbulb)
-                        CategoryCard(
-                            modifier = Modifier.weight(1f),
-                            icon = Icons.Default.Lightbulb,
-                            iconTint = Color(0xFFFBC02D),
-                            label = "Repair",
-                            isSelected = state.selectedCategory == "Repair",
-                            onClick = { viewModel.selectCategory("Repair") }
-                        )
-
-                        // 2. Installation (Power Plug)
-                        CategoryCard(
-                            modifier = Modifier.weight(1f),
-                            icon = Icons.Default.Power,
-                            iconTint = SapphireBlue800,
-                            label = "Installation",
-                            isSelected = state.selectedCategory == "Installation",
-                            onClick = { viewModel.selectCategory("Installation") }
-                        )
-
-                        // 3. Maintenance (Battery / Meter)
-                        CategoryCard(
-                            modifier = Modifier.weight(1f),
-                            icon = Icons.Default.BatteryChargingFull,
-                            iconTint = SuccessGreen,
-                            label = "Maintenance",
-                            isSelected = state.selectedCategory == "Maintenance",
-                            onClick = { viewModel.selectCategory("Maintenance") }
-                        )
-
-                        // 4. Emergency (Red Highlighted Lightning Bolt as in diagram)
-                        EmergencyCategoryCard(
-                            modifier = Modifier.weight(1f),
-                            isSelected = state.selectedCategory == "Emergency",
-                            onClick = { viewModel.selectCategory("Emergency") }
-                        )
-                    }
-                }
-            }
-
-            // ==========================================
-            // 3. SECTION: Active Service Card (Green Card)
-            // ==========================================
-            item {
-                Column {
-                    Text(
-                        text = "Active Service",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextDarkPrimary
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    if (state.hasActiveJob) {
-                        Surface(
-                            color = Color(0xFFE8F5E9), // Soft green background as in diagram
-                            shape = RoundedCornerShape(14.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFF81C784)),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onTrackSelected(state.activeJobId) }
-                        ) {
+                    // ==========================================
+                    // 1. SECTION: Quick Actions (3 Cards with Chevrons)
+                    // ==========================================
+                    item {
+                        Column {
+                            Text(
+                                text = "Quick Actions",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextDarkPrimary
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
                             Row(
-                                modifier = Modifier.padding(14.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                // Wrench Icon circle
-                                Box(
-                                    modifier = Modifier
-                                        .size(44.dp)
-                                        .background(Color(0xFFC8E6C9), CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Build,
-                                        contentDescription = null,
-                                        tint = Color(0xFF2E7D32),
-                                        modifier = Modifier.size(22.dp)
-                                    )
-                                }
+                                // 1. Book Service Card
+                                QuickActionCard(
+                                    modifier = Modifier.weight(1f),
+                                    icon = Icons.Default.Build,
+                                    iconTint = SapphireBlue800,
+                                    iconBg = Color(0xFFEFF6FF),
+                                    title = "Book Service",
+                                    subtitle = "Instant Booking",
+                                    onClick = {
+                                        currentBottomTab = 1
+                                    }
+                                )
 
-                                Spacer(modifier = Modifier.width(12.dp))
+                                // 2. Track Service Card
+                                QuickActionCard(
+                                    modifier = Modifier.weight(1f),
+                                    icon = Icons.Default.LocationOn,
+                                    iconTint = Color(0xFFDC2626),
+                                    iconBg = Color(0xFFFEF2F2),
+                                    title = "Track Service",
+                                    subtitle = "Live GPS ETA",
+                                    onClick = {
+                                        onTrackSelected(state.activeJobId)
+                                    }
+                                )
 
-                                // Service Details
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = state.activeJobTitle,
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = TextDarkPrimary
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = "Technician: ${state.activeJobTechnician}",
-                                        fontSize = 12.sp,
-                                        color = TextDarkSecondary
-                                    )
-                                    Text(
-                                        text = "Est. Arrival: ${state.activeJobEta}",
-                                        fontSize = 12.sp,
-                                        color = TextDarkSecondary
-                                    )
-                                }
-
-                                // Status Badge ("⏳ In Progress")
-                                Surface(
-                                    color = Color(0xFFFFF8E1),
-                                    shape = RoundedCornerShape(6.dp),
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFB300))
-                                ) {
-                                    Text(
-                                        text = "⏳ In Progress",
-                                        color = Color(0xFFF57F17),
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                    )
-                                }
-                            }
-                        }
-                    } else {
-                        Surface(
-                            color = Color.White,
-                            shape = RoundedCornerShape(12.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = SuccessGreen)
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Text(
-                                    text = "No active jobs. Book an electrician above!",
-                                    fontSize = 13.sp,
-                                    color = TextDarkSecondary
+                                // 3. History Card
+                                QuickActionCard(
+                                    modifier = Modifier.weight(1f),
+                                    icon = Icons.Default.ReceiptLong,
+                                    iconTint = Color(0xFFD97706),
+                                    iconBg = Color(0xFFFFFBEB),
+                                    title = "History",
+                                    subtitle = "Past Invoices",
+                                    onClick = {
+                                        currentBottomTab = 3
+                                    }
                                 )
                             }
                         }
                     }
-                }
-            }
 
-            // ==========================================
-            // 4. SECTION: Available Electrical Services Catalog
-            // ==========================================
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = if (state.selectedCategory == "All") "Popular Services" else "${state.selectedCategory} Offerings",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextDarkPrimary
-                    )
-                    if (state.selectedCategory != "All") {
-                        Text(
-                            text = "Reset All",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = SapphireBlue800,
-                            modifier = Modifier.clickable { viewModel.selectCategory("All") }
+                    // ==========================================
+                    // 2. SECTION: Service Categories (4 Pastel Cards)
+                    // ==========================================
+                    item {
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Service Categories",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextDarkPrimary
+                                )
+                                Text(
+                                    text = "View All >",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = SapphireBlue800,
+                                    modifier = Modifier.clickable { currentBottomTab = 1 }
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                // 1. Repair (Pastel Yellow)
+                                CategoryCard(
+                                    modifier = Modifier.weight(1f),
+                                    icon = Icons.Default.Build,
+                                    iconTint = Color(0xFFD97706),
+                                    bgColor = CategoryRepairBg,
+                                    borderColor = Color(0xFFFDE68A),
+                                    label = "Repair",
+                                    subtitle = "Fix issues",
+                                    isSelected = state.selectedCategory == "Repair",
+                                    onClick = {
+                                        if (state.selectedCategory == "Repair") {
+                                            viewModel.selectCategory("All")
+                                        } else {
+                                            viewModel.selectCategory("Repair")
+                                        }
+                                    }
+                                )
+
+                                // 2. Installation (Pastel Blue)
+                                CategoryCard(
+                                    modifier = Modifier.weight(1f),
+                                    icon = Icons.Default.Power,
+                                    iconTint = Color(0xFF2563EB),
+                                    bgColor = CategoryInstallBg,
+                                    borderColor = Color(0xFFBFDBFE),
+                                    label = "Installation",
+                                    subtitle = "New setups",
+                                    isSelected = state.selectedCategory == "Installation",
+                                    onClick = {
+                                        if (state.selectedCategory == "Installation") {
+                                            viewModel.selectCategory("All")
+                                        } else {
+                                            viewModel.selectCategory("Installation")
+                                        }
+                                    }
+                                )
+
+                                // 3. Maintenance (Pastel Green)
+                                CategoryCard(
+                                    modifier = Modifier.weight(1f),
+                                    icon = Icons.Default.BatteryChargingFull,
+                                    iconTint = Color(0xFF16A34A),
+                                    bgColor = CategoryMaintBg,
+                                    borderColor = Color(0xFFBBF7D0),
+                                    label = "Maintenance",
+                                    subtitle = "Inspection",
+                                    isSelected = state.selectedCategory == "Maintenance",
+                                    onClick = {
+                                        if (state.selectedCategory == "Maintenance") {
+                                            viewModel.selectCategory("All")
+                                        } else {
+                                            viewModel.selectCategory("Maintenance")
+                                        }
+                                    }
+                                )
+
+                                // 4. Emergency (Pastel Red SOS)
+                                CategoryCard(
+                                    modifier = Modifier.weight(1f),
+                                    icon = Icons.Default.Bolt,
+                                    iconTint = Color(0xFFDC2626),
+                                    bgColor = CategoryEmergencyBg,
+                                    borderColor = Color(0xFFFECACA),
+                                    label = "Emergency",
+                                    subtitle = "24/7 SOS",
+                                    isSelected = state.selectedCategory == "Emergency",
+                                    onClick = {
+                                        if (state.selectedCategory == "Emergency") {
+                                            viewModel.selectCategory("All")
+                                        } else {
+                                            viewModel.selectCategory("Emergency")
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    // ==========================================
+                    // 3. SECTION: Active Service Card (With Live Stepper & ETA)
+                    // ==========================================
+                    item {
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "Active Service",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextDarkPrimary
+                                )
+                                if (state.hasActiveJob) {
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .size(8.dp)
+                                            .clip(CircleShape)
+                                            .background(SuccessGreen)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            if (state.hasActiveJob) {
+                                Surface(
+                                    color = ActiveServiceCardBg,
+                                    shape = ShapeCard,
+                                    border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFF86EFAC)),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { onTrackSelected(state.activeJobId) }
+                                ) {
+                                    Column(modifier = Modifier.padding(16.dp)) {
+                                        // Header Row: Status Chip & ETA Pill
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Surface(
+                                                color = EnRoutePillBg,
+                                                shape = RoundedCornerShape(20.dp)
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .size(6.dp)
+                                                            .clip(CircleShape)
+                                                            .background(EnRoutePillText)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(5.dp))
+                                                    Text(
+                                                        text = "TECHNICIAN EN ROUTE",
+                                                        color = EnRoutePillText,
+                                                        fontSize = 10.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                }
+                                            }
+
+                                            Surface(
+                                                color = EtaPillBg,
+                                                shape = RoundedCornerShape(20.dp)
+                                            ) {
+                                                Text(
+                                                    text = "ETA ${state.activeJobEta}",
+                                                    color = EtaPillText,
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Black,
+                                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                                )
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.height(12.dp))
+
+                                        // Service Details & Location
+                                        Text(
+                                            text = state.activeJobTitle,
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = TextDarkPrimary
+                                        )
+                                        Spacer(modifier = Modifier.height(3.dp))
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                imageVector = Icons.Default.LocationOn,
+                                                contentDescription = null,
+                                                tint = TextDarkMuted,
+                                                modifier = Modifier.size(13.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(3.dp))
+                                            Text(
+                                                text = "Home • ${state.activePincodeCity} (${state.activePincode})",
+                                                fontSize = 11.5.sp,
+                                                color = TextDarkSecondary
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        Divider(color = Color(0xFFDCFCE7), thickness = 1.dp)
+                                        Spacer(modifier = Modifier.height(10.dp))
+
+                                        // Technician Info Row
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(36.dp)
+                                                        .clip(CircleShape)
+                                                        .background(Color(0xFFDCFCE7)),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Text(
+                                                        text = "RK",
+                                                        color = SuccessGreen,
+                                                        fontWeight = FontWeight.Black,
+                                                        fontSize = 13.sp
+                                                    )
+                                                }
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Column {
+                                                    Text(
+                                                        text = state.activeJobTechnician,
+                                                        fontSize = 12.5.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = TextDarkPrimary
+                                                    )
+                                                    Text(
+                                                        text = "★ 4.8 • Verified Master Electrician",
+                                                        fontSize = 11.sp,
+                                                        color = TextDarkMuted
+                                                    )
+                                                }
+                                            }
+
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text(
+                                                    text = "Live Map",
+                                                    fontSize = 11.5.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = SapphireBlue800
+                                                )
+                                                Icon(
+                                                    imageVector = Icons.Default.ChevronRight,
+                                                    contentDescription = null,
+                                                    tint = SapphireBlue800,
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.height(14.dp))
+
+                                        // Live Horizontal Stepper (4 Milestones)
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            MiniStepItem(label = "Confirmed", isDone = true, isActive = false)
+                                            MiniStepDivider(isDone = true)
+                                            MiniStepItem(label = "En Route", isDone = false, isActive = true)
+                                            MiniStepDivider(isDone = false)
+                                            MiniStepItem(label = "At Location", isDone = false, isActive = false)
+                                            MiniStepDivider(isDone = false)
+                                            MiniStepItem(label = "Done", isDone = false, isActive = false)
+                                        }
+                                    }
+                                }
+                            } else {
+                                Surface(
+                                    color = Color.White,
+                                    shape = ShapeCardSmall,
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(16.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Icon(Icons.Default.CheckCircle, contentDescription = null, tint = SuccessGreen)
+                                            Spacer(modifier = Modifier.width(10.dp))
+                                            Text(
+                                                text = "No active bookings. Need electrical help?",
+                                                fontSize = 13.sp,
+                                                color = TextDarkSecondary
+                                            )
+                                        }
+                                        Button(
+                                            onClick = { currentBottomTab = 1 },
+                                            shape = RoundedCornerShape(8.dp),
+                                            colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800),
+                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                        ) {
+                                            Text("BOOK", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // ==========================================
+                    // 4. SECTION: Available Electrical Services Catalog
+                    // ==========================================
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = if (state.selectedCategory == "All") "Popular Services" else "${state.selectedCategory} Offerings",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextDarkPrimary
+                            )
+                            if (state.selectedCategory != "All") {
+                                Text(
+                                    text = "Reset All",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = SapphireBlue800,
+                                    modifier = Modifier.clickable { viewModel.selectCategory("All") }
+                                )
+                            }
+                        }
+                    }
+
+                    items(state.filteredServices) { service ->
+                        ServiceItemRow(
+                            service = service,
+                            onBook = { onServiceSelected(service.id) }
                         )
+                    }
+
+                    item {
+                        Spacer(modifier = Modifier.height(20.dp))
                     }
                 }
             }
-
-            items(state.filteredServices) { service ->
-                ServiceItemRow(
-                    service = service,
-                    onBook = { onServiceSelected(service.id) }
-                )
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(20.dp))
-            }
         }
-        }
-    }
     }
 }
 
 // -------------------------------------------------------------
-// Component: Quick Action Card (Wrench, Pin, History)
+// Component: Mini Step Item for Active Service Card
+// -------------------------------------------------------------
+@Composable
+private fun RowScope.MiniStepItem(label: String, isDone: Boolean, isActive: Boolean) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.weight(1f)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(16.dp)
+                .clip(CircleShape)
+                .background(
+                    when {
+                        isDone -> SuccessGreen
+                        isActive -> SapphireBlue800
+                        else -> Color(0xFFCBD5E1)
+                    }
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isDone) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(10.dp)
+                )
+            } else if (isActive) {
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .clip(CircleShape)
+                        .background(Color.White)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(3.dp))
+        Text(
+            text = label,
+            fontSize = 9.sp,
+            fontWeight = if (isActive || isDone) FontWeight.Bold else FontWeight.Normal,
+            color = if (isActive || isDone) TextDarkPrimary else TextDarkMuted,
+            textAlign = TextAlign.Center,
+            maxLines = 1
+        )
+    }
+}
+
+@Composable
+private fun MiniStepDivider(isDone: Boolean) {
+    Box(
+        modifier = Modifier
+            .width(16.dp)
+            .height(2.dp)
+            .background(if (isDone) SuccessGreen else Color(0xFFCBD5E1))
+            .offset(y = (-7).dp)
+    )
+}
+
+// -------------------------------------------------------------
+// Component: Quick Action Card (Book, Track, History with Chevron)
 // -------------------------------------------------------------
 @Composable
 fun QuickActionCard(
     modifier: Modifier = Modifier,
     icon: ImageVector,
     iconTint: Color,
-    label: String,
+    iconBg: Color,
+    title: String,
+    subtitle: String,
     onClick: () -> Unit
 ) {
     Surface(
         onClick = onClick,
-        color = Color(0xFFE3F2FD), // Light blue background as in diagram
-        shape = RoundedCornerShape(12.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF90CAF9)),
-        modifier = modifier.height(84.dp)
+        color = Color.White,
+        shape = ShapeCardSmall,
+        border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder),
+        shadowElevation = 1.dp,
+        modifier = modifier.height(96.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = iconTint,
-                modifier = Modifier.size(26.dp)
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = label,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextDarkPrimary,
-                textAlign = TextAlign.Center
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(iconBg),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = title,
+                        tint = iconTint,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = Color(0xFF94A3B8),
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+
+            Column {
+                Text(
+                    text = title,
+                    fontSize = 11.5.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextDarkPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = subtitle,
+                    fontSize = 9.5.sp,
+                    color = TextDarkMuted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }
 
 // -------------------------------------------------------------
-// Component: Standard Category Card (Repair, Installation, Maintenance)
+// Component: Pastel Category Card (Repair, Installation, Maintenance, Emergency)
 // -------------------------------------------------------------
 @Composable
 fun CategoryCard(
     modifier: Modifier = Modifier,
     icon: ImageVector,
     iconTint: Color,
+    bgColor: Color,
+    borderColor: Color,
     label: String,
+    subtitle: String,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
     Surface(
         onClick = onClick,
-        color = if (isSelected) Color(0xFFE3F2FD) else Color.White,
-        shape = RoundedCornerShape(12.dp),
+        color = bgColor,
+        shape = ShapeCardSmall,
         border = androidx.compose.foundation.BorderStroke(
-            if (isSelected) 1.5.dp else 1.dp,
-            if (isSelected) SapphireBlue800 else Color(0xFFE0E0E0)
+            width = if (isSelected) 2.dp else 1.dp,
+            color = if (isSelected) iconTint else borderColor
         ),
-        modifier = modifier.height(84.dp)
+        shadowElevation = if (isSelected) 2.dp else 0.dp,
+        modifier = modifier.height(92.dp)
     ) {
         Column(
             modifier = Modifier
@@ -648,57 +997,20 @@ fun CategoryCard(
                 tint = iconTint,
                 modifier = Modifier.size(24.dp)
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(5.dp))
             Text(
                 text = label,
-                fontSize = 10.5.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                color = if (isSelected) SapphireBlue900 else TextDarkPrimary,
+                fontSize = 11.sp,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                color = TextDarkPrimary,
                 textAlign = TextAlign.Center,
                 maxLines = 1
             )
-        }
-    }
-}
-
-// -------------------------------------------------------------
-// Component: Emergency Category Card (Red border & highlight as in diagram)
-// -------------------------------------------------------------
-@Composable
-fun EmergencyCategoryCard(
-    modifier: Modifier = Modifier,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Surface(
-        onClick = onClick,
-        color = Color(0xFFFFEBEE), // Pinkish red background as in diagram
-        shape = RoundedCornerShape(12.dp),
-        border = androidx.compose.foundation.BorderStroke(
-            1.5.dp,
-            if (isSelected) Color(0xFFC62828) else Color(0xFFEF5350)
-        ),
-        modifier = modifier.height(84.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(6.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Bolt,
-                contentDescription = "Emergency",
-                tint = Color(0xFFD32F2F),
-                modifier = Modifier.size(26.dp)
-            )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(1.dp))
             Text(
-                text = "Emergency",
-                fontSize = 10.5.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFFD32F2F),
+                text = subtitle,
+                fontSize = 9.sp,
+                color = TextDarkMuted,
                 textAlign = TextAlign.Center,
                 maxLines = 1
             )
@@ -716,35 +1028,84 @@ fun ServiceItemRow(
 ) {
     Surface(
         color = Color.White,
-        shape = RoundedCornerShape(12.dp),
+        shape = ShapeCardSmall,
         border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder),
+        shadowElevation = 1.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier.padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Category Visual Icon Thumbnail
+            Box(
+                modifier = Modifier
+                    .size(50.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFFF1F5F9)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = when {
+                        service.category.contains("MCB", ignoreCase = true) -> Icons.Default.Bolt
+                        service.category.contains("Emergency", ignoreCase = true) -> Icons.Default.FlashOn
+                        service.category.contains("Wiring", ignoreCase = true) -> Icons.Default.Power
+                        else -> Icons.Default.Build
+                    },
+                    contentDescription = null,
+                    tint = SapphireBlue800,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = service.title,
-                    fontSize = 14.sp,
+                    fontSize = 13.5.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TextDarkPrimary
-                )
-                Spacer(modifier = Modifier.height(3.dp))
-                Text(
-                    text = "${service.durationMinutes} mins • 18% GST itemized",
-                    fontSize = 11.sp,
-                    color = TextDarkMuted
+                    color = TextDarkPrimary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Schedule,
+                        contentDescription = null,
+                        tint = TextDarkMuted,
+                        modifier = Modifier.size(12.dp)
+                    )
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text(
+                        text = "${service.durationMinutes} mins",
+                        fontSize = 11.sp,
+                        color = TextDarkMuted
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(text = "•", color = TextDarkMuted, fontSize = 10.sp)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Surface(
+                        color = Color(0xFFF1F5F9),
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            text = "18% GST itemized",
+                            fontSize = 9.5.sp,
+                            color = TextDarkMuted,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(5.dp))
                 Text(
                     text = "₹${"%,.0f".format(service.priceInr)}",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Black,
-                    color = SapphireBlue900
+                    style = ServicePriceStyle
                 )
             }
+
+            Spacer(modifier = Modifier.width(10.dp))
 
             Button(
                 onClick = onBook,

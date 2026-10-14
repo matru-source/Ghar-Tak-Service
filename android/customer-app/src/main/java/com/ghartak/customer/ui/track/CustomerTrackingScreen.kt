@@ -82,16 +82,16 @@ fun CustomerTrackingScreen(
                             "COMPLETED" -> SuccessGreen.copy(alpha = 0.2f)
                             else -> WarningAmber.copy(alpha = 0.15f)
                         },
-                        shape = RoundedCornerShape(6.dp),
+                        shape = RoundedCornerShape(20.dp),
                         modifier = Modifier.padding(end = 12.dp)
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(6.dp)
+                                    .size(7.dp)
                                     .clip(CircleShape)
                                     .background(
                                         when (state.status) {
@@ -112,9 +112,9 @@ fun CustomerTrackingScreen(
                                 color = when (state.status) {
                                     "ARRIVED", "COMPLETED" -> SuccessGreen
                                     "IN_PROGRESS" -> SapphireBlue800
-                                    else -> WarningAmber
+                                    else -> Color(0xFFB45309)
                                 },
-                                fontSize = 10.sp,
+                                fontSize = 10.5.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -133,13 +133,13 @@ fun CustomerTrackingScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Lifecycle Progress Stepper
-            TrackingLifecycleStepper(state)
+            // 1. Lifecycle Progress Stepper (4-Stage with Timestamps)
+            TrackingLifecycleStepper(state = state)
 
-            // Realistic Live Route Map Canvas with City Road Network, GPS Navigation & Animated Pulse
+            // 2. Tactical Midnight Live Map Visualizer with City Grid & SSE Beacon
             LiveElectricianTrackingMap(state = state)
 
-            // Assigned Electrician Profile Card
+            // 3. Assigned Verified Electrician Profile Card
             val techInitials = remember(state.technicianName) {
                 val parts = state.technicianName.trim().split(" ").filter { it.isNotEmpty() }
                 when {
@@ -151,7 +151,7 @@ fun CustomerTrackingScreen(
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = ShapeCard,
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
             ) {
@@ -162,38 +162,69 @@ fun CustomerTrackingScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFFE65100).copy(alpha = 0.15f))
-                                    .border(1.5.dp, Color(0xFFE65100), CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = techInitials,
-                                    color = Color(0xFFE65100),
-                                    fontWeight = FontWeight.Black,
-                                    fontSize = 16.sp
+                            Box {
+                                Box(
+                                    modifier = Modifier
+                                        .size(50.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFFE65100).copy(alpha = 0.15f))
+                                        .border(1.5.dp, Color(0xFFE65100), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = techInitials,
+                                        color = Color(0xFFE65100),
+                                        fontWeight = FontWeight.Black,
+                                        fontSize = 17.sp
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .size(12.dp)
+                                        .align(Alignment.BottomEnd)
+                                        .clip(CircleShape)
+                                        .background(SuccessGreen)
+                                        .border(2.dp, Color.White, CircleShape)
                                 )
                             }
+
                             Spacer(modifier = Modifier.width(12.dp))
+
                             Column {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
                                         text = state.technicianName,
                                         color = TextDarkPrimary,
-                                        fontSize = 15.sp,
+                                        fontSize = 15.5.sp,
                                         fontWeight = FontWeight.Bold
                                     )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Icon(imageVector = Icons.Default.Verified, contentDescription = null, tint = SuccessGreen, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(5.dp))
+                                    Icon(
+                                        imageVector = Icons.Default.Verified,
+                                        contentDescription = "Verified",
+                                        tint = SapphireBlue800,
+                                        modifier = Modifier.size(16.dp)
+                                    )
                                 }
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = "${state.technicianBadge} • ${state.technicianRating} ★ (${state.technicianCompletedJobs})",
+                                    text = "${state.technicianBadge} • ★ ${state.technicianRating} (${state.technicianCompletedJobs})",
                                     color = TextDarkMuted,
                                     fontSize = 12.sp
                                 )
+                                Spacer(modifier = Modifier.height(3.dp))
+                                Surface(
+                                    color = Color(0xFFEFF6FF),
+                                    shape = RoundedCornerShape(4.dp)
+                                ) {
+                                    Text(
+                                        text = "Class 0 Insulated (1000V Certified)",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = SapphireBlue800,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
                             }
                         }
 
@@ -204,21 +235,21 @@ fun CustomerTrackingScreen(
                             },
                             shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
                         ) {
                             Icon(imageVector = Icons.Default.Phone, contentDescription = null, modifier = Modifier.size(14.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("CALL", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text("CALL", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
             }
 
-            // Secure Customer Handover OTP Box
+            // 4. Secure Customer Handover OTP Container (4 Large Boxes)
             Surface(
-                color = WarningAmber.copy(alpha = 0.1f),
-                shape = RoundedCornerShape(16.dp),
-                border = androidx.compose.foundation.BorderStroke(1.5.dp, WarningAmber),
+                color = OtpCardBackground,
+                shape = ShapeCard,
+                border = androidx.compose.foundation.BorderStroke(1.5.dp, OtpCardBorder),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
@@ -226,18 +257,32 @@ fun CustomerTrackingScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(imageVector = Icons.Default.Lock, contentDescription = null, tint = WarningAmber, modifier = Modifier.size(18.dp))
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = null,
+                            tint = Color(0xFFD97706),
+                            modifier = Modifier.size(18.dp)
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "SECURE HANDOVER VERIFICATION OTP",
-                            color = Color(0xFFB78103),
-                            fontSize = 11.sp,
+                            color = Color(0xFFB45309),
+                            fontSize = 11.5.sp,
                             fontWeight = FontWeight.Black,
                             letterSpacing = 1.sp
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Text(
+                        text = "Show this 4-digit code to your electrician only upon arrival and safety check.",
+                        color = Color(0xFF92400E),
+                        fontSize = 11.sp,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     // Giant 4-Digit Display
                     Row(
@@ -247,35 +292,41 @@ fun CustomerTrackingScreen(
                         state.handoverOtp.forEach { digit ->
                             Box(
                                 modifier = Modifier
-                                    .size(54.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(Color.White)
-                                    .border(1.5.dp, WarningAmber, RoundedCornerShape(12.dp)),
+                                    .size(58.dp)
+                                    .clip(ShapeOtpBox)
+                                    .background(OtpBoxBackground)
+                                    .border(2.dp, OtpBoxBorder, ShapeOtpBox),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
                                     text = digit.toString(),
-                                    color = TextDarkPrimary,
-                                    fontSize = 28.sp,
-                                    fontWeight = FontWeight.Black
+                                    style = OtpDigitStyle
                                 )
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
-                    Text(
-                        text = "🔒 DO NOT SHARE THIS OTP NOW.\nShare with ${state.technicianName} ONLY after inspecting your panel and verifying restored power.",
-                        color = TextDarkSecondary,
-                        fontSize = 11.sp,
-                        textAlign = TextAlign.Center,
-                        lineHeight = 15.sp
-                    )
+                    Surface(
+                        color = Color(0xFFFEF3C7),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "🔒 DO NOT SHARE THIS OTP NOW.\nShare with ${state.technicianName} ONLY after inspecting your panel and verifying restored power.",
+                            color = Color(0xFF92400E),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 15.sp,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)
+                        )
+                    }
                 }
             }
 
-            // 1000V Safety Interlock Verified Card
+            // 5. 1000V Safety Interlock Verified Card
             if (state.isSafetyInterlockVerified) {
                 Surface(
                     color = SuccessGreen.copy(alpha = 0.12f),
@@ -306,7 +357,7 @@ fun CustomerTrackingScreen(
                 }
             }
 
-            // Staging Demo Action Buttons
+            // 6. Staging Demo Action Buttons
             Surface(
                 color = SurfaceLight,
                 shape = RoundedCornerShape(12.dp),
@@ -335,7 +386,7 @@ fun CustomerTrackingScreen(
                 }
             }
 
-            // Bottom Sign-off CTA Button
+            // 7. Bottom Sign-off CTA Button
             Button(
                 onClick = { onProceedToSignoff(state.jobId) },
                 shape = RoundedCornerShape(12.dp),
@@ -354,69 +405,128 @@ fun CustomerTrackingScreen(
     }
 }
 
+// -------------------------------------------------------------
+// Component: 4-Stage Horizontal Stepper with Timestamps
+// -------------------------------------------------------------
 @Composable
 fun TrackingLifecycleStepper(state: CustomerTrackingUiState) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
+        shape = ShapeCard,
         colors = CardDefaults.cardColors(containerColor = Color.White),
         border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
+                .padding(horizontal = 14.dp, vertical = 14.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            StepPill(label = "Dispatched", isDone = true, isActive = false)
-            Divider(modifier = Modifier.width(20.dp), color = SapphireBlue800)
-            StepPill(label = "Transit", isDone = state.isDoorstepArrived, isActive = !state.isDoorstepArrived)
-            Divider(modifier = Modifier.width(20.dp), color = if (state.isDoorstepArrived) SapphireBlue800 else SurfaceBorder)
-            StepPill(label = "Safety", isDone = state.isSafetyInterlockVerified, isActive = state.isDoorstepArrived && !state.isSafetyInterlockVerified)
-            Divider(modifier = Modifier.width(20.dp), color = if (state.isSafetyInterlockVerified) SapphireBlue800 else SurfaceBorder)
-            StepPill(label = "Done", isDone = state.isJobCompleted, isActive = state.isSafetyInterlockVerified && !state.isJobCompleted)
+            StepPill(
+                label = "Dispatched",
+                subLabel = "10:35 AM",
+                isDone = true,
+                isActive = false
+            )
+            StepDivider(isDone = state.isDoorstepArrived)
+            StepPill(
+                label = "Transit",
+                subLabel = if (state.isDoorstepArrived) "10:59 AM" else "In Transit",
+                isDone = state.isDoorstepArrived,
+                isActive = !state.isDoorstepArrived
+            )
+            StepDivider(isDone = state.isSafetyInterlockVerified)
+            StepPill(
+                label = "Safety",
+                subLabel = if (state.isSafetyInterlockVerified) "Pass" else "Pending",
+                isDone = state.isSafetyInterlockVerified,
+                isActive = state.isDoorstepArrived && !state.isSafetyInterlockVerified
+            )
+            StepDivider(isDone = state.isJobCompleted)
+            StepPill(
+                label = "Done",
+                subLabel = if (state.isJobCompleted) "Signed" else "Pending",
+                isDone = state.isJobCompleted,
+                isActive = state.isSafetyInterlockVerified && !state.isJobCompleted
+            )
         }
     }
 }
 
 @Composable
-fun StepPill(label: String, isDone: Boolean, isActive: Boolean) {
+fun StepPill(
+    label: String,
+    subLabel: String,
+    isDone: Boolean,
+    isActive: Boolean
+) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             modifier = Modifier
-                .size(24.dp)
+                .size(26.dp)
                 .clip(CircleShape)
                 .background(
                     when {
                         isDone -> SuccessGreen
                         isActive -> SapphireBlue800
-                        else -> SurfaceBorder
+                        else -> Color(0xFFE2E8F0)
                     }
                 ),
             contentAlignment = Alignment.Center
         ) {
             if (isDone) {
-                Icon(imageVector = Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
-            } else {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(15.dp)
+                )
+            } else if (isActive) {
                 Box(
                     modifier = Modifier
                         .size(8.dp)
                         .clip(CircleShape)
                         .background(Color.White)
                 )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF94A3B8))
+                )
             }
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = label,
-            fontSize = 10.sp,
-            fontWeight = if (isActive || isDone) FontWeight.Bold else FontWeight.Normal,
+            fontSize = 11.sp,
+            fontWeight = if (isActive || isDone) FontWeight.Bold else FontWeight.Medium,
             color = if (isActive || isDone) TextDarkPrimary else TextDarkMuted
+        )
+        Text(
+            text = subLabel,
+            fontSize = 9.5.sp,
+            color = if (isDone) SuccessGreen else TextDarkMuted
         )
     }
 }
 
+@Composable
+fun StepDivider(isDone: Boolean) {
+    Box(
+        modifier = Modifier
+            .width(18.dp)
+            .height(2.dp)
+            .background(if (isDone) SuccessGreen else Color(0xFFE2E8F0))
+            .offset(y = (-8).dp)
+    )
+}
+
+// -------------------------------------------------------------
+// Component: Tactical Midnight Live Map Visualizer with Glowing Cyan Route
+// -------------------------------------------------------------
 @Composable
 fun LiveElectricianTrackingMap(state: CustomerTrackingUiState) {
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
@@ -451,10 +561,10 @@ fun LiveElectricianTrackingMap(state: CustomerTrackingUiState) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(235.dp),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
-        border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
+            .height(245.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = DarkMapBg),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1E293B))
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Canvas(modifier = Modifier.fillMaxSize()) {
@@ -495,7 +605,7 @@ fun LiveElectricianTrackingMap(state: CustomerTrackingUiState) {
                 val roadColor = Color(0xFF1E293B)
                 val roadEdgeColor = Color(0xFF334155).copy(alpha = 0.6f)
 
-                // Major Avenue 1 (Colaba Causeway - Upper Horizontal)
+                // Major Avenue 1 (Upper Horizontal)
                 val road1Y = canvasHeight * 0.30f
                 drawRect(
                     color = roadColor,
@@ -557,10 +667,10 @@ fun LiveElectricianTrackingMap(state: CustomerTrackingUiState) {
                     lineTo(p4.x, p4.y)
                 }
 
-                // Route Outer Glow
+                // Glowing Cyan Outer Glow Bloom
                 drawPath(
                     path = fullPath,
-                    color = Color(0xFF0284C7).copy(alpha = 0.35f),
+                    color = DarkMapRouteCyan.copy(alpha = 0.35f),
                     style = Stroke(width = 10f, cap = StrokeCap.Round, join = StrokeJoin.Round)
                 )
 
@@ -575,7 +685,7 @@ fun LiveElectricianTrackingMap(state: CustomerTrackingUiState) {
                 // Vibrant Route Path
                 drawPath(
                     path = fullPath,
-                    color = if (isArrived) SuccessGreen else ElectricCyan,
+                    color = if (isArrived) SuccessGreen else DarkMapRouteCyan,
                     style = Stroke(
                         width = 4.5f,
                         cap = StrokeCap.Round,
@@ -585,7 +695,6 @@ fun LiveElectricianTrackingMap(state: CustomerTrackingUiState) {
                 )
 
                 // 4. Customer Doorstep Home Destination Pin at p4
-                // 50m Geofence circle
                 drawCircle(
                     color = SuccessGreen.copy(alpha = 0.18f),
                     radius = 36f,
@@ -600,7 +709,7 @@ fun LiveElectricianTrackingMap(state: CustomerTrackingUiState) {
                 drawCircle(color = SuccessGreen, radius = 11f, center = p4)
                 drawCircle(color = Color.White, radius = 5f, center = p4)
 
-                // 5. Technician Live Marker
+                // 5. Electrician Live Moving Marker
                 val techPos = when {
                     progressFrac <= 0.25f -> {
                         val t = progressFrac / 0.25f
@@ -656,7 +765,7 @@ fun LiveElectricianTrackingMap(state: CustomerTrackingUiState) {
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "LIVE GPS • SSE ACTIVE",
+                        text = "LIVE GPS • SSE ACTIVE 📶",
                         color = Color.White,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
@@ -679,7 +788,7 @@ fun LiveElectricianTrackingMap(state: CustomerTrackingUiState) {
                     Icon(
                         imageVector = Icons.Default.MyLocation,
                         contentDescription = "My Location",
-                        tint = ElectricCyan,
+                        tint = DarkMapRouteCyan,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -687,8 +796,8 @@ fun LiveElectricianTrackingMap(state: CustomerTrackingUiState) {
 
             // Floating Bottom Overlay: Live Status & Route ETA Banner
             Surface(
-                color = Color(0xFF0F172A).copy(alpha = 0.92f),
-                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFF0F172A).copy(alpha = 0.94f),
+                shape = RoundedCornerShape(14.dp),
                 border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF334155)),
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -707,7 +816,7 @@ fun LiveElectricianTrackingMap(state: CustomerTrackingUiState) {
                         Icon(
                             imageVector = if (state.transitStep >= 3 || state.status == "ARRIVED") Icons.Default.CheckCircle else Icons.Default.Navigation,
                             contentDescription = null,
-                            tint = if (state.transitStep >= 3 || state.status == "ARRIVED") SuccessGreen else ElectricCyan,
+                            tint = if (state.transitStep >= 3 || state.status == "ARRIVED") SuccessGreen else DarkMapRouteCyan,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
