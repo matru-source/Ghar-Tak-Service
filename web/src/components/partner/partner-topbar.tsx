@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { Zap } from '@/components/ui/icons';
 
 interface PartnerTopbarProps {
@@ -10,7 +9,6 @@ interface PartnerTopbarProps {
 }
 
 export function PartnerTopbar({ onToggleSidebar }: PartnerTopbarProps) {
-  const pathname = usePathname();
   const [timeStr, setTimeStr] = useState('');
 
   useEffect(() => {
@@ -30,13 +28,6 @@ export function PartnerTopbar({ onToggleSidebar }: PartnerTopbarProps) {
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
   }, []);
-
-  const navLinks = [
-    { name: 'Dashboard', href: '/partner' },
-    { name: 'Technicians', href: '/partner/fleet' },
-    { name: 'Jobs', href: '/partner/jobs' },
-    { name: 'Finance', href: '/partner/invoices' },
-  ];
 
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between bg-[#1B5E20] text-white px-3 sm:px-6 lg:px-8 shadow-md">
@@ -62,29 +53,6 @@ export function PartnerTopbar({ onToggleSidebar }: PartnerTopbarProps) {
             <span className="hidden sm:inline text-emerald-200/80 text-xs font-semibold">| Partner Portal</span>
           </div>
         </Link>
-
-        {/* Center Navigation Links (Matching Client Mockup) */}
-        <nav className="hidden md:flex items-center gap-1 ml-4">
-          {navLinks.map((link) => {
-            const isActive =
-              link.href === '/partner'
-                ? pathname === '/partner'
-                : pathname.startsWith(link.href);
-            return (
-              <Link
-                key={link.name}
-                href={link.href}
-                className={`px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                  isActive
-                    ? 'bg-white/20 text-white shadow-xs underline decoration-2 underline-offset-8'
-                    : 'text-emerald-100 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                {link.name}
-              </Link>
-            );
-          })}
-        </nav>
       </div>
 
       {/* Right controls */}
