@@ -2023,10 +2023,10 @@ fun TechnicianProfileContent(
                     icon = Icons.Default.Build,
                     onEdit = { showEditServiceDialog = true }
                 ) {
-                    ProfileInfoRow(icon = Icons.Default.Handyman, label = "Specialization", value = state.profile?.specialization ?: "Electrical Installation, AC, Fan, Wiring")
-                    ProfileInfoRow(icon = Icons.Default.WorkspacePremium, label = "Experience", value = state.profile?.experience ?: "5+ Years")
-                    ProfileInfoRow(icon = Icons.Default.Badge, label = "License / Certification", value = state.profile?.license ?: "1000V Safety Certified")
-                    ProfileInfoRow(icon = Icons.Default.DirectionsCar, label = "Service Area", value = state.profile?.serviceArea ?: "Mumbai & Surrounding Areas")
+                    ProfileInfoRow(icon = Icons.Default.Build, label = "Specialization", value = state.profile?.specialization ?: "Electrical Installation, AC, Fan, Wiring")
+                    ProfileInfoRow(icon = Icons.Default.WorkHistory, label = "Experience", value = state.profile?.experience ?: "5+ Years")
+                    ProfileInfoRow(icon = Icons.Default.VerifiedUser, label = "License / Certification", value = state.profile?.license ?: "1000V Safety Certified")
+                    ProfileInfoRow(icon = Icons.Default.LocationCity, label = "Service Area", value = state.profile?.serviceArea ?: "Mumbai & Surrounding Areas")
                 }
             }
 
