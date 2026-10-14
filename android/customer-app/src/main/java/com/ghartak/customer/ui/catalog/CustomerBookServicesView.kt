@@ -1,5 +1,6 @@
 package com.ghartak.customer.ui.catalog
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -15,11 +16,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ghartak.customer.data.model.ServiceItem
 import com.ghartak.customer.ui.theme.*
+import com.ghartak.customer.ui.util.ServiceDrawableHelper.getServiceDrawable
 
 @Composable
 fun CustomerBookServicesView(
@@ -247,21 +252,47 @@ private fun ServiceBookingCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            Text(
-                text = service.title,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextDarkPrimary
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(58.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFF8FAFC))
+                        .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(12.dp))
+                        .padding(3.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = getServiceDrawable(service.title, service.category)),
+                        contentDescription = service.title,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
 
-            Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.width(12.dp))
 
-            Text(
-                text = service.description,
-                fontSize = 12.sp,
-                color = TextDarkSecondary,
-                lineHeight = 16.sp
-            )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = service.title,
+                        fontSize = 14.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextDarkPrimary
+                    )
+                    Spacer(modifier = Modifier.height(3.dp))
+                    Text(
+                        text = service.description,
+                        fontSize = 11.5.sp,
+                        color = TextDarkSecondary,
+                        lineHeight = 15.sp,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 

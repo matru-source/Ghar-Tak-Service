@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
@@ -40,6 +41,7 @@ import com.ghartak.customer.ui.catalog.CustomerBookServicesView
 import com.ghartak.customer.ui.catalog.CustomerCatalogViewModel
 import com.ghartak.customer.ui.components.EnvironmentSwitcherDialog
 import com.ghartak.customer.ui.theme.*
+import com.ghartak.customer.ui.util.ServiceDrawableHelper.getServiceDrawable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -182,19 +184,44 @@ fun CustomerHomeScreen(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // 2. Greeting Headline & Subtitle
-                    val firstName = remember(state.userName) {
-                        state.userName.trim().split(" ").firstOrNull() ?: state.userName
+                    // 2. Greeting Headline & Subtitle with Night Villa House Overlay (Image 1 Match)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            val firstName = remember(state.userName) {
+                                state.userName.trim().split(" ").firstOrNull() ?: state.userName
+                            }
+                            Text(
+                                text = "Hello, $firstName!",
+                                style = GreetingHeadlineStyle
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Professional Electrical Services at Your Doorstep",
+                                style = SubGreetingStyle
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(10.dp))
+
+                        // Illuminated Night Villa House Graphic
+                        Box(
+                            modifier = Modifier
+                                .size(width = 100.dp, height = 58.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .border(1.dp, Color.White.copy(alpha = 0.35f), RoundedCornerShape(14.dp))
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.bg_header_house),
+                                contentDescription = "Illuminated Home",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
                     }
-                    Text(
-                        text = "Hello, $firstName!",
-                        style = GreetingHeadlineStyle
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "Professional Electrical Services at Your Doorstep",
-                        style = SubGreetingStyle
-                    )
 
                     Spacer(modifier = Modifier.height(14.dp))
 
@@ -432,11 +459,11 @@ fun CustomerHomeScreen(
                                 // 1. Book Service Card
                                 QuickActionCard(
                                     modifier = Modifier.weight(1f),
-                                    icon = Icons.Default.Build,
+                                    icon = Icons.Default.DateRange,
                                     iconTint = SapphireBlue800,
                                     iconBg = Color(0xFFEFF6FF),
                                     title = "Book Service",
-                                    subtitle = "Instant Booking",
+                                    subtitle = "Schedule a service",
                                     onClick = {
                                         currentBottomTab = 1
                                     }
@@ -446,10 +473,10 @@ fun CustomerHomeScreen(
                                 QuickActionCard(
                                     modifier = Modifier.weight(1f),
                                     icon = Icons.Default.LocationOn,
-                                    iconTint = Color(0xFFDC2626),
-                                    iconBg = Color(0xFFFEF2F2),
+                                    iconTint = SapphireBlue800,
+                                    iconBg = Color(0xFFEFF6FF),
                                     title = "Track Service",
-                                    subtitle = "Live GPS ETA",
+                                    subtitle = "Live updates",
                                     onClick = {
                                         onTrackSelected(state.activeJobId)
                                     }
@@ -459,10 +486,10 @@ fun CustomerHomeScreen(
                                 QuickActionCard(
                                     modifier = Modifier.weight(1f),
                                     icon = Icons.Default.ReceiptLong,
-                                    iconTint = Color(0xFFD97706),
-                                    iconBg = Color(0xFFFFFBEB),
+                                    iconTint = SapphireBlue800,
+                                    iconBg = Color(0xFFEFF6FF),
                                     title = "History",
-                                    subtitle = "Past Invoices",
+                                    subtitle = "View past services",
                                     onClick = {
                                         currentBottomTab = 3
                                     }
@@ -500,15 +527,15 @@ fun CustomerHomeScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                // 1. Repair (Pastel Yellow)
+                                // 1. Repair (Pastel Blue)
                                 CategoryCard(
                                     modifier = Modifier.weight(1f),
                                     icon = Icons.Default.Build,
-                                    iconTint = Color(0xFFD97706),
-                                    bgColor = CategoryRepairBg,
-                                    borderColor = Color(0xFFFDE68A),
+                                    iconTint = SapphireBlue800,
+                                    bgColor = Color(0xFFF0F7FF),
+                                    borderColor = Color(0xFFD0E3FF),
                                     label = "Repair",
-                                    subtitle = "Fix issues",
+                                    subtitle = "Fix electrical issues",
                                     isSelected = state.selectedCategory == "Repair",
                                     onClick = {
                                         if (state.selectedCategory == "Repair") {
@@ -519,15 +546,15 @@ fun CustomerHomeScreen(
                                     }
                                 )
 
-                                // 2. Installation (Pastel Blue)
+                                // 2. Installation (Pastel Mint Green)
                                 CategoryCard(
                                     modifier = Modifier.weight(1f),
                                     icon = Icons.Default.Power,
-                                    iconTint = Color(0xFF2563EB),
-                                    bgColor = CategoryInstallBg,
-                                    borderColor = Color(0xFFBFDBFE),
+                                    iconTint = Color(0xFF16A34A),
+                                    bgColor = Color(0xFFF0FDF4),
+                                    borderColor = Color(0xFFBBF7D0),
                                     label = "Installation",
-                                    subtitle = "New setups",
+                                    subtitle = "New fittings",
                                     isSelected = state.selectedCategory == "Installation",
                                     onClick = {
                                         if (state.selectedCategory == "Installation") {
@@ -538,15 +565,15 @@ fun CustomerHomeScreen(
                                     }
                                 )
 
-                                // 3. Maintenance (Pastel Green)
+                                // 3. Maintenance (Pastel Amber)
                                 CategoryCard(
                                     modifier = Modifier.weight(1f),
-                                    icon = Icons.Default.BatteryChargingFull,
-                                    iconTint = Color(0xFF16A34A),
-                                    bgColor = CategoryMaintBg,
-                                    borderColor = Color(0xFFBBF7D0),
+                                    icon = Icons.Default.Settings,
+                                    iconTint = Color(0xFFD97706),
+                                    bgColor = Color(0xFFFFFBEB),
+                                    borderColor = Color(0xFFFDE68A),
                                     label = "Maintenance",
-                                    subtitle = "Inspection",
+                                    subtitle = "Regular checkup",
                                     isSelected = state.selectedCategory == "Maintenance",
                                     onClick = {
                                         if (state.selectedCategory == "Maintenance") {
@@ -557,15 +584,15 @@ fun CustomerHomeScreen(
                                     }
                                 )
 
-                                // 4. Emergency (Pastel Red SOS)
+                                // 4. Emergency (Pastel Rose Red)
                                 CategoryCard(
                                     modifier = Modifier.weight(1f),
-                                    icon = Icons.Default.Bolt,
+                                    icon = Icons.Default.NotificationsActive,
                                     iconTint = Color(0xFFDC2626),
-                                    bgColor = CategoryEmergencyBg,
+                                    bgColor = Color(0xFFFEF2F2),
                                     borderColor = Color(0xFFFECACA),
                                     label = "Emergency",
-                                    subtitle = "24/7 SOS",
+                                    subtitle = "24x7 support",
                                     isSelected = state.selectedCategory == "Emergency",
                                     onClick = {
                                         if (state.selectedCategory == "Emergency") {
@@ -605,88 +632,16 @@ fun CustomerHomeScreen(
 
                             if (state.hasActiveJob) {
                                 Surface(
-                                    color = ActiveServiceCardBg,
+                                    color = Color.White,
                                     shape = ShapeCard,
-                                    border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFF86EFAC)),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                                    shadowElevation = 2.dp,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable { onTrackSelected(state.activeJobId) }
                                 ) {
-                                    Column(modifier = Modifier.padding(16.dp)) {
-                                        // Header Row: Status Chip & ETA Pill
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Surface(
-                                                color = EnRoutePillBg,
-                                                shape = RoundedCornerShape(20.dp)
-                                            ) {
-                                                Row(
-                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                                    verticalAlignment = Alignment.CenterVertically
-                                                ) {
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .size(6.dp)
-                                                            .clip(CircleShape)
-                                                            .background(EnRoutePillText)
-                                                    )
-                                                    Spacer(modifier = Modifier.width(5.dp))
-                                                    Text(
-                                                        text = "TECHNICIAN EN ROUTE",
-                                                        color = EnRoutePillText,
-                                                        fontSize = 10.sp,
-                                                        fontWeight = FontWeight.Bold
-                                                    )
-                                                }
-                                            }
-
-                                            Surface(
-                                                color = EtaPillBg,
-                                                shape = RoundedCornerShape(20.dp)
-                                            ) {
-                                                Text(
-                                                    text = "ETA ${state.activeJobEta}",
-                                                    color = EtaPillText,
-                                                    fontSize = 11.sp,
-                                                    fontWeight = FontWeight.Black,
-                                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                                                )
-                                            }
-                                        }
-
-                                        Spacer(modifier = Modifier.height(12.dp))
-
-                                        // Service Details & Location
-                                        Text(
-                                            text = state.activeJobTitle,
-                                            fontSize = 15.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = TextDarkPrimary
-                                        )
-                                        Spacer(modifier = Modifier.height(3.dp))
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(
-                                                imageVector = Icons.Default.LocationOn,
-                                                contentDescription = null,
-                                                tint = TextDarkMuted,
-                                                modifier = Modifier.size(13.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(3.dp))
-                                            Text(
-                                                text = "Home • ${state.activePincodeCity} (${state.activePincode})",
-                                                fontSize = 11.5.sp,
-                                                color = TextDarkSecondary
-                                            )
-                                        }
-
-                                        Spacer(modifier = Modifier.height(12.dp))
-                                        Divider(color = Color(0xFFDCFCE7), thickness = 1.dp)
-                                        Spacer(modifier = Modifier.height(10.dp))
-
-                                        // Technician Info Row
+                                    Column(modifier = Modifier.padding(14.dp)) {
+                                        // Top Row: Status Dot & Technician En Route Chip
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -695,64 +650,202 @@ fun CustomerHomeScreen(
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Box(
                                                     modifier = Modifier
-                                                        .size(36.dp)
+                                                        .size(8.dp)
                                                         .clip(CircleShape)
-                                                        .background(Color(0xFFDCFCE7)),
-                                                    contentAlignment = Alignment.Center
-                                                ) {
-                                                    Text(
-                                                        text = "RK",
-                                                        color = SuccessGreen,
-                                                        fontWeight = FontWeight.Black,
-                                                        fontSize = 13.sp
-                                                    )
-                                                }
-                                                Spacer(modifier = Modifier.width(8.dp))
-                                                Column {
-                                                    Text(
-                                                        text = state.activeJobTechnician,
-                                                        fontSize = 12.5.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = TextDarkPrimary
-                                                    )
-                                                    Text(
-                                                        text = "★ 4.8 • Verified Master Electrician",
-                                                        fontSize = 11.sp,
-                                                        color = TextDarkMuted
-                                                    )
-                                                }
+                                                        .background(SuccessGreen)
+                                                )
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text(
+                                                    text = "Active Service",
+                                                    color = SapphireBlue800,
+                                                    fontSize = 13.5.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
                                             }
 
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Text(
-                                                    text = "Live Map",
-                                                    fontSize = 11.5.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = SapphireBlue800
-                                                )
-                                                Icon(
-                                                    imageVector = Icons.Default.ChevronRight,
-                                                    contentDescription = null,
-                                                    tint = SapphireBlue800,
-                                                    modifier = Modifier.size(16.dp)
-                                                )
+                                            Surface(
+                                                color = Color(0xFFFEF3C7),
+                                                shape = RoundedCornerShape(20.dp),
+                                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFDE68A))
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .size(6.dp)
+                                                            .clip(CircleShape)
+                                                            .background(Color(0xFFD97706))
+                                                    )
+                                                    Spacer(modifier = Modifier.width(5.dp))
+                                                    Text(
+                                                        text = "Technician En Route",
+                                                        color = Color(0xFFB45309),
+                                                        fontSize = 10.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                }
                                             }
                                         }
 
-                                        Spacer(modifier = Modifier.height(14.dp))
+                                        Spacer(modifier = Modifier.height(12.dp))
 
-                                        // Live Horizontal Stepper (4 Milestones)
+                                        // Product Image + Service Info + Technician Info
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            MiniStepItem(label = "Confirmed", isDone = true, isActive = false)
-                                            MiniStepDivider(isDone = true)
-                                            MiniStepItem(label = "En Route", isDone = false, isActive = true)
-                                            MiniStepDivider(isDone = false)
-                                            MiniStepItem(label = "At Location", isDone = false, isActive = false)
-                                            MiniStepDivider(isDone = false)
-                                            MiniStepItem(label = "Done", isDone = false, isActive = false)
+                                            // Service Product Image Thumbnail
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(54.dp)
+                                                    .clip(RoundedCornerShape(12.dp))
+                                                    .background(Color(0xFFF8FAFC))
+                                                    .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(12.dp))
+                                                    .padding(3.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Image(
+                                                    painter = painterResource(id = getServiceDrawable(state.activeJobTitle)),
+                                                    contentDescription = state.activeJobTitle,
+                                                    contentScale = ContentScale.Fit,
+                                                    modifier = Modifier.fillMaxSize()
+                                                )
+                                            }
+
+                                            Spacer(modifier = Modifier.width(10.dp))
+
+                                            // Service Name & Location
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = state.activeJobTitle,
+                                                    fontSize = 14.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = TextDarkPrimary
+                                                )
+                                                Spacer(modifier = Modifier.height(3.dp))
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.LocationOn,
+                                                        contentDescription = null,
+                                                        tint = TextDarkMuted,
+                                                        modifier = Modifier.size(13.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(2.dp))
+                                                    Text(
+                                                        text = "Brahmapur, Ganjam, Odisha",
+                                                        fontSize = 11.sp,
+                                                        color = TextDarkSecondary,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+                                                }
+                                            }
+
+                                            Spacer(modifier = Modifier.width(8.dp))
+
+                                            // Technician Avatar & Rating
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Image(
+                                                    painter = painterResource(id = R.drawable.img_technician_rajesh),
+                                                    contentDescription = "Technician Rajesh",
+                                                    contentScale = ContentScale.Crop,
+                                                    modifier = Modifier
+                                                        .size(38.dp)
+                                                        .clip(CircleShape)
+                                                        .border(1.dp, Color(0xFFCBD5E1), CircleShape)
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Column {
+                                                    Text(
+                                                        text = "Rajesh",
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = TextDarkPrimary
+                                                    )
+                                                    Text(
+                                                        text = "Technician",
+                                                        fontSize = 10.sp,
+                                                        color = TextDarkMuted
+                                                    )
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.Star,
+                                                            contentDescription = null,
+                                                            tint = Color(0xFFF59E0B),
+                                                            modifier = Modifier.size(11.dp)
+                                                        )
+                                                        Spacer(modifier = Modifier.width(2.dp))
+                                                        Text(
+                                                            text = "4.8",
+                                                            fontSize = 10.5.sp,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = TextDarkPrimary
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.height(14.dp))
+                                        Divider(color = Color(0xFFF1F5F9), thickness = 1.dp)
+                                        Spacer(modifier = Modifier.height(12.dp))
+
+                                        // Stepper Row with ETA Pill on Right
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            // 4 Milestones
+                                            Row(
+                                                modifier = Modifier.weight(1f),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                MiniStepItem(label = "Confirmed", isDone = true, isActive = false)
+                                                MiniStepDivider(isDone = true)
+                                                MiniStepItem(label = "En Route", isDone = false, isActive = true)
+                                                MiniStepDivider(isDone = false)
+                                                MiniStepItem(label = "At Location", isDone = false, isActive = false)
+                                                MiniStepDivider(isDone = false)
+                                                MiniStepItem(label = "Completed", isDone = false, isActive = false)
+                                            }
+
+                                            Spacer(modifier = Modifier.width(8.dp))
+
+                                            // ETA Pill with Truck Icon
+                                            Surface(
+                                                color = Color(0xFFEFF6FF),
+                                                shape = RoundedCornerShape(10.dp),
+                                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBFDBFE))
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.LocalShipping,
+                                                        contentDescription = null,
+                                                        tint = SapphireBlue800,
+                                                        modifier = Modifier.size(16.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(4.dp))
+                                                    Column {
+                                                        Text(
+                                                            text = "ETA",
+                                                            fontSize = 8.sp,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = TextDarkMuted
+                                                        )
+                                                        Text(
+                                                            text = "15 mins",
+                                                            fontSize = 11.sp,
+                                                            fontWeight = FontWeight.Black,
+                                                            color = SapphireBlue800
+                                                        )
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -816,6 +909,14 @@ fun CustomerHomeScreen(
                                     fontWeight = FontWeight.Bold,
                                     color = SapphireBlue800,
                                     modifier = Modifier.clickable { viewModel.selectCategory("All") }
+                                )
+                            } else {
+                                Text(
+                                    text = "View All >",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = SapphireBlue800,
+                                    modifier = Modifier.clickable { currentBottomTab = 1 }
                                 )
                             }
                         }
@@ -1050,27 +1151,24 @@ fun ServiceItemRow(
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(14.dp),
+            modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Category Visual Icon Thumbnail
+            // Service Product Image Thumbnail (Image 1 Match)
             Box(
                 modifier = Modifier
-                    .size(50.dp)
+                    .size(56.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFF1F5F9)),
+                    .background(Color(0xFFF8FAFC))
+                    .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(12.dp))
+                    .padding(3.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = when {
-                        service.category.contains("MCB", ignoreCase = true) -> Icons.Default.Bolt
-                        service.category.contains("Emergency", ignoreCase = true) -> Icons.Default.FlashOn
-                        service.category.contains("Wiring", ignoreCase = true) -> Icons.Default.Power
-                        else -> Icons.Default.Build
-                    },
-                    contentDescription = null,
-                    tint = SapphireBlue800,
-                    modifier = Modifier.size(24.dp)
+                Image(
+                    painter = painterResource(id = getServiceDrawable(service.title, service.category)),
+                    contentDescription = service.title,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize()
                 )
             }
 
@@ -1082,54 +1180,61 @@ fun ServiceItemRow(
                     fontSize = 13.5.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextDarkPrimary,
-                    maxLines = 2,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.Schedule,
                         contentDescription = null,
                         tint = TextDarkMuted,
-                        modifier = Modifier.size(12.dp)
+                        modifier = Modifier.size(11.dp)
                     )
                     Spacer(modifier = Modifier.width(3.dp))
                     Text(
                         text = "${service.durationMinutes} mins",
-                        fontSize = 11.sp,
+                        fontSize = 10.5.sp,
                         color = TextDarkMuted
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(text = "•", color = TextDarkMuted, fontSize = 10.sp)
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Surface(
-                        color = Color(0xFFF1F5F9),
-                        shape = RoundedCornerShape(4.dp)
-                    ) {
-                        Text(
-                            text = "18% GST itemized",
-                            fontSize = 9.5.sp,
-                            color = TextDarkMuted,
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-                        )
-                    }
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text(text = "|", color = Color(0xFFCBD5E1), fontSize = 10.sp)
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text(
+                        text = "GST extra",
+                        fontSize = 10.5.sp,
+                        color = TextDarkMuted
+                    )
                 }
-                Spacer(modifier = Modifier.height(5.dp))
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "₹${"%,.0f".format(service.priceInr)}",
-                    style = ServicePriceStyle
+                    text = service.description,
+                    fontSize = 11.sp,
+                    color = TextDarkSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
             Spacer(modifier = Modifier.width(10.dp))
 
-            Button(
-                onClick = onBook,
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800),
-                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
-            ) {
-                Text("BOOK", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = "₹${"%,.0f".format(service.priceInr)}",
+                    fontSize = 14.5.sp,
+                    fontWeight = FontWeight.Black,
+                    color = TextDarkPrimary
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Button(
+                    onClick = onBook,
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                    modifier = Modifier.height(32.dp)
+                ) {
+                    Text("Book", fontSize = 11.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                }
             }
         }
     }
