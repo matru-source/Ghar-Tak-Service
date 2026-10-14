@@ -1155,7 +1155,7 @@ fun TechnicianEarningsContent(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(24.dp),
-                            horizontalAlignment = Alignment.CenterVertically
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
                                 text = "No transactions found for this period",
