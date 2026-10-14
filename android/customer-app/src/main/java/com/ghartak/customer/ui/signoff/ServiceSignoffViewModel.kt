@@ -11,22 +11,22 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 data class ServiceSignoffUiState(
-    val jobId: String = "job_mh_live_01",
-    val ticketNumber: String = "GTS-MH-9821",
-    val serviceTitle: String = "Full Home MCB Panel Replacement & Earth Leakage Fix",
+    val jobId: String = "job_od_live_01",
+    val ticketNumber: String = "GTS-OD-5638",
+    val serviceTitle: String = "Fan Installation",
     val technicianName: String = "Rajesh Kumar",
     val technicianBadge: String = "GTS-TECH-4091",
-    val stateCode: String = "MH",
-    val invoiceNumber: String = "INV-2026-MH-4091",
-    val invoiceDate: String = "Oct 07, 2026",
+    val stateCode: String = "OD",
+    val invoiceNumber: String = "INV-2026-OD-5638",
+    val invoiceDate: String = "Oct 15, 2026",
     val hsnSacCode: String = "998713",
-    val gstin: String = "27AAACG1234F1Z5 (27-MH)",
-    val basePriceInr: Double = 2499.0,
-    val cgstInr: Double = 224.91,
-    val sgstInr: Double = 224.91,
-    val totalAmountInr: Double = 2948.82,
+    val gstin: String = "21AAACG1234F1Z5 (21-OD)",
+    val basePriceInr: Double = 299.0,
+    val cgstInr: Double = 26.91,
+    val sgstInr: Double = 26.91,
+    val totalAmountInr: Double = 352.82,
     val rating: Int = 5,
-    val reviewText: String = "Rajesh arrived in 15 minutes, used insulated gloves, and restored our MCB panel cleanly. Earth leakage test passed at 0.0V.",
+    val reviewText: String = "Rajesh arrived in 15 minutes, used insulated gloves, and completed the Fan Installation cleanly. Safety inspection passed at 100%.",
     val selectedTags: Set<String> = setOf("1000V Safe", "Punctual", "Spotless Cleanup"),
     val isWorkRestoredConfirmed: Boolean = true,
     val isSafetyChecklistConfirmed: Boolean = true,
@@ -44,35 +44,45 @@ class ServiceSignoffViewModel(
 
     fun initSignoff(
         jobId: String,
-        technicianName: String = "Rajesh Kumar",
-        technicianBadge: String = "GTS-TECH-4091",
-        stateCode: String = "MH",
-        gstin: String = "27AAACG1234F1Z5 (27-MH)",
-        serviceTitle: String = "Full Home MCB Panel Replacement & Earth Leakage Fix",
-        basePrice: Double = 2499.0,
-        cgst: Double = 224.91,
-        sgst: Double = 224.91,
-        total: Double = 2948.82,
+        technicianName: String? = null,
+        technicianBadge: String? = null,
+        stateCode: String? = null,
+        gstin: String? = null,
+        serviceTitle: String? = null,
+        basePrice: Double? = null,
+        cgst: Double? = null,
+        sgst: Double? = null,
+        total: Double? = null,
         ticketNumber: String? = null
     ) {
-        val techFirstName = technicianName.trim().split(" ").firstOrNull() ?: "Technician"
-        val cleanState = stateCode.ifEmpty { "MH" }
-        val randomNum = (1000..9999).random()
-        val defaultReview = "$techFirstName arrived in 15 minutes, used insulated gloves, and restored our MCB panel cleanly. Earth leakage test passed at 0.0V."
+        val resolvedTitle = if (!serviceTitle.isNullOrBlank()) serviceTitle else sessionManager.getActiveJobTitle()
+        val resolvedBase = if (basePrice != null && basePrice > 0.0) basePrice else sessionManager.getActiveJobBasePrice()
+        val resolvedCgst = cgst ?: (resolvedBase * 0.09)
+        val resolvedSgst = sgst ?: (resolvedBase * 0.09)
+        val resolvedTotal = total ?: (resolvedBase + resolvedCgst + resolvedSgst)
+        val resolvedTech = if (!technicianName.isNullOrBlank()) technicianName else sessionManager.getActiveJobTechnicianName()
+        val resolvedBadge = if (!technicianBadge.isNullOrBlank()) technicianBadge else sessionManager.getActiveJobTechnicianBadge()
+        val resolvedState = if (!stateCode.isNullOrBlank()) stateCode else sessionManager.getActiveJobStateCode()
+        val resolvedGstin = if (!gstin.isNullOrBlank()) gstin else sessionManager.getActiveJobGstin()
+        val resolvedTicket = if (!ticketNumber.isNullOrBlank()) ticketNumber else sessionManager.getActiveJobTicketNumber()
+
+        val techFirstName = resolvedTech.trim().split(" ").firstOrNull() ?: "Technician"
+        val invoiceNum = resolvedTicket.replace("GTS", "INV-2026")
+        val defaultReview = "$techFirstName arrived on time, used insulated gloves, and completed the $resolvedTitle cleanly. Safety inspection passed at 100%."
 
         _uiState.value = _uiState.value.copy(
             jobId = jobId,
-            technicianName = technicianName,
-            technicianBadge = technicianBadge,
-            stateCode = cleanState,
-            gstin = gstin,
-            serviceTitle = serviceTitle,
-            basePriceInr = basePrice,
-            cgstInr = cgst,
-            sgstInr = sgst,
-            totalAmountInr = total,
-            ticketNumber = ticketNumber ?: "GTS-$cleanState-$randomNum",
-            invoiceNumber = "INV-2026-$cleanState-$randomNum",
+            technicianName = resolvedTech,
+            technicianBadge = resolvedBadge,
+            stateCode = resolvedState,
+            gstin = resolvedGstin,
+            serviceTitle = resolvedTitle,
+            basePriceInr = resolvedBase,
+            cgstInr = resolvedCgst,
+            sgstInr = resolvedSgst,
+            totalAmountInr = resolvedTotal,
+            ticketNumber = resolvedTicket,
+            invoiceNumber = invoiceNum,
             reviewText = defaultReview
         )
     }

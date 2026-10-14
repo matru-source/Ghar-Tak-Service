@@ -22,6 +22,20 @@ class SessionManager(context: Context) {
         private const val KEY_USERS_REGISTRY = "key_users_registry"
         private const val KEY_CUSTOM_BASE_URL = "key_custom_base_url"
         private const val KEY_USER_PROFILE_IMAGE = "key_user_profile_image"
+
+        // Active Job & Invoice Persistence Keys
+        private const val KEY_ACTIVE_JOB_ID = "key_active_job_id"
+        private const val KEY_ACTIVE_JOB_TITLE = "key_active_job_title"
+        private const val KEY_ACTIVE_JOB_BASE_PRICE = "key_active_job_base_price"
+        private const val KEY_ACTIVE_JOB_GST = "key_active_job_gst"
+        private const val KEY_ACTIVE_JOB_TOTAL = "key_active_job_total"
+        private const val KEY_ACTIVE_JOB_TECH_NAME = "key_active_job_tech_name"
+        private const val KEY_ACTIVE_JOB_TECH_BADGE = "key_active_job_tech_badge"
+        private const val KEY_ACTIVE_JOB_TECH_PHONE = "key_active_job_tech_phone"
+        private const val KEY_ACTIVE_JOB_TICKET_NO = "key_active_job_ticket_no"
+        private const val KEY_ACTIVE_JOB_STATE_CODE = "key_active_job_state_code"
+        private const val KEY_ACTIVE_JOB_GSTIN = "key_active_job_gstin"
+
         const val DEFAULT_BASE_URL = "https://ghartak-api.onrender.com/api/"
     }
 
@@ -182,7 +196,89 @@ class SessionManager(context: Context) {
 
     fun getUserAddress(): String = prefs.getString(KEY_USER_ADDRESS, "") ?: ""
 
-    fun getUserPincode(): String = prefs.getString(KEY_USER_PINCODE, "400001") ?: "400001"
+    fun getUserPincode(): String {
+        val saved = prefs.getString(KEY_USER_PINCODE, null)
+        if (!saved.isNullOrBlank()) return saved
+        // If not explicitly saved, try extracting 6-digit pin from saved address
+        val address = getUserAddress()
+        val match = Regex("""\b(\d{6})\b""").find(address)
+        if (match != null) {
+            val pin = match.value
+            setUserPincode(pin)
+            return pin
+        }
+        return "760001" // Default user city (Brahmapur, Odisha)
+    }
+
+    fun setUserPincode(pincode: String) {
+        val sanitized = pincode.filter { it.isDigit() }.take(6)
+        if (sanitized.length == 6) {
+            prefs.edit().putString(KEY_USER_PINCODE, sanitized).apply()
+        }
+    }
+
+    // -------------------------------------------------------------
+    // Active Job / Order Persistence (Fix for amount/service mismatch)
+    // -------------------------------------------------------------
+    fun saveActiveJob(
+        id: String,
+        title: String,
+        basePrice: Double,
+        gst: Double,
+        total: Double,
+        technicianName: String = "Rajesh Kumar",
+        technicianBadge: String = "GTS-TECH-4091",
+        technicianPhone: String = "+91 98201 44091",
+        ticketNumber: String = "GTS-OD-5638",
+        stateCode: String = "OD",
+        gstin: String = "21AAACG1234F1Z5 (21-OD)"
+    ) {
+        prefs.edit().apply {
+            putString(KEY_ACTIVE_JOB_ID, id)
+            putString(KEY_ACTIVE_JOB_TITLE, title)
+            putFloat(KEY_ACTIVE_JOB_BASE_PRICE, basePrice.toFloat())
+            putFloat(KEY_ACTIVE_JOB_GST, gst.toFloat())
+            putFloat(KEY_ACTIVE_JOB_TOTAL, total.toFloat())
+            putString(KEY_ACTIVE_JOB_TECH_NAME, technicianName)
+            putString(KEY_ACTIVE_JOB_TECH_BADGE, technicianBadge)
+            putString(KEY_ACTIVE_JOB_TECH_PHONE, technicianPhone)
+            putString(KEY_ACTIVE_JOB_TICKET_NO, ticketNumber)
+            putString(KEY_ACTIVE_JOB_STATE_CODE, stateCode)
+            putString(KEY_ACTIVE_JOB_GSTIN, gstin)
+            apply()
+        }
+    }
+
+    fun getActiveJobId(): String = prefs.getString(KEY_ACTIVE_JOB_ID, "job_od_live_01") ?: "job_od_live_01"
+
+    fun getActiveJobTitle(): String = prefs.getString(KEY_ACTIVE_JOB_TITLE, "Fan Installation") ?: "Fan Installation"
+
+    fun getActiveJobBasePrice(): Double {
+        val p = prefs.getFloat(KEY_ACTIVE_JOB_BASE_PRICE, 299.0f).toDouble()
+        return if (p > 0.0) p else 299.0
+    }
+
+    fun getActiveJobGst(): Double {
+        val g = prefs.getFloat(KEY_ACTIVE_JOB_GST, 53.82f).toDouble()
+        return if (g > 0.0) g else (getActiveJobBasePrice() * 0.18)
+    }
+
+    fun getActiveJobTotal(): Double {
+        val t = prefs.getFloat(KEY_ACTIVE_JOB_TOTAL, 352.82f).toDouble()
+        return if (t > 0.0) t else (getActiveJobBasePrice() + getActiveJobGst())
+    }
+
+    fun getActiveJobTechnicianName(): String = prefs.getString(KEY_ACTIVE_JOB_TECH_NAME, "Rajesh Kumar") ?: "Rajesh Kumar"
+
+    fun getActiveJobTechnicianBadge(): String = prefs.getString(KEY_ACTIVE_JOB_TECH_BADGE, "GTS-TECH-4091") ?: "GTS-TECH-4091"
+
+    fun getActiveJobTechnicianPhone(): String = prefs.getString(KEY_ACTIVE_JOB_TECH_PHONE, "+91 98201 44091") ?: "+91 98201 44091"
+
+    fun getActiveJobTicketNumber(): String = prefs.getString(KEY_ACTIVE_JOB_TICKET_NO, "GTS-OD-5638") ?: "GTS-OD-5638"
+
+    fun getActiveJobStateCode(): String = prefs.getString(KEY_ACTIVE_JOB_STATE_CODE, "OD") ?: "OD"
+
+    fun getActiveJobGstin(): String = prefs.getString(KEY_ACTIVE_JOB_GSTIN, "21AAACG1234F1Z5 (21-OD)") ?: "21AAACG1234F1Z5 (21-OD)"
 
     fun getProfileImageUri(): String? = prefs.getString(KEY_USER_PROFILE_IMAGE, null)
 
@@ -199,12 +295,17 @@ class SessionManager(context: Context) {
 
     fun isLoggedIn(): Boolean = prefs.getBoolean(KEY_IS_LOGGED_IN, false)
 
-    fun updateProfile(name: String, email: String, phone: String, address: String) {
+    fun updateProfile(name: String, email: String, phone: String, address: String, pincode: String? = null) {
         prefs.edit().apply {
             putString(KEY_USER_NAME, name.trim())
             putString(KEY_USER_EMAIL, email.trim())
             putString(KEY_USER_PHONE, phone.trim())
             putString(KEY_USER_ADDRESS, address.trim())
+            val pin = pincode?.filter { it.isDigit() }?.take(6)
+                ?: Regex("""\b(\d{6})\b""").find(address)?.value
+            if (!pin.isNullOrEmpty() && pin.length == 6) {
+                putString(KEY_USER_PINCODE, pin)
+            }
             apply()
         }
     }
@@ -218,6 +319,17 @@ class SessionManager(context: Context) {
             remove(KEY_USER_PHONE)
             remove(KEY_USER_ADDRESS)
             remove(KEY_USER_PINCODE)
+            remove(KEY_ACTIVE_JOB_ID)
+            remove(KEY_ACTIVE_JOB_TITLE)
+            remove(KEY_ACTIVE_JOB_BASE_PRICE)
+            remove(KEY_ACTIVE_JOB_GST)
+            remove(KEY_ACTIVE_JOB_TOTAL)
+            remove(KEY_ACTIVE_JOB_TECH_NAME)
+            remove(KEY_ACTIVE_JOB_TECH_BADGE)
+            remove(KEY_ACTIVE_JOB_TECH_PHONE)
+            remove(KEY_ACTIVE_JOB_TICKET_NO)
+            remove(KEY_ACTIVE_JOB_STATE_CODE)
+            remove(KEY_ACTIVE_JOB_GSTIN)
             putBoolean(KEY_IS_LOGGED_IN, false)
             apply()
         }

@@ -12,26 +12,26 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 data class CustomerTrackingUiState(
-    val jobId: String = "job_mh_live_01",
-    val ticketNumber: String = "GTS-MH-9821",
-    val serviceTitle: String = "Full Home MCB Panel Replacement & Earth Leakage Fix",
+    val jobId: String = "job_od_live_01",
+    val ticketNumber: String = "GTS-OD-5638",
+    val serviceTitle: String = "Fan Installation",
     val status: String = "EN_ROUTE",
     val technicianName: String = "Rajesh Kumar",
     val technicianPhone: String = "+91 98201 44091",
     val technicianBadge: String = "GTS-TECH-4091",
-    val technicianRating: Double = 4.9,
+    val technicianRating: Double = 4.8,
     val technicianCompletedJobs: String = "240+ jobs",
     val handoverOtp: String = "4819",
     val distanceKm: Double = 1.3,
-    val etaMinutes: Int = 8,
+    val etaMinutes: Int = 15,
     val isDoorstepArrived: Boolean = false,
     val isSafetyInterlockVerified: Boolean = false,
     val isJobCompleted: Boolean = false,
     val transitStep: Int = 0,
-    val techLatitude: Double = 18.9220,
-    val techLongitude: Double = 72.8347,
-    val destLatitude: Double = 18.9067,
-    val destLongitude: Double = 72.8147
+    val techLatitude: Double = 19.3149,
+    val techLongitude: Double = 84.7941,
+    val destLatitude: Double = 19.3200,
+    val destLongitude: Double = 84.8000
 )
 
 class CustomerTrackingViewModel(
@@ -44,13 +44,33 @@ class CustomerTrackingViewModel(
     private val realtimeStreamManager = RealtimeStreamManager()
 
     fun initTracking(jobId: String) {
-        _uiState.value = _uiState.value.copy(jobId = jobId)
+        val activeTitle = sessionManager.getActiveJobTitle()
+        val activeTicket = sessionManager.getActiveJobTicketNumber()
+        val activeTech = sessionManager.getActiveJobTechnicianName()
+        val activeBadge = sessionManager.getActiveJobTechnicianBadge()
+        val activePhone = sessionManager.getActiveJobTechnicianPhone()
+
+        _uiState.value = _uiState.value.copy(
+            jobId = jobId,
+            serviceTitle = activeTitle,
+            ticketNumber = activeTicket,
+            technicianName = activeTech,
+            technicianBadge = activeBadge,
+            technicianPhone = activePhone
+        )
 
         // Connect to Central Real-Time SSE Bus
         val customerId = sessionManager.getUserId()
         realtimeStreamManager.connect(customerId, jobId) { eventType, data ->
             handleRealtimeEvent(eventType, data)
         }
+    }
+
+    fun setServiceDetails(title: String, ticketNumber: String? = null) {
+        _uiState.value = _uiState.value.copy(
+            serviceTitle = title,
+            ticketNumber = ticketNumber ?: _uiState.value.ticketNumber
+        )
     }
 
     fun setAssignedTechnician(

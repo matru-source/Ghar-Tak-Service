@@ -194,10 +194,43 @@ fun CustomerHomeScreen(
                             val firstName = remember(state.userName) {
                                 state.userName.trim().split(" ").firstOrNull() ?: state.userName
                             }
-                            Text(
-                                text = "Hello, $firstName!",
-                                style = GreetingHeadlineStyle
-                            )
+                            val displayPincode = remember(state.activePincode) {
+                                sessionManager.getUserPincode().ifEmpty { state.activePincode }.ifEmpty { "760001" }
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "Hello, $firstName!",
+                                    style = GreetingHeadlineStyle
+                                )
+                                // Pincode badge right beside Hello, Matru! (User Request Match)
+                                Surface(
+                                    color = Color.White.copy(alpha = 0.22f),
+                                    shape = RoundedCornerShape(12.dp),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.45f))
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.5.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.LocationOn,
+                                            contentDescription = "Pincode",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(13.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(3.dp))
+                                        Text(
+                                            text = displayPincode,
+                                            color = Color.White,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.ExtraBold
+                                        )
+                                    }
+                                }
+                            }
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "Professional Electrical Services at Your Doorstep",
@@ -732,9 +765,13 @@ fun CustomerHomeScreen(
                                                         tint = TextDarkMuted,
                                                         modifier = Modifier.size(13.dp)
                                                     )
-                                                    Spacer(modifier = Modifier.width(2.dp))
+                                                    val activeLocation = remember(state.activePincode) {
+                                                        val addr = sessionManager.getUserAddress()
+                                                        val pin = sessionManager.getUserPincode().ifEmpty { "760001" }
+                                                        if (addr.isNotBlank()) "$addr • $pin" else "Brahmapur, Ganjam, Odisha • $pin"
+                                                    }
                                                     Text(
-                                                        text = "Brahmapur, Ganjam, Odisha",
+                                                        text = activeLocation,
                                                         fontSize = 11.sp,
                                                         color = TextDarkSecondary,
                                                         maxLines = 1,

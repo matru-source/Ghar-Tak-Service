@@ -149,9 +149,22 @@ class CustomerCatalogViewModel(
             userPhone = currentPhone,
             userEmail = currentEmail,
             userAddress = currentAddress,
-            activePincode = currentPincode.ifEmpty { "400001" },
+            activePincode = currentPincode.ifEmpty { "760001" },
+            activeJobId = sessionManager.getActiveJobId(),
+            activeJobTitle = sessionManager.getActiveJobTitle(),
+            activeJobTechnician = "${sessionManager.getActiveJobTechnicianName()} (En Route)",
             services = allServices,
             filteredServices = allServices
+        )
+    }
+
+    fun updateActiveJob(id: String, title: String, technician: String, eta: String = "15 mins") {
+        _uiState.value = _uiState.value.copy(
+            hasActiveJob = true,
+            activeJobId = id,
+            activeJobTitle = title,
+            activeJobTechnician = "$technician (En Route)",
+            activeJobEta = eta
         )
     }
 

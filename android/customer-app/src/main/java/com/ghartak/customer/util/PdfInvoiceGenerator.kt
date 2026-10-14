@@ -22,22 +22,22 @@ import java.util.Locale
 object PdfInvoiceGenerator {
 
     data class InvoiceData(
-        val invoiceNumber: String = "INV-2026-MH-1720",
-        val ticketNumber: String = "GTS-MH-6430",
-        val serviceTitle: String = "Full Home MCB Panel Replacement & Earth Leakage Fix",
+        val invoiceNumber: String = "INV-2026-OD-5638",
+        val ticketNumber: String = "GTS-OD-5638",
+        val serviceTitle: String = "Fan Installation",
         val customerName: String = "Customer",
         val customerPhone: String = "",
         val customerAddress: String = "",
         val technicianName: String = "Rajesh Kumar (GTS-TECH-4091)",
-        val dateOfSupply: String = "Oct 07, 2026",
-        val gstin: String = "27AAACG1234F1Z5 (27-MH)",
+        val dateOfSupply: String = "Oct 15, 2026",
+        val gstin: String = "21AAACG1234F1Z5 (21-OD)",
         val hsnSac: String = "998713 (Electrical installation and maintenance)",
-        val taxableCharges: Double = 2499.00,
-        val cgstAmount: Double = 224.91,
-        val sgstAmount: Double = 224.91,
-        val totalAmount: Double = 2948.82,
+        val taxableCharges: Double = 299.00,
+        val cgstAmount: Double = 26.91,
+        val sgstAmount: Double = 26.91,
+        val totalAmount: Double = 352.82,
         val paymentMethod: String = "PAID (ONLINE • UPI)",
-        val warrantyDetails: String = "12-Month Official Service Warranty Active"
+        val warrantyDetails: String = "6-Month Official Service Warranty Active"
     )
 
     fun generateAndSaveGstInvoice(

@@ -83,8 +83,10 @@ class MainActivity : ComponentActivity() {
 
                         // Placeholder routes for Steps 15, 16, 17, 18
                         composable("booking/{serviceId}") { backStackEntry ->
-                            val serviceId = backStackEntry.arguments?.getString("serviceId") ?: "srv_mcb_replace"
-                            val service = catalogViewModel.uiState.collectAsState().value.services.find { it.id == serviceId }
+                            val serviceId = backStackEntry.arguments?.getString("serviceId") ?: "srv_fan_install"
+                            val allServices = catalogViewModel.uiState.collectAsState().value.services
+                            val service = allServices.find { it.id == serviceId }
+                                ?: com.ghartak.customer.data.model.ServiceCatalogRegistry.findService(serviceId)
                             if (service != null) {
                                 bookingViewModel.initService(service.id, service.title, service.priceInr)
                             }
@@ -100,7 +102,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("payment/{serviceId}") { backStackEntry ->
-                            val serviceId = backStackEntry.arguments?.getString("serviceId") ?: "srv_mcb_replace"
+                            val serviceId = backStackEntry.arguments?.getString("serviceId") ?: "srv_fan_install"
                             val bookingState = bookingViewModel.uiState.collectAsState().value
                             val selectedTech = bookingState.selectedTechnician
 
@@ -123,7 +125,30 @@ class MainActivity : ComponentActivity() {
                                 onBookingSuccess = { jobId ->
                                     val currentSelectedTech = bookingViewModel.uiState.value.selectedTechnician
                                     val currentState = bookingViewModel.uiState.value
-                                    val ticketNo = "GTS-${currentState.stateCode}-${(1000..9999).random()}"
+                                    val cleanState = currentState.stateCode.ifEmpty { sessionManager.getActiveJobStateCode() }
+                                    val ticketNo = "GTS-$cleanState-${(1000..9999).random()}"
+
+                                    sessionManager.saveActiveJob(
+                                        id = jobId,
+                                        title = currentState.serviceTitle,
+                                        basePrice = currentState.basePriceInr,
+                                        gst = currentState.gst18PctInr,
+                                        total = currentState.totalPayableInr,
+                                        technicianName = currentSelectedTech.name,
+                                        technicianBadge = currentSelectedTech.badge,
+                                        technicianPhone = currentSelectedTech.phone,
+                                        ticketNumber = ticketNo,
+                                        stateCode = cleanState,
+                                        gstin = currentState.gstinStateCode
+                                    )
+                                    sessionManager.setUserPincode(currentState.pincode)
+
+                                    catalogViewModel.updateActiveJob(
+                                        id = jobId,
+                                        title = currentState.serviceTitle,
+                                        technician = currentSelectedTech.name
+                                    )
+
                                     trackingViewModel.setAssignedTechnician(
                                         name = currentSelectedTech.name,
                                         badge = currentSelectedTech.badge,
@@ -134,6 +159,8 @@ class MainActivity : ComponentActivity() {
                                         completedJobs = currentSelectedTech.completedJobs,
                                         ticketNumber = ticketNo
                                     )
+                                    trackingViewModel.setServiceDetails(currentState.serviceTitle, ticketNo)
+
                                     Toast.makeText(this@MainActivity, "⚡ Work Order Dispatched to ${currentSelectedTech.name}!", Toast.LENGTH_LONG).show()
                                     navController.navigate("track/$jobId") {
                                         popUpTo("home")
@@ -143,13 +170,16 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("track/{jobId}") { backStackEntry ->
-                            val jobId = backStackEntry.arguments?.getString("jobId") ?: "job_mh_live_01"
+                            val jobId = backStackEntry.arguments?.getString("jobId") ?: sessionManager.getActiveJobId()
                             val bookingState = bookingViewModel.uiState.collectAsState().value
                             val selectedTech = bookingState.selectedTechnician
 
                             LaunchedEffect(jobId) {
                                 trackingViewModel.initTracking(jobId)
-                                if (trackingViewModel.uiState.value.technicianName == "Rajesh Kumar" && selectedTech.name != "Rajesh Kumar") {
+                                val activeTitle = if (bookingState.basePriceInr > 0) bookingState.serviceTitle else sessionManager.getActiveJobTitle()
+                                val activeTicket = sessionManager.getActiveJobTicketNumber()
+                                trackingViewModel.setServiceDetails(activeTitle, activeTicket)
+                                if (selectedTech.name != "Rajesh Kumar") {
                                     trackingViewModel.setAssignedTechnician(
                                         name = selectedTech.name,
                                         badge = selectedTech.badge,
@@ -158,7 +188,7 @@ class MainActivity : ComponentActivity() {
                                         distanceKm = selectedTech.distanceKm,
                                         etaMinutes = selectedTech.etaMinutes,
                                         completedJobs = selectedTech.completedJobs,
-                                        ticketNumber = "GTS-${bookingState.stateCode}-${(1000..9999).random()}"
+                                        ticketNumber = activeTicket
                                     )
                                 }
                             }
@@ -174,23 +204,32 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("signoff/{jobId}") { backStackEntry ->
-                            val jobId = backStackEntry.arguments?.getString("jobId") ?: "job_mh_live_01"
+                            val jobId = backStackEntry.arguments?.getString("jobId") ?: sessionManager.getActiveJobId()
                             val trackState = trackingViewModel.uiState.collectAsState().value
                             val bookingState = bookingViewModel.uiState.collectAsState().value
+
+                            val resolvedTitle = if (bookingState.basePriceInr > 0) bookingState.serviceTitle else sessionManager.getActiveJobTitle()
+                            val resolvedBase = if (bookingState.basePriceInr > 0) bookingState.basePriceInr else sessionManager.getActiveJobBasePrice()
+                            val resolvedCgst = resolvedBase * 0.09
+                            val resolvedSgst = resolvedBase * 0.09
+                            val resolvedTotal = resolvedBase + resolvedCgst + resolvedSgst
+                            val resolvedState = if (bookingState.stateCode.isNotBlank()) bookingState.stateCode else sessionManager.getActiveJobStateCode()
+                            val resolvedGstin = if (bookingState.gstinStateCode.isNotBlank()) bookingState.gstinStateCode else sessionManager.getActiveJobGstin()
+                            val resolvedTicket = if (trackState.ticketNumber.isNotBlank()) trackState.ticketNumber else sessionManager.getActiveJobTicketNumber()
 
                             LaunchedEffect(jobId, trackState.technicianName) {
                                 signoffViewModel.initSignoff(
                                     jobId = jobId,
                                     technicianName = trackState.technicianName,
                                     technicianBadge = trackState.technicianBadge,
-                                    stateCode = bookingState.stateCode,
-                                    gstin = bookingState.gstinStateCode,
-                                    serviceTitle = bookingState.serviceTitle,
-                                    basePrice = bookingState.basePriceInr,
-                                    cgst = bookingState.gst18PctInr / 2.0,
-                                    sgst = bookingState.gst18PctInr / 2.0,
-                                    total = bookingState.totalPayableInr,
-                                    ticketNumber = trackState.ticketNumber
+                                    stateCode = resolvedState,
+                                    gstin = resolvedGstin,
+                                    serviceTitle = resolvedTitle,
+                                    basePrice = resolvedBase,
+                                    cgst = resolvedCgst,
+                                    sgst = resolvedSgst,
+                                    total = resolvedTotal,
+                                    ticketNumber = resolvedTicket
                                 )
                             }
 

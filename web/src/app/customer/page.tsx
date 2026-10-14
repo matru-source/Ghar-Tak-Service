@@ -287,8 +287,12 @@ export default function CustomerDashboardPage() {
           <div className="flex items-center gap-2.5 min-w-0">
             <BrandMark size="md" badgeBg="bg-blue-50 border border-blue-100 shadow-2xs" />
             <div className="flex flex-col min-w-0">
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <h1 className="font-bold text-base text-slate-900 truncate">Hello, {session.fullName}</h1>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[11px] font-bold border border-blue-200">
+                  <MapPin className="w-3 h-3 text-blue-600" />
+                  {session.defaultPincode}
+                </span>
                 <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-bold border border-emerald-200">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span>
                   Verified

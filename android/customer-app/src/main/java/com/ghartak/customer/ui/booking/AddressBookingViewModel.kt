@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ghartak.customer.data.api.ApiClient
+import com.ghartak.customer.data.model.ServiceCatalogRegistry
 import com.ghartak.customer.data.session.SessionManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,16 +29,16 @@ data class NearbyTechnician(
 )
 
 data class AddressBookingUiState(
-    val serviceId: String = "srv_mcb_replace",
-    val serviceTitle: String = "Full Home MCB Panel Replacement & Earth Leakage Fix",
-    val basePriceInr: Double = 2499.0,
-    val gst18PctInr: Double = 449.82,
-    val totalPayableInr: Double = 2948.82,
+    val serviceId: String = "srv_fan_install",
+    val serviceTitle: String = "Fan Installation",
+    val basePriceInr: Double = 299.0,
+    val gst18PctInr: Double = 53.82,
+    val totalPayableInr: Double = 352.82,
     val flatNumber: String = "",
     val streetName: String = "",
     val landmark: String = "",
-    val pincode: String = "400001",
-    val stateName: String = "Maharashtra",
+    val pincode: String = "760001",
+    val stateName: String = "Odisha",
     val stateCode: String = "MH",
     val gstinStateCode: String = "27AAACG1234F1Z5 (27-MH)",
     val isCheckingPincode: Boolean = false,
@@ -138,13 +139,16 @@ class AddressBookingViewModel(
         _uiState.value = _uiState.value.copy(selectedTechnicianId = id)
     }
 
-    fun initService(id: String, title: String = "Full Home MCB Panel Replacement & Earth Leakage Fix", price: Double = 2499.0) {
-        val gst = price * 0.18
-        val total = price + gst
+    fun initService(id: String, title: String? = null, price: Double? = null) {
+        val registered = ServiceCatalogRegistry.findService(id)
+        val resolvedTitle = title ?: registered?.title ?: "Fan Installation"
+        val resolvedPrice = price ?: registered?.priceInr ?: 299.0
+        val gst = resolvedPrice * 0.18
+        val total = resolvedPrice + gst
         _uiState.value = _uiState.value.copy(
             serviceId = id,
-            serviceTitle = title,
-            basePriceInr = price,
+            serviceTitle = resolvedTitle,
+            basePriceInr = resolvedPrice,
             gst18PctInr = gst,
             totalPayableInr = total
         )
@@ -167,6 +171,7 @@ class AddressBookingViewModel(
         _uiState.value = _uiState.value.copy(pincode = sanitized)
 
         if (sanitized.length == 6) {
+            sessionManager.setUserPincode(sanitized)
             val instant = com.ghartak.customer.util.IndianPincodeResolver.getOfflineFallback(sanitized)
             _uiState.value = _uiState.value.copy(
                 hubName = instant.hubName,
