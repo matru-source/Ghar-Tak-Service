@@ -283,22 +283,26 @@ fun CustomerHomeScreen(
             }
         },
         bottomBar = {
-            // Fixed 5-Tab Navigation Bar: Home, Book, Track, History, Profile
+            // Fixed 5-Tab Navigation Bar: Home, Book, Track, History, Profile (Phase 5 Token Aligned)
             NavigationBar(
                 containerColor = Color.White,
                 tonalElevation = 8.dp,
-                modifier = Modifier.border(0.5.dp, SurfaceBorder)
+                modifier = Modifier.border(0.5.dp, BottomNavBorder)
             ) {
+                val navColors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = BottomNavActiveBlue,
+                    selectedTextColor = BottomNavActiveBlue,
+                    indicatorColor = BottomNavActivePillBg,
+                    unselectedIconColor = BottomNavInactiveSlate,
+                    unselectedTextColor = BottomNavInactiveSlate
+                )
+
                 NavigationBarItem(
                     selected = currentBottomTab == 0,
                     onClick = { currentBottomTab = 0 },
                     icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
                     label = { Text("Home", fontSize = 11.sp, fontWeight = if (currentBottomTab == 0) FontWeight.Bold else FontWeight.Normal) },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = SapphireBlue800,
-                        selectedTextColor = SapphireBlue800,
-                        indicatorColor = Color(0xFFE3F2FD)
-                    )
+                    colors = navColors
                 )
 
                 NavigationBarItem(
@@ -306,11 +310,7 @@ fun CustomerHomeScreen(
                     onClick = { currentBottomTab = 1 },
                     icon = { Icon(Icons.Default.Build, contentDescription = "Book") },
                     label = { Text("Book", fontSize = 11.sp, fontWeight = if (currentBottomTab == 1) FontWeight.Bold else FontWeight.Normal) },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = SapphireBlue800,
-                        selectedTextColor = SapphireBlue800,
-                        indicatorColor = Color(0xFFE3F2FD)
-                    )
+                    colors = navColors
                 )
 
                 NavigationBarItem(
@@ -321,11 +321,7 @@ fun CustomerHomeScreen(
                     },
                     icon = { Icon(Icons.Default.LocationOn, contentDescription = "Track") },
                     label = { Text("Track", fontSize = 11.sp) },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = SapphireBlue800,
-                        selectedTextColor = SapphireBlue800,
-                        indicatorColor = Color(0xFFE3F2FD)
-                    )
+                    colors = navColors
                 )
 
                 NavigationBarItem(
@@ -333,11 +329,7 @@ fun CustomerHomeScreen(
                     onClick = { currentBottomTab = 3 },
                     icon = { Icon(Icons.Default.ReceiptLong, contentDescription = "History") },
                     label = { Text("History", fontSize = 11.sp, fontWeight = if (currentBottomTab == 3) FontWeight.Bold else FontWeight.Normal) },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = SapphireBlue800,
-                        selectedTextColor = SapphireBlue800,
-                        indicatorColor = Color(0xFFE3F2FD)
-                    )
+                    colors = navColors
                 )
 
                 NavigationBarItem(
@@ -345,11 +337,7 @@ fun CustomerHomeScreen(
                     onClick = { currentBottomTab = 4 },
                     icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
                     label = { Text("Profile", fontSize = 11.sp, fontWeight = if (currentBottomTab == 4) FontWeight.Bold else FontWeight.Normal) },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = SapphireBlue800,
-                        selectedTextColor = SapphireBlue800,
-                        indicatorColor = Color(0xFFE3F2FD)
-                    )
+                    colors = navColors
                 )
             }
         },
@@ -380,6 +368,12 @@ fun CustomerHomeScreen(
                         userPhone = state.userPhone,
                         userEmail = state.userEmail,
                         userAddress = state.userAddress,
+                        onViewOrders = {
+                            currentBottomTab = 3
+                        },
+                        onUpdateProfile = { name, email, phone, addr ->
+                            viewModel.updateProfile(name, email, phone, addr)
+                        },
                         onLogout = {
                             viewModel.logout()
                             onLogout()

@@ -185,6 +185,16 @@ class SessionManager(context: Context) {
 
     fun isLoggedIn(): Boolean = prefs.getBoolean(KEY_IS_LOGGED_IN, false)
 
+    fun updateProfile(name: String, email: String, phone: String, address: String) {
+        prefs.edit().apply {
+            putString(KEY_USER_NAME, name.trim())
+            putString(KEY_USER_EMAIL, email.trim())
+            putString(KEY_USER_PHONE, phone.trim())
+            putString(KEY_USER_ADDRESS, address.trim())
+            apply()
+        }
+    }
+
     fun clearSession() {
         prefs.edit().apply {
             remove(KEY_AUTH_TOKEN)

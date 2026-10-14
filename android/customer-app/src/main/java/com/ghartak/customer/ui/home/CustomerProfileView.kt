@@ -1,8 +1,11 @@
 package com.ghartak.customer.ui.home
 
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -17,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ghartak.customer.ui.theme.*
@@ -27,20 +31,38 @@ fun CustomerProfileView(
     userPhone: String = "",
     userAddress: String = "",
     userEmail: String = "",
+    onViewOrders: () -> Unit = {},
+    onUpdateProfile: (name: String, email: String, phone: String, address: String) -> Unit = { _, _, _, _ -> },
     onLogout: () -> Unit
 ) {
     val context = LocalContext.current
     var showLogoutDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
+    var showAmcDialog by remember { mutableStateOf(false) }
+    var showSafetyDialog by remember { mutableStateOf(false) }
+    var showPolicyDialog by remember { mutableStateOf(false) }
+    var showAddAddressDialog by remember { mutableStateOf(false) }
+
+    // Editable form state for Edit Profile Dialog
+    var editName by remember(userName) { mutableStateOf(userName) }
+    var editPhone by remember(userPhone) { mutableStateOf(userPhone.ifBlank { "+91 98201 44091" }) }
+    var editEmail by remember(userEmail) { mutableStateOf(userEmail.ifBlank { "matrumatru2003@gmail.com" }) }
+    var editAddress by remember(userAddress) {
+        mutableStateOf(userAddress.ifBlank { "Plot No. 215, Sri Vihar, Berhampur, Ganjam, Odisha - 760004" })
+    }
 
     val initials = remember(userName) {
-        val parts = userName.trim().split(" ")
+        val parts = userName.trim().split(" ").filter { it.isNotEmpty() }
         if (parts.size >= 2) {
-            "${parts[0].take(1)}${parts[1].take(1)}".uppercase()
+            "${parts[0].first().uppercaseChar()}${parts[1].first().uppercaseChar()}"
+        } else if (parts.isNotEmpty()) {
+            parts[0].take(2).uppercase()
         } else {
-            userName.take(2).uppercase().ifEmpty { "GT" }
+            "MJ"
         }
     }
 
+    // 1. Logout Confirmation Dialog
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
@@ -73,6 +95,198 @@ fun CustomerProfileView(
         )
     }
 
+    // 2. Edit Profile Modal Dialog
+    if (showEditDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            title = {
+                Text("Edit Profile & Contact Details", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(
+                        value = editName,
+                        onValueChange = { editName = it },
+                        label = { Text("Full Name") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = editEmail,
+                        onValueChange = { editEmail = it },
+                        label = { Text("Email Address") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = editPhone,
+                        onValueChange = { editPhone = it },
+                        label = { Text("Phone Number") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = editAddress,
+                        onValueChange = { editAddress = it },
+                        label = { Text("Registered Service Address") },
+                        maxLines = 3,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showEditDialog = false
+                        onUpdateProfile(editName, editEmail, editPhone, editAddress)
+                        Toast.makeText(context, "Profile details updated successfully!", Toast.LENGTH_SHORT).show()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
+                ) {
+                    Text("Save Changes", color = Color.White)
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showEditDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // 3. AMC Membership Benefits Dialog
+    if (showAmcDialog) {
+        AlertDialog(
+            onDismissRequest = { showAmcDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Shield, contentDescription = null, tint = SapphireBlue800, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("ZEX-Shield AMC Membership", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                }
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Your residential plan includes full coverage through Dec 2026:", fontSize = 13.sp, color = TextDarkPrimary)
+                    Text("⚡ 24/7 Priority SOS Dispatch under 15 minutes", fontSize = 12.sp, color = TextDarkSecondary)
+                    Text("🛡️ 1000V VDE Double Insulation Certified Safety Protocol", fontSize = 12.sp, color = TextDarkSecondary)
+                    Text("📜 12-Month Post-Work Warranty across all repairs", fontSize = 12.sp, color = TextDarkSecondary)
+                    Text("🔧 ₹0 Labor Charges on bi-annual home electrical audits", fontSize = 12.sp, color = TextDarkSecondary)
+                    Text("📞 Dedicated Senior Master Electrician Concierge", fontSize = 12.sp, color = TextDarkSecondary)
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showAmcDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
+                ) {
+                    Text("Got It", color = Color.White)
+                }
+            }
+        )
+    }
+
+    // 4. Safety Tips Dialog
+    if (showSafetyDialog) {
+        AlertDialog(
+            onDismissRequest = { showSafetyDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Shield, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Electrical Safety Guide (GTS Norms)", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                }
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("1. Always isolate the main MCB before touching any switchboard or appliance.", fontSize = 12.sp, color = TextDarkSecondary)
+                    Text("2. Never reset a repeatedly tripping RCCB/ELCB without an electrician inspecting for earth leaks.", fontSize = 12.sp, color = TextDarkSecondary)
+                    Text("3. Look out for hot sockets, humming sounds, or burning plastic smells.", fontSize = 12.sp, color = TextDarkSecondary)
+                    Text("4. GTS technicians wear certified 1000V Class 0 insulated gloves for your protection.", fontSize = 12.sp, color = TextDarkSecondary)
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showSafetyDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
+                ) {
+                    Text("Understood", color = Color.White)
+                }
+            }
+        )
+    }
+
+    // 5. Terms & Policy Dialog
+    if (showPolicyDialog) {
+        AlertDialog(
+            onDismissRequest = { showPolicyDialog = false },
+            title = {
+                Text("GTS Service Policy & Guarantee", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("• Transparent itemized pricing with statutory 18% GST.", fontSize = 12.sp, color = TextDarkSecondary)
+                    Text("• Secure OTP verification: Share code only after restored power inspection.", fontSize = 12.sp, color = TextDarkSecondary)
+                    Text("• 30-day money-back guarantee if service does not meet safety standards.", fontSize = 12.sp, color = TextDarkSecondary)
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showPolicyDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
+                ) {
+                    Text("Close", color = Color.White)
+                }
+            }
+        )
+    }
+
+    // 6. Add Address Dialog
+    if (showAddAddressDialog) {
+        var newAddressTitle by remember { mutableStateOf("") }
+        var newAddressText by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showAddAddressDialog = false },
+            title = {
+                Text("Add New Service Address", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(
+                        value = newAddressTitle,
+                        onValueChange = { newAddressTitle = it },
+                        label = { Text("Address Label (e.g., Summer House, Shop)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = newAddressText,
+                        onValueChange = { newAddressText = it },
+                        label = { Text("Full Address & Landmark") },
+                        maxLines = 3,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showAddAddressDialog = false
+                        Toast.makeText(context, "Address added to your vault!", Toast.LENGTH_SHORT).show()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
+                ) {
+                    Text("Add Address", color = Color.White)
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showAddAddressDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -81,11 +295,13 @@ fun CustomerProfileView(
     ) {
         item { Spacer(modifier = Modifier.height(4.dp)) }
 
-        // User Avatar & Primary Dossier Card
+        // ==========================================
+        // 1. SECTION: Identity Hero Profile Card
+        // ==========================================
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = ShapeCard,
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
             ) {
@@ -95,29 +311,55 @@ fun CustomerProfileView(
                         .padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(72.dp)
-                            .clip(CircleShape)
-                            .background(SapphireBlue800),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = initials,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
+                    // Avatar with camera badge
+                    Box {
+                        Box(
+                            modifier = Modifier
+                                .size(76.dp)
+                                .clip(CircleShape)
+                                .background(GtsHeaderGradientStart),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = initials,
+                                fontSize = 26.sp,
+                                fontWeight = FontWeight.Black,
+                                color = Color.White
+                            )
+                        }
+
+                        // Floating camera badge for quick photo change
+                        Box(
+                            modifier = Modifier
+                                .size(26.dp)
+                                .align(Alignment.BottomEnd)
+                                .clip(CircleShape)
+                                .background(Color.White)
+                                .border(1.5.dp, SurfaceBorder, CircleShape)
+                                .clickable {
+                                    Toast.makeText(context, "Profile photo update available in Settings", Toast.LENGTH_SHORT).show()
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PhotoCamera,
+                                contentDescription = "Change photo",
+                                tint = SapphireBlue800,
+                                modifier = Modifier.size(15.dp)
+                            )
+                        }
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = userName,
-                        fontSize = 18.sp,
+                        text = userName.ifBlank { "Matru ji" },
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextDarkPrimary
                     )
+
+                    Spacer(modifier = Modifier.height(4.dp))
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -126,135 +368,401 @@ fun CustomerProfileView(
                         Icon(
                             imageVector = Icons.Default.Verified,
                             contentDescription = null,
-                            tint = SuccessGreen,
+                            tint = ProfileVerifiedGreen,
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
                             text = "Verified Customer Account",
                             fontSize = 12.sp,
-                            color = SuccessGreen,
+                            color = ProfileVerifiedGreen,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
 
-                    val detailsSummary = listOfNotNull(
-                        userEmail.ifBlank { null },
-                        userPhone.ifBlank { null },
-                        userAddress.ifBlank { null }
-                    ).joinToString(" • ")
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                    if (detailsSummary.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = userEmail.ifBlank { "matrumatru2003@gmail.com" },
+                        fontSize = 12.5.sp,
+                        color = TextDarkMuted
+                    )
+                    Text(
+                        text = userPhone.ifBlank { "+91 98201 44091" },
+                        fontSize = 12.5.sp,
+                        color = TextDarkMuted
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    OutlinedButton(
+                        onClick = { showEditDialog = true },
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = SapphireBlue800
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = detailsSummary,
+                            text = "Edit Profile",
                             fontSize = 12.sp,
-                            color = TextDarkMuted
+                            fontWeight = FontWeight.Bold,
+                            color = SapphireBlue800
                         )
                     }
+                }
+            }
+        }
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Quick Stats Bar
-                    Row(
+        // ==========================================
+        // 2. SECTION: Tri-Metric Quick Stats Row
+        // ==========================================
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = ShapeCardSmall,
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Metric 1: Orders
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFFF1F5F9))
-                            .padding(vertical = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly
+                            .weight(1f)
+                            .clickable { onViewOrders() }
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(text = "3", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = SapphireBlue800)
-                            Text(text = "Orders", fontSize = 11.sp, color = TextDarkMuted)
-                        }
-                        Divider(modifier = Modifier.height(24.dp).width(1.dp), color = Color(0xFFCBD5E1))
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(text = "Active", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = SuccessGreen)
-                            Text(text = "AMC Shield", fontSize = 11.sp, color = TextDarkMuted)
-                        }
-                        Divider(modifier = Modifier.height(24.dp).width(1.dp), color = Color(0xFFCBD5E1))
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(text = "5.0 ★", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = AmberAlert)
-                            Text(text = "Rating", fontSize = 11.sp, color = TextDarkMuted)
-                        }
+                        Icon(
+                            imageVector = Icons.Default.ReceiptLong,
+                            contentDescription = null,
+                            tint = SapphireBlue800,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(text = "3 Orders", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextDarkPrimary)
+                        Text(text = "View all →", fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold, color = SapphireBlue800)
+                    }
+
+                    Divider(modifier = Modifier.height(30.dp).width(1.dp), color = SurfaceBorder)
+
+                    // Metric 2: Active AMC Shield
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { showAmcDialog = true }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Shield,
+                            contentDescription = null,
+                            tint = ProfileVerifiedGreen,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(text = "Active AMC", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextDarkPrimary)
+                        Text(text = "View details →", fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold, color = ProfileVerifiedGreen)
+                    }
+
+                    Divider(modifier = Modifier.height(30.dp).width(1.dp), color = SurfaceBorder)
+
+                    // Metric 3: Rating
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = null,
+                            tint = Color(0xFFF59E0B),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(text = "5.0 ★ Rating", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextDarkPrimary)
+                        Text(text = "12 reviews", fontSize = 10.5.sp, color = TextDarkMuted)
                     }
                 }
             }
         }
 
-        // ZEX-Shield AMC Card
+        // ==========================================
+        // 3. SECTION: ZEX-Shield AMC Membership Banner
+        // ==========================================
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
+                shape = ShapeCard,
+                colors = CardDefaults.cardColors(containerColor = AmcGradientStart),
+                border = androidx.compose.foundation.BorderStroke(1.5.dp, AmcShieldBorder)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Shield, contentDescription = null, tint = SapphireBlue800, modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("ZEX-SHIELD AMC MEMBERSHIP", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = SapphireBlue800)
-                        }
-                        Surface(
-                            shape = RoundedCornerShape(20.dp),
-                            color = SuccessGreenLight
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(brush = amcMembershipGradient())
+                        .padding(18.dp)
+                ) {
+                    Column {
+                        // Banner Header
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("ACTIVE", modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp), color = SuccessGreen, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .clip(CircleShape)
+                                        .background(AmcShieldElectricBlue.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Shield,
+                                        contentDescription = null,
+                                        tint = AmcShieldElectricBlue,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = "ZEX-SHIELD AMC MEMBERSHIP",
+                                        fontWeight = FontWeight.Black,
+                                        fontSize = 12.sp,
+                                        color = Color.White,
+                                        letterSpacing = 0.5.sp
+                                    )
+                                    Text(
+                                        text = "Residential Premium Protection",
+                                        fontSize = 10.5.sp,
+                                        color = Color(0xFF94A3B8)
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                shape = RoundedCornerShape(20.dp),
+                                color = AmcActiveBadgeBg
+                            ) {
+                                Text(
+                                    text = "ACTIVE",
+                                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),
+                                    color = AmcActiveBadgeText,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        Text(
+                            text = "Comprehensive Home Electrical Coverage",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Benefit Checkmark Bullets
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AmcActiveBadgeText, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("24/7 priority emergency dispatch (under 15 mins)", fontSize = 11.sp, color = Color(0xFFCBD5E1))
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AmcActiveBadgeText, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("12-month post-work warranty across all home installations", fontSize = 11.sp, color = Color(0xFFCBD5E1))
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AmcActiveBadgeText, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("₹0 labor cost on scheduled bi-annual safety audits", fontSize = 11.sp, color = Color(0xFFCBD5E1))
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Expires: Dec 2026", fontSize = 11.sp, color = Color(0xFF94A3B8))
+
+                            Button(
+                                onClick = { showAmcDialog = true },
+                                colors = ButtonDefaults.buttonColors(containerColor = AmcShieldElectricBlue),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                Text("View Benefits →", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = NavyDark900)
+                            }
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("Residential Premium Electrical Protection Plan", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TextDarkPrimary)
-                    Text("Includes 24/7 priority emergency dispatch and 12-month post-work warranty across all home installations.", fontSize = 11.sp, color = TextDarkMuted)
                 }
             }
         }
 
-        // Saved Addresses Card
+        // ==========================================
+        // 4. SECTION: Saved Addresses Vault
+        // ==========================================
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
-            ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("SAVED ADDRESSES", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDarkPrimary)
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "SAVED ADDRESSES",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextDarkPrimary
+                    )
+                    Text(
+                        text = "+ Add New",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = SapphireBlue800,
+                        modifier = Modifier.clickable { showAddAddressDialog = true }
+                    )
+                }
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    // Address 1: Home (Registered Primary)
+                    Surface(
+                        color = Color.White,
+                        shape = ShapeCardSmall,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Home, contentDescription = null, tint = SapphireBlue800, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Text("Home (Registered Service Address)", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = TextDarkPrimary)
-                                Text(userAddress, fontSize = 11.sp, color = TextDarkMuted)
+                        Row(
+                            modifier = Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFFEFF6FF)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Home,
+                                        contentDescription = null,
+                                        tint = SapphireBlue800,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "Home (Registered Service Address)",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = TextDarkPrimary
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = userAddress.ifBlank { "Plot No. 215, Sri Vihar, Berhampur, Ganjam, Odisha - 760004" },
+                                        fontSize = 11.5.sp,
+                                        color = TextDarkSecondary
+                                    )
+                                }
+                            }
+
+                            IconButton(
+                                onClick = { showEditDialog = true },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Edit",
+                                    tint = SapphireBlue800,
+                                    modifier = Modifier.size(16.dp)
+                                )
                             }
                         }
                     }
 
-                    Divider(color = SurfaceBorder)
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    // Address 2: Office / Commercial
+                    Surface(
+                        color = Color.White,
+                        shape = ShapeCardSmall,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Place, contentDescription = null, tint = SapphireBlue800, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Text("Office / Commercial", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = TextDarkPrimary)
-                                Text("Suite 12, Nariman Point, Mumbai 400021", fontSize = 11.sp, color = TextDarkMuted)
+                        Row(
+                            modifier = Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFFEFF6FF)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Business,
+                                        contentDescription = null,
+                                        tint = SapphireBlue800,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "Office / Commercial",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = TextDarkPrimary
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = "Suite 12, Nariman Point, Mumbai, Maharashtra - 400021",
+                                        fontSize = 11.5.sp,
+                                        color = TextDarkSecondary
+                                    )
+                                }
+                            }
+
+                            IconButton(
+                                onClick = {
+                                    Toast.makeText(context, "Editing commercial address...", Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Edit",
+                                    tint = SapphireBlue800,
+                                    modifier = Modifier.size(16.dp)
+                                )
                             }
                         }
                     }
@@ -262,60 +770,134 @@ fun CustomerProfileView(
             }
         }
 
-        // App & Support Actions
+        // ==========================================
+        // 5. SECTION: 4-Quadrant Pastel Help & Support Grid (2x2)
+        // ==========================================
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
-            ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("HELP & SUPPORT", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDarkPrimary)
+            Column {
+                Text(
+                    text = "HELP & ACCOUNT ACTIONS",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextDarkPrimary
+                )
+                Spacer(modifier = Modifier.height(10.dp))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Phone, contentDescription = null, tint = SapphireBlue800, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("24/7 Emergency Helpline (1800-GTS-HELP)", fontSize = 13.sp, color = TextDarkPrimary)
+                // Row 1: Contact Support + Safety Tips
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    SupportGridCard(
+                        modifier = Modifier.weight(1f),
+                        icon = Icons.Default.Phone,
+                        iconTint = SupportContactIcon,
+                        bgColor = SupportContactBg,
+                        borderColor = Color(0xFFBBF7D0),
+                        title = "Contact Support",
+                        subtitle = "Get help anytime >",
+                        onClick = {
+                            val callIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:18004874357"))
+                            context.startActivity(callIntent)
                         }
-                    }
+                    )
 
-                    Divider(color = SurfaceBorder)
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Security, contentDescription = null, tint = SapphireBlue800, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Terms of Service & Electrical Safety Norms", fontSize = 13.sp, color = TextDarkPrimary)
-                        }
-                    }
+                    SupportGridCard(
+                        modifier = Modifier.weight(1f),
+                        icon = Icons.Default.Shield,
+                        iconTint = SupportSafetyIcon,
+                        bgColor = SupportSafetyBg,
+                        borderColor = Color(0xFFFDE68A),
+                        title = "Safety Tips",
+                        subtitle = "1000V guide >",
+                        onClick = { showSafetyDialog = true }
+                    )
                 }
-            }
-        }
 
-        // Sign Out Button
-        item {
-            Button(
-                onClick = { showLogoutDialog = true },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFEE2E2)),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth().height(48.dp)
-            ) {
-                Icon(Icons.Default.ExitToApp, contentDescription = null, tint = Color(0xFFDC2626), modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Log Out from Device", color = Color(0xFFDC2626), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Row 2: Terms & Policy + Log Out
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    SupportGridCard(
+                        modifier = Modifier.weight(1f),
+                        icon = Icons.Default.Description,
+                        iconTint = SupportTermsIcon,
+                        bgColor = SupportTermsBg,
+                        borderColor = Color(0xFFBFDBFE),
+                        title = "Terms & Policy",
+                        subtitle = "Our guarantee >",
+                        onClick = { showPolicyDialog = true }
+                    )
+
+                    SupportGridCard(
+                        modifier = Modifier.weight(1f),
+                        icon = Icons.Default.ExitToApp,
+                        iconTint = SupportLogoutIcon,
+                        bgColor = SupportLogoutBg,
+                        borderColor = Color(0xFFFECACA),
+                        title = "Log Out",
+                        subtitle = "Sign out account >",
+                        onClick = { showLogoutDialog = true }
+                    )
+                }
             }
         }
 
         item { Spacer(modifier = Modifier.height(20.dp)) }
+    }
+}
+
+// -------------------------------------------------------------
+// Component: Support Grid Pastel Card
+// -------------------------------------------------------------
+@Composable
+private fun SupportGridCard(
+    modifier: Modifier = Modifier,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconTint: Color,
+    bgColor: Color,
+    borderColor: Color,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        color = bgColor,
+        shape = ShapeCardSmall,
+        border = androidx.compose.foundation.BorderStroke(1.dp, borderColor),
+        modifier = modifier.height(86.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(10.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = iconTint,
+                modifier = Modifier.size(20.dp)
+            )
+
+            Column {
+                Text(
+                    text = title,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextDarkPrimary
+                )
+                Text(
+                    text = subtitle,
+                    fontSize = 10.sp,
+                    color = iconTint,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
     }
 }

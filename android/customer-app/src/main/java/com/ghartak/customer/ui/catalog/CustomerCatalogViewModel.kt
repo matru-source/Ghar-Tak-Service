@@ -192,6 +192,16 @@ class CustomerCatalogViewModel(
         _uiState.value = _uiState.value.copy(cartItems = emptyList(), cartTotalInr = 0.0)
     }
 
+    fun updateProfile(name: String, email: String, phone: String, address: String) {
+        sessionManager.updateProfile(name, email, phone, address)
+        _uiState.value = _uiState.value.copy(
+            userName = name,
+            userEmail = email,
+            userPhone = phone,
+            userAddress = address
+        )
+    }
+
     fun logout() {
         sessionManager.clearSession()
     }
