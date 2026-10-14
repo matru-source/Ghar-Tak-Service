@@ -1,11 +1,14 @@
 package com.ghartak.customer.ui.auth
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -16,14 +19,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.foundation.clickable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ghartak.customer.R
@@ -60,770 +68,937 @@ fun CustomerAuthScreen(
         )
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(SurfaceLight)
-            .padding(horizontal = 20.dp, vertical = 24.dp),
-        contentAlignment = Alignment.Center
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Full bleed background: Luxury villa, blue sky with sunburst, and curved waves
+        Image(
+            painter = painterResource(id = R.drawable.bg_auth_villa),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
-                .background(Color.White)
-                .border(1.dp, SurfaceBorder, RoundedCornerShape(24.dp))
-                .padding(24.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
         ) {
-            // Official GTS Logo (Secret 6-Tap Developer Environment Switcher)
+            // ==========================================
+            // TOP HERO SECTION: Logo, Slogan, Badges & Electrician
+            // ==========================================
             Box(
                 modifier = Modifier
-                    .size(76.dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(SapphireBlue900.copy(alpha = 0.08f))
-                    .border(1.5.dp, SapphireBlue800.copy(alpha = 0.2f), RoundedCornerShape(20.dp))
-                    .clickable {
-                        val now = System.currentTimeMillis()
-                        if (now - lastClickTime < 1500) {
-                            logoClickCount++
-                        } else {
-                            logoClickCount = 1
-                        }
-                        lastClickTime = now
-
-                        if (logoClickCount >= 6) {
-                            logoClickCount = 0
-                            showEnvSwitcher = true
-                        }
-                    },
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .height(235.dp)
             ) {
+                // Electrician in uniform with toolbelt standing on the right overlooking the villa
                 Image(
-                    painter = painterResource(id = R.drawable.logo_gts_nobg),
-                    contentDescription = "Ghar Tak Services Logo",
-                    modifier = Modifier.size(60.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = "GHAR TAK SERVICES",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Black,
-                color = SapphireBlue900,
-                letterSpacing = 0.8.sp
-            )
-
-            Text(
-                text = "ON-DEMAND ELECTRICAL & SAFETY",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = ElectricCyan,
-                letterSpacing = 0.6.sp
-            )
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            // ================= MODE SELECTOR (Only shown in LOGIN or SIGN_UP) =================
-            if (state.mode != "FORGOT_PASSWORD") {
-                Row(
+                    painter = painterResource(id = R.drawable.img_auth_electrician),
+                    contentDescription = "GTS Electrician",
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFF1F5F9))
-                        .padding(4.dp)
-                ) {
-                    Surface(
-                        onClick = { viewModel.setMode("LOGIN") },
-                        modifier = Modifier.weight(1f),
-                        color = if (state.mode == "LOGIN") Color.White else Color.Transparent,
-                        shape = RoundedCornerShape(10.dp),
-                        shadowElevation = if (state.mode == "LOGIN") 2.dp else 0.dp
-                    ) {
-                        Box(
-                            modifier = Modifier.padding(vertical = 10.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Sign In",
-                                fontWeight = if (state.mode == "LOGIN") FontWeight.Bold else FontWeight.Medium,
-                                fontSize = 13.sp,
-                                color = if (state.mode == "LOGIN") SapphireBlue800 else TextDarkMuted
-                            )
-                        }
-                    }
-
-                    Surface(
-                        onClick = { viewModel.setMode("SIGN_UP") },
-                        modifier = Modifier.weight(1f),
-                        color = if (state.mode == "SIGN_UP") Color.White else Color.Transparent,
-                        shape = RoundedCornerShape(10.dp),
-                        shadowElevation = if (state.mode == "SIGN_UP") 2.dp else 0.dp
-                    ) {
-                        Box(
-                            modifier = Modifier.padding(vertical = 10.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Register / Sign Up",
-                                fontWeight = if (state.mode == "SIGN_UP") FontWeight.Bold else FontWeight.Medium,
-                                fontSize = 13.sp,
-                                color = if (state.mode == "SIGN_UP") SapphireBlue800 else TextDarkMuted
-                            )
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            // ================= 1. SIGN IN SCREEN =================
-            if (state.mode == "LOGIN") {
-                OutlinedTextField(
-                    value = state.email,
-                    onValueChange = { viewModel.onEmailChanged(it) },
-                    label = { Text("Registered Email Address") },
-                    placeholder = { Text("name@example.com") },
-                    leadingIcon = {
-                        Icon(imageVector = Icons.Default.Email, contentDescription = null, tint = SapphireBlue800)
-                    },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                        .align(Alignment.BottomEnd)
+                        .width(170.dp)
+                        .fillMaxHeight()
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                OutlinedTextField(
-                    value = state.password,
-                    onValueChange = { viewModel.onPasswordChanged(it) },
-                    label = { Text("Password") },
-                    placeholder = { Text("Enter your password") },
-                    leadingIcon = {
-                        Icon(imageVector = Icons.Default.Lock, contentDescription = null, tint = SapphireBlue800)
-                    },
-                    trailingIcon = {
-                        IconButton(onClick = { viewModel.togglePasswordVisibility() }) {
-                            Icon(
-                                imageVector = if (state.isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                contentDescription = if (state.isPasswordVisible) "Hide password" else "Show password",
-                                tint = TextDarkMuted
-                            )
-                        }
-                    },
-                    visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                )
-
-                // Forgot Password link
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(
-                        onClick = { viewModel.setMode("FORGOT_PASSWORD") },
-                        contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = "Forgot Password?",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = SapphireBlue800
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Button(
-                    onClick = { viewModel.loginWithPassword() },
-                    enabled = !state.isLoading,
+                // Left Content: GTS Logo + Brand Slogan + 3 Trust Pills
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
+                        .align(Alignment.TopStart)
+                        .padding(start = 16.dp, top = 28.dp)
+                        .fillMaxWidth(0.62f)
                 ) {
-                    if (state.isLoading) {
-                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
-                    } else {
-                        Text("SIGN IN", fontWeight = FontWeight.Bold, fontSize = 13.sp, letterSpacing = 0.5.sp)
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                TextButton(onClick = { viewModel.setMode("SIGN_UP") }) {
-                    Text(
-                        text = "Don't have an account? Register / Sign Up",
-                        fontSize = 12.sp,
-                        color = SapphireBlue800,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-
-            // ================= 2. REGISTER / SIGN UP SCREEN =================
-            if (state.mode == "SIGN_UP") {
-                if (state.signUpStep == 1) {
-                    // STEP 1: Full Name, Email Address, then OTP verification
-                    Row(
+                    // Logo with secret 6-tap developer environment switcher
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(SapphireBlue900.copy(alpha = 0.05f))
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .clickable {
+                                val now = System.currentTimeMillis()
+                                if (now - lastClickTime < 1500) {
+                                    logoClickCount++
+                                } else {
+                                    logoClickCount = 1
+                                }
+                                lastClickTime = now
+
+                                if (logoClickCount >= 6) {
+                                    logoClickCount = 0
+                                    showEnvSwitcher = true
+                                }
+                            }
                     ) {
-                        Icon(imageVector = Icons.Default.Info, contentDescription = null, tint = SapphireBlue800, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Step 1 of 2: Name & Email Verification",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = SapphireBlue800
+                        Image(
+                            painter = painterResource(id = R.drawable.logo_gts_nobg),
+                            contentDescription = "GTS Logo",
+                            modifier = Modifier.height(42.dp)
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Text(
+                        text = "ON-DEMAND ELECTRICAL & SAFETY",
+                        fontSize = 9.5.sp,
+                        fontWeight = FontWeight.Black,
+                        color = SapphireBlue900,
+                        letterSpacing = 0.5.sp
+                    )
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    OutlinedTextField(
-                        value = state.fullName,
-                        onValueChange = { viewModel.onFullNameChanged(it) },
-                        label = { Text("Full Name *") },
-                        placeholder = { Text("Enter your full name") },
-                        leadingIcon = {
-                            Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = SapphireBlue800)
-                        },
-                        singleLine = true,
+                    // 3 Translucent Trust Chips Row
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    )
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        HeroTrustChip(
+                            icon = Icons.Default.Shield,
+                            text = "Verified\nTechnicians"
+                        )
+                        HeroTrustChip(
+                            icon = Icons.Default.Bolt,
+                            text = "Safe &\nReliable"
+                        )
+                        HeroTrustChip(
+                            icon = Icons.Default.Home,
+                            text = "Homes &\nBusiness"
+                        )
+                    }
+                }
+            }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    OutlinedTextField(
-                        value = state.email,
-                        onValueChange = { viewModel.onEmailChanged(it) },
-                        label = { Text("Email Address *") },
-                        placeholder = { Text("name@example.com") },
-                        leadingIcon = {
-                            Icon(imageVector = Icons.Default.Email, contentDescription = null, tint = SapphireBlue800)
-                        },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-
-                    // If OTP has been sent, show the 6-Digit OTP field
-                    AnimatedVisibility(visible = state.isOtpSent) {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            OutlinedTextField(
-                                value = state.otpCode,
-                                onValueChange = { viewModel.onOtpChanged(it) },
-                                label = { Text("6-Digit Email Code *") },
-                                placeholder = { Text("e.g. 582914") },
-                                leadingIcon = {
-                                    Icon(imageVector = Icons.Default.Security, contentDescription = null, tint = SapphireBlue800)
-                                },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true,
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp)
-                            )
-
-                            Spacer(modifier = Modifier.height(6.dp))
-
+            // ==========================================
+            // MAIN FLOATING CARD (Curved 28.dp Top)
+            // ==========================================
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+                color = Color.White,
+                shadowElevation = 14.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 22.dp, vertical = 20.dp)
+                ) {
+                    // 1. Dual Capsule Pill Mode Switcher (Sign In vs Register / Sign Up)
+                    if (state.mode != "FORGOT_PASSWORD") {
+                        Surface(
+                            color = Color(0xFFF1F5F9),
+                            shape = RoundedCornerShape(50.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(46.dp)
+                        ) {
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(3.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = "Code sent to ${state.email}",
-                                    fontSize = 11.sp,
-                                    color = TextDarkMuted,
-                                    maxLines = 1,
-                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f, fill = false)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                TextButton(
-                                    onClick = { viewModel.sendSignUpOtp() },
-                                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+                                // Sign In Pill
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight()
+                                        .clip(RoundedCornerShape(50.dp))
+                                        .background(
+                                            if (state.mode == "LOGIN") {
+                                                Brush.horizontalGradient(
+                                                    listOf(GtsHeaderGradientStart, GtsHeaderGradientMid)
+                                                )
+                                            } else {
+                                                Brush.linearGradient(
+                                                    listOf(Color.Transparent, Color.Transparent)
+                                                )
+                                            }
+                                        )
+                                        .clickable { viewModel.setMode("LOGIN") },
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Text("Resend OTP", fontSize = 12.sp, color = SapphireBlue800, fontWeight = FontWeight.Bold)
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Person,
+                                            contentDescription = null,
+                                            tint = if (state.mode == "LOGIN") Color.White else Color(0xFF64748B),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "Sign In",
+                                            fontSize = 13.sp,
+                                            fontWeight = if (state.mode == "LOGIN") FontWeight.Bold else FontWeight.SemiBold,
+                                            color = if (state.mode == "LOGIN") Color.White else Color(0xFF64748B)
+                                        )
+                                    }
+                                }
+
+                                // Register / Sign Up Pill
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight()
+                                        .clip(RoundedCornerShape(50.dp))
+                                        .background(
+                                            if (state.mode == "SIGN_UP") {
+                                                Brush.horizontalGradient(
+                                                    listOf(GtsHeaderGradientStart, GtsHeaderGradientMid)
+                                                )
+                                            } else {
+                                                Brush.linearGradient(
+                                                    listOf(Color.Transparent, Color.Transparent)
+                                                )
+                                            }
+                                        )
+                                        .clickable { viewModel.setMode("SIGN_UP") },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.PersonAdd,
+                                            contentDescription = null,
+                                            tint = if (state.mode == "SIGN_UP") Color.White else Color(0xFF64748B),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "Register / Sign Up",
+                                            fontSize = 13.sp,
+                                            fontWeight = if (state.mode == "SIGN_UP") FontWeight.Bold else FontWeight.SemiBold,
+                                            color = if (state.mode == "SIGN_UP") Color.White else Color(0xFF64748B)
+                                        )
+                                    }
                                 }
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(18.dp))
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Button(
-                        onClick = {
-                            if (state.isOtpSent) {
-                                viewModel.verifySignUpOtp()
-                            } else {
-                                viewModel.sendSignUpOtp()
-                            }
-                        },
-                        enabled = !state.isLoading,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
-                    ) {
-                        if (state.isLoading) {
-                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
-                        } else {
-                            val label = if (state.isOtpSent) "VERIFY OTP & PROCEED TO STEP 2" else "SEND VERIFICATION CODE TO EMAIL"
-                            Text(label, fontWeight = FontWeight.Bold, fontSize = 12.sp, letterSpacing = 0.5.sp)
-                        }
+                    // 2. Headline & Subtitle
+                    val headlineText = when (state.mode) {
+                        "SIGN_UP" -> if (state.signUpStep == 1) "Create Your Account" else "Set Password & Location"
+                        "FORGOT_PASSWORD" -> "Reset Your Password"
+                        else -> "Welcome Back!"
+                    }
+                    val subtitleText = when (state.mode) {
+                        "SIGN_UP" -> "Register for on-demand electrical services in 60 seconds"
+                        "FORGOT_PASSWORD" -> "We'll send a 6-digit security code to your email"
+                        else -> "Sign in to continue with Ghar Tak Services"
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    TextButton(onClick = { viewModel.setMode("LOGIN") }) {
-                        Text(
-                            text = "Already have an account? Sign In",
-                            fontSize = 12.sp,
-                            color = SapphireBlue800,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-
-                } else {
-                    // STEP 2: Password (mandatory), Confirm Password (mandatory), Pincode (mandatory), Mobile (optional), Address (optional)
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(SuccessGreenLight)
-                            .border(1.dp, SuccessGreen.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = SuccessGreen, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "Verified: ${state.email}",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF14532D)
-                            )
-                        }
-                        TextButton(
-                            onClick = { viewModel.backToSignUpStep1() },
-                            contentPadding = PaddingValues(0.dp)
-                        ) {
-                            Text("Change", fontSize = 11.sp, color = SapphireBlue800, fontWeight = FontWeight.Bold)
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    OutlinedTextField(
-                        value = state.password,
-                        onValueChange = { viewModel.onPasswordChanged(it) },
-                        label = { Text("Create Password * (Mandatory)") },
-                        placeholder = { Text("At least 4 characters") },
-                        leadingIcon = {
-                            Icon(imageVector = Icons.Default.Lock, contentDescription = null, tint = SapphireBlue800)
-                        },
-                        trailingIcon = {
-                            IconButton(onClick = { viewModel.togglePasswordVisibility() }) {
-                                Icon(
-                                    imageVector = if (state.isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    contentDescription = if (state.isPasswordVisible) "Hide password" else "Show password",
-                                    tint = TextDarkMuted
-                                )
-                            }
-                        },
-                        visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                    Text(
+                        text = headlineText,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Black,
+                        color = TextDarkPrimary
                     )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    OutlinedTextField(
-                        value = state.confirmPassword,
-                        onValueChange = { viewModel.onConfirmPasswordChanged(it) },
-                        label = { Text("Confirm Password * (Mandatory)") },
-                        placeholder = { Text("Re-enter your password") },
-                        leadingIcon = {
-                            Icon(imageVector = Icons.Default.Lock, contentDescription = null, tint = SapphireBlue800)
-                        },
-                        trailingIcon = {
-                            IconButton(onClick = { viewModel.toggleConfirmPasswordVisibility() }) {
-                                Icon(
-                                    imageVector = if (state.isConfirmPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    contentDescription = if (state.isConfirmPasswordVisible) "Hide password" else "Show password",
-                                    tint = TextDarkMuted
-                                )
-                            }
-                        },
-                        visualTransformation = if (state.isConfirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    OutlinedTextField(
-                        value = state.pincode,
-                        onValueChange = { viewModel.onPincodeChanged(it) },
-                        label = { Text("Pincode * (Mandatory 6-Digits)") },
-                        placeholder = { Text("400001") },
-                        leadingIcon = {
-                            Icon(imageVector = Icons.Default.PinDrop, contentDescription = null, tint = SapphireBlue800)
-                        },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    OutlinedTextField(
-                        value = state.phoneNumber,
-                        onValueChange = { viewModel.onPhoneChanged(it) },
-                        label = { Text("Mobile Number (Optional)") },
-                        placeholder = { Text("9876543210 (Optional)") },
-                        prefix = { Text("+91 ", fontWeight = FontWeight.Bold, color = TextDarkPrimary) },
-                        leadingIcon = {
-                            Icon(imageVector = Icons.Default.Phone, contentDescription = null, tint = SapphireBlue800)
-                        },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    OutlinedTextField(
-                        value = state.address,
-                        onValueChange = { viewModel.onAddressChanged(it) },
-                        label = { Text("Service Address (Optional)") },
-                        placeholder = { Text("House / Flat No, Street, Area") },
-                        leadingIcon = {
-                            Icon(imageVector = Icons.Default.Home, contentDescription = null, tint = SapphireBlue800)
-                        },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = subtitleText,
+                        fontSize = 13.sp,
+                        color = Color(0xFF64748B)
                     )
 
                     Spacer(modifier = Modifier.height(18.dp))
 
-                    Button(
-                        onClick = { viewModel.completeRegistration() },
-                        enabled = !state.isLoading,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
-                    ) {
-                        if (state.isLoading) {
-                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
-                        } else {
-                            Text("COMPLETE REGISTRATION & SIGN IN", fontWeight = FontWeight.Bold, fontSize = 12.sp, letterSpacing = 0.5.sp)
+                    // 3. Error and Success Alert Banners
+                    if (!state.errorMessage.isNullOrBlank()) {
+                        Surface(
+                            color = Color(0xFFFEE2E2),
+                            shape = RoundedCornerShape(10.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFCA5A5)),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 14.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ErrorOutline,
+                                    contentDescription = null,
+                                    tint = Color(0xFFDC2626),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = state.errorMessage ?: "",
+                                    color = Color(0xFFB91C1C),
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    TextButton(onClick = { viewModel.backToSignUpStep1() }) {
-                        Text("← Back to Step 1", fontSize = 12.sp, color = TextDarkMuted)
-                    }
-                }
-            }
-
-            // ================= 3. FORGOT PASSWORD SCREEN =================
-            if (state.mode == "FORGOT_PASSWORD") {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = { viewModel.setMode("LOGIN") }) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = SapphireBlue800)
-                    }
-                    Text(
-                        text = "Reset Password",
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = SapphireBlue900
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                if (state.forgotStep == 1) {
-                    Text(
-                        text = "Enter your registered email address to receive a 6-digit password reset code.",
-                        fontSize = 12.sp,
-                        color = TextDarkMuted,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    OutlinedTextField(
-                        value = state.email,
-                        onValueChange = { viewModel.onEmailChanged(it) },
-                        label = { Text("Registered Email Address") },
-                        placeholder = { Text("name@example.com") },
-                        leadingIcon = {
-                            Icon(imageVector = Icons.Default.Email, contentDescription = null, tint = SapphireBlue800)
-                        },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Button(
-                        onClick = { viewModel.sendForgotPasswordOtp() },
-                        enabled = !state.isLoading,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
-                    ) {
-                        if (state.isLoading) {
-                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
-                        } else {
-                            Text("SEND RESET CODE TO EMAIL", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    if (!state.successMessage.isNullOrBlank()) {
+                        Surface(
+                            color = Color(0xFFDCFCE7),
+                            shape = RoundedCornerShape(10.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF86EFAC)),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 14.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = SuccessGreen,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = state.successMessage ?: "",
+                                    color = Color(0xFF15803D),
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
                         }
                     }
-                } else {
-                    Text(
-                        text = "Enter the 6-digit code sent to ${state.email} and create your new password.",
-                        fontSize = 12.sp,
-                        color = TextDarkMuted,
-                        modifier = Modifier.fillMaxWidth()
-                    )
 
+                    // ==========================================
+                    // 4. SCREEN FORMS (LOGIN / SIGN UP / FORGOT)
+                    // ==========================================
+                    if (state.mode == "LOGIN") {
+                        // Email Field
+                        Text(
+                            text = "Email Address",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextDarkPrimary
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        OutlinedTextField(
+                            value = state.email,
+                            onValueChange = { viewModel.onEmailChanged(it) },
+                            placeholder = { Text("Enter your registered email", fontSize = 13.sp, color = Color(0xFF94A3B8)) },
+                            leadingIcon = {
+                                Icon(imageVector = Icons.Default.Email, contentDescription = null, tint = SapphireBlue800, modifier = Modifier.size(18.dp))
+                            },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = SapphireBlue800,
+                                unfocusedBorderColor = Color(0xFFE2E8F0)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Password Field
+                        Text(
+                            text = "Password",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextDarkPrimary
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        OutlinedTextField(
+                            value = state.password,
+                            onValueChange = { viewModel.onPasswordChanged(it) },
+                            placeholder = { Text("Enter your password", fontSize = 13.sp, color = Color(0xFF94A3B8)) },
+                            leadingIcon = {
+                                Icon(imageVector = Icons.Default.Lock, contentDescription = null, tint = SapphireBlue800, modifier = Modifier.size(18.dp))
+                            },
+                            trailingIcon = {
+                                IconButton(onClick = { viewModel.togglePasswordVisibility() }) {
+                                    Icon(
+                                        imageVector = if (state.isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                        contentDescription = if (state.isPasswordVisible) "Hide password" else "Show password",
+                                        tint = Color(0xFF94A3B8),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            },
+                            visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = SapphireBlue800,
+                                unfocusedBorderColor = Color(0xFFE2E8F0)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        // Forgot Password Link
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            TextButton(
+                                onClick = { viewModel.setMode("FORGOT_PASSWORD") },
+                                contentPadding = PaddingValues(0.dp)
+                            ) {
+                                Text(
+                                    text = "Forgot Password?",
+                                    fontSize = 12.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = SapphireBlue800
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Primary Action Button (Sign In with Circular Forward Arrow)
+                        Button(
+                            onClick = { viewModel.loginWithPassword() },
+                            enabled = !state.isLoading,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800),
+                            contentPadding = PaddingValues(horizontal = 16.dp)
+                        ) {
+                            if (state.isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(22.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Spacer(modifier = Modifier.width(32.dp))
+                                    Text(
+                                        text = "Sign In",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 15.sp,
+                                        color = Color.White
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .size(32.dp)
+                                            .clip(CircleShape)
+                                            .background(Color.White.copy(alpha = 0.22f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.ArrowForward,
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(18.dp))
+
+                        // "OR" Divider
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Divider(modifier = Modifier.weight(1f), color = Color(0xFFE2E8F0))
+                            Text(
+                                text = "OR",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF94A3B8),
+                                modifier = Modifier.padding(horizontal = 12.dp)
+                            )
+                            Divider(modifier = Modifier.weight(1f), color = Color(0xFFE2E8F0))
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // "Continue with Google" Button
+                        Surface(
+                            onClick = { viewModel.loginWithGoogle() },
+                            shape = RoundedCornerShape(12.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                            color = Color.White,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            shadowElevation = 0.5.dp
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                GoogleLogoIcon(modifier = Modifier.size(20.dp))
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(
+                                    text = "Continue with Google",
+                                    fontSize = 13.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextDarkPrimary
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Switch to Register Prompt
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Don't have an account? ",
+                                fontSize = 12.5.sp,
+                                color = Color(0xFF64748B)
+                            )
+                            Text(
+                                text = "Register / Sign Up",
+                                fontSize = 12.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = SapphireBlue800,
+                                modifier = Modifier.clickable { viewModel.setMode("SIGN_UP") }
+                            )
+                        }
+
+                    } else if (state.mode == "SIGN_UP") {
+                        // SIGN UP MODE
+                        if (state.signUpStep == 1) {
+                            // Step 1: Name + Email + OTP
+                            Text(
+                                text = "Full Name",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextDarkPrimary
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            OutlinedTextField(
+                                value = state.fullName,
+                                onValueChange = { viewModel.onFullNameChanged(it) },
+                                placeholder = { Text("Enter your full name", fontSize = 13.sp, color = Color(0xFF94A3B8)) },
+                                leadingIcon = {
+                                    Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = SapphireBlue800, modifier = Modifier.size(18.dp))
+                                },
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = SapphireBlue800,
+                                    unfocusedBorderColor = Color(0xFFE2E8F0)
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            Text(
+                                text = "Email Address",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextDarkPrimary
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            OutlinedTextField(
+                                value = state.email,
+                                onValueChange = { viewModel.onEmailChanged(it) },
+                                placeholder = { Text("name@example.com", fontSize = 13.sp, color = Color(0xFF94A3B8)) },
+                                leadingIcon = {
+                                    Icon(imageVector = Icons.Default.Email, contentDescription = null, tint = SapphireBlue800, modifier = Modifier.size(18.dp))
+                                },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = SapphireBlue800,
+                                    unfocusedBorderColor = Color(0xFFE2E8F0)
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            AnimatedVisibility(visible = state.isOtpSent) {
+                                Column(modifier = Modifier.fillMaxWidth()) {
+                                    Spacer(modifier = Modifier.height(14.dp))
+                                    Text(
+                                        text = "6-Digit Email Verification Code",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextDarkPrimary
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    OutlinedTextField(
+                                        value = state.otpCode,
+                                        onValueChange = { viewModel.onOtpChanged(it) },
+                                        placeholder = { Text("Enter 6-digit code", fontSize = 13.sp, color = Color(0xFF94A3B8)) },
+                                        leadingIcon = {
+                                            Icon(imageVector = Icons.Default.Security, contentDescription = null, tint = SapphireBlue800, modifier = Modifier.size(18.dp))
+                                        },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = SapphireBlue800,
+                                            unfocusedBorderColor = Color(0xFFE2E8F0)
+                                        ),
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "Code sent to ${state.email}",
+                                            fontSize = 11.sp,
+                                            color = TextDarkMuted
+                                        )
+                                        TextButton(onClick = { viewModel.sendSignUpOtp() }) {
+                                            Text("Resend OTP", fontSize = 11.5.sp, fontWeight = FontWeight.Bold, color = SapphireBlue800)
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            Button(
+                                onClick = {
+                                    if (state.isOtpSent) {
+                                        viewModel.verifySignUpOtp()
+                                    } else {
+                                        viewModel.sendSignUpOtp()
+                                    }
+                                },
+                                enabled = !state.isLoading,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(50.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
+                            ) {
+                                if (state.isLoading) {
+                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                                } else {
+                                    val label = if (state.isOtpSent) "VERIFY OTP & PROCEED" else "SEND VERIFICATION CODE"
+                                    Text(label, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                }
+                            }
+
+                        } else {
+                            // Step 2: Password, Confirm, Phone, Pincode
+                            OutlinedTextField(
+                                value = state.password,
+                                onValueChange = { viewModel.onPasswordChanged(it) },
+                                label = { Text("Create Password *") },
+                                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = SapphireBlue800) },
+                                visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            OutlinedTextField(
+                                value = state.confirmPassword,
+                                onValueChange = { viewModel.onConfirmPasswordChanged(it) },
+                                label = { Text("Confirm Password *") },
+                                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = SapphireBlue800) },
+                                visualTransformation = if (state.isConfirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            OutlinedTextField(
+                                value = state.phoneNumber,
+                                onValueChange = { viewModel.onPhoneChanged(it) },
+                                label = { Text("Mobile Phone Number") },
+                                placeholder = { Text("10-digit number") },
+                                leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = SapphireBlue800) },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            OutlinedTextField(
+                                value = state.pincode,
+                                onValueChange = { viewModel.onPincodeChanged(it) },
+                                label = { Text("Pincode * (6-digits)") },
+                                leadingIcon = { Icon(Icons.Default.Place, contentDescription = null, tint = SapphireBlue800) },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(modifier = Modifier.height(14.dp))
+                            Button(
+                                onClick = { viewModel.completeSignUp() },
+                                enabled = !state.isLoading,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(50.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
+                            ) {
+                                if (state.isLoading) {
+                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                                } else {
+                                    Text("COMPLETE REGISTRATION & SIGN IN", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text("Already have an account? ", fontSize = 12.5.sp, color = Color(0xFF64748B))
+                            Text("Sign In", fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = SapphireBlue800, modifier = Modifier.clickable { viewModel.setMode("LOGIN") })
+                        }
+
+                    } else {
+                        // FORGOT PASSWORD MODE
+                        Text("Registered Email Address", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextDarkPrimary)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        OutlinedTextField(
+                            value = state.email,
+                            onValueChange = { viewModel.onEmailChanged(it) },
+                            placeholder = { Text("name@example.com", fontSize = 13.sp, color = Color(0xFF94A3B8)) },
+                            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = SapphireBlue800) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        if (state.forgotStep == 2) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            OutlinedTextField(
+                                value = state.otpCode,
+                                onValueChange = { viewModel.onOtpChanged(it) },
+                                label = { Text("6-Digit Email Code *") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            OutlinedTextField(
+                                value = state.password,
+                                onValueChange = { viewModel.onPasswordChanged(it) },
+                                label = { Text("New Password *") },
+                                visualTransformation = PasswordVisualTransformation(),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            OutlinedTextField(
+                                value = state.confirmPassword,
+                                onValueChange = { viewModel.onConfirmPasswordChanged(it) },
+                                label = { Text("Confirm New Password *") },
+                                visualTransformation = PasswordVisualTransformation(),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        Button(
+                            onClick = {
+                                if (state.forgotStep == 1) {
+                                    viewModel.sendForgotOtp()
+                                } else {
+                                    viewModel.verifyForgotOtpAndResetPassword()
+                                }
+                            },
+                            enabled = !state.isLoading,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
+                        ) {
+                            if (state.isLoading) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                            } else {
+                                val label = if (state.forgotStep == 1) "SEND PASSWORD RESET CODE" else "RESET PASSWORD & SIGN IN"
+                                Text(label, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text("Remembered your password? ", fontSize = 12.5.sp, color = Color(0xFF64748B))
+                            Text("Sign In", fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = SapphireBlue800, modifier = Modifier.clickable { viewModel.setMode("LOGIN") })
+                        }
+                    }
+
+                    // ==========================================
+                    // 5. BOTTOM TRUST TELEMETRY BAR
+                    // ==========================================
+                    Spacer(modifier = Modifier.height(22.dp))
+                    Divider(color = Color(0xFFF1F5F9), thickness = 1.dp)
                     Spacer(modifier = Modifier.height(14.dp))
-
-                    OutlinedTextField(
-                        value = state.otpCode,
-                        onValueChange = { viewModel.onOtpChanged(it) },
-                        label = { Text("6-Digit Reset Code") },
-                        placeholder = { Text("e.g. 582914") },
-                        leadingIcon = {
-                            Icon(imageVector = Icons.Default.Security, contentDescription = null, tint = SapphireBlue800)
-                        },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        TextButton(
-                            onClick = { viewModel.setMode("FORGOT_PASSWORD") },
-                            contentPadding = PaddingValues(0.dp)
-                        ) {
-                            Text("← Change Email", fontSize = 11.sp, color = TextDarkMuted)
-                        }
-                        TextButton(
-                            onClick = { viewModel.sendForgotPasswordOtp() },
-                            contentPadding = PaddingValues(0.dp)
-                        ) {
-                            Text("Resend Code", fontSize = 11.sp, color = SapphireBlue800, fontWeight = FontWeight.Bold)
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    OutlinedTextField(
-                        value = state.password,
-                        onValueChange = { viewModel.onPasswordChanged(it) },
-                        label = { Text("New Password *") },
-                        placeholder = { Text("At least 4 characters") },
-                        leadingIcon = {
-                            Icon(imageVector = Icons.Default.Lock, contentDescription = null, tint = SapphireBlue800)
-                        },
-                        trailingIcon = {
-                            IconButton(onClick = { viewModel.togglePasswordVisibility() }) {
-                                Icon(
-                                    imageVector = if (state.isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    contentDescription = if (state.isPasswordVisible) "Hide password" else "Show password",
-                                    tint = TextDarkMuted
-                                )
-                            }
-                        },
-                        visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    OutlinedTextField(
-                        value = state.confirmPassword,
-                        onValueChange = { viewModel.onConfirmPasswordChanged(it) },
-                        label = { Text("Confirm New Password *") },
-                        placeholder = { Text("Re-enter new password") },
-                        leadingIcon = {
-                            Icon(imageVector = Icons.Default.Lock, contentDescription = null, tint = SapphireBlue800)
-                        },
-                        trailingIcon = {
-                            IconButton(onClick = { viewModel.toggleConfirmPasswordVisibility() }) {
-                                Icon(
-                                    imageVector = if (state.isConfirmPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    contentDescription = if (state.isConfirmPasswordVisible) "Hide password" else "Show password",
-                                    tint = TextDarkMuted
-                                )
-                            }
-                        },
-                        visualTransformation = if (state.isConfirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(18.dp))
-
-                    Button(
-                        onClick = { viewModel.resetPasswordWithOtp() },
-                        enabled = !state.isLoading,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
-                    ) {
-                        if (state.isLoading) {
-                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
-                        } else {
-                            Text("RESET PASSWORD & SIGN IN", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                TextButton(onClick = { viewModel.setMode("LOGIN") }) {
-                    Text("Cancel & Return to Sign In", fontSize = 12.sp, color = TextDarkMuted)
-                }
-            }
-
-            // ================= NOTIFICATION BANNERS =================
-            // Success Message Banner
-            if (!state.successMessage.isNullOrEmpty()) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Surface(
-                    color = SuccessGreenLight,
-                    shape = RoundedCornerShape(10.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, SuccessGreen.copy(alpha = 0.5f)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = SuccessGreen, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = state.successMessage!!,
-                            color = Color(0xFF14532D),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                }
-            }
-
-            // Error Alert Banner
-            if (!state.errorMessage.isNullOrEmpty()) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Surface(
-                    color = Color(0xFFFFEBEE),
-                    shape = RoundedCornerShape(10.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, DangerRed.copy(alpha = 0.4f)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(10.dp)) {
+                        // Trust 1: 1000+ Verified Experts
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(imageVector = Icons.Default.Warning, contentDescription = null, tint = DangerRed, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = state.errorMessage!!,
-                                color = DangerRed,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.SemiBold
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = SuccessGreen,
+                                modifier = Modifier.size(18.dp)
                             )
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Column {
+                                Text("1000+", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextDarkPrimary)
+                                Text("Verified Experts", fontSize = 9.sp, color = TextDarkMuted)
+                            }
                         }
-                        if (state.errorMessage!!.contains("switch to Register", ignoreCase = true) ||
-                            state.errorMessage!!.contains("create your account", ignoreCase = true)) {
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Button(
-                                onClick = { viewModel.setMode("SIGN_UP") },
-                                colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.fillMaxWidth().height(36.dp)
-                            ) {
-                                Text("Switch to Register / Sign Up Now", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+
+                        Divider(modifier = Modifier.height(24.dp).width(1.dp), color = Color(0xFFE2E8F0))
+
+                        // Trust 2: 24/7 Emergency Support
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.SupportAgent,
+                                contentDescription = null,
+                                tint = SapphireBlue800,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Column {
+                                Text("24/7", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextDarkPrimary)
+                                Text("Emergency Support", fontSize = 9.sp, color = TextDarkMuted)
+                            }
+                        }
+
+                        Divider(modifier = Modifier.height(24.dp).width(1.dp), color = Color(0xFFE2E8F0))
+
+                        // Trust 3: Safe Homes
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = null,
+                                tint = SapphireBlue800,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Column {
+                                Text("Safe Homes", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextDarkPrimary)
+                                Text("Brighter Tomorrows", fontSize = 9.sp, color = TextDarkMuted)
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
-            }
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Shield,
-                    contentDescription = null,
-                    tint = SuccessGreen,
-                    modifier = Modifier.size(14.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "Official Ghar Tak Services • 1000V Certified Safety",
-                    color = TextDarkMuted,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Medium
-                )
             }
         }
+    }
+}
+
+// -------------------------------------------------------------
+// Component: Top Hero Translucent Trust Chip
+// -------------------------------------------------------------
+@Composable
+private fun HeroTrustChip(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    text: String
+) {
+    Surface(
+        color = Color.White.copy(alpha = 0.88f),
+        shape = RoundedCornerShape(8.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.95f))
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 5.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = SapphireBlue800,
+                modifier = Modifier.size(14.dp)
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = text,
+                fontSize = 8.5.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextDarkPrimary,
+                textAlign = TextAlign.Center,
+                lineHeight = 10.sp
+            )
+        }
+    }
+}
+
+// -------------------------------------------------------------
+// Component: Official 4-Color Google "G" Vector Icon
+// -------------------------------------------------------------
+@Composable
+fun GoogleLogoIcon(modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val strokeW = w * 0.22f
+        val center = Offset(w / 2f, h / 2f)
+
+        // Red Arc (Top)
+        drawArc(
+            color = Color(0xFFEA4335),
+            startAngle = -45f,
+            sweepAngle = -135f,
+            useCenter = false,
+            style = Stroke(width = strokeW, cap = StrokeCap.Butt)
+        )
+        // Yellow Arc (Bottom-Left)
+        drawArc(
+            color = Color(0xFFFBBC05),
+            startAngle = 180f,
+            sweepAngle = -90f,
+            useCenter = false,
+            style = Stroke(width = strokeW, cap = StrokeCap.Butt)
+        )
+        // Green Arc (Bottom-Right)
+        drawArc(
+            color = Color(0xFF34A853),
+            startAngle = 90f,
+            sweepAngle = -90f,
+            useCenter = false,
+            style = Stroke(width = strokeW, cap = StrokeCap.Butt)
+        )
+        // Blue Arc (Right)
+        drawArc(
+            color = Color(0xFF4285F4),
+            startAngle = 0f,
+            sweepAngle = -45f,
+            useCenter = false,
+            style = Stroke(width = strokeW, cap = StrokeCap.Butt)
+        )
+        // Blue Center Bar
+        drawLine(
+            color = Color(0xFF4285F4),
+            start = Offset(center.x, center.y),
+            end = Offset(w - strokeW / 2f, center.y),
+            strokeWidth = strokeW
+        )
     }
 }
