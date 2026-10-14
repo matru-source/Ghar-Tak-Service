@@ -1,11 +1,14 @@
 package com.ghartak.technician.ui.dashboard
 
-import com.ghartak.technician.ui.nav.launchTurnByTurnNavigation
-
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,21 +19,58 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import com.ghartak.technician.R
 import com.ghartak.technician.data.model.TechnicianJob
 import com.ghartak.technician.data.session.SessionManager
 import com.ghartak.technician.ui.components.EnvironmentSwitcherDialog
 import com.ghartak.technician.ui.theme.*
+
+// Curated UI Colors matching Client Attached References
+private val TechFlameOrange = Color(0xFFE65100)
+private val TechAmberLight = Color(0xFFFFF3E0)
+private val TechGreen = Color(0xFF2E7D32)
+private val TechGreenLight = Color(0xFFE8F5E9)
+private val TechPurpleLight = Color(0xFFEDE7F6)
+private val TechPurple = Color(0xFF673AB7)
+private val TechBlueLight = Color(0xFFE3F2FD)
+private val TechBlue = Color(0xFF1976D2)
+private val TechEmergencyRed = Color(0xFFD32F2F)
+private val TechEmergencyRedDark = Color(0xFFB71C1C)
+private val TechEmergencyPink = Color(0xFFFEE2E2)
+private val TechSurfaceBorder = Color(0xFFE2E8F0)
+
+// Helper: resolves realistic repair object image for jobs and notifications
+fun getServiceDrawableRes(serviceTitle: String, iconType: String = ""): Int {
+    return when {
+        iconType.equals("AC", ignoreCase = true) || serviceTitle.contains("AC", ignoreCase = true) || serviceTitle.contains("Air Condition", ignoreCase = true) -> R.drawable.service_ac
+        iconType.equals("FAN", ignoreCase = true) || serviceTitle.contains("Fan", ignoreCase = true) -> R.drawable.service_fan
+        serviceTitle.contains("Light", ignoreCase = true) || serviceTitle.contains("Bulb", ignoreCase = true) -> R.drawable.service_light
+        serviceTitle.contains("Wiring", ignoreCase = true) || serviceTitle.contains("Wire", ignoreCase = true) || serviceTitle.contains("Inverter", ignoreCase = true) -> R.drawable.service_wiring
+        serviceTitle.contains("Switch", ignoreCase = true) || serviceTitle.contains("Board", ignoreCase = true) || serviceTitle.contains("Socket", ignoreCase = true) -> R.drawable.service_switchboard
+        serviceTitle.contains("Geyser", ignoreCase = true) || serviceTitle.contains("Heater", ignoreCase = true) -> R.drawable.service_geyser
+        else -> R.drawable.service_wiring
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,6 +94,7 @@ fun TechnicianDashboardScreen(
         bottomBar = {
             TechnicianBottomNavBar(
                 currentTab = state.currentTab,
+                badgeCount = state.newJobNotifications.size,
                 onTabSelected = { tab ->
                     if (tab == "SOS") {
                         showSosDialog = true
@@ -78,6 +119,8 @@ fun TechnicianDashboardScreen(
                         onAcceptNotification = { viewModel.acceptNotificationJob(it) },
                         onRejectNotification = { viewModel.rejectNotificationJob(it) },
                         onSelectJob = { viewModel.viewJobDetails(it) },
+                        onViewJobsTab = { viewModel.selectTab("JOBS") },
+                        onViewEarningsTab = { viewModel.selectTab("EARNINGS") },
                         onSimulateDispatch = { onNavigateToDispatchAlert("job_1001") }
                     )
                 }
@@ -126,39 +169,14 @@ fun TechnicianDashboardScreen(
             }
         }
 
-        // Emergency SOS Dialog
+        // Dedicated High-Impact Emergency Safety SOS Popup Dialog
         if (showSosDialog) {
-            AlertDialog(
-                onDismissRequest = { showSosDialog = false },
-                icon = {
-                    Icon(imageVector = Icons.Default.Warning, contentDescription = null, tint = SafetyRed, modifier = Modifier.size(36.dp))
-                },
-                title = {
-                    Text(text = "EMERGENCY SAFETY SOS", fontWeight = FontWeight.Black, color = SafetyRed)
-                },
-                text = {
-                    Text(
-                        text = "High-voltage flash, live arc hazard, or site accident detected?\n\nTriggering SOS alerts Ghar Tak 24x7 Safety Command Center with your exact GPS telemetry and VDE 1000V crew credentials.",
-                        fontSize = 13.sp,
-                        color = TextDarkSecondary
-                    )
-                },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            showSosDialog = false
-                            val emergencyIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:112"))
-                            context.startActivity(emergencyIntent)
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = SafetyRed)
-                    ) {
-                        Text("CALL 112 / DISPATCH HELPLINE", fontWeight = FontWeight.Bold)
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showSosDialog = false }) {
-                        Text("Cancel", color = TextDarkMuted)
-                    }
+            EmergencySafetySosDialog(
+                onDismiss = { showSosDialog = false },
+                onCallEmergency = {
+                    showSosDialog = false
+                    val emergencyIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:112"))
+                    context.startActivity(emergencyIntent)
                 }
             )
         }
@@ -174,7 +192,7 @@ fun TechnicianDashboardScreen(
 }
 
 // =========================================================================
-// SCREEN 1: TECHNICIAN HOME SCREEN (Matches Client Asset Screen 1)
+// SCREEN 1: TECHNICIAN HOME SCREEN (Matches Client Reference Image 1)
 // =========================================================================
 
 @Composable
@@ -184,115 +202,207 @@ fun TechnicianHomeScreenContent(
     onAcceptNotification: (id: String) -> Unit,
     onRejectNotification: (id: String) -> Unit,
     onSelectJob: (TechnicianJob) -> Unit,
+    onViewJobsTab: () -> Unit,
+    onViewEarningsTab: () -> Unit,
     onSimulateDispatch: () -> Unit
 ) {
+    val context = LocalContext.current
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 24.dp)
     ) {
-        // 1. Top Header Banner (Primary Theme: Deep Electric Orange)
+        // 1. Top Header Banner with Villa & GTS Electrician
         item {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(ElectricOrangeHeader)
-                    .padding(horizontal = 16.dp, vertical = 14.dp)
+                    .height(205.dp)
             ) {
-                Column {
+                // Background Image
+                Image(
+                    painter = painterResource(id = R.drawable.bg_tech_home_header),
+                    contentDescription = "GTS Home Header",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    // Top Bar: GTS Logo, Status Capsule, Notification Bell
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
-                            val firstName = state.profile?.fullName?.split(" ")?.firstOrNull() ?: "Rajesh"
-                            Text(
-                                text = "Good Morning, $firstName!",
-                                color = Color.White,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Black
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "ID: ${state.profile?.badgeNumber ?: "TECH-1024"} | Pincodes: ${state.profile?.assignedPincode ?: "400001"}, 400002",
-                                color = Color.White.copy(alpha = 0.9f),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
+                        Image(
+                            painter = painterResource(id = R.drawable.logo_gts_nobg),
+                            contentDescription = "GTS Logo",
+                            modifier = Modifier.height(32.dp)
+                        )
 
-                        // Online / Offline Pill Button
-                        Surface(
-                            onClick = onToggleDuty,
-                            color = if (state.isOnline) Color(0xFF2E7D32) else Color(0xFFD32F2F),
-                            shape = RoundedCornerShape(16.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.6f))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                            // Online/Offline Pill Button
+                            Surface(
+                                onClick = onToggleDuty,
+                                color = if (state.isOnline) Color(0xFF007A3D) else Color(0xFFD32F2F),
+                                shape = RoundedCornerShape(20.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.7f))
                             ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(7.dp)
+                                            .clip(CircleShape)
+                                            .background(Color.White)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = if (state.isOnline) "Online" else "Offline",
+                                        color = Color.White,
+                                        fontSize = 11.5.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowDropDown,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+
+                            // Notification Bell with Badge
+                            Box(modifier = Modifier.size(36.dp), contentAlignment = Alignment.Center) {
+                                IconButton(
+                                    onClick = onViewJobsTab,
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .background(Color.White.copy(alpha = 0.2f), CircleShape)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Notifications,
+                                        contentDescription = "Notifications",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
                                 Box(
                                     modifier = Modifier
-                                        .size(7.dp)
+                                        .size(17.dp)
+                                        .align(Alignment.TopEnd)
                                         .clip(CircleShape)
-                                        .background(Color.White)
-                                )
-                                Spacer(modifier = Modifier.width(5.dp))
-                                Text(
-                                    text = if (state.isOnline) "Online" else "Offline",
-                                    color = Color.White,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
+                                        .background(Color(0xFFE53935)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "${state.newJobNotifications.size}",
+                                        color = Color.White,
+                                        fontSize = 9.5.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Earnings Banner Inside Header
-                    Surface(
-                        color = Color.White,
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp, horizontal = 12.dp),
-                            horizontalArrangement = Arrangement.SpaceEvenly,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Today: ₹${"%,.0f".format(state.todayEarningsInr)}",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = ElectricOrangeDark
-                            )
-                            Text(text = "|", color = Color(0xFFE0E0E0))
-                            Text(
-                                text = "This Week: ₹${"%,.0f".format(state.weekEarningsInr)}",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = ElectricOrangeDark
-                            )
-                            Text(text = "|", color = Color(0xFFE0E0E0))
-                            Text(
-                                text = "This Month: ₹${"%,.0f".format(state.monthEarningsInr)}",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = ElectricOrangeDark
-                            )
-                        }
+                    // Greeting & Pincodes
+                    Column(modifier = Modifier.padding(bottom = 12.dp)) {
+                        val technicianName = state.profile?.fullName?.split(" ")?.firstOrNull() ?: "Raja"
+                        Text(
+                            text = "Good Morning, $technicianName! 👋",
+                            color = Color.White,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Black
+                        )
+                        Spacer(modifier = Modifier.height(3.dp))
+                        Text(
+                            text = "ID: ${state.profile?.badgeNumber ?: "GTS-TECH-4815"}  |  Pincodes: ${state.profile?.assignedPincode ?: "400001"}, 400002",
+                            color = Color.White.copy(alpha = 0.92f),
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
             }
         }
 
-        // 2. Quick Stat Boxes Row (3 Cards: Today's Jobs, Completed, Pending)
+        // 2. Floating 3 Mini Metric Cards (Today, This Week, This Month)
         item {
-            Spacer(modifier = Modifier.height(14.dp))
+            Surface(
+                color = Color.White,
+                shape = RoundedCornerShape(16.dp),
+                shadowElevation = 6.dp,
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF1F5F9)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .offset(y = (-14).dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp, horizontal = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Today
+                    MiniMetricItem(
+                        icon = Icons.Default.AccountBalanceWallet,
+                        iconBg = TechAmberLight,
+                        iconTint = TechFlameOrange,
+                        label = "Today",
+                        amount = "₹${"%,.0f".format(state.todayEarningsInr)}"
+                    )
+
+                    Divider(
+                        modifier = Modifier
+                            .height(32.dp)
+                            .width(1.dp),
+                        color = Color(0xFFE2E8F0)
+                    )
+
+                    // This Week
+                    MiniMetricItem(
+                        icon = Icons.Default.TrendingUp,
+                        iconBg = TechGreenLight,
+                        iconTint = TechGreen,
+                        label = "This Week",
+                        amount = "₹${"%,.0f".format(state.weekEarningsInr)}"
+                    )
+
+                    Divider(
+                        modifier = Modifier
+                            .height(32.dp)
+                            .width(1.dp),
+                        color = Color(0xFFE2E8F0)
+                    )
+
+                    // This Month
+                    MiniMetricItem(
+                        icon = Icons.Default.Work,
+                        iconBg = TechPurpleLight,
+                        iconTint = TechPurple,
+                        label = "This Month",
+                        amount = "₹${"%,.0f".format(state.monthEarningsInr)}"
+                    )
+                }
+            }
+        }
+
+        // 3. Three Summary Status Cards Row (Today's Jobs, Completed, Pending)
+        item {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -300,79 +410,93 @@ fun TechnicianHomeScreenContent(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 // Card 1: Today's Jobs
-                Surface(
-                    color = Color(0xFFFFF3E0),
-                    shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFCC80)),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(vertical = 12.dp, horizontal = 6.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(text = "Today's Jobs", fontSize = 11.sp, color = TextDarkSecondary, fontWeight = FontWeight.Medium)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = "${state.jobsTodayCount}", fontSize = 22.sp, color = ElectricOrangeDark, fontWeight = FontWeight.Black)
-                    }
-                }
+                SummaryActionCard(
+                    modifier = Modifier.weight(1f),
+                    bgColor = Color(0xFFFFF8F1),
+                    borderColor = Color(0xFFFFE0B2),
+                    icon = Icons.Default.CalendarToday,
+                    iconTint = TechFlameOrange,
+                    label = "Today's Jobs",
+                    count = "${state.jobsTodayCount}",
+                    actionText = "View all →",
+                    onClick = onViewJobsTab
+                )
 
                 // Card 2: Completed
-                Surface(
-                    color = Color(0xFFE8F5E9),
-                    shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFA5D6A7)),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(vertical = 12.dp, horizontal = 6.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(text = "Completed", fontSize = 11.sp, color = TextDarkSecondary, fontWeight = FontWeight.Medium)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = "${state.jobsCompletedCount}", fontSize = 22.sp, color = Color(0xFF2E7D32), fontWeight = FontWeight.Black)
-                    }
-                }
+                SummaryActionCard(
+                    modifier = Modifier.weight(1f),
+                    bgColor = Color(0xFFF1FBF4),
+                    borderColor = Color(0xFFC8E6C9),
+                    icon = Icons.Default.CheckCircle,
+                    iconTint = TechGreen,
+                    label = "Completed",
+                    count = "${state.jobsCompletedCount}",
+                    actionText = "View history →",
+                    onClick = onViewJobsTab
+                )
 
                 // Card 3: Pending
-                Surface(
-                    color = Color(0xFFFFF8E1),
-                    shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFE082)),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(vertical = 12.dp, horizontal = 6.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(text = "Pending", fontSize = 11.sp, color = TextDarkSecondary, fontWeight = FontWeight.Medium)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = "${state.jobsPendingCount}", fontSize = 22.sp, color = Color(0xFFE65100), fontWeight = FontWeight.Black)
-                    }
-                }
+                SummaryActionCard(
+                    modifier = Modifier.weight(1f),
+                    bgColor = Color(0xFFFFFDF0),
+                    borderColor = Color(0xFFFFECB3),
+                    icon = Icons.Default.Schedule,
+                    iconTint = Color(0xFFF57C00),
+                    label = "Pending",
+                    count = "${state.jobsPendingCount}",
+                    actionText = "View details →",
+                    onClick = onViewJobsTab
+                )
             }
         }
 
-        // 3. New Job Notifications (Cards with Accept / Reject)
+        // 4. New Job Notifications (with realistic product images)
         item {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(18.dp))
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                Text(
-                    text = "New Job Notifications (${state.newJobNotifications.size} new)",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextDarkPrimary
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.NotificationsActive,
+                            contentDescription = null,
+                            tint = Color(0xFFE53935),
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "New Job Notifications (${state.newJobNotifications.size} new)",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextDarkPrimary
+                        )
+                    }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = "See All →",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TechBlue,
+                        modifier = Modifier.clickable { onViewJobsTab() }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
 
                 state.newJobNotifications.forEach { notif ->
+                    val serviceDrawable = getServiceDrawableRes(notif.serviceTitle, notif.iconType)
+
                     Surface(
                         color = Color.White,
                         shape = RoundedCornerShape(14.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFCC80)),
+                        shadowElevation = 2.dp,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF1F5F9)),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 10.dp)
+                            .padding(bottom = 12.dp)
                     ) {
                         Row(
                             modifier = Modifier
@@ -380,64 +504,126 @@ fun TechnicianHomeScreenContent(
                                 .padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Icon Box
-                            Box(
+                            // Realistic Catalog Product Thumbnail
+                            Image(
+                                painter = painterResource(id = serviceDrawable),
+                                contentDescription = notif.serviceTitle,
+                                contentScale = ContentScale.Crop,
                                 modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFFFFF3E0)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = if (notif.iconType == "FAN") Icons.Default.Bolt else Icons.Default.Power,
-                                    contentDescription = null,
-                                    tint = ElectricOrangeHeader,
-                                    modifier = Modifier.size(22.dp)
+                                    .size(68.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(12.dp))
+                            )
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "New Job ${notif.jobTicketNumber}",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = TextDarkPrimary
+                                    )
+                                    if (notif.id == "J-1005") {
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Surface(
+                                            color = Color(0xFFFEE2E2),
+                                            shape = RoundedCornerShape(4.dp)
+                                        ) {
+                                            Text(
+                                                text = "🚨 Urgent",
+                                                color = Color(0xFFDC2626),
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(2.dp))
+
+                                Text(
+                                    text = "${notif.serviceTitle}  |  ${notif.scheduledTime}",
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = TextDarkSecondary
                                 )
+
+                                Spacer(modifier = Modifier.height(2.dp))
+
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(imageVector = Icons.Default.Place, contentDescription = null, tint = TechFlameOrange, modifier = Modifier.size(11.dp))
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text(
+                                        text = "Pincode: ${notif.pincode}  |  Customer: ${notif.customerName}",
+                                        fontSize = 10.5.sp,
+                                        color = TextDarkMuted,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(3.dp))
+
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = if (notif.iconType == "AC") Icons.Default.Apartment else Icons.Default.Home,
+                                        contentDescription = null,
+                                        tint = TextDarkMuted,
+                                        modifier = Modifier.size(11.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text(
+                                        text = if (notif.iconType == "AC") "Apartment" else "Home Service",
+                                        fontSize = 10.sp,
+                                        color = TextDarkMuted
+                                    )
+                                    Text(text = " • ", fontSize = 10.sp, color = TextDarkMuted)
+                                    Icon(imageVector = Icons.Default.Schedule, contentDescription = null, tint = TextDarkMuted, modifier = Modifier.size(11.dp))
+                                    Spacer(modifier = Modifier.width(2.dp))
+                                    Text(
+                                        text = if (notif.iconType == "AC") "~ 1 hr" else "~ 45 mins",
+                                        fontSize = 10.sp,
+                                        color = TextDarkMuted
+                                    )
+                                }
                             }
 
                             Spacer(modifier = Modifier.width(10.dp))
 
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "New Job ${notif.jobTicketNumber}",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 12.sp,
-                                    color = TextDarkPrimary
-                                )
-                                Text(
-                                    text = "${notif.serviceTitle} | ${notif.scheduledTime}",
-                                    fontSize = 11.sp,
-                                    color = TextDarkSecondary
-                                )
-                                Text(
-                                    text = "Pincode: ${notif.pincode} | Customer: ${notif.customerName}",
-                                    fontSize = 10.sp,
-                                    color = TextDarkMuted
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.width(8.dp))
-
                             // Accept & Reject Buttons
-                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(6.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
                                 Button(
                                     onClick = { onAcceptNotification(notif.id) },
                                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
-                                    shape = RoundedCornerShape(6.dp),
-                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
-                                    modifier = Modifier.height(26.dp)
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 2.dp),
+                                    modifier = Modifier.height(30.dp)
                                 ) {
-                                    Text("Accept", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(imageVector = Icons.Default.Check, contentDescription = null, modifier = Modifier.size(13.dp))
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text("Accept", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    }
                                 }
+
                                 Button(
                                     onClick = { onRejectNotification(notif.id) },
                                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
-                                    shape = RoundedCornerShape(6.dp),
-                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
-                                    modifier = Modifier.height(26.dp)
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 2.dp),
+                                    modifier = Modifier.height(30.dp)
                                 ) {
-                                    Text("Reject", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(imageVector = Icons.Default.Close, contentDescription = null, modifier = Modifier.size(13.dp))
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text("Reject", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    }
                                 }
                             }
                         }
@@ -446,28 +632,51 @@ fun TechnicianHomeScreenContent(
             }
         }
 
-        // 4. My Active Jobs
+        // 5. My Active Jobs (With real catalog thumbnails & status action buttons)
         item {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                Text(
-                    text = "My Active Jobs",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextDarkPrimary
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(imageVector = Icons.Default.Build, contentDescription = null, tint = TechFlameOrange, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "My Active Jobs",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextDarkPrimary
+                        )
+                    }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = "View All →",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TechBlue,
+                        modifier = Modifier.clickable { onViewJobsTab() }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
 
                 state.assignedJobs.forEach { job ->
+                    val serviceDrawable = getServiceDrawableRes(job.serviceTitle)
+                    val isStarted = job.status == "STARTED" || job.status == "IN_PROGRESS"
+                    val technicianFirstName = state.profile?.fullName?.split(" ")?.firstOrNull() ?: "Raja"
+
                     Surface(
                         onClick = { onSelectJob(job) },
                         color = Color.White,
                         shape = RoundedCornerShape(14.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                        shadowElevation = 2.dp,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF1F5F9)),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 10.dp)
+                            .padding(bottom = 12.dp)
                     ) {
                         Row(
                             modifier = Modifier
@@ -475,56 +684,99 @@ fun TechnicianHomeScreenContent(
                                 .padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            // Circular Service Icon / Thumbnail
                             Box(
                                 modifier = Modifier
-                                    .size(38.dp)
+                                    .size(46.dp)
                                     .clip(CircleShape)
-                                    .background(Color(0xFFE8F5E9)),
+                                    .background(if (isStarted) Color(0xFFE8F5E9) else Color(0xFFE0F2F1)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    imageVector = if (job.serviceTitle.contains("Light", ignoreCase = true)) Icons.Default.Lightbulb else Icons.Default.Build,
-                                    contentDescription = null,
-                                    tint = Color(0xFF2E7D32),
-                                    modifier = Modifier.size(20.dp)
+                                Image(
+                                    painter = painterResource(id = serviceDrawable),
+                                    contentDescription = job.serviceTitle,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .clip(CircleShape)
                                 )
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "${job.jobTicketNumber} – ${job.serviceTitle}",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.5.sp,
+                                        color = TextDarkPrimary
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Surface(
+                                        color = if (isStarted) Color(0xFFE3F2FD) else Color(0xFFE0F7FA),
+                                        shape = RoundedCornerShape(4.dp)
+                                    ) {
+                                        Text(
+                                            text = if (isStarted) "● In Progress" else "● En Route",
+                                            color = if (isStarted) Color(0xFF1976D2) else Color(0xFF00838F),
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(2.dp))
+
+                                Text(
+                                    text = "$technicianFirstName – ${if (isStarted) "In Progress  |  45 mins left" else "En Route  |  10 mins away"}",
+                                    fontSize = 11.sp,
+                                    color = TextDarkSecondary
+                                )
+
+                                Spacer(modifier = Modifier.height(2.dp))
+
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(imageVector = Icons.Default.Place, contentDescription = null, tint = TechFlameOrange, modifier = Modifier.size(11.dp))
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text(
+                                        text = job.customerAddressText,
+                                        fontSize = 10.5.sp,
+                                        color = TextDarkMuted,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
                             }
 
                             Spacer(modifier = Modifier.width(10.dp))
 
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "${job.jobTicketNumber} - ${job.serviceTitle}",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 12.sp,
-                                    color = TextDarkPrimary
-                                )
-                                Text(
-                                    text = "${state.profile?.fullName?.split(" ")?.firstOrNull() ?: "Rajesh"} - ${if (job.status == "STARTED") "In Progress | 45 mins left" else "En Route | 10 mins away"}",
-                                    fontSize = 11.sp,
-                                    color = TextDarkSecondary
-                                )
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(imageVector = Icons.Default.LocationOn, contentDescription = null, tint = Color(0xFFE65100), modifier = Modifier.size(11.dp))
-                                    Spacer(modifier = Modifier.width(2.dp))
-                                    Text(text = job.customerAddressText, fontSize = 10.sp, color = TextDarkMuted, maxLines = 1)
+                            // Action Button: Continue (Orange) or View on Map (Green)
+                            if (isStarted) {
+                                Button(
+                                    onClick = { onSelectJob(job) },
+                                    colors = ButtonDefaults.buttonColors(containerColor = TechFlameOrange),
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                    modifier = Modifier.height(34.dp)
+                                ) {
+                                    Text("Continue >", fontSize = 11.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
                                 }
-                            }
-
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            // Status Pill
-                            Surface(
-                                color = if (job.status == "STARTED") Color(0xFFFB8C00) else Color(0xFF2E7D32),
-                                shape = RoundedCornerShape(6.dp)
-                            ) {
-                                Text(
-                                    text = if (job.status == "STARTED") "Started" else "En Route",
-                                    color = Color.White,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
+                            } else {
+                                Button(
+                                    onClick = { onSelectJob(job) },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                    modifier = Modifier.height(34.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(imageVector = Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(13.dp))
+                                        Spacer(modifier = Modifier.width(3.dp))
+                                        Text("View on Map >", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                    }
+                                }
                             }
                         }
                     }
@@ -532,454 +784,128 @@ fun TechnicianHomeScreenContent(
             }
         }
 
-        // Fast Staging Dispatch Simulator Button
+        // 6. Test Inbound 60s Dispatch Siren Banner
         item {
             Spacer(modifier = Modifier.height(10.dp))
             Surface(
                 onClick = onSimulateDispatch,
-                color = ElectricOrangeHeader.copy(alpha = 0.08f),
-                shape = RoundedCornerShape(12.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, ElectricOrangeHeader.copy(alpha = 0.3f)),
+                color = Color(0xFFFFF8F1),
+                shape = RoundedCornerShape(14.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFCC80)),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(imageVector = Icons.Default.Emergency, contentDescription = null, tint = ElectricOrangeHeader, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Test Inbound 60s Dispatch Siren",
-                            color = ElectricOrangeHeader,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(CircleShape)
+                                .background(TechFlameOrange.copy(alpha = 0.12f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(imageVector = Icons.Default.Emergency, contentDescription = null, tint = TechFlameOrange, modifier = Modifier.size(20.dp))
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = "Test Inbound 60s Dispatch Siren",
+                                color = TechFlameOrange,
+                                fontSize = 12.5.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Test the emergency alert sound for new job dispatch notifications",
+                                color = TextDarkSecondary,
+                                fontSize = 10.sp
+                            )
+                        }
                     }
-                    Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = ElectricOrangeHeader, modifier = Modifier.size(18.dp))
+                    Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = TechFlameOrange, modifier = Modifier.size(20.dp))
                 }
             }
         }
     }
 }
 
-// =========================================================================
-// SCREEN 2: TECHNICIAN JOB DETAILS SCREEN (Matches Client Asset Screen 2)
-// =========================================================================
-
+// -------------------------------------------------------------------------
+// Component: Mini Metric Item for Header Floating Bar
+// -------------------------------------------------------------------------
 @Composable
-fun TechnicianJobDetailsContent(
-    job: TechnicianJob,
-    onBack: () -> Unit,
-    onNavigate: () -> Unit,
-    onCall: () -> Unit,
-    onStartJob: () -> Unit,
-    onCompleteJob: () -> Unit
+private fun MiniMetricItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconBg: Color,
+    iconTint: Color,
+    label: String,
+    amount: String
 ) {
-    val context = LocalContext.current
-    var showNavigationDialog by remember { mutableStateOf(false) }
-
-    if (showNavigationDialog) {
-        AlertDialog(
-            onDismissRequest = { showNavigationDialog = false },
-            icon = {
-                Icon(imageVector = Icons.Default.Navigation, contentDescription = null, tint = ActionNavigateBlue, modifier = Modifier.size(32.dp))
-            },
-            title = {
-                Text("Select Navigation Mode", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextDarkPrimary)
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(
-                        text = "Destination: ${job.customerName}\n${job.customerAddressText}",
-                        fontSize = 12.sp,
-                        color = TextDarkSecondary
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Button(
-                        onClick = {
-                            showNavigationDialog = false
-                            onNavigate()
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = ActionNavigateBlue),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(imageVector = Icons.Default.DirectionsRun, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("In-App Doorstep Transit & Geofence", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                    }
-
-                    Button(
-                        onClick = {
-                            showNavigationDialog = false
-                            launchTurnByTurnNavigation(
-                                context = context,
-                                lat = job.customerLatitude ?: 18.9067,
-                                lng = job.customerLongitude ?: 72.8147,
-                                customerName = job.customerName,
-                                address = job.customerAddressText
-                            )
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(imageVector = Icons.Default.Directions, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Google Maps Turn-by-Turn (Driving)", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                    }
-                }
-            },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { showNavigationDialog = false }) {
-                    Text("Cancel", color = TextDarkMuted)
-                }
-            }
-        )
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .clip(CircleShape)
+                .background(iconBg),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(imageVector = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(18.dp))
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Column {
+            Text(text = label, fontSize = 10.5.sp, color = TextDarkSecondary, fontWeight = FontWeight.Medium)
+            Text(text = amount, fontSize = 14.sp, color = TechFlameOrange, fontWeight = FontWeight.Black)
+        }
     }
+}
 
-    Column(
-        modifier = Modifier.fillMaxSize()
+// -------------------------------------------------------------------------
+// Component: Summary Action Card (Today's Jobs, Completed, Pending)
+// -------------------------------------------------------------------------
+@Composable
+private fun SummaryActionCard(
+    modifier: Modifier = Modifier,
+    bgColor: Color,
+    borderColor: Color,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconTint: Color,
+    label: String,
+    count: String,
+    actionText: String,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        color = bgColor,
+        shape = RoundedCornerShape(14.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, borderColor),
+        modifier = modifier
     ) {
-        // Orange Header Bar
-        Surface(
-            color = ElectricOrangeHeader,
-            modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier.padding(vertical = 12.dp, horizontal = 10.dp),
+            horizontalAlignment = Alignment.Start
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 14.dp),
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onBack) {
-                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
-                }
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "Job Details",
-                    color = Color.White,
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Icon(imageVector = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(18.dp))
+                Text(text = count, fontSize = 22.sp, color = iconTint, fontWeight = FontWeight.Black)
             }
-        }
-
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            // Status Bar (Dynamic Pill)
-            item {
-                val isCompleted = job.status == "COMPLETED"
-                val isStarted = job.status == "STARTED" || job.status == "IN_PROGRESS"
-
-                Surface(
-                    color = when {
-                        isCompleted -> Color(0xFF1B5E20)
-                        isStarted -> Color(0xFFE65100)
-                        else -> Color(0xFF2E7D32)
-                    },
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = when {
-                            isCompleted -> "Status: Completed & Handover Verified ✅"
-                            isStarted -> "Status: In Progress at Customer Site (Safety Verified ⚡)"
-                            else -> "Status: En Route to Customer"
-                        },
-                        color = Color.White,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                }
-            }
-
-            // 1. Job Info Card
-            item {
-                Surface(
-                    color = Color.White,
-                    shape = RoundedCornerShape(14.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFCC80)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "Job ID: ${job.jobTicketNumber}",
-                            fontWeight = FontWeight.Black,
-                            fontSize = 13.sp,
-                            color = ElectricOrangeDark
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "Service: ${job.serviceTitle}",
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 13.sp,
-                            color = TextDarkPrimary
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Date & Time: ${job.scheduledAt ?: "Today, 10:30 AM"}",
-                            fontSize = 12.sp,
-                            color = TextDarkSecondary
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Pincode: ${job.pincode}",
-                            fontSize = 12.sp,
-                            color = TextDarkSecondary
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Amount: ₹${"%,.0f".format(job.totalAmountInr)} (Including GST)",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp,
-                            color = TextDarkPrimary
-                        )
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        // Commission Highlight Pill
-                        Surface(
-                            color = Color(0xFFE8F5E9),
-                            shape = RoundedCornerShape(6.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "Your Commission: ₹${"%,.0f".format(job.totalAmountInr * 0.6)}",
-                                color = Color(0xFF2E7D32),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                            )
-                        }
-                    }
-                }
-            }
-
-            // 2. Customer Details Card
-            item {
-                Surface(
-                    color = Color.White,
-                    shape = RoundedCornerShape(14.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFCC80)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "Customer Details",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
-                            color = ElectricOrangeDark
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Name: ${job.customerName}",
-                            fontSize = 12.sp,
-                            color = TextDarkPrimary,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Phone: ${job.customerPhone}",
-                            fontSize = 12.sp,
-                            color = TextDarkSecondary
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Address: ${job.customerAddressText}",
-                            fontSize = 12.sp,
-                            color = TextDarkSecondary
-                        )
-                    }
-                }
-            }
-
-            // 3. Job Actions Section (Status-Driven Lifecycle)
-            item {
-                val isCompleted = job.status == "COMPLETED"
-                val isStarted = job.status == "STARTED" || job.status == "IN_PROGRESS"
-
-                if (isCompleted) {
-                    Surface(
-                        color = Color(0xFFE8F5E9),
-                        shape = RoundedCornerShape(12.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF81C784)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                tint = Color(0xFF2E7D32),
-                                modifier = Modifier.size(36.dp)
-                            )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = "WORK ORDER COMPLETED",
-                                fontWeight = FontWeight.Black,
-                                fontSize = 15.sp,
-                                color = Color(0xFF1B5E20)
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Payout Credited: ₹${"%,.0f".format(job.totalAmountInr * 0.7)} to Electrician Wallet",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp,
-                                color = Color(0xFF2E7D32)
-                            )
-                            Text(
-                                text = "Customer OTP Verified • 5-Star Handover Logged",
-                                fontSize = 11.sp,
-                                color = TextDarkSecondary
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Button(
-                        onClick = onBack,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                    ) {
-                        Text("Return to Active Dispatch Hub", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color.White)
-                    }
-                } else if (isStarted) {
-                    Text(
-                        text = "Job Actions (Work in Progress)",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp,
-                        color = TextDarkPrimary
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Surface(
-                        color = Color(0xFFFFF3E0),
-                        shape = RoundedCornerShape(8.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFB74D)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "⚡ 1000V Safety Interlock Disengaged! High-voltage circuit work active on site.",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFFE65100)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Button(
-                        onClick = onCall,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(44.dp)
-                    ) {
-                        Icon(imageVector = Icons.Default.Call, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Call Customer", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Button(
-                        onClick = onCompleteJob,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                    ) {
-                        Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Proceed to Complete & Handover", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color.White)
-                    }
-                } else {
-                    Text(
-                        text = "Job Actions",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp,
-                        color = TextDarkPrimary
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        // Navigate (Blue)
-                        Button(
-                            onClick = { showNavigationDialog = true },
-                            colors = ButtonDefaults.buttonColors(containerColor = ActionNavigateBlue),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(imageVector = Icons.Default.Navigation, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.White)
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Navigate", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                        }
-
-                        // Call Customer (Green)
-                        Button(
-                            onClick = onCall,
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(imageVector = Icons.Default.Call, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.White)
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Call Customer", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Start Job (Orange) -> Safety Interlock
-                    Button(
-                        onClick = onStartJob,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFB8C00)),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                    ) {
-                        Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.White)
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Start Job (1000V Safety Interlock)", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color.White)
-                    }
-                }
-            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(text = label, fontSize = 11.sp, color = TextDarkSecondary, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(text = actionText, fontSize = 10.5.sp, color = iconTint, fontWeight = FontWeight.Bold)
         }
     }
 }
 
 // =========================================================================
-// SCREEN 3: TECHNICIAN EARNINGS SCREEN (Matches Client Asset Screen 3)
+// SCREEN 2: TECHNICIAN EARNINGS SCREEN (Matches Client Reference Image 2)
 // =========================================================================
 
 @Composable
@@ -989,378 +915,469 @@ fun TechnicianEarningsContent(
     onFilterSelected: (String) -> Unit,
     onWithdraw: () -> Unit
 ) {
+    val context = LocalContext.current
+
     Column(modifier = Modifier.fillMaxSize()) {
-        // Orange Header Bar
-        Surface(
-            color = ElectricOrangeHeader,
-            modifier = Modifier.fillMaxWidth()
+        // 1. Top Header Banner with Motivational Asset
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(130.dp)
         ) {
+            Image(
+                painter = painterResource(id = R.drawable.bg_tech_earnings_header),
+                contentDescription = "Earnings Header",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.Top
             ) {
                 IconButton(onClick = onBack) {
                     Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
                 }
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "My Earnings",
-                    color = Color.White,
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Column(modifier = Modifier.padding(top = 8.dp)) {
+                    Text(
+                        text = "My Earnings",
+                        color = Color.White,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Black
+                    )
+                    Text(
+                        text = "Track your earnings and transactions",
+                        color = Color.White.copy(alpha = 0.9f),
+                        fontSize = 11.5.sp
+                    )
+                }
             }
-        }
-
-        val filterTitle = when (state.selectedEarningsFilter) {
-            "TODAY" -> "Total Earnings (Today)"
-            "THIS_WEEK" -> "Total Earnings (This Week)"
-            "THIS_MONTH" -> "Total Earnings (This Month)"
-            "ALL_TIME" -> "Total Earnings (All Time)"
-            else -> "Total Earnings (This Month)"
-        }
-
-        val filterAmount = when (state.selectedEarningsFilter) {
-            "TODAY" -> state.todayEarningsInr
-            "THIS_WEEK" -> state.weekEarningsInr
-            "THIS_MONTH" -> state.monthEarningsInr
-            "ALL_TIME" -> state.allTimeEarningsInr
-            else -> state.monthEarningsInr
-        }
-
-        val filterTrend = when (state.selectedEarningsFilter) {
-            "TODAY" -> "↑ 2 completed jobs today"
-            "THIS_WEEK" -> "↑ 12% from last week"
-            "THIS_MONTH" -> "↑ 15% from last month"
-            "ALL_TIME" -> "Total 48 Jobs Settled"
-            else -> "↑ 15% from last month"
-        }
-
-        val txSectionTitle = when (state.selectedEarningsFilter) {
-            "TODAY" -> "Today's Transactions"
-            "THIS_WEEK" -> "This Week's Transactions"
-            "THIS_MONTH" -> "This Month's Transactions"
-            "ALL_TIME" -> "All Lifetime Transactions"
-            else -> "Recent Transactions"
-        }
-
-        val filteredTransactions = state.recentTransactions.filter { tx ->
-            tx.periodScope.contains(state.selectedEarningsFilter)
         }
 
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // Total Earnings Card
+            // 2. Total Earnings Card with Integrated Monthly Bar Chart
             item {
                 Surface(
-                    color = Color(0xFFFFF8E1),
-                    shape = RoundedCornerShape(14.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFCC80)),
+                    color = Color.White,
+                    shape = RoundedCornerShape(16.dp),
+                    shadowElevation = 3.dp,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF1F5F9)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = filterTitle,
-                            color = ElectricOrangeDark,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "₹${"%,.0f".format(filterAmount)}",
-                                color = ElectricOrangeDark,
-                                fontSize = 28.sp,
-                                fontWeight = FontWeight.Black
-                            )
+                            Column {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.AccountBalanceWallet,
+                                        contentDescription = null,
+                                        tint = TechFlameOrange,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Total Earnings",
+                                        fontSize = 12.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextDarkSecondary
+                                    )
+                                }
 
-                            Surface(
-                                color = Color(0xFFE8F5E9),
-                                shape = RoundedCornerShape(6.dp)
-                            ) {
+                                Spacer(modifier = Modifier.height(4.dp))
+
                                 Text(
-                                    text = filterTrend,
-                                    color = Color(0xFF2E7D32),
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    text = "₹32,500",
+                                    fontSize = 32.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = TechFlameOrange
                                 )
-                            }
-                        }
 
-                        Spacer(modifier = Modifier.height(14.dp))
+                                Spacer(modifier = Modifier.height(6.dp))
 
-                        // Filter Tabs: Today | This Week | This Month | All Time
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            val filters = listOf(
-                                "TODAY" to "Today",
-                                "THIS_WEEK" to "This Week",
-                                "THIS_MONTH" to "This Month",
-                                "ALL_TIME" to "All Time"
-                            )
-                            filters.forEach { (key, label) ->
-                                val isSelected = state.selectedEarningsFilter == key
                                 Surface(
-                                    onClick = { onFilterSelected(key) },
-                                    color = if (isSelected) ElectricOrangeHeader else Color.Transparent,
+                                    color = Color(0xFFE8F5E9),
                                     shape = RoundedCornerShape(6.dp)
                                 ) {
-                                    Text(
-                                        text = label,
-                                        color = if (isSelected) Color.White else TextDarkSecondary,
-                                        fontSize = 11.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                    )
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "↑ 15% from last month",
+                                            color = Color(0xFF2E7D32),
+                                            fontSize = 10.5.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Icon(
+                                            imageVector = Icons.Default.Info,
+                                            contentDescription = null,
+                                            tint = Color(0xFF2E7D32),
+                                            modifier = Modifier.size(12.dp)
+                                        )
+                                    }
                                 }
                             }
-                        }
-                    }
-                }
-            }
 
-            // Recent Transactions Section
-            item {
-                Text(
-                    text = txSectionTitle,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp,
-                    color = TextDarkPrimary
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-
-                if (filteredTransactions.isEmpty()) {
-                    Surface(
-                        color = Color.White,
-                        shape = RoundedCornerShape(10.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(24.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = "No transactions found for this period",
-                                fontSize = 12.sp,
-                                color = TextDarkMuted,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    }
-                } else {
-                    filteredTransactions.forEach { tx ->
-                        Surface(
-                            color = Color.White,
-                            shape = RoundedCornerShape(10.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 8.dp)
-                        ) {
+                            // Minimalist Monthly Bar Chart (Jun, Jul, Aug, Sep, Oct highlighted in Orange)
                             Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.Bottom,
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                    .height(80.dp)
+                                    .padding(end = 4.dp)
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .clip(CircleShape)
-                                        .background(if (tx.isPending) Color(0xFFFFF3E0) else Color(0xFFE8F5E9)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = if (tx.isPending) Icons.Default.HourglassEmpty else Icons.Default.Check,
-                                        contentDescription = null,
-                                        tint = if (tx.isPending) Color(0xFFFB8C00) else Color(0xFF2E7D32),
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(10.dp))
-
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "${tx.jobTicketNumber} - ${tx.serviceTitle}",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 12.sp,
-                                        color = TextDarkPrimary
-                                    )
-                                    Text(
-                                        text = tx.completedTime,
-                                        fontSize = 10.sp,
-                                        color = TextDarkMuted
-                                    )
-                                }
-
-                                Text(
-                                    text = if (tx.isPending) "+₹${"%,.0f".format(tx.amountInr)} (Pending)" else "+₹${"%,.0f".format(tx.amountInr)}",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 12.sp,
-                                    color = if (tx.isPending) Color(0xFFFB8C00) else Color(0xFF2E7D32)
-                                )
+                                MonthlyChartBar(label = "Jun", heightRatio = 0.22f, isHighlighted = false)
+                                MonthlyChartBar(label = "Jul", heightRatio = 0.35f, isHighlighted = false)
+                                MonthlyChartBar(label = "Aug", heightRatio = 0.52f, isHighlighted = false)
+                                MonthlyChartBar(label = "Sep", heightRatio = 0.70f, isHighlighted = false)
+                                MonthlyChartBar(label = "Oct", heightRatio = 1.00f, isHighlighted = true)
                             }
                         }
                     }
                 }
             }
 
-            // Withdraw Earnings Button
-            item {
-                Spacer(modifier = Modifier.height(4.dp))
-                Button(
-                    onClick = onWithdraw,
-                    enabled = !state.isWithdrawing,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                ) {
-                    if (state.isWithdrawing) {
-                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                    } else {
-                        Text(
-                            text = "Withdraw Earnings (₹${"%,.0f".format(state.availableWithdrawalInr)} Available)",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp
-                        )
-                    }
-                }
-
-                if (state.withdrawSuccessMessage != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = state.withdrawSuccessMessage ?: "",
-                        color = Color(0xFF2E7D32),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-
-            // Secured Payment Withdrawal Card (Zex Security Module)
+            // 3. Time Filter Pill Row (Today, This Week, This Month, All Time)
             item {
                 Surface(
-                    color = ZexSecurityYellow,
-                    shape = RoundedCornerShape(10.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, ZexSecurityBorder),
+                    color = Color(0xFFF8FAFC),
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Shield,
-                            contentDescription = null,
-                            tint = Color(0xFFFB8C00),
-                            modifier = Modifier.size(20.dp)
+                        val filterOptions = listOf(
+                            "TODAY" to "Today",
+                            "THIS_WEEK" to "This Week",
+                            "THIS_MONTH" to "This Month",
+                            "ALL_TIME" to "All Time"
                         )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
-                            Text(
-                                text = "Secured Payment Withdrawal",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 11.sp,
-                                color = Color(0xFFB45309)
-                            )
-                            Text(
-                                text = "Your Payment is secured with Zex Security Module",
-                                fontSize = 10.sp,
-                                color = Color(0xFF78350F)
-                            )
+
+                        filterOptions.forEach { (key, title) ->
+                            val isSelected = state.selectedEarningsFilter == key
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (isSelected) TechFlameOrange else Color.Transparent)
+                                    .clickable { onFilterSelected(key) }
+                                    .padding(vertical = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = title,
+                                    fontSize = 11.5.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) Color.White else TextDarkSecondary
+                                )
+                            }
                         }
                     }
                 }
             }
-        }
-    }
-}
 
-// =========================================================================
-// TAB 4: ALL JOBS CONTENT
-// =========================================================================
-
-@Composable
-fun TechnicianAllJobsContent(
-    state: DashboardUiState,
-    onSelectJob: (TechnicianJob) -> Unit
-) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        Surface(color = ElectricOrangeHeader, modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = "Assigned Field Tickets (${state.assignedJobs.size})",
-                color = Color.White,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(16.dp)
-            )
-        }
-
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            items(state.assignedJobs) { job ->
-                Surface(
-                    onClick = { onSelectJob(job) },
-                    color = Color.White,
-                    shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorderLight),
-                    modifier = Modifier.fillMaxWidth()
+            // 4. Three Stat Cards Row (Total Jobs, Completed Jobs, Pending Jobs)
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
+                    // Total Jobs
+                    Surface(
+                        color = Color.White,
+                        shape = RoundedCornerShape(14.dp),
+                        shadowElevation = 2.dp,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFCC80)),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Box(
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .clip(CircleShape)
+                                    .background(TechAmberLight),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(imageVector = Icons.Default.Work, contentDescription = null, tint = TechFlameOrange, modifier = Modifier.size(16.dp))
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(text = "Total Jobs", fontSize = 10.sp, color = TextDarkSecondary, fontWeight = FontWeight.Medium)
+                            Row(verticalAlignment = Alignment.Bottom) {
+                                Text(text = "24", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDarkPrimary)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(text = "↑ 20%", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
+                            }
+                            Text(text = "in this month", fontSize = 9.5.sp, color = TextDarkMuted)
+                        }
+                    }
+
+                    // Completed Jobs
+                    Surface(
+                        color = Color.White,
+                        shape = RoundedCornerShape(14.dp),
+                        shadowElevation = 2.dp,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFA5D6A7)),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Box(
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .clip(CircleShape)
+                                    .background(TechGreenLight),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(imageVector = Icons.Default.CurrencyRupee, contentDescription = null, tint = TechGreen, modifier = Modifier.size(16.dp))
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(text = "Completed Jobs", fontSize = 10.sp, color = TextDarkSecondary, fontWeight = FontWeight.Medium)
+                            Text(text = "20", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDarkPrimary)
+                            Text(text = "₹28,400 earned", fontSize = 9.5.sp, color = TechGreen, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    // Pending Jobs
+                    Surface(
+                        color = Color.White,
+                        shape = RoundedCornerShape(14.dp),
+                        shadowElevation = 2.dp,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFE082)),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Box(
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFFFF8E1)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(imageVector = Icons.Default.Schedule, contentDescription = null, tint = Color(0xFFF57C00), modifier = Modifier.size(16.dp))
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(text = "Pending Jobs", fontSize = 10.sp, color = TextDarkSecondary, fontWeight = FontWeight.Medium)
+                            Text(text = "4", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDarkPrimary)
+                            Text(text = "₹4,100 expected", fontSize = 9.5.sp, color = Color(0xFFF57C00), fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
+            // 5. This Month's Transactions Section
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "This Month's Transactions",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextDarkPrimary
+                    )
+
+                    Surface(
+                        color = Color(0xFFF1F5F9),
+                        shape = RoundedCornerShape(8.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(imageVector = Icons.Default.CalendarToday, contentDescription = null, tint = TextDarkSecondary, modifier = Modifier.size(12.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(text = "October 2026", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextDarkPrimary)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null, tint = TextDarkSecondary, modifier = Modifier.size(14.dp))
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                state.recentTransactions.forEach { tx ->
+                    Surface(
+                        color = Color.White,
+                        shape = RoundedCornerShape(12.dp),
+                        shadowElevation = 1.dp,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF1F5F9)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(CircleShape)
+                                    .background(if (tx.isPending) Color(0xFFFFF3E0) else Color(0xFFE8F5E9)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = if (tx.isPending) Icons.Default.HourglassEmpty else Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = if (tx.isPending) Color(0xFFFB8C00) else Color(0xFF2E7D32),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(10.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "${tx.jobTicketNumber} - ${tx.serviceTitle}",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.5.sp,
+                                    color = TextDarkPrimary
+                                )
+                                Text(
+                                    text = tx.completedTime,
+                                    fontSize = 10.5.sp,
+                                    color = TextDarkMuted
+                                )
+                            }
+
+                            Column(horizontalAlignment = Alignment.End) {
+                                Surface(
+                                    color = if (tx.isPending) Color(0xFFFFF8E1) else Color(0xFFE8F5E9),
+                                    shape = RoundedCornerShape(4.dp)
+                                ) {
+                                    Text(
+                                        text = if (tx.isPending) "Pending" else "Completed",
+                                        color = if (tx.isPending) Color(0xFFE65100) else Color(0xFF2E7D32),
+                                        fontSize = 9.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = if (tx.isPending) "+₹${"%,.0f".format(tx.amountInr)}" else "+₹${"%,.0f".format(tx.amountInr)}",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = if (tx.isPending) Color(0xFFE65100) else Color(0xFF2E7D32)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFCBD5E1), modifier = Modifier.size(16.dp))
+                        }
+                    }
+                }
+            }
+
+            // 6. Withdraw Earnings Button
+            item {
+                Spacer(modifier = Modifier.height(4.dp))
+                Button(
+                    onClick = onWithdraw,
+                    enabled = !state.isWithdrawing,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B873F)),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                ) {
+                    if (state.isWithdrawing) {
+                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                    } else {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = job.jobTicketNumber, fontWeight = FontWeight.Black, fontSize = 13.sp, color = ElectricOrangeDark)
-                            Surface(
-                                color = if (job.status == "STARTED") Color(0xFFFFF3E0) else Color(0xFFE8F5E9),
-                                shape = RoundedCornerShape(4.dp)
-                            ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(imageVector = Icons.Default.AccountBalanceWallet, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = job.status,
-                                    fontSize = 10.sp,
+                                    text = "Withdraw Earnings (₹${"%,.0f".format(state.availableWithdrawalInr)} Available)",
                                     fontWeight = FontWeight.Bold,
-                                    color = if (job.status == "STARTED") Color(0xFFE65100) else Color(0xFF2E7D32),
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    fontSize = 13.5.sp
                                 )
                             }
+                            Icon(imageVector = Icons.Default.ArrowForward, contentDescription = null, modifier = Modifier.size(18.dp))
                         }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = job.serviceTitle, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = TextDarkPrimary)
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(text = "Customer: ${job.customerName} • Pincode: ${job.pincode}", fontSize = 11.sp, color = TextDarkSecondary)
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(text = "Address: ${job.customerAddressText}", fontSize = 10.sp, color = TextDarkMuted)
+                    }
+                }
+
+                if (state.withdrawSuccessMessage != null) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Surface(
+                        color = Color(0xFFDCFCE7),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = state.withdrawSuccessMessage ?: "",
+                            color = Color(0xFF15803D),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(10.dp)
+                        )
+                    }
+                }
+            }
+
+            // 7. Security Footnote Card
+            item {
+                Surface(
+                    color = Color(0xFFFFFBEB),
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFDE68A)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFFEF3C7)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(imageVector = Icons.Default.Shield, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(18.dp))
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = "Secure Payment Withdrawal",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.5.sp,
+                                color = Color(0xFFB45309)
+                            )
+                            Text(
+                                text = "Your payment is secured with Zex Security Module. Withdraw directly to your bank account.",
+                                fontSize = 10.sp,
+                                color = Color(0xFF92400E)
+                            )
+                        }
                     }
                 }
             }
@@ -1368,8 +1385,39 @@ fun TechnicianAllJobsContent(
     }
 }
 
+// -------------------------------------------------------------------------
+// Component: Single Bar in the Monthly Chart
+// -------------------------------------------------------------------------
+@Composable
+private fun MonthlyChartBar(
+    label: String,
+    heightRatio: Float,
+    isHighlighted: Boolean
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Bottom,
+        modifier = Modifier.fillMaxHeight()
+    ) {
+        Box(
+            modifier = Modifier
+                .width(18.dp)
+                .height((50 * heightRatio).dp)
+                .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                .background(if (isHighlighted) TechFlameOrange else Color(0xFFFFCC80))
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = label,
+            fontSize = 9.sp,
+            fontWeight = if (isHighlighted) FontWeight.Bold else FontWeight.Medium,
+            color = if (isHighlighted) TechFlameOrange else TextDarkMuted
+        )
+    }
+}
+
 // =========================================================================
-// TAB 5: PROFILE CONTENT
+// SCREEN 3: TECHNICIAN PROFILE SCREEN (Matches Client Reference Image 3)
 // =========================================================================
 
 @Composable
@@ -1382,8 +1430,7 @@ fun TechnicianProfileContent(
     val sessionManager = remember { SessionManager(context) }
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showEnvSwitcher by remember { mutableStateOf(false) }
-    var avatarClickCount by remember { mutableStateOf(0) }
-    var lastClickTime by remember { mutableStateOf(0L) }
+    var isDarkModeEnabled by remember { mutableStateOf(false) }
 
     if (showEnvSwitcher) {
         EnvironmentSwitcherDialog(
@@ -1432,14 +1479,903 @@ fun TechnicianProfileContent(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        Surface(color = ElectricOrangeHeader, modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = "Technician Profile",
-                color = Color.White,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(16.dp)
-            )
+        // 1. Top Orange Header with Slogan and Notification Bell
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Brush.verticalGradient(listOf(Color(0xFFE65100), Color(0xFFF57C00))))
+                .padding(horizontal = 16.dp, vertical = 14.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "My Profile",
+                        color = Color.White,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Black
+                    )
+                    Text(
+                        text = "Manage your account and preferences",
+                        color = Color.White.copy(alpha = 0.9f),
+                        fontSize = 11.5.sp
+                    )
+                }
+
+                // Bell Icon with "2" Badge
+                Box(modifier = Modifier.size(36.dp), contentAlignment = Alignment.Center) {
+                    IconButton(
+                        onClick = { },
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(Color.White.copy(alpha = 0.2f), CircleShape)
+                    ) {
+                        Icon(imageVector = Icons.Default.Notifications, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(17.dp)
+                            .align(Alignment.TopEnd)
+                            .clip(CircleShape)
+                            .background(Color(0xFFE53935)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = "2", color = Color.White, fontSize = 9.5.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            // 2. Main Profile Floating Card
+            item {
+                Surface(
+                    color = Color.White,
+                    shape = RoundedCornerShape(20.dp),
+                    shadowElevation = 3.dp,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF1F5F9)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                // Technician Avatar with Online Indicator
+                                Box(modifier = Modifier.size(72.dp)) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.img_technician_rajesh),
+                                        contentDescription = "Technician Photo",
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(72.dp)
+                                            .clip(CircleShape)
+                                            .border(2.dp, Color(0xFFE2E8F0), CircleShape)
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .size(16.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFF2E7D32))
+                                            .border(2.dp, Color.White, CircleShape)
+                                            .align(Alignment.BottomEnd)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                Column {
+                                    Text(
+                                        text = state.profile?.fullName ?: "Raja Kumar",
+                                        fontSize = 17.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = TextDarkPrimary
+                                    )
+
+                                    Spacer(modifier = Modifier.height(2.dp))
+
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = "ID: ${state.profile?.badgeNumber ?: "GTS-TECH-4815"}",
+                                            fontSize = 11.5.sp,
+                                            color = TextDarkSecondary
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Icon(
+                                            imageVector = Icons.Default.ContentCopy,
+                                            contentDescription = "Copy ID",
+                                            tint = TechFlameOrange,
+                                            modifier = Modifier
+                                                .size(13.dp)
+                                                .clickable {
+                                                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                                    val clip = ClipData.newPlainText("Badge ID", state.profile?.badgeNumber ?: "GTS-TECH-4815")
+                                                    clipboard.setPrimaryClip(clip)
+                                                    Toast.makeText(context, "Badge ID copied to clipboard", Toast.LENGTH_SHORT).show()
+                                                }
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    // Star Rating
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        repeat(5) {
+                                            Icon(
+                                                imageVector = Icons.Default.Star,
+                                                contentDescription = null,
+                                                tint = Color(0xFFFFB300),
+                                                modifier = Modifier.size(13.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "4.8 (200+ jobs)",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = TextDarkSecondary
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Edit Profile Button
+                            Surface(
+                                onClick = { Toast.makeText(context, "Edit Profile Dialog coming in next shift update", Toast.LENGTH_SHORT).show() },
+                                color = Color.White,
+                                shape = RoundedCornerShape(8.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, TechFlameOrange)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(imageVector = Icons.Default.Edit, contentDescription = null, tint = TechFlameOrange, modifier = Modifier.size(12.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Edit Profile", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = TechFlameOrange)
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Verified Technician Chip
+                        Surface(
+                            color = Color(0xFFE8F5E9),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF2E7D32), modifier = Modifier.size(12.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Verified Technician", color = Color(0xFF2E7D32), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Divider(color = Color(0xFFF1F5F9))
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // 4 Metrics Row (247 Total Jobs, 232 Completed, 12 Pending, 4.8 Rating)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceAround,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            ProfileStatColumn(icon = Icons.Default.Work, iconTint = TechFlameOrange, value = "247", label = "Total Jobs")
+                            Divider(modifier = Modifier.height(26.dp).width(1.dp), color = Color(0xFFE2E8F0))
+                            ProfileStatColumn(icon = Icons.Default.CheckCircle, iconTint = TechGreen, value = "232", label = "Completed")
+                            Divider(modifier = Modifier.height(26.dp).width(1.dp), color = Color(0xFFE2E8F0))
+                            ProfileStatColumn(icon = Icons.Default.Schedule, iconTint = Color(0xFFF57C00), value = "12", label = "Pending")
+                            Divider(modifier = Modifier.height(26.dp).width(1.dp), color = Color(0xFFE2E8F0))
+                            ProfileStatColumn(icon = Icons.Default.Star, iconTint = Color(0xFF1976D2), value = "4.8", label = "Rating")
+                        }
+                    }
+                }
+            }
+
+            // 3. Document Verification Banner
+            item {
+                Surface(
+                    color = Color(0xFFF1FBF4),
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFC8E6C9)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFE8F5E9)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF2E7D32), modifier = Modifier.size(20.dp))
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(text = "Profile Verified", fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20))
+                                Text(text = "Your documents are verified by GTS", fontSize = 10.5.sp, color = TextDarkSecondary)
+                            }
+                        }
+
+                        Surface(
+                            onClick = { Toast.makeText(context, "Documents verified with 1000V VDE Registry", Toast.LENGTH_SHORT).show() },
+                            color = Color(0xFFE8F5E9),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Text("View Documents >", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32), modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+                        }
+                    }
+                }
+            }
+
+            // 4. Personal Information Group
+            item {
+                GroupedProfileSection(
+                    title = "Personal Information",
+                    icon = Icons.Default.Person,
+                    onEdit = { Toast.makeText(context, "Edit Personal Information", Toast.LENGTH_SHORT).show() }
+                ) {
+                    ProfileInfoRow(icon = Icons.Default.Phone, label = "Phone", value = state.profile?.phone ?: "+91 98765 43210")
+                    ProfileInfoRow(icon = Icons.Default.Email, label = "Email", value = "rajakumar1995@gmail.com")
+                    ProfileInfoRow(icon = Icons.Default.Place, label = "Location", value = "Mumbai, Maharashtra")
+                    ProfileInfoRow(icon = Icons.Default.Language, label = "Languages", value = "English, Hindi, Marathi")
+                }
+            }
+
+            // 5. Service Details Group
+            item {
+                GroupedProfileSection(
+                    title = "Service Details",
+                    icon = Icons.Default.Build,
+                    onEdit = { Toast.makeText(context, "Edit Service Details", Toast.LENGTH_SHORT).show() }
+                ) {
+                    ProfileInfoRow(icon = Icons.Default.Handyman, label = "Specialization", value = "Electrical Installation, AC, Fan, Wiring")
+                    ProfileInfoRow(icon = Icons.Default.WorkspacePremium, label = "Experience", value = "5+ Years")
+                    ProfileInfoRow(icon = Icons.Default.Badge, label = "License / Certification", value = "1000V Safety Certified")
+                    ProfileInfoRow(icon = Icons.Default.DirectionsCar, label = "Service Area", value = "Mumbai & Surrounding Areas")
+                }
+            }
+
+            // 6. App Settings Group
+            item {
+                Surface(
+                    color = Color.White,
+                    shape = RoundedCornerShape(14.dp),
+                    shadowElevation = 1.dp,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF1F5F9)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(imageVector = Icons.Default.Settings, contentDescription = null, tint = TechFlameOrange, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(text = "App Settings", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextDarkPrimary)
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        SettingNavRow(icon = Icons.Default.Notifications, title = "Notifications") { }
+                        Divider(color = Color(0xFFF8FAFC))
+
+                        // Dark Mode Row with interactive switch
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(imageVector = Icons.Default.DarkMode, contentDescription = null, tint = TextDarkSecondary, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(text = "Dark Mode", fontSize = 12.sp, color = TextDarkPrimary)
+                            }
+                            Switch(
+                                checked = isDarkModeEnabled,
+                                onCheckedChange = { isDarkModeEnabled = it },
+                                colors = SwitchDefaults.colors(checkedThumbColor = TechFlameOrange, checkedTrackColor = TechAmberLight)
+                            )
+                        }
+                        Divider(color = Color(0xFFF8FAFC))
+
+                        SettingNavRow(icon = Icons.Default.Security, title = "Privacy & Security") { }
+                        Divider(color = Color(0xFFF8FAFC))
+
+                        SettingNavRow(icon = Icons.Default.Translate, title = "Language", trailingValue = "English") { }
+                    }
+                }
+            }
+
+            // 7. Support & Legal Group
+            item {
+                Surface(
+                    color = Color.White,
+                    shape = RoundedCornerShape(14.dp),
+                    shadowElevation = 1.dp,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF1F5F9)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(imageVector = Icons.Default.HelpOutline, contentDescription = null, tint = TechFlameOrange, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(text = "Support & Legal", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextDarkPrimary)
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        SettingNavRow(icon = Icons.Default.HeadsetMic, title = "Help & Support") { }
+                        Divider(color = Color(0xFFF8FAFC))
+
+                        SettingNavRow(icon = Icons.Default.Description, title = "Terms & Conditions") { }
+                        Divider(color = Color(0xFFF8FAFC))
+
+                        SettingNavRow(icon = Icons.Default.VerifiedUser, title = "Privacy Policy") { }
+                        Divider(color = Color(0xFFF8FAFC))
+
+                        SettingNavRow(icon = Icons.Default.Info, title = "About GTS", trailingValue = "v1.0.0") {
+                            showEnvSwitcher = true
+                        }
+                    }
+                }
+            }
+
+            // 8. Sign Out Button
+            item {
+                Spacer(modifier = Modifier.height(4.dp))
+                Button(
+                    onClick = { showLogoutDialog = true },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFEE2E2)),
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFCA5A5)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                ) {
+                    Icon(imageVector = Icons.Default.Logout, contentDescription = null, tint = Color(0xFFDC2626), modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = "Sign Out from Console", color = Color(0xFFB91C1C), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+        }
+    }
+}
+
+// -------------------------------------------------------------------------
+// Component: Stat column inside Profile card
+// -------------------------------------------------------------------------
+@Composable
+private fun ProfileStatColumn(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconTint: Color,
+    value: String,
+    label: String
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Icon(imageVector = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(16.dp))
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(text = value, fontSize = 14.sp, fontWeight = FontWeight.Black, color = TextDarkPrimary)
+        Text(text = label, fontSize = 10.sp, color = TextDarkMuted)
+    }
+}
+
+// -------------------------------------------------------------------------
+// Component: Grouped Profile Section Container
+// -------------------------------------------------------------------------
+@Composable
+private fun GroupedProfileSection(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onEdit: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Surface(
+        color = Color.White,
+        shape = RoundedCornerShape(14.dp),
+        shadowElevation = 1.dp,
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF1F5F9)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(imageVector = icon, contentDescription = null, tint = TechFlameOrange, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(text = title, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextDarkPrimary)
+                }
+
+                Text(
+                    text = "Edit",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TechBlue,
+                    modifier = Modifier.clickable { onEdit() }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+            content()
+        }
+    }
+}
+
+// -------------------------------------------------------------------------
+// Component: Single Row inside Profile Info Sections
+// -------------------------------------------------------------------------
+@Composable
+private fun ProfileInfoRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    value: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(imageVector = icon, contentDescription = null, tint = TextDarkMuted, modifier = Modifier.size(14.dp))
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text = value, fontSize = 11.5.sp, color = TextDarkSecondary, modifier = Modifier.weight(1f))
+        Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFCBD5E1), modifier = Modifier.size(14.dp))
+    }
+}
+
+// -------------------------------------------------------------------------
+// Component: Single Nav Row inside Settings / Legal
+// -------------------------------------------------------------------------
+@Composable
+private fun SettingNavRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    trailingValue: String? = null,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(imageVector = icon, contentDescription = null, tint = TextDarkSecondary, modifier = Modifier.size(16.dp))
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(text = title, fontSize = 12.sp, color = TextDarkPrimary)
+        }
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (trailingValue != null) {
+                Text(text = trailingValue, fontSize = 11.sp, color = TextDarkMuted)
+                Spacer(modifier = Modifier.width(4.dp))
+            }
+            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFCBD5E1), modifier = Modifier.size(16.dp))
+        }
+    }
+}
+
+// =========================================================================
+// SCREEN 4: EMERGENCY SAFETY SOS POPUP DIALOG (Matches Client Reference Image 4)
+// =========================================================================
+
+@Composable
+fun EmergencySafetySosDialog(
+    onDismiss: () -> Unit,
+    onCallEmergency: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = Color.White,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Top Red Glowing Header with Emergency Rotating Beacon Graphic
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Brush.verticalGradient(listOf(TechEmergencyRed, TechEmergencyRedDark)))
+                        .padding(horizontal = 16.dp, vertical = 14.dp)
+                ) {
+                    // Close Button (Top Right)
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .size(28.dp)
+                            .background(Color.White.copy(alpha = 0.25f), CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // Siren Beacon Image Asset
+                        Image(
+                            painter = painterResource(id = R.drawable.img_tech_sos_beacon),
+                            contentDescription = "Emergency Beacon",
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier.height(90.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Text(
+                            text = "EMERGENCY SAFETY",
+                            color = Color.White,
+                            fontSize = 19.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 0.8.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // Heartbeat Line with SOS Pill
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            // ECG pulse line left
+                            Canvas(modifier = Modifier.size(width = 38.dp, height = 16.dp)) {
+                                val stroke = 2.dp.toPx()
+                                drawLine(Color.White.copy(alpha = 0.8f), Offset(0f, size.height / 2), Offset(size.width * 0.4f, size.height / 2), strokeWidth = stroke, cap = StrokeCap.Round)
+                                drawLine(Color.White.copy(alpha = 0.8f), Offset(size.width * 0.4f, size.height / 2), Offset(size.width * 0.6f, 0f), strokeWidth = stroke, cap = StrokeCap.Round)
+                                drawLine(Color.White.copy(alpha = 0.8f), Offset(size.width * 0.6f, 0f), Offset(size.width * 0.8f, size.height), strokeWidth = stroke, cap = StrokeCap.Round)
+                                drawLine(Color.White.copy(alpha = 0.8f), Offset(size.width * 0.8f, size.height), Offset(size.width, size.height / 2), strokeWidth = stroke, cap = StrokeCap.Round)
+                            }
+
+                            Spacer(modifier = Modifier.width(6.dp))
+
+                            // Glowing White SOS Pill
+                            Surface(
+                                color = Color.White,
+                                shape = RoundedCornerShape(50.dp),
+                                shadowElevation = 4.dp
+                            ) {
+                                Text(
+                                    text = "SOS",
+                                    color = TechEmergencyRed,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Black,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(6.dp))
+
+                            // ECG pulse line right
+                            Canvas(modifier = Modifier.size(width = 38.dp, height = 16.dp)) {
+                                val stroke = 2.dp.toPx()
+                                drawLine(Color.White.copy(alpha = 0.8f), Offset(0f, size.height / 2), Offset(size.width * 0.2f, 0f), strokeWidth = stroke, cap = StrokeCap.Round)
+                                drawLine(Color.White.copy(alpha = 0.8f), Offset(size.width * 0.2f, 0f), Offset(size.width * 0.4f, size.height), strokeWidth = stroke, cap = StrokeCap.Round)
+                                drawLine(Color.White.copy(alpha = 0.8f), Offset(size.width * 0.4f, size.height), Offset(size.width * 0.6f, size.height / 2), strokeWidth = stroke, cap = StrokeCap.Round)
+                                drawLine(Color.White.copy(alpha = 0.8f), Offset(size.width * 0.6f, size.height / 2), Offset(size.width, size.height / 2), strokeWidth = stroke, cap = StrokeCap.Round)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = "Your safety is our priority",
+                            color = Color.White.copy(alpha = 0.9f),
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+
+                // White Body Section
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Pink Warning Box
+                    Surface(
+                        color = Color(0xFFFFF1F2),
+                        shape = RoundedCornerShape(14.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFECDD3)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            // Red Warning Icon in glowing circle
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFFEE2E2)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Warning,
+                                    contentDescription = null,
+                                    tint = TechEmergencyRed,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(10.dp))
+
+                            Column {
+                                Text(
+                                    text = "High-voltage flash, live arc hazard, or site accident detected?",
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 12.5.sp,
+                                    color = Color(0xFF881337)
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Triggering SOS alerts Ghar Tak 24×7 Safety Command Center with your exact GPS telemetry and VDE 1000V crew credentials.",
+                                    fontSize = 11.sp,
+                                    color = Color(0xFF9F1239),
+                                    lineHeight = 15.sp
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // 3 Telemetry Columns (GPS, 24x7 Center, VDE Crew)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceAround
+                    ) {
+                        SosTelemetryPill(icon = Icons.Default.Place, iconTint = TechEmergencyRed, label = "Your Live\nGPS Location")
+                        SosTelemetryPill(icon = Icons.Default.HeadsetMic, iconTint = Color(0xFFF57C00), label = "24×7 Safety\nCommand Center")
+                        SosTelemetryPill(icon = Icons.Default.Shield, iconTint = TechBlue, label = "Your VDE 1000V\nCrew Credentials")
+                    }
+
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    // Primary Button: Big Red Call 112 / Helpline
+                    Button(
+                        onClick = onCallEmergency,
+                        colors = ButtonDefaults.buttonColors(containerColor = TechEmergencyRed),
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(imageVector = Icons.Default.Call, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Text(
+                                text = "CALL 112 / DISPATCH HELPLINE",
+                                fontSize = 13.5.sp,
+                                fontWeight = FontWeight.Black,
+                                color = Color.White
+                            )
+                            Icon(imageVector = Icons.Default.ArrowForward, contentDescription = null, modifier = Modifier.size(18.dp))
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Secondary Action: Cancel
+                    Surface(
+                        onClick = onDismiss,
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                        color = Color.White,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(text = "Cancel", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextDarkSecondary)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// -------------------------------------------------------------------------
+// Component: Single Telemetry Pill in SOS Dialog
+// -------------------------------------------------------------------------
+@Composable
+private fun SosTelemetryPill(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconTint: Color,
+    label: String
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .clip(CircleShape)
+                .background(iconTint.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(imageVector = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(18.dp))
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = label,
+            fontSize = 9.5.sp,
+            fontWeight = FontWeight.Bold,
+            color = TextDarkSecondary,
+            textAlign = TextAlign.Center,
+            lineHeight = 12.sp
+        )
+    }
+}
+
+// =========================================================================
+// SCREEN 5: ALL JOBS CONTENT (Retains full functional job listing)
+// =========================================================================
+
+@Composable
+fun TechnicianAllJobsContent(
+    state: DashboardUiState,
+    onSelectJob: (TechnicianJob) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        Surface(color = TechFlameOrange, modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Technician Job Dispatch Queue",
+                    color = Color.White,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            items(state.assignedJobs) { job ->
+                val serviceDrawable = getServiceDrawableRes(job.serviceTitle)
+
+                Surface(
+                    onClick = { onSelectJob(job) },
+                    color = Color.White,
+                    shape = RoundedCornerShape(14.dp),
+                    shadowElevation = 2.dp,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF1F5F9)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Image(
+                            painter = painterResource(id = serviceDrawable),
+                            contentDescription = job.serviceTitle,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(50.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(10.dp))
+                        )
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = job.jobTicketNumber,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp,
+                                    color = TechFlameOrange
+                                )
+                                Surface(
+                                    color = if (job.status == "STARTED") Color(0xFFFFF3E0) else Color(0xFFE8F5E9),
+                                    shape = RoundedCornerShape(4.dp)
+                                ) {
+                                    Text(
+                                        text = job.status,
+                                        fontSize = 9.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (job.status == "STARTED") TechFlameOrange else Color(0xFF2E7D32),
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(text = job.serviceTitle, fontWeight = FontWeight.Bold, fontSize = 12.5.sp, color = TextDarkPrimary)
+                            Text(text = "Customer: ${job.customerName} • Pincode: ${job.pincode}", fontSize = 11.sp, color = TextDarkSecondary)
+                            Text(text = job.customerAddressText, fontSize = 10.sp, color = TextDarkMuted, maxLines = 1)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// =========================================================================
+// SCREEN 6: JOB DETAILS CONTENT (Full status-driven action sheet)
+// =========================================================================
+
+@Composable
+fun TechnicianJobDetailsContent(
+    job: TechnicianJob,
+    onBack: () -> Unit,
+    onNavigate: () -> Unit,
+    onCall: () -> Unit,
+    onStartJob: () -> Unit,
+    onCompleteJob: () -> Unit
+) {
+    val serviceDrawable = getServiceDrawableRes(job.serviceTitle)
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        Surface(color = TechFlameOrange, modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                }
+                Spacer(modifier = Modifier.width(4.dp))
+                Column {
+                    Text(text = "Job Order ${job.jobTicketNumber}", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Black)
+                    Text(text = job.serviceTitle, color = Color.White.copy(alpha = 0.9f), fontSize = 11.sp)
+                }
+            }
         }
 
         LazyColumn(
@@ -1452,87 +2388,134 @@ fun TechnicianProfileContent(
                 Surface(
                     color = Color.White,
                     shape = RoundedCornerShape(14.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorderLight),
+                    shadowElevation = 2.dp,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF1F5F9)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(50.dp)
-                                    .clip(CircleShape)
-                                    .background(ElectricOrangeHeader.copy(alpha = 0.15f))
-                                    .border(1.5.dp, ElectricOrangeHeader, CircleShape)
-                                    .clickable {
-                                        val now = System.currentTimeMillis()
-                                        if (now - lastClickTime < 1500) {
-                                            avatarClickCount++
-                                        } else {
-                                            avatarClickCount = 1
-                                        }
-                                        lastClickTime = now
-
-                                        if (avatarClickCount >= 6) {
-                                            avatarClickCount = 0
-                                            showEnvSwitcher = true
-                                        }
-                                    },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(text = "RK", color = ElectricOrangeDark, fontWeight = FontWeight.Black, fontSize = 18.sp)
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(text = state.profile?.fullName ?: "Rajesh Kumar", fontWeight = FontWeight.Bold, fontSize = 15.sp, color = TextDarkPrimary)
-                                Text(text = "Badge: ${state.profile?.badgeNumber ?: "GTS-TECH-4091"}", fontSize = 12.sp, color = TextDarkSecondary)
-                                Text(text = "Rating: ${state.customerRating} ★ (48 Completed Jobs)", fontSize = 11.sp, color = Color(0xFF2E7D32), fontWeight = FontWeight.SemiBold)
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(14.dp))
-                        Divider(color = Color(0xFFF1F5F9))
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(text = "Registered Mobile:", fontSize = 12.sp, color = TextDarkMuted)
-                            Text(text = state.profile?.phone ?: "+91 98112 23344", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TextDarkPrimary)
-                        }
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(text = "Assigned Hub / Pincode:", fontSize = 12.sp, color = TextDarkMuted)
-                            Text(text = "MH-01 Hub (${state.profile?.assignedPincode ?: "400001"})", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TextDarkPrimary)
-                        }
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(text = "Safety Kit Status:", fontSize = 12.sp, color = TextDarkMuted)
-                            Text(text = "VDE 1000V Insulated (Verified)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Image(
+                            painter = painterResource(id = serviceDrawable),
+                            contentDescription = job.serviceTitle,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(60.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(text = job.serviceTitle, fontWeight = FontWeight.Black, fontSize = 14.sp, color = TextDarkPrimary)
+                            Text(text = "Scheduled: ${job.scheduledAt}", fontSize = 11.5.sp, color = TextDarkSecondary)
+                            Text(text = "Estimated Payout: ₹${"%,.0f".format(job.totalAmountInr)}", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TechGreen)
                         }
                     }
                 }
             }
 
             item {
-                Button(
-                    onClick = onToggleDuty,
-                    colors = ButtonDefaults.buttonColors(containerColor = if (state.isOnline) Color(0xFFD32F2F) else Color(0xFF2E7D32)),
-                    shape = RoundedCornerShape(10.dp),
+                Surface(
+                    color = Color.White,
+                    shape = RoundedCornerShape(14.dp),
+                    shadowElevation = 2.dp,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF1F5F9)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(text = if (state.isOnline) "PAUSE SHIFT (GO OFFLINE)" else "RESUME SHIFT (GO ONLINE)", fontWeight = FontWeight.Bold)
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Text(text = "Customer Details", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextDarkPrimary)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(text = "Name: ${job.customerName}", fontSize = 12.sp, color = TextDarkSecondary)
+                        Text(text = "Phone: ${job.customerPhone}", fontSize = 12.sp, color = TextDarkSecondary)
+                        Text(text = "Address: ${job.customerAddressText}", fontSize = 12.sp, color = TextDarkSecondary)
+                    }
                 }
             }
 
             item {
-                OutlinedButton(
-                    onClick = { showLogoutDialog = true },
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD32F2F)),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFD32F2F)),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(imageVector = Icons.Default.Logout, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("SIGN OUT FROM CONSOLE", fontWeight = FontWeight.Bold)
+                val isCompleted = job.status == "COMPLETED"
+                val isStarted = job.status == "STARTED" || job.status == "IN_PROGRESS"
+
+                if (isCompleted) {
+                    Button(
+                        onClick = onBack,
+                        colors = ButtonDefaults.buttonColors(containerColor = TechGreen),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                    ) {
+                        Text("Return to Dispatch Queue", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color.White)
+                    }
+                } else if (isStarted) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Button(
+                            onClick = onCall,
+                            colors = ButtonDefaults.buttonColors(containerColor = TechGreen),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(imageVector = Icons.Default.Call, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Call Customer", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
+
+                        Button(
+                            onClick = onCompleteJob,
+                            colors = ButtonDefaults.buttonColors(containerColor = TechFlameOrange),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1.3f)
+                        ) {
+                            Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Complete & Handover", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Button(
+                            onClick = onNavigate,
+                            colors = ButtonDefaults.buttonColors(containerColor = TechBlue),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(imageVector = Icons.Default.Navigation, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Navigate", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
+
+                        Button(
+                            onClick = onCall,
+                            colors = ButtonDefaults.buttonColors(containerColor = TechGreen),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(imageVector = Icons.Default.Call, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Call", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Button(
+                        onClick = onStartJob,
+                        colors = ButtonDefaults.buttonColors(containerColor = TechFlameOrange),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Start Job (1000V Safety Interlock)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    }
                 }
             }
         }
@@ -1540,12 +2523,13 @@ fun TechnicianProfileContent(
 }
 
 // =========================================================================
-// BOTTOM NAVIGATION BAR (Matches Client Asset Footer: Home | Jobs | Earnings | Profile | SOS Help)
+// BOTTOM NAVIGATION BAR (Home | Jobs | Earnings | Profile | SOS Help)
 // =========================================================================
 
 @Composable
 fun TechnicianBottomNavBar(
     currentTab: String,
+    badgeCount: Int = 2,
     onTabSelected: (String) -> Unit
 ) {
     Surface(
@@ -1564,7 +2548,7 @@ fun TechnicianBottomNavBar(
             val navItems = listOf(
                 Triple("HOME", "Home", Icons.Default.Home),
                 Triple("JOBS", "Jobs", Icons.Default.ListAlt),
-                Triple("EARNINGS", "Earnings", Icons.Default.AttachMoney),
+                Triple("EARNINGS", "Earnings", Icons.Default.BarChart),
                 Triple("PROFILE", "Profile", Icons.Default.Person),
                 Triple("SOS", "SOS Help", Icons.Default.Warning)
             )
@@ -1579,24 +2563,48 @@ fun TechnicianBottomNavBar(
                         .clickable { onTabSelected(key) }
                         .padding(horizontal = 8.dp, vertical = 2.dp)
                 ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = label,
-                        tint = when {
-                            isSos -> Color(0xFFD32F2F)
-                            isSelected -> ElectricOrangeHeader
-                            else -> Color(0xFF94A3B8)
-                        },
-                        modifier = Modifier.size(20.dp)
-                    )
+                    Box {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = label,
+                            tint = when {
+                                isSos -> TechEmergencyRed
+                                isSelected -> TechFlameOrange
+                                else -> Color(0xFF64748B)
+                            },
+                            modifier = Modifier.size(22.dp)
+                        )
+
+                        // Notification Badge on "Jobs"
+                        if (key == "JOBS" && badgeCount > 0) {
+                            Box(
+                                modifier = Modifier
+                                    .size(15.dp)
+                                    .align(Alignment.TopEnd)
+                                    .offset(x = 6.dp, y = (-4).dp)
+                                    .clip(CircleShape)
+                                    .background(TechEmergencyRed),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "$badgeCount",
+                                    color = Color.White,
+                                    fontSize = 8.5.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
                     Spacer(modifier = Modifier.height(2.dp))
+
                     Text(
                         text = label,
                         fontSize = 10.sp,
                         fontWeight = if (isSelected || isSos) FontWeight.Bold else FontWeight.Medium,
                         color = when {
-                            isSos -> Color(0xFFD32F2F)
-                            isSelected -> ElectricOrangeHeader
+                            isSos -> TechEmergencyRed
+                            isSelected -> TechFlameOrange
                             else -> Color(0xFF64748B)
                         }
                     )
