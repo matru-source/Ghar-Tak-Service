@@ -34,7 +34,8 @@ data class EarningsTransaction(
     val serviceTitle: String,
     val completedTime: String,
     val amountInr: Double,
-    val isPending: Boolean = false
+    val isPending: Boolean = false,
+    val periodScope: Set<String> = setOf("TODAY", "THIS_WEEK", "THIS_MONTH", "ALL_TIME")
 )
 
 data class DashboardUiState(
@@ -45,6 +46,7 @@ data class DashboardUiState(
     val todayEarningsInr: Double = 1250.0,
     val weekEarningsInr: Double = 8400.0,
     val monthEarningsInr: Double = 32500.0,
+    val allTimeEarningsInr: Double = 128400.0,
     val availableWithdrawalInr: Double = 12000.0,
     val jobsTodayCount: Int = 4,
     val jobsCompletedCount: Int = 2,
@@ -88,7 +90,8 @@ data class DashboardUiState(
             serviceTitle = "Light Repair",
             completedTime = "Completed Today at 09:30 AM",
             amountInr = 750.0,
-            isPending = false
+            isPending = false,
+            periodScope = setOf("TODAY", "THIS_WEEK", "THIS_MONTH", "ALL_TIME")
         ),
         EarningsTransaction(
             id = "tx_2",
@@ -96,7 +99,8 @@ data class DashboardUiState(
             serviceTitle = "Fan Installation",
             completedTime = "Pending Completion",
             amountInr = 500.0,
-            isPending = true
+            isPending = true,
+            periodScope = setOf("TODAY", "THIS_WEEK", "THIS_MONTH", "ALL_TIME")
         ),
         EarningsTransaction(
             id = "tx_3",
@@ -104,7 +108,8 @@ data class DashboardUiState(
             serviceTitle = "AC Repair",
             completedTime = "Completed Yesterday at 04:00 PM",
             amountInr = 1200.0,
-            isPending = false
+            isPending = false,
+            periodScope = setOf("THIS_WEEK", "THIS_MONTH", "ALL_TIME")
         ),
         EarningsTransaction(
             id = "tx_4",
@@ -112,7 +117,35 @@ data class DashboardUiState(
             serviceTitle = "Wiring Fix",
             completedTime = "Completed 2 days ago at 11:00 AM",
             amountInr = 900.0,
-            isPending = false
+            isPending = false,
+            periodScope = setOf("THIS_WEEK", "THIS_MONTH", "ALL_TIME")
+        ),
+        EarningsTransaction(
+            id = "tx_5",
+            jobTicketNumber = "#J-0985",
+            serviceTitle = "Switchboard Upgrade",
+            completedTime = "Completed 10 days ago",
+            amountInr = 1450.0,
+            isPending = false,
+            periodScope = setOf("THIS_MONTH", "ALL_TIME")
+        ),
+        EarningsTransaction(
+            id = "tx_6",
+            jobTicketNumber = "#J-0970",
+            serviceTitle = "Inverter Wiring",
+            completedTime = "Completed 20 days ago",
+            amountInr = 2800.0,
+            isPending = false,
+            periodScope = setOf("THIS_MONTH", "ALL_TIME")
+        ),
+        EarningsTransaction(
+            id = "tx_7",
+            jobTicketNumber = "#J-0890",
+            serviceTitle = "Substation Breaker Fix",
+            completedTime = "Completed last month",
+            amountInr = 4500.0,
+            isPending = false,
+            periodScope = setOf("ALL_TIME")
         )
     ),
     val incomingDispatchAlert: TechnicianJob? = null,
@@ -196,9 +229,11 @@ class TechnicianDashboardViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isWithdrawing = true)
             kotlinx.coroutines.delay(800)
+            val withdrawnAmount = _uiState.value.availableWithdrawalInr
             _uiState.value = _uiState.value.copy(
                 isWithdrawing = false,
-                withdrawSuccessMessage = "₹${"%,.0f".format(_uiState.value.availableWithdrawalInr)} payout initiated via UPI to verified bank account."
+                availableWithdrawalInr = 0.0,
+                withdrawSuccessMessage = "₹${"%,.0f".format(withdrawnAmount)} payout initiated via UPI to verified bank account."
             )
         }
     }
@@ -285,13 +320,17 @@ class TechnicianDashboardViewModel(
             serviceTitle = service,
             completedTime = "Completed just now",
             amountInr = finalPayout,
-            isPending = false
+            isPending = false,
+            periodScope = setOf("TODAY", "THIS_WEEK", "THIS_MONTH", "ALL_TIME")
         )
 
         _uiState.value = _uiState.value.copy(
             assignedJobs = updatedJobs,
             selectedJob = completedJob?.copy(status = "COMPLETED"),
             todayEarningsInr = _uiState.value.todayEarningsInr + finalPayout,
+            weekEarningsInr = _uiState.value.weekEarningsInr + finalPayout,
+            monthEarningsInr = _uiState.value.monthEarningsInr + finalPayout,
+            allTimeEarningsInr = _uiState.value.allTimeEarningsInr + finalPayout,
             availableWithdrawalInr = _uiState.value.availableWithdrawalInr + finalPayout,
             jobsCompletedCount = _uiState.value.jobsCompletedCount + 1,
             jobsPendingCount = maxOf(0, _uiState.value.jobsPendingCount - 1),

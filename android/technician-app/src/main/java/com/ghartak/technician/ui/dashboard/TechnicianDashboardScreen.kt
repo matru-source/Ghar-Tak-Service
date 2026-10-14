@@ -1014,6 +1014,46 @@ fun TechnicianEarningsContent(
             }
         }
 
+        val (filterTitle, filterAmount, filterTrend) = when (state.selectedEarningsFilter) {
+            "TODAY" -> Triple(
+                "Total Earnings (Today)",
+                state.todayEarningsInr,
+                "↑ 2 completed jobs today"
+            )
+            "THIS_WEEK" -> Triple(
+                "Total Earnings (This Week)",
+                state.weekEarningsInr,
+                "↑ 12% from last week"
+            )
+            "THIS_MONTH" -> Triple(
+                "Total Earnings (This Month)",
+                state.monthEarningsInr,
+                "↑ 15% from last month"
+            )
+            "ALL_TIME" -> Triple(
+                "Total Earnings (All Time)",
+                state.allTimeEarningsInr,
+                "Total 48 Jobs Settled"
+            )
+            else -> Triple(
+                "Total Earnings (This Month)",
+                state.monthEarningsInr,
+                "↑ 15% from last month"
+            )
+        }
+
+        val txSectionTitle = when (state.selectedEarningsFilter) {
+            "TODAY" -> "Today's Transactions"
+            "THIS_WEEK" -> "This Week's Transactions"
+            "THIS_MONTH" -> "This Month's Transactions"
+            "ALL_TIME" -> "All Lifetime Transactions"
+            else -> "Recent Transactions"
+        }
+
+        val filteredTransactions = state.recentTransactions.filter { tx ->
+            tx.periodScope.contains(state.selectedEarningsFilter)
+        }
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -1030,7 +1070,7 @@ fun TechnicianEarningsContent(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "Total Earnings (This Month)",
+                            text = filterTitle,
                             color = ElectricOrangeDark,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
@@ -1042,7 +1082,7 @@ fun TechnicianEarningsContent(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "₹${"%,.0f".format(state.monthEarningsInr)}",
+                                text = "₹${"%,.0f".format(filterAmount)}",
                                 color = ElectricOrangeDark,
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.Black
@@ -1053,7 +1093,7 @@ fun TechnicianEarningsContent(
                                 shape = RoundedCornerShape(6.dp)
                             ) {
                                 Text(
-                                    text = "↑ 15% from last month",
+                                    text = filterTrend,
                                     color = Color(0xFF2E7D32),
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
@@ -1099,14 +1139,14 @@ fun TechnicianEarningsContent(
             // Recent Transactions Section
             item {
                 Text(
-                    text = "Recent Transactions",
+                    text = txSectionTitle,
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
                     color = TextDarkPrimary
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
-                state.recentTransactions.forEach { tx ->
+                if (filteredTransactions.isEmpty()) {
                     Surface(
                         color = Color.White,
                         shape = RoundedCornerShape(10.dp),
@@ -1115,49 +1155,74 @@ fun TechnicianEarningsContent(
                             .fillMaxWidth()
                             .padding(bottom = 8.dp)
                     ) {
-                        Row(
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterVertically
                         ) {
-                            Box(
+                            Text(
+                                text = "No transactions found for this period",
+                                fontSize = 12.sp,
+                                color = TextDarkMuted,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                } else {
+                    filteredTransactions.forEach { tx ->
+                        Surface(
+                            color = Color.White,
+                            shape = RoundedCornerShape(10.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp)
+                        ) {
+                            Row(
                                 modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(if (tx.isPending) Color(0xFFFFF3E0) else Color(0xFFE8F5E9)),
-                                contentAlignment = Alignment.Center
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    imageVector = if (tx.isPending) Icons.Default.HourglassEmpty else Icons.Default.Check,
-                                    contentDescription = null,
-                                    tint = if (tx.isPending) Color(0xFFFB8C00) else Color(0xFF2E7D32),
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .background(if (tx.isPending) Color(0xFFFFF3E0) else Color(0xFFE8F5E9)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = if (tx.isPending) Icons.Default.HourglassEmpty else Icons.Default.Check,
+                                        contentDescription = null,
+                                        tint = if (tx.isPending) Color(0xFFFB8C00) else Color(0xFF2E7D32),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
 
-                            Spacer(modifier = Modifier.width(10.dp))
+                                Spacer(modifier = Modifier.width(10.dp))
 
-                            Column(modifier = Modifier.weight(1f)) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "${tx.jobTicketNumber} - ${tx.serviceTitle}",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.sp,
+                                        color = TextDarkPrimary
+                                    )
+                                    Text(
+                                        text = tx.completedTime,
+                                        fontSize = 10.sp,
+                                        color = TextDarkMuted
+                                    )
+                                }
+
                                 Text(
-                                    text = "${tx.jobTicketNumber} - ${tx.serviceTitle}",
+                                    text = if (tx.isPending) "+₹${"%,.0f".format(tx.amountInr)} (Pending)" else "+₹${"%,.0f".format(tx.amountInr)}",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 12.sp,
-                                    color = TextDarkPrimary
-                                )
-                                Text(
-                                    text = tx.completedTime,
-                                    fontSize = 10.sp,
-                                    color = TextDarkMuted
+                                    color = if (tx.isPending) Color(0xFFFB8C00) else Color(0xFF2E7D32)
                                 )
                             }
-
-                            Text(
-                                text = if (tx.isPending) "+₹${"%,.0f".format(tx.amountInr)} (Pending)" else "+₹${"%,.0f".format(tx.amountInr)}",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
-                                color = if (tx.isPending) Color(0xFFFB8C00) else Color(0xFF2E7D32)
-                            )
                         }
                     }
                 }
