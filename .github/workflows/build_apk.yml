@@ -56,6 +56,12 @@ jobs:
             echo '```' >> $GITHUB_STEP_SUMMARY
             echo "=== FAILED TECHNICIAN BUILD LOG TAIL ==="
             tail -n 120 /tmp/technician_build.log
+            while IFS= read -r line; do
+              echo "::error title=Compiler::$line"
+            done < <(grep -E 'e: |FAILURE:|Caused by:|Compilation error' /tmp/technician_build.log | head -n 25)
+            while IFS= read -r line; do
+              echo "::error title=LogTail::$line"
+            done < <(tail -n 15 /tmp/technician_build.log)
             exit 1
           }
 
