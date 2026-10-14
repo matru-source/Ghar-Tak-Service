@@ -145,20 +145,20 @@ export default function AdminTechniciansPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-widest bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase">
-              ADM-SCR-06, 07, 08
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-widest bg-amber-50 text-amber-700 border border-amber-200 uppercase">
+              Fleet Management
             </span>
-            <span className="text-xs text-slate-400 font-medium">Regulatory Safety & Wireman Compliance</span>
+            <span className="text-xs text-slate-500 font-medium">Regulatory Safety & Wireman Compliance</span>
           </div>
-          <h1 className="text-2xl font-black text-white mt-1">National Technician Fleet & KYC Registry</h1>
-          <p className="text-sm text-slate-400">
+          <h1 className="text-2xl font-black text-slate-900 mt-1">National Technician Fleet & KYC Registry</h1>
+          <p className="text-sm text-slate-500">
             Electrical licensing board cross-verification, 1000V insulated safety audits, and real-time dispatch certification.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           {pendingKyc > 0 && (
-            <span className="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-bold flex items-center gap-2 animate-pulse">
+            <span className="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold flex items-center gap-2">
               <span>⚠️</span>
               <span>{pendingKyc} Pending KYC Reviews</span>
             </span>
@@ -166,37 +166,37 @@ export default function AdminTechniciansPage() {
         </div>
       </div>
 
-      {/* Macro Telemetry KPI Cards */}
+      {/* Macro Telemetry KPI Cards (Clean White Cards) */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Rostered Technicians</div>
-          <div className="text-2xl font-black text-white mt-1">{totalTechs}</div>
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs hover:shadow-md transition-shadow">
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Rostered Technicians</div>
+          <div className="text-2xl font-black text-slate-900 mt-1">{totalTechs}</div>
           <div className="text-[11px] text-slate-400 font-medium mt-1">Across all franchise partners</div>
         </div>
 
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Regulatory Certified</div>
-          <div className="text-2xl font-black text-emerald-400 mt-1">{verifiedTechs}</div>
-          <div className="text-[11px] text-emerald-400 font-medium mt-1">✓ Wireman License Grade-A</div>
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs hover:shadow-md transition-shadow">
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Regulatory Certified</div>
+          <div className="text-2xl font-black text-emerald-600 mt-1">{verifiedTechs}</div>
+          <div className="text-[11px] text-emerald-600 font-medium mt-1">✓ Wireman License Grade-A</div>
         </div>
 
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Awaiting Audit</div>
-          <div className="text-2xl font-black text-amber-400 mt-1">{pendingKyc}</div>
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs hover:shadow-md transition-shadow">
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Awaiting Audit</div>
+          <div className="text-2xl font-black text-amber-600 mt-1">{pendingKyc}</div>
           <div className="text-[11px] text-slate-400 font-medium mt-1">Requires compliance inspection</div>
         </div>
 
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">1000V Safety Kit Certified</div>
-          <div className="text-2xl font-black text-blue-400 mt-1">{safetyCertified}</div>
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs hover:shadow-md transition-shadow">
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">1000V Safety Kit Certified</div>
+          <div className="text-2xl font-black text-blue-600 mt-1">{safetyCertified}</div>
           <div className="text-[11px] text-slate-400 font-medium mt-1">Insulated gloves audit pass</div>
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
+      {/* Filter and Search Bar (Clean White Card) */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col md:flex-row gap-4 items-center justify-between">
         {/* Status Filter Tabs */}
-        <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800 w-full md:w-auto">
+        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 w-full md:w-auto">
           {[
             { id: 'ALL', label: 'All Fleet' },
             { id: 'PENDING_REVIEW', label: 'Pending Review ⚠️' },
@@ -209,8 +209,8 @@ export default function AdminTechniciansPage() {
               onClick={() => setKycFilter(tab.id)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
                 kycFilter === tab.id
-                  ? 'bg-amber-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-amber-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               {tab.label}
@@ -223,7 +223,7 @@ export default function AdminTechniciansPage() {
           <select
             value={onlineFilter}
             onChange={(e) => setOnlineFilter(e.target.value)}
-            className="bg-slate-950 border border-slate-800 text-white text-xs rounded-xl px-3 py-2 outline-none focus:border-amber-500"
+            className="bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-xl px-3 py-2 outline-none focus:border-amber-500 focus:bg-white transition"
           >
             <option value="ALL">All Shifts</option>
             <option value="ONLINE">Online on Duty</option>
@@ -236,14 +236,14 @@ export default function AdminTechniciansPage() {
               placeholder="Search badge, name, license..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 text-white text-xs rounded-xl px-3 py-2 outline-none focus:border-amber-500 placeholder:text-slate-600"
+              className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-xl px-3 py-2 outline-none focus:border-amber-500 focus:bg-white placeholder:text-slate-400 transition"
             />
           </form>
         </div>
       </div>
 
-      {/* Technician Roster Table */}
-      <div className="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      {/* Technician Roster Table (Clean White Card) */}
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
         {loading ? (
           <div className="p-12 text-center text-slate-400">Loading technician fleet records...</div>
         ) : technicians.length === 0 ? (
@@ -251,7 +251,7 @@ export default function AdminTechniciansPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-950 text-slate-400 font-bold border-b border-slate-800">
+              <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200 text-[11px] uppercase tracking-wider">
                 <tr>
                   <th className="py-3.5 px-4">BADGE / NAME</th>
                   <th className="py-3.5 px-4">CONTACT & CLUSTER</th>
@@ -263,43 +263,43 @@ export default function AdminTechniciansPage() {
                   <th className="py-3.5 px-4 text-right">ACTION</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/80 text-slate-300">
+              <tbody className="divide-y divide-slate-100 text-slate-700">
                 {technicians.map((t) => (
-                  <tr key={t.id} className="hover:bg-slate-800/40 transition">
+                  <tr key={t.id} className="hover:bg-slate-50/80 transition">
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-amber-400 text-xs">
+                        <div className="w-8 h-8 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center font-bold text-amber-800 text-xs">
                           {t.fullName.charAt(0)}
                         </div>
                         <div>
-                          <div className="font-bold text-white text-sm">{t.fullName}</div>
-                          <div className="font-mono text-[11px] text-amber-400/90">{t.badgeNumber}</div>
+                          <div className="font-bold text-slate-900 text-sm">{t.fullName}</div>
+                          <div className="font-mono text-[11px] text-amber-600 font-semibold">{t.badgeNumber}</div>
                         </div>
                       </div>
                     </td>
                     <td className="py-3.5 px-4">
-                      <div className="text-white font-medium">{t.phone}</div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">
-                        📍 Pincode: <span className="font-mono text-slate-300 font-bold">{t.assignedPincode}</span>
+                      <div className="text-slate-900 font-medium">{t.phone}</div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">
+                        📍 Pincode: <span className="font-mono text-slate-700 font-bold">{t.assignedPincode}</span>
                       </div>
                     </td>
                     <td className="py-3.5 px-4">
                       <span
                         className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
                           t.isOnline
-                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                            : 'bg-slate-800 text-slate-400 border border-slate-700'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-slate-100 text-slate-600 border border-slate-200'
                         }`}
                       >
                         {t.isOnline ? '● Online' : '○ Offline'}
                       </span>
                     </td>
                     <td className="py-3.5 px-4">
-                      <div className="font-bold text-white flex items-center gap-1">
-                        <span className="text-amber-400">★</span>
+                      <div className="font-bold text-slate-900 flex items-center gap-1">
+                        <span className="text-amber-500">★</span>
                         <span>{t.rating.toFixed(1)}</span>
                       </div>
-                      <div className="text-[11px] text-slate-400 mt-0.5 font-medium">
+                      <div className="text-[11px] text-slate-500 mt-0.5 font-medium">
                         {t.totalJobsCompleted} jobs settled
                       </div>
                     </td>
@@ -307,25 +307,25 @@ export default function AdminTechniciansPage() {
                       <span
                         className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
                           t.kycStatus === 'VERIFIED'
-                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                             : t.kycStatus === 'PENDING_REVIEW'
-                            ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse'
-                            : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                            ? 'bg-amber-50 text-amber-700 border border-amber-200 font-bold animate-pulse'
+                            : 'bg-red-50 text-red-700 border border-red-200'
                         }`}
                       >
                         {t.kycStatus.replace('_', ' ')}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 font-mono text-[11px] text-slate-300">
+                    <td className="py-3.5 px-4 font-mono text-[11px] text-slate-600">
                       {t.electricalLicenseNumber || 'Not Uploaded'}
                     </td>
                     <td className="py-3.5 px-4">
                       {t.insulatedGlovesVerified ? (
-                        <span className="px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 font-semibold text-[10px]">
+                        <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold text-[10px]">
                           🛡️ Passed (1000V)
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded bg-red-950/60 text-red-400 border border-red-800/60 font-semibold text-[10px]">
+                        <span className="px-2 py-0.5 rounded bg-red-50 text-red-700 border border-red-200 font-semibold text-[10px]">
                           ⚠️ Uncertified
                         </span>
                       )}
@@ -334,10 +334,10 @@ export default function AdminTechniciansPage() {
                       <button
                         type="button"
                         onClick={() => handleOpenInspection(t)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 shadow-sm ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 shadow-xs ${
                           t.kycStatus === 'PENDING_REVIEW'
-                            ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-600/30'
-                            : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+                            ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-600/20'
+                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
                         }`}
                       >
                         <span>🔍</span>
@@ -354,25 +354,25 @@ export default function AdminTechniciansPage() {
 
       {/* ADM-SCR-07 & ADM-SCR-08: Regulatory KYC Verification Modal */}
       {inspectingTech && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full p-6 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full p-6 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-start justify-between">
               <div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                  ADM-SCR-07 · Regulatory Compliance Inspection
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200">
+                  Compliance Inspection
                 </span>
-                <h2 className="text-xl font-black text-white mt-1">
+                <h2 className="text-xl font-black text-slate-900 mt-1">
                   KYC Verification: {inspectingTech.fullName}
                 </h2>
-                <p className="text-xs text-slate-400">
-                  Badge: <span className="font-mono text-amber-400 font-bold">{inspectingTech.badgeNumber}</span> · Phone: {inspectingTech.phone}
+                <p className="text-xs text-slate-500">
+                  Badge: <span className="font-mono text-amber-600 font-bold">{inspectingTech.badgeNumber}</span> · Phone: {inspectingTech.phone}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setInspectingTech(null)}
-                className="p-2 text-slate-400 hover:text-white rounded-lg bg-slate-800 text-sm font-bold"
+                className="p-2 text-slate-400 hover:text-slate-700 rounded-lg bg-slate-100 hover:bg-slate-200 text-sm font-bold transition"
               >
                 ✕
               </button>
@@ -381,47 +381,47 @@ export default function AdminTechniciansPage() {
             {/* Document Verification Cards */}
             <div className="grid grid-cols-2 gap-4">
               {/* Government Aadhar ID Card */}
-              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                     <span>🪪</span> Government UID (Aadhar)
                   </span>
-                  <span className="text-[10px] text-emerald-400 font-bold">UIDAI Valid</span>
+                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">UIDAI Valid</span>
                 </div>
-                <div className="font-mono text-xs text-slate-300 font-semibold">
+                <div className="font-mono text-xs text-slate-800 font-semibold">
                   {inspectingTech.aadharNumberMasked || 'XXXX-XXXX-4912'}
                 </div>
                 <div className="text-[11px] text-slate-500">
                   Address Match: Mumbai Suburban District · Name Authenticated
                 </div>
                 <div className="pt-2">
-                  <span className="px-2 py-1 rounded bg-slate-800 text-slate-300 text-[10px] font-medium inline-block">
+                  <span className="px-2 py-1 rounded bg-white border border-slate-200 text-slate-700 text-[10px] font-medium inline-block shadow-2xs">
                     ✓ Biometric eKYC Verified
                   </span>
                 </div>
               </div>
 
               {/* State Electrical Wireman License */}
-              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                    <BrandMark size="xs" variant="dark" badge={false} className="shrink-0" />
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <BrandMark size="xs" variant="default" badge={false} className="shrink-0" />
                     <span>Wireman Electrical License</span>
                   </span>
-                  <span className="text-[10px] text-amber-400 font-bold">State Board</span>
+                  <span className="text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">State Board</span>
                 </div>
                 <input
                   type="text"
                   value={licenseNumber}
                   onChange={(e) => setLicenseNumber(e.target.value)}
                   placeholder="e.g. EL-MH-2024-8849"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white font-mono outline-none focus:border-amber-500"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-mono outline-none focus:border-amber-500"
                 />
                 <div className="text-[11px] text-slate-500">
                   Grade-A Domestic & Industrial High Voltage Qualified
                 </div>
                 <div className="pt-2">
-                  <span className="px-2 py-1 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-medium inline-block">
+                  <span className="px-2 py-1 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-medium inline-block">
                     ✓ Valid through 2028
                   </span>
                 </div>
@@ -429,35 +429,35 @@ export default function AdminTechniciansPage() {
             </div>
 
             {/* Safety Interlock Kit Audit */}
-            <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                   <span>🧤</span> Mandatory Safety Gear Audit (Indian Electrical Standards)
                 </span>
-                <span className="text-[10px] text-blue-400 font-bold">Protocol v2.4</span>
+                <span className="text-[10px] text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-200">Protocol v2.4</span>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] text-slate-400 mb-1">Safety Kit Serial Number</label>
+                  <label className="block text-[11px] text-slate-600 font-medium mb-1">Safety Kit Serial Number</label>
                   <input
                     type="text"
                     value={safetyKitSerial}
                     onChange={(e) => setSafetyKitSerial(e.target.value)}
                     placeholder="SK-1000V-992"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white font-mono outline-none focus:border-amber-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-mono outline-none focus:border-amber-500"
                   />
                 </div>
 
                 <div className="flex flex-col justify-end">
-                  <label className="flex items-center gap-2 p-2 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer">
+                  <label className="flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-200 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={glovesConfirmed}
                       onChange={(e) => setGlovesConfirmed(e.target.checked)}
-                      className="w-4 h-4 accent-emerald-500 rounded"
+                      className="w-4 h-4 accent-emerald-600 rounded"
                     />
-                    <span className="text-xs text-slate-200 font-medium">
+                    <span className="text-xs text-slate-800 font-medium">
                       1000V Insulated Gloves Calibrated
                     </span>
                   </label>
@@ -468,18 +468,18 @@ export default function AdminTechniciansPage() {
             {/* Compliance Inspector Notes */}
             {!isRejecting ? (
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">Inspector Verification Notes</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Inspector Verification Notes</label>
                 <textarea
                   rows={2}
                   value={inspectionNotes}
                   onChange={(e) => setInspectionNotes(e.target.value)}
                   placeholder="Document and safety kit verified by compliance officer..."
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-500 placeholder:text-slate-600"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none focus:border-amber-500 focus:bg-white placeholder:text-slate-400 transition"
                 />
               </div>
             ) : (
-              <div className="space-y-2 bg-red-950/30 p-3.5 rounded-2xl border border-red-900/50">
-                <label className="block text-xs font-bold text-red-400">
+              <div className="space-y-2 bg-red-50 p-3.5 rounded-2xl border border-red-200">
+                <label className="block text-xs font-bold text-red-700">
                   Mandatory Rejection Reason (Will be sent via SMS to technician)
                 </label>
                 <textarea
@@ -487,17 +487,17 @@ export default function AdminTechniciansPage() {
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value)}
                   placeholder="Specify why documents or safety kit failed audit..."
-                  className="w-full bg-slate-950 border border-red-800/60 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-red-500 placeholder:text-slate-600"
+                  className="w-full bg-white border border-red-300 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none focus:border-red-500 placeholder:text-slate-400"
                 />
               </div>
             )}
 
             {/* Modal Actions */}
-            <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+            <div className="flex items-center justify-between pt-3 border-t border-slate-200">
               <button
                 type="button"
                 onClick={() => setInspectingTech(null)}
-                className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700 transition"
+                className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold hover:bg-slate-200 border border-slate-200 transition"
               >
                 Cancel
               </button>
@@ -508,14 +508,14 @@ export default function AdminTechniciansPage() {
                     <button
                       type="button"
                       onClick={() => setIsRejecting(true)}
-                      className="px-3.5 py-2 rounded-xl bg-red-950/60 hover:bg-red-900/80 text-red-300 border border-red-800/60 text-xs font-bold transition"
+                      className="px-3.5 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold transition"
                     >
                       Reject KYC...
                     </button>
                     <button
                       type="button"
                       onClick={() => handleVerifyKyc('VERIFY')}
-                      className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-lg shadow-emerald-600/30 flex items-center gap-1.5"
+                      className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-md shadow-emerald-600/20 flex items-center gap-1.5"
                     >
                       <span>✓</span>
                       <span>Approve & Certify for Dispatch</span>
@@ -526,14 +526,14 @@ export default function AdminTechniciansPage() {
                     <button
                       type="button"
                       onClick={() => setIsRejecting(false)}
-                      className="px-3 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700"
+                      className="px-3 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold hover:bg-slate-200 border border-slate-200"
                     >
                       Back
                     </button>
                     <button
                       type="button"
                       onClick={() => handleVerifyKyc('REJECT')}
-                      className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition shadow-lg shadow-red-600/30"
+                      className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition shadow-md shadow-red-600/20"
                     >
                       Confirm Rejection
                     </button>

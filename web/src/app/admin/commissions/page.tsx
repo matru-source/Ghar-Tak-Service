@@ -103,13 +103,13 @@ export default function AdminCommissionsPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-widest bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-widest bg-blue-50 text-blue-700 border border-blue-200 uppercase">
               ADM-SCR-13
             </span>
-            <span className="text-xs text-slate-400 font-medium">Algorithmic Distribution Sliders</span>
+            <span className="text-xs text-slate-500 font-medium">Algorithmic Distribution Sliders</span>
           </div>
-          <h1 className="text-2xl font-black text-white mt-1">Global Commission Configuration</h1>
-          <p className="text-sm text-slate-400">
+          <h1 className="text-2xl font-black text-slate-900 mt-1">Global Commission Configuration</h1>
+          <p className="text-sm text-slate-500">
             Define multi-tenant revenue split between ElectriCare Platform, Regional Franchises, and Field Technicians.
           </p>
         </div>
@@ -121,7 +121,7 @@ export default function AdminCommissionsPage() {
           className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg transition transform active:scale-95 ${
             isBalanced
               ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/30'
-              : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+              : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
           }`}
         >
           <span>💾</span>
@@ -131,10 +131,10 @@ export default function AdminCommissionsPage() {
 
       {/* Mathematical Balance Interlock Warning */}
       <div
-        className={`p-4 rounded-2xl border flex items-center justify-between gap-4 transition ${
+        className={`p-4 rounded-2xl border flex items-center justify-between gap-4 transition shadow-xs ${
           isBalanced
-            ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
-            : 'bg-red-950/40 border-red-500/30 text-red-300'
+            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+            : 'bg-red-50 border-red-200 text-red-800'
         }`}
       >
         <div className="flex items-center gap-3">
@@ -143,7 +143,7 @@ export default function AdminCommissionsPage() {
             <div className="text-sm font-bold">
               {isBalanced ? 'Mathematical Balance Verified (100.0%)' : 'Variance Detected in Labor Split!'}
             </div>
-            <div className="text-xs opacity-80 mt-0.5">
+            <div className="text-xs opacity-90 mt-0.5">
               Platform ({platformPct}%) + Partner ({partnerPct}%) + Technician ({techPct}%) = {totalBaseShare}%
             </div>
           </div>
@@ -159,17 +159,17 @@ export default function AdminCommissionsPage() {
       {/* Main Grid: Rate Sliders & Live Simulation */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Sliders Card */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 space-y-6">
-          <h2 className="text-base font-black text-white flex items-center gap-2">
+        <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-6 shadow-xs hover:shadow-md transition-shadow">
+          <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
             <span>🎚️</span>
             <span>Base Labor Split Parameters</span>
           </h2>
 
           {/* Platform Share Slider */}
-          <div className="space-y-2 bg-slate-950 p-4 rounded-2xl border border-slate-800/80">
+          <div className="space-y-2 bg-slate-50 p-4 rounded-2xl border border-slate-200">
             <div className="flex justify-between items-center text-xs">
-              <span className="font-bold text-blue-400">ElectriCare Platform Fee</span>
-              <span className="font-mono text-white font-bold bg-blue-950 px-2 py-0.5 rounded border border-blue-800">
+              <span className="font-bold text-blue-700">ElectriCare Platform Fee</span>
+              <span className="font-mono text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
                 {platformPct.toFixed(1)}%
               </span>
             </div>
@@ -180,7 +180,7 @@ export default function AdminCommissionsPage() {
               step="0.5"
               value={platformPct}
               onChange={(e) => setPlatformPct(Number(e.target.value))}
-              className="w-full accent-blue-500 h-2 bg-slate-800 rounded-lg cursor-pointer"
+              className="w-full accent-blue-600 h-2 bg-slate-200 rounded-lg cursor-pointer"
             />
             <div className="text-[11px] text-slate-500">
               National SaaS infrastructure, payment gateways, and algorithmic dispatch fee.
@@ -188,10 +188,10 @@ export default function AdminCommissionsPage() {
           </div>
 
           {/* Partner Share Slider */}
-          <div className="space-y-2 bg-slate-950 p-4 rounded-2xl border border-slate-800/80">
+          <div className="space-y-2 bg-slate-50 p-4 rounded-2xl border border-slate-200">
             <div className="flex justify-between items-center text-xs">
-              <span className="font-bold text-purple-400">Franchise Partner Commission</span>
-              <span className="font-mono text-white font-bold bg-purple-950 px-2 py-0.5 rounded border border-purple-800">
+              <span className="font-bold text-purple-700">Franchise Partner Commission</span>
+              <span className="font-mono text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
                 {partnerPct.toFixed(1)}%
               </span>
             </div>
@@ -202,7 +202,7 @@ export default function AdminCommissionsPage() {
               step="0.5"
               value={partnerPct}
               onChange={(e) => setPartnerPct(Number(e.target.value))}
-              className="w-full accent-purple-500 h-2 bg-slate-800 rounded-lg cursor-pointer"
+              className="w-full accent-purple-600 h-2 bg-slate-200 rounded-lg cursor-pointer"
             />
             <div className="text-[11px] text-slate-500">
               Regional operational oversight, fleet onboarding, and local territory management.
@@ -210,10 +210,10 @@ export default function AdminCommissionsPage() {
           </div>
 
           {/* Technician Share Slider */}
-          <div className="space-y-2 bg-slate-950 p-4 rounded-2xl border border-slate-800/80">
+          <div className="space-y-2 bg-slate-50 p-4 rounded-2xl border border-slate-200">
             <div className="flex justify-between items-center text-xs">
-              <span className="font-bold text-emerald-400">Technician Net Take-Home</span>
-              <span className="font-mono text-white font-bold bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">
+              <span className="font-bold text-emerald-700">Technician Net Take-Home</span>
+              <span className="font-mono text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                 {techPct.toFixed(1)}%
               </span>
             </div>
@@ -224,7 +224,7 @@ export default function AdminCommissionsPage() {
               step="0.5"
               value={techPct}
               onChange={(e) => setTechPct(Number(e.target.value))}
-              className="w-full accent-emerald-500 h-2 bg-slate-800 rounded-lg cursor-pointer"
+              className="w-full accent-emerald-600 h-2 bg-slate-200 rounded-lg cursor-pointer"
             />
             <div className="text-[11px] text-slate-500">
               Direct field labor payout disbursed to technician digital wallet.
@@ -233,28 +233,28 @@ export default function AdminCommissionsPage() {
 
           {/* Statutory Tax & Emergency SOS Settings */}
           <div className="grid grid-cols-2 gap-4 pt-2">
-            <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800">
-              <label className="block text-[11px] font-bold text-amber-400 mb-1">
+            <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+              <label className="block text-[11px] font-bold text-amber-700 mb-1">
                 Statutory GST Rate (%)
               </label>
               <input
                 type="number"
                 value={gstRate}
                 disabled
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white font-mono opacity-80"
+                className="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 font-mono opacity-80 cursor-not-allowed"
               />
               <span className="text-[10px] text-slate-500 block mt-1">Locked at 18.0% (CGST 9% + SGST 9%)</span>
             </div>
 
-            <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800">
-              <label className="block text-[11px] font-bold text-red-400 mb-1">
+            <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+              <label className="block text-[11px] font-bold text-red-700 mb-1">
                 24/7 Emergency SOS Surcharge (%)
               </label>
               <input
                 type="number"
                 value={sosPremium}
                 onChange={(e) => setSosPremium(Number(e.target.value))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white font-mono outline-none focus:border-red-500"
+                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 font-mono outline-none focus:border-red-500"
               />
               <span className="text-[10px] text-slate-500 block mt-1">Applied on urgent SLA requests</span>
             </div>
@@ -262,20 +262,20 @@ export default function AdminCommissionsPage() {
         </div>
 
         {/* Live Simulation Calculator Card */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 space-y-6 flex flex-col justify-between">
+        <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-6 flex flex-col justify-between shadow-xs hover:shadow-md transition-shadow">
           <div>
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-black text-white flex items-center gap-2">
+              <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
                 <span>🧮</span>
                 <span>Live Escrow Simulation Calculator</span>
               </h2>
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-950 text-blue-400 border border-blue-800">
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
                 REAL-TIME RECONCILIATION
               </span>
             </div>
 
-            <div className="mt-4 bg-slate-950 p-4 rounded-2xl border border-slate-800">
-              <label className="block text-xs font-medium text-slate-400 mb-1">
+            <div className="mt-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+              <label className="block text-xs font-semibold text-slate-600 mb-1">
                 Test Work Order Base Labor Amount (₹ INR)
               </label>
               <input
@@ -283,64 +283,64 @@ export default function AdminCommissionsPage() {
                 step="50"
                 value={simBaseAmount}
                 onChange={(e) => setSimBaseAmount(Number(e.target.value))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono font-bold text-sm outline-none focus:border-blue-500"
+                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono font-bold text-sm outline-none focus:border-blue-500"
               />
             </div>
 
             {/* Simulated Receipt Breakdown */}
-            <div className="mt-4 bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3 text-xs">
-              <div className="flex justify-between text-slate-300">
+            <div className="mt-4 bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3 text-xs">
+              <div className="flex justify-between text-slate-700">
                 <span>Customer Base Labor</span>
-                <span className="font-mono font-bold text-white">₹{simBaseAmount.toFixed(2)}</span>
+                <span className="font-mono font-bold text-slate-900">₹{simBaseAmount.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-amber-400/90">
+              <div className="flex justify-between text-amber-700">
                 <span>Statutory 18% GST (CGST + SGST)</span>
                 <span className="font-mono font-bold">₹{simGst.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between pt-2 border-t border-slate-800 text-sm font-bold text-white">
+              <div className="flex justify-between pt-2 border-t border-slate-200 text-sm font-bold text-slate-900">
                 <span>Total Customer Inflow</span>
-                <span className="font-mono text-emerald-400 text-base">₹{simTotal.toFixed(2)}</span>
+                <span className="font-mono text-emerald-600 text-base">₹{simTotal.toFixed(2)}</span>
               </div>
 
-              <div className="pt-3 border-t border-slate-800/80 space-y-2 text-[11px]">
-                <span className="text-slate-400 font-bold block">Automated Escrow Distribution:</span>
-                <div className="flex justify-between text-slate-300">
+              <div className="pt-3 border-t border-slate-200 space-y-2 text-[11px]">
+                <span className="text-slate-600 font-bold block">Automated Escrow Distribution:</span>
+                <div className="flex justify-between text-slate-700">
                   <span className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-blue-500" />
                     <span>ElectriCare Platform Fee ({platformPct}%)</span>
                   </span>
-                  <span className="font-mono text-blue-400 font-bold">₹{simPlatform.toFixed(2)}</span>
+                  <span className="font-mono text-blue-600 font-bold">₹{simPlatform.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-slate-300">
+                <div className="flex justify-between text-slate-700">
                   <span className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-purple-500" />
                     <span>Partner Regional Franchise ({partnerPct}%)</span>
                   </span>
-                  <span className="font-mono text-purple-400 font-bold">₹{simPartner.toFixed(2)}</span>
+                  <span className="font-mono text-purple-600 font-bold">₹{simPartner.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-slate-300">
+                <div className="flex justify-between text-slate-700">
                   <span className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-emerald-500" />
                     <span>Technician Net Take-Home ({techPct}%)</span>
                   </span>
-                  <span className="font-mono text-emerald-400 font-bold">₹{simTech.toFixed(2)}</span>
+                  <span className="font-mono text-emerald-600 font-bold">₹{simTech.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-slate-300">
+                <div className="flex justify-between text-slate-700">
                   <span className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-amber-500" />
                     <span>Government Tax Escrow Reserve ({gstRate}%)</span>
                   </span>
-                  <span className="font-mono text-amber-400 font-bold">₹{simGst.toFixed(2)}</span>
+                  <span className="font-mono text-amber-600 font-bold">₹{simGst.toFixed(2)}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-4 bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 flex items-center justify-between text-xs">
-            <span className="text-slate-400">Reconciliation Variance:</span>
+          <div className="mt-4 bg-slate-50 p-3.5 rounded-2xl border border-slate-200 flex items-center justify-between text-xs">
+            <span className="text-slate-600">Reconciliation Variance:</span>
             <span
               className={`font-mono font-bold ${
-                Math.abs(simVariance) < 0.05 ? 'text-emerald-400' : 'text-red-400'
+                Math.abs(simVariance) < 0.05 ? 'text-emerald-600' : 'text-red-600'
               }`}
             >
               {Math.abs(simVariance) < 0.05 ? '✓ ₹0.00 (Zero Variance)' : `⚠️ ₹${simVariance} Discrepancy`}

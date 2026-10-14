@@ -143,16 +143,16 @@ export default function AdminSubscriptionsPage() {
   return (
     <div className="space-y-6">
       {/* Screen Title & Top Navigation Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-400">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-700">
             <ShieldCheck className="h-4 w-4" />
             <span>ADM-SCR-16 &bull; ADM-SCR-17 &bull; Zex Cyber Security Shield</span>
           </div>
-          <h1 className="text-2xl font-bold text-slate-100 mt-1">
+          <h1 className="text-2xl font-bold text-slate-900 mt-1">
             Subscription Modules &amp; Protection Plans
           </h1>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-slate-500">
             Household electrical warranty, 15-min emergency SOS dispatch guarantee &amp; multi-tenant franchise liability coverage.
           </p>
         </div>
@@ -160,7 +160,7 @@ export default function AdminSubscriptionsPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={fetchData}
-            className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-2 text-xs font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+            className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 shadow-xs transition-colors"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
             Sync Policies
@@ -169,92 +169,92 @@ export default function AdminSubscriptionsPage() {
       </div>
 
       {actionSuccessMsg && (
-        <div className="flex items-center gap-3 rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-3.5 text-xs text-emerald-300">
-          <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+        <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3.5 text-xs text-emerald-800">
+          <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
           <span>{actionSuccessMsg}</span>
         </div>
       )}
 
       {/* Telemetry Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 backdrop-blur shadow-sm">
-          <div className="flex items-center justify-between text-slate-400">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between text-slate-500">
             <span className="text-xs font-medium">Active Policyholders</span>
-            <Users className="h-4 w-4 text-sky-400" />
+            <Users className="h-4 w-4 text-sky-600" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-slate-100">
+            <span className="text-2xl font-bold text-slate-900">
               {telemetry?.activeSubscriptionsCount ?? '...'}
             </span>
-            <span className="text-xs font-semibold text-emerald-400">
+            <span className="text-xs font-semibold text-emerald-600">
               ({telemetry?.consumerActiveCount || 0} Consumer / {telemetry?.partnerActiveCount || 0} Franchise)
             </span>
           </div>
-          <div className="mt-2 text-[11px] text-slate-400">
+          <div className="mt-2 text-[11px] text-slate-500">
             Total policies tracked: {telemetry?.totalSubscriptionsCount || 0}
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 backdrop-blur shadow-sm">
-          <div className="flex items-center justify-between text-slate-400">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between text-slate-500">
             <span className="text-xs font-medium">Total Risk Pool Reserve</span>
-            <ShieldCheck className="h-4 w-4 text-emerald-400" />
+            <ShieldCheck className="h-4 w-4 text-emerald-600" />
           </div>
           <div className="mt-2">
-            <span className="text-2xl font-bold text-emerald-300">
+            <span className="text-2xl font-bold text-emerald-600">
               ₹{(telemetry?.totalRiskPoolCoverageInr || 0).toLocaleString('en-IN')}
             </span>
           </div>
-          <div className="mt-2 text-[11px] text-emerald-500/90 flex items-center gap-1 font-medium">
+          <div className="mt-2 text-[11px] text-emerald-600 flex items-center gap-1 font-medium">
             <TrendingUp className="h-3 w-3" />
             100% Backed by General Insurance Underwriting
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 backdrop-blur shadow-sm">
-          <div className="flex items-center justify-between text-slate-400">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between text-slate-500">
             <span className="text-xs font-medium">Enrolled Premium Revenue</span>
-            <Sparkles className="h-4 w-4 text-amber-400" />
+            <Sparkles className="h-4 w-4 text-amber-600" />
           </div>
           <div className="mt-2">
-            <span className="text-2xl font-bold text-amber-300">
+            <span className="text-2xl font-bold text-amber-600">
               ₹{(telemetry?.totalRevenueInr || 0).toLocaleString('en-IN')}
             </span>
           </div>
-          <div className="mt-2 text-[11px] text-slate-400">
+          <div className="mt-2 text-[11px] text-slate-500">
             Directly accounted into Central Treasury Escrow
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 backdrop-blur shadow-sm">
-          <div className="flex items-center justify-between text-slate-400">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between text-slate-500">
             <span className="text-xs font-medium">Active Protection Tiers</span>
-            <Award className="h-4 w-4 text-purple-400" />
+            <Award className="h-4 w-4 text-purple-600" />
           </div>
           <div className="mt-2">
-            <span className="text-2xl font-bold text-purple-300">
+            <span className="text-2xl font-bold text-purple-600">
               {telemetry?.activeTiersCount ?? tiers.length} Tiers
             </span>
           </div>
-          <div className="mt-2 text-[11px] text-purple-400/90 font-medium">
+          <div className="mt-2 text-[11px] text-purple-600 font-medium">
             Standardized Pan-India SLA Guarantee
           </div>
         </div>
       </div>
 
       {/* Tabs navigation */}
-      <div className="flex border-b border-slate-800 space-x-6 text-sm font-semibold">
+      <div className="flex border-b border-slate-200 space-x-6 text-sm font-semibold">
         <button
           onClick={() => setActiveTab('TIERS')}
           className={`pb-3 flex items-center gap-2 border-b-2 transition-colors ${
             activeTab === 'TIERS'
-              ? 'border-emerald-400 text-emerald-400'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
           <Zap className="h-4 w-4" />
           <span>Protection Tier Architecture (ADM-SCR-16)</span>
-          <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-300">
+          <span className="rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-xs text-slate-700">
             {tiers.length}
           </span>
         </button>
@@ -263,13 +263,13 @@ export default function AdminSubscriptionsPage() {
           onClick={() => setActiveTab('SUBSCRIBERS')}
           className={`pb-3 flex items-center gap-2 border-b-2 transition-colors ${
             activeTab === 'SUBSCRIBERS'
-              ? 'border-emerald-400 text-emerald-400'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
           <Users className="h-4 w-4" />
           <span>Active Policyholder Registry (ADM-SCR-17)</span>
-          <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-300">
+          <span className="rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-xs text-slate-700">
             {subscriptions.length}
           </span>
         </button>
@@ -279,7 +279,7 @@ export default function AdminSubscriptionsPage() {
       {activeTab === 'TIERS' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500">
               Configured surge warranty limits, inspection quotas &amp; automated emergency dispatch benefits.
             </p>
           </div>
@@ -293,14 +293,14 @@ export default function AdminSubscriptionsPage() {
               return (
                 <div
                   key={tier.id}
-                  className={`relative flex flex-col justify-between rounded-xl border p-5 backdrop-blur transition-all ${
+                  className={`relative flex flex-col justify-between rounded-xl border p-5 transition-all shadow-xs hover:shadow-md ${
                     isAnnualGold
-                      ? 'border-amber-500/50 bg-gradient-to-b from-amber-500/10 via-slate-900/80 to-slate-900/90 shadow-lg shadow-amber-500/5'
+                      ? 'border-amber-300 bg-amber-50/25 shadow-amber-500/5'
                       : isPartner
-                      ? 'border-sky-500/40 bg-gradient-to-b from-sky-500/10 via-slate-900/80 to-slate-900/90'
+                      ? 'border-sky-300 bg-sky-50/25'
                       : isEnterprise
-                      ? 'border-purple-500/40 bg-gradient-to-b from-purple-500/10 via-slate-900/80 to-slate-900/90'
-                      : 'border-slate-800 bg-slate-900/70'
+                      ? 'border-purple-300 bg-purple-50/25'
+                      : 'border-slate-200 bg-white'
                   }`}
                 >
                   {isAnnualGold && (
@@ -310,83 +310,83 @@ export default function AdminSubscriptionsPage() {
                   )}
 
                   <div>
-                    <div className="flex items-center justify-between text-xs font-semibold text-slate-400">
-                      <span className="rounded bg-slate-800/80 px-2 py-0.5 text-[10px] uppercase tracking-wider text-slate-300 font-mono">
+                    <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+                      <span className="rounded bg-slate-100 px-2 py-0.5 text-[10px] uppercase tracking-wider text-slate-700 font-mono border border-slate-200">
                         {tier.code}
                       </span>
                       <span
                         className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
                           tier.targetAudience === 'CONSUMER'
-                            ? 'bg-emerald-500/10 text-emerald-400'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                             : tier.targetAudience === 'PARTNER_FRANCHISE'
-                            ? 'bg-sky-500/10 text-sky-400'
-                            : 'bg-purple-500/10 text-purple-400'
+                            ? 'bg-sky-50 text-sky-700 border border-sky-200'
+                            : 'bg-purple-50 text-purple-700 border border-purple-200'
                         }`}
                       >
                         {tier.targetAudience.replace('_', ' ')}
                       </span>
                     </div>
 
-                    <h3 className="mt-3 text-lg font-bold text-slate-100">{tier.name}</h3>
-                    <p className="mt-1 text-xs text-slate-400 leading-relaxed min-h-[40px]">
+                    <h3 className="mt-3 text-lg font-bold text-slate-900">{tier.name}</h3>
+                    <p className="mt-1 text-xs text-slate-500 leading-relaxed min-h-[40px]">
                       {tier.description}
                     </p>
 
-                    <div className="mt-4 border-t border-slate-800/80 pt-3">
+                    <div className="mt-4 border-t border-slate-100 pt-3">
                       <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-extrabold text-white">
+                        <span className="text-3xl font-extrabold text-slate-900">
                           ₹{tier.priceInr.toLocaleString('en-IN')}
                         </span>
-                        <span className="text-xs text-slate-400">
+                        <span className="text-xs text-slate-500">
                           / {tier.durationMonths === 1 ? 'month' : `${tier.durationMonths} months`}
                         </span>
                       </div>
                     </div>
 
                     {/* Feature Checklist */}
-                    <div className="mt-4 space-y-2.5 text-xs text-slate-300 border-t border-slate-800/80 pt-3">
+                    <div className="mt-4 space-y-2.5 text-xs text-slate-700 border-t border-slate-100 pt-3">
                       <div className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                        <Check className="h-4 w-4 text-emerald-600 shrink-0" />
                         <span>
-                          <strong className="text-slate-100">
+                          <strong className="text-slate-900">
                             ₹{tier.surgeProtectionCoverageInr.toLocaleString('en-IN')}
                           </strong>{' '}
                           Surge Guarantee
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                        <Check className="h-4 w-4 text-emerald-600 shrink-0" />
                         <span>
-                          <strong className="text-slate-100">{tier.freeInspectionsCount}</strong> Free Routine Safety Audits
+                          <strong className="text-slate-900">{tier.freeInspectionsCount}</strong> Free Routine Safety Audits
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                        <Check className="h-4 w-4 text-emerald-600 shrink-0" />
                         <span>
                           {tier.isPrioritySosDispatch ? (
-                            <span className="text-emerald-300 font-medium">15-Min Guaranteed SOS Dispatch</span>
+                            <span className="text-emerald-700 font-medium">15-Min Guaranteed SOS Dispatch</span>
                           ) : (
-                            <span className="text-slate-500">Standard Queue</span>
+                            <span className="text-slate-400">Standard Queue</span>
                           )}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         {tier.applianceWarrantyIncluded ? (
-                          <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                          <Check className="h-4 w-4 text-emerald-600 shrink-0" />
                         ) : (
-                          <span className="h-4 w-4 text-slate-600 text-center font-bold">&times;</span>
+                          <span className="h-4 w-4 text-slate-300 text-center font-bold">&times;</span>
                         )}
-                        <span className={tier.applianceWarrantyIncluded ? 'text-slate-300' : 'text-slate-600 line-through'}>
+                        <span className={tier.applianceWarrantyIncluded ? 'text-slate-700' : 'text-slate-400 line-through'}>
                           Zero-Deductible Appliance Cover
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         {tier.cyberShieldAuditIncluded ? (
-                          <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                          <Check className="h-4 w-4 text-emerald-600 shrink-0" />
                         ) : (
-                          <span className="h-4 w-4 text-slate-600 text-center font-bold">&times;</span>
+                          <span className="h-4 w-4 text-slate-300 text-center font-bold">&times;</span>
                         )}
-                        <span className={tier.cyberShieldAuditIncluded ? 'text-slate-300' : 'text-slate-600 line-through'}>
+                        <span className={tier.cyberShieldAuditIncluded ? 'text-slate-700' : 'text-slate-400 line-through'}>
                           SCADA &amp; Cyber Shield Audit
                         </span>
                       </div>
@@ -399,7 +399,7 @@ export default function AdminSubscriptionsPage() {
                       setEditPrice(tier.priceInr);
                       setEditCoverage(tier.surgeProtectionCoverageInr);
                     }}
-                    className="mt-6 flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/90 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 hover:text-white transition-colors"
+                    className="mt-6 flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 py-2 text-xs font-semibold text-slate-700 transition-colors"
                   >
                     <span>Calibrate Pricing &amp; Cover</span>
                     <ChevronRight className="h-3.5 w-3.5" />
@@ -415,27 +415,27 @@ export default function AdminSubscriptionsPage() {
       {activeTab === 'SUBSCRIBERS' && (
         <div className="space-y-4">
           {/* Filter Bar */}
-          <div className="flex flex-col md:flex-row gap-3 justify-between items-center bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
+          <div className="flex flex-col md:flex-row gap-3 justify-between items-center bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs">
             <div className="relative w-full md:w-80">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search subscriber, phone, plan or ID..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-1.5 text-xs rounded-lg bg-slate-800/80 border border-slate-700 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                className="w-full pl-9 pr-4 py-1.5 text-xs rounded-lg bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white"
               />
             </div>
 
             <div className="flex items-center gap-3 w-full md:w-auto">
-              <div className="flex items-center gap-1.5 text-xs text-slate-400">
+              <div className="flex items-center gap-1.5 text-xs text-slate-500">
                 <Filter className="h-3.5 w-3.5" />
                 <span>Status:</span>
               </div>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="rounded-lg bg-slate-800 border border-slate-700 px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-emerald-500"
+                className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="ACTIVE">Active Policies</option>
@@ -445,7 +445,7 @@ export default function AdminSubscriptionsPage() {
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="rounded-lg bg-slate-800 border border-slate-700 px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-emerald-500"
+                className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white"
               >
                 <option value="ALL">All Account Types</option>
                 <option value="CUSTOMER">Consumer</option>
@@ -455,10 +455,10 @@ export default function AdminSubscriptionsPage() {
           </div>
 
           {/* Subscribers Table */}
-          <div className="rounded-xl border border-slate-800 bg-slate-900/70 overflow-hidden">
+          <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-800/80 text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-800">
+              <table className="w-full text-left text-xs text-slate-700">
+                <thead className="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-600 border-b border-slate-200">
                   <tr>
                     <th className="py-3 px-4">Policyholder</th>
                     <th className="py-3 px-4">Type</th>
@@ -470,57 +470,57 @@ export default function AdminSubscriptionsPage() {
                     <th className="py-3 px-4">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 font-medium">
+                <tbody className="divide-y divide-slate-100 font-medium">
                   {filteredSubscriptions.map((sub) => {
                     const isActive = sub.status === 'ACTIVE';
                     return (
-                      <tr key={sub.id} className="hover:bg-slate-800/40 transition-colors">
+                      <tr key={sub.id} className="hover:bg-slate-50/80 transition-colors">
                         <td className="py-3 px-4">
-                          <div className="font-bold text-slate-100">{sub.subscriberName}</div>
-                          <div className="text-[11px] text-slate-400 font-mono">{sub.subscriberPhone}</div>
+                          <div className="font-bold text-slate-900">{sub.subscriberName}</div>
+                          <div className="text-[11px] text-slate-500 font-mono">{sub.subscriberPhone}</div>
                         </td>
                         <td className="py-3 px-4">
                           <span
                             className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                               sub.subscriberType === 'CUSTOMER'
-                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                : 'bg-sky-500/10 text-sky-400 border border-sky-500/20'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : 'bg-sky-50 text-sky-700 border border-sky-200'
                             }`}
                           >
                             {sub.subscriberType}
                           </span>
                         </td>
                         <td className="py-3 px-4">
-                          <div className="font-semibold text-slate-200">{sub.tierName}</div>
+                          <div className="font-semibold text-slate-900">{sub.tierName}</div>
                           <div className="text-[10px] text-slate-500 font-mono">ID: {sub.id}</div>
                         </td>
-                        <td className="py-3 px-4 font-mono font-bold text-slate-100">
+                        <td className="py-3 px-4 font-mono font-bold text-slate-900">
                           ₹{sub.pricePaidInr.toLocaleString('en-IN')}
                         </td>
                         <td className="py-3 px-4">
-                          <span className="font-mono font-bold text-emerald-400">
+                          <span className="font-mono font-bold text-emerald-600">
                             ₹{sub.coverageMaxInr.toLocaleString('en-IN')}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-slate-400 text-[11px]">
+                        <td className="py-3 px-4 text-slate-500 text-[11px]">
                           <div>From: {new Date(sub.startDate).toLocaleDateString('en-IN')}</div>
                           <div>To: {new Date(sub.expiryDate).toLocaleDateString('en-IN')}</div>
                         </td>
                         <td className="py-3 px-4">
                           {sub.autoRenew ? (
-                            <span className="text-emerald-400 flex items-center gap-1 text-[11px]">
+                            <span className="text-emerald-600 flex items-center gap-1 text-[11px]">
                               <CheckCircle2 className="h-3 w-3" /> Enabled
                             </span>
                           ) : (
-                            <span className="text-slate-500 text-[11px]">Manual</span>
+                            <span className="text-slate-400 text-[11px]">Manual</span>
                           )}
                         </td>
                         <td className="py-3 px-4">
                           <span
                             className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                               isActive
-                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                                : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : 'bg-rose-50 text-rose-700 border border-rose-200'
                             }`}
                           >
                             {sub.status}
@@ -544,16 +544,16 @@ export default function AdminSubscriptionsPage() {
 
       {/* Calibration Modal */}
       {selectedTier && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div>
-                <h3 className="font-bold text-slate-100 text-base">Calibrate Protection Tier</h3>
-                <p className="text-xs text-slate-400 font-mono mt-0.5">{selectedTier.name}</p>
+                <h3 className="font-bold text-slate-900 text-base">Calibrate Protection Tier</h3>
+                <p className="text-xs text-slate-500 font-mono mt-0.5">{selectedTier.name}</p>
               </div>
               <button
                 onClick={() => setSelectedTier(null)}
-                className="text-slate-400 hover:text-white text-lg font-bold"
+                className="text-slate-400 hover:text-slate-700 text-lg font-bold"
               >
                 &times;
               </button>
@@ -561,36 +561,36 @@ export default function AdminSubscriptionsPage() {
 
             <form onSubmit={handleUpdateTier} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Subscription Price (INR)
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-bold">
                     ₹
                   </span>
                   <input
                     type="number"
                     value={editPrice}
                     onChange={(e) => setEditPrice(Number(e.target.value))}
-                    className="w-full pl-8 pr-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white font-mono focus:outline-none focus:border-emerald-500"
+                    className="w-full pl-8 pr-3 py-2 text-xs rounded-lg bg-slate-50 border border-slate-200 text-slate-900 font-mono focus:outline-none focus:border-blue-500 focus:bg-white"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Surge Protection Maximum Coverage Limit (INR)
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-bold">
                     ₹
                   </span>
                   <input
                     type="number"
                     value={editCoverage}
                     onChange={(e) => setEditCoverage(Number(e.target.value))}
-                    className="w-full pl-8 pr-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white font-mono focus:outline-none focus:border-emerald-500"
+                    className="w-full pl-8 pr-3 py-2 text-xs rounded-lg bg-slate-50 border border-slate-200 text-slate-900 font-mono focus:outline-none focus:border-blue-500 focus:bg-white"
                     required
                   />
                 </div>
@@ -599,18 +599,18 @@ export default function AdminSubscriptionsPage() {
                 </p>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setSelectedTier(null)}
-                  className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white"
+                  className="px-4 py-2 text-xs font-medium text-slate-500 hover:text-slate-800"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isUpdatingTier}
-                  className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-500 transition-colors disabled:opacity-50"
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-500 transition-colors disabled:opacity-50 shadow-xs"
                 >
                   {isUpdatingTier ? 'Committing Changes...' : 'Save & Calibrate Plan'}
                 </button>

@@ -133,13 +133,13 @@ export default function AdminCustomersPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-widest bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-widest bg-blue-50 text-blue-700 border border-blue-200 uppercase">
               ADM-SCR-09 & ADM-SCR-10
             </span>
-            <span className="text-xs text-slate-400 font-medium">Customer CRM & Lifetime Value</span>
+            <span className="text-xs text-slate-500 font-medium">Customer CRM & Lifetime Value</span>
           </div>
-          <h1 className="text-2xl font-black text-white mt-1">Customer Management & Lifetime Profiles</h1>
-          <p className="text-sm text-slate-400">
+          <h1 className="text-2xl font-black text-slate-900 mt-1">Customer Management & Lifetime Profiles</h1>
+          <p className="text-sm text-slate-500">
             Track user booking histories, dispute resolutions, and active Zex Cyber Security Shield subscriptions.
           </p>
         </div>
@@ -156,37 +156,37 @@ export default function AdminCustomersPage() {
 
       {/* Macro Telemetry KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Registered Accounts</div>
-          <div className="text-2xl font-black text-white mt-1">{totalCount}</div>
-          <div className="text-[11px] text-emerald-400 font-medium mt-1">Across 4 major hubs</div>
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs hover:shadow-md transition-shadow">
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Registered Accounts</div>
+          <div className="text-2xl font-black text-slate-900 mt-1">{totalCount}</div>
+          <div className="text-[11px] text-emerald-600 font-medium mt-1">Across 4 major hubs</div>
         </div>
 
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Gross Lifetime Spend</div>
-          <div className="text-2xl font-black text-emerald-400 mt-1">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs hover:shadow-md transition-shadow">
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Gross Lifetime Spend</div>
+          <div className="text-2xl font-black text-emerald-600 mt-1">
             ₹{totalSpend.toLocaleString('en-IN')}
           </div>
-          <div className="text-[11px] text-slate-400 font-medium mt-1">Direct customer inflows</div>
+          <div className="text-[11px] text-slate-500 font-medium mt-1">Direct customer inflows</div>
         </div>
 
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Zex Shield Subscriptions</div>
-          <div className="text-2xl font-black text-purple-400 mt-1">{activeSubscribers}</div>
-          <div className="text-[11px] text-slate-400 font-medium mt-1">Active protection policies</div>
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs hover:shadow-md transition-shadow">
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Zex Shield Subscriptions</div>
+          <div className="text-2xl font-black text-purple-600 mt-1">{activeSubscribers}</div>
+          <div className="text-[11px] text-slate-500 font-medium mt-1">Active protection policies</div>
         </div>
 
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">VIP Accounts</div>
-          <div className="text-2xl font-black text-amber-400 mt-1">{vipCount}</div>
-          <div className="text-[11px] text-slate-400 font-medium mt-1">Priority dispatch enabled</div>
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs hover:shadow-md transition-shadow">
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">VIP Accounts</div>
+          <div className="text-2xl font-black text-amber-600 mt-1">{vipCount}</div>
+          <div className="text-[11px] text-slate-500 font-medium mt-1">Priority dispatch enabled</div>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between shadow-xs">
         {/* Subscription Plan Filter Tabs */}
-        <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800 w-full md:w-auto overflow-x-auto">
+        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 w-full md:w-auto overflow-x-auto">
           {[
             { id: 'ALL', label: 'All Users' },
             { id: 'ZEX_SHIELD_1MO', label: '1-Mo Shield' },
@@ -200,8 +200,8 @@ export default function AdminCustomersPage() {
               onClick={() => setPlanFilter(tab.id)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition ${
                 planFilter === tab.id
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               {tab.label}
@@ -215,21 +215,21 @@ export default function AdminCustomersPage() {
             placeholder="Search name, phone, address, pincode..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 text-white text-xs rounded-xl px-3 py-2 outline-none focus:border-blue-500 placeholder:text-slate-600"
+            className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-xl px-3 py-2 outline-none focus:border-blue-500 focus:bg-white placeholder:text-slate-400"
           />
         </form>
       </div>
 
       {/* Customer Directory Table */}
-      <div className="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
         {loading ? (
-          <div className="p-12 text-center text-slate-400">Loading customer profiles...</div>
+          <div className="p-12 text-center text-slate-500">Loading customer profiles...</div>
         ) : customers.length === 0 ? (
           <div className="p-12 text-center text-slate-500">No customer profiles match your filter.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-950 text-slate-400 font-bold border-b border-slate-800">
+              <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
                 <tr>
                   <th className="py-3.5 px-4">CUSTOMER NAME</th>
                   <th className="py-3.5 px-4">CONTACT & CLUSTER</th>
@@ -240,59 +240,59 @@ export default function AdminCustomersPage() {
                   <th className="py-3.5 px-4 text-right">ACTION</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/80 text-slate-300">
+              <tbody className="divide-y divide-slate-100 text-slate-700">
                 {customers.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-800/40 transition">
+                  <tr key={c.id} className="hover:bg-slate-50/80 transition">
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-blue-950 border border-blue-800 text-blue-300 flex items-center justify-center font-bold text-xs">
+                        <div className="w-8 h-8 rounded-full bg-blue-50 border border-blue-200 text-blue-700 flex items-center justify-center font-bold text-xs">
                           {c.fullName.charAt(0)}
                         </div>
                         <div>
-                          <div className="font-bold text-white text-sm flex items-center gap-1.5">
+                          <div className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
                             <span>{c.fullName}</span>
                             {c.isVip && (
-                              <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] font-black uppercase">
+                              <span className="px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[9px] font-black uppercase">
                                 VIP
                               </span>
                             )}
                           </div>
-                          <div className="text-[11px] text-slate-400">{c.email}</div>
+                          <div className="text-[11px] text-slate-500">{c.email}</div>
                         </div>
                       </div>
                     </td>
                     <td className="py-3.5 px-4">
-                      <div className="text-white font-medium">{c.phone}</div>
-                      <div className="text-[11px] text-slate-400 mt-0.5 truncate max-w-xs">
+                      <div className="text-slate-900 font-medium">{c.phone}</div>
+                      <div className="text-[11px] text-slate-500 mt-0.5 truncate max-w-xs">
                         📍 {c.defaultAddressLine}
                       </div>
                     </td>
                     <td className="py-3.5 px-4">
                       {c.activeSubscriptionPlan && c.activeSubscriptionPlan !== 'NONE' ? (
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-950/60 text-purple-300 border border-purple-800/50 inline-flex items-center gap-1">
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 inline-flex items-center gap-1">
                           <span>🛡️</span>
                           <span>{c.activeSubscriptionPlan.replace(/_/g, ' ')}</span>
                         </span>
                       ) : (
-                        <span className="text-slate-500 font-medium">Standard</span>
+                        <span className="text-slate-400 font-medium">Standard</span>
                       )}
                     </td>
-                    <td className="py-3.5 px-4 font-bold text-white">
+                    <td className="py-3.5 px-4 font-bold text-slate-900">
                       <div>₹{c.totalSpendInr.toLocaleString('en-IN')}</div>
-                      <div className="text-[11px] text-slate-400 font-normal">
+                      <div className="text-[11px] text-slate-500 font-normal">
                         {c.totalOrdersCount} service bookings
                       </div>
                     </td>
                     <td className="py-3.5 px-4">
                       {c.disputeCount > 0 ? (
-                        <span className="px-2 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-800 text-[10px] font-bold">
+                        <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold">
                           ⚠️ {c.disputeCount} Logged
                         </span>
                       ) : (
-                        <span className="text-emerald-400 text-[11px] font-medium">✓ 0 Disputes</span>
+                        <span className="text-emerald-600 text-[11px] font-medium">✓ 0 Disputes</span>
                       )}
                     </td>
-                    <td className="py-3.5 px-4 font-mono text-[11px] text-slate-400">
+                    <td className="py-3.5 px-4 font-mono text-[11px] text-slate-500">
                       {new Date(c.memberSince).toLocaleDateString('en-IN', {
                         month: 'short',
                         year: 'numeric',
@@ -302,7 +302,7 @@ export default function AdminCustomersPage() {
                       <button
                         type="button"
                         onClick={() => handleViewDossier(c.id)}
-                        className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition inline-flex items-center gap-1.5"
+                        className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition inline-flex items-center gap-1.5 border border-slate-200"
                       >
                         <span>📂</span>
                         <span>Dossier</span>
@@ -318,64 +318,64 @@ export default function AdminCustomersPage() {
 
       {/* ADM-SCR-10: Customer Lifetime Profile & Order History Modal */}
       {isDossierOpen && selectedCustomer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full p-6 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full p-6 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-start justify-between">
               <div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
                   ADM-SCR-10 · Customer Profile Dossier
                 </span>
-                <h2 className="text-xl font-black text-white mt-1 flex items-center gap-2">
+                <h2 className="text-xl font-black text-slate-900 mt-1 flex items-center gap-2">
                   <span>{selectedCustomer.fullName}</span>
                   {selectedCustomer.isVip && (
-                    <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-bold">
+                    <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold">
                       VIP Account
                     </span>
                   )}
                 </h2>
-                <p className="text-xs text-slate-400">
-                  Customer ID: <span className="font-mono text-slate-300">{selectedCustomer.id}</span>
+                <p className="text-xs text-slate-500">
+                  Customer ID: <span className="font-mono text-slate-700">{selectedCustomer.id}</span>
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsDossierOpen(false)}
-                className="p-2 text-slate-400 hover:text-white rounded-lg bg-slate-800 text-sm font-bold"
+                className="p-2 text-slate-400 hover:text-slate-700 rounded-lg bg-slate-100 hover:bg-slate-200 text-sm font-bold"
               >
                 ✕
               </button>
             </div>
 
             {/* Profile & Subscription Card */}
-            <div className="grid grid-cols-2 gap-4 bg-slate-950 p-4 rounded-2xl border border-slate-800 text-xs">
+            <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs">
               <div>
-                <span className="text-slate-500 block text-[11px]">Contact & Coordinates</span>
-                <span className="text-white font-bold block mt-0.5">{selectedCustomer.phone}</span>
-                <span className="text-slate-400 block">{selectedCustomer.email}</span>
-                <span className="text-slate-400 block mt-1">📍 {selectedCustomer.defaultAddressLine}</span>
-                <span className="text-blue-400 font-mono text-[11px] block">
+                <span className="text-slate-500 block text-[11px] font-medium">Contact & Coordinates</span>
+                <span className="text-slate-900 font-bold block mt-0.5">{selectedCustomer.phone}</span>
+                <span className="text-slate-600 block">{selectedCustomer.email}</span>
+                <span className="text-slate-600 block mt-1">📍 {selectedCustomer.defaultAddressLine}</span>
+                <span className="text-blue-600 font-mono text-[11px] block font-semibold">
                   PIN: {selectedCustomer.defaultPincode} (Colaba Hub)
                 </span>
               </div>
 
               <div>
-                <span className="text-slate-500 block text-[11px]">Zex Cyber Security Shield</span>
+                <span className="text-slate-500 block text-[11px] font-medium">Zex Cyber Security Shield</span>
                 <div className="mt-1">
-                  <span className="px-2.5 py-1 rounded bg-purple-950/70 text-purple-300 border border-purple-800 text-[11px] font-bold inline-flex items-center gap-1">
+                  <span className="px-2.5 py-1 rounded bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-bold inline-flex items-center gap-1">
                     <span>🛡️</span>
                     <span>{selectedCustomer.activeSubscriptionPlan || 'Standard'}</span>
                   </span>
                 </div>
                 {selectedCustomer.subscriptionExpiryDate && (
-                  <div className="text-[11px] text-slate-400 mt-2">
+                  <div className="text-[11px] text-slate-500 mt-2">
                     Valid until:{' '}
-                    <span className="text-slate-200 font-mono">
+                    <span className="text-slate-800 font-mono font-semibold">
                       {new Date(selectedCustomer.subscriptionExpiryDate).toLocaleDateString()}
                     </span>
                   </div>
                 )}
-                <div className="text-[11px] text-emerald-400 font-medium mt-1">
+                <div className="text-[11px] text-emerald-600 font-semibold mt-1">
                   ✓ Priority 15-Minute SOS Dispatch Eligible
                 </div>
               </div>
@@ -383,9 +383,9 @@ export default function AdminCustomersPage() {
 
             {/* Work Order Lifecycle History */}
             <div className="space-y-3">
-              <h3 className="text-sm font-bold text-white flex items-center justify-between">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center justify-between">
                 <span>Lifetime Service History</span>
-                <span className="text-xs text-slate-400 font-normal">
+                <span className="text-xs text-slate-500 font-normal">
                   {selectedCustomer.jobs?.length || 0} Work Orders
                 </span>
               </h3>
@@ -395,40 +395,40 @@ export default function AdminCustomersPage() {
                   {selectedCustomer.jobs.map((job: any) => (
                     <div
                       key={job.id}
-                      className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex items-center justify-between gap-3 text-xs"
+                      className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex items-center justify-between gap-3 text-xs"
                     >
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-white text-xs">{job.jobTicketNumber}</span>
+                          <span className="font-mono font-bold text-slate-900 text-xs">{job.jobTicketNumber}</span>
                           <span
                             className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
                               job.status === 'WORK_COMPLETED' || job.status === 'SETTLED'
-                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                 : job.status === 'ESCALATED_SLA'
-                                ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                                : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                ? 'bg-red-50 text-red-700 border border-red-200'
+                                : 'bg-blue-50 text-blue-700 border border-blue-200'
                             }`}
                           >
                             {job.status.replace('_', ' ')}
                           </span>
                         </div>
-                        <div className="text-slate-300 font-medium mt-1">{job.serviceTitle}</div>
+                        <div className="text-slate-800 font-medium mt-1">{job.serviceTitle}</div>
                         <div className="text-[11px] text-slate-500 mt-0.5">
                           {job.technicianName ? `Assigned Tech: ${job.technicianName}` : 'Unassigned'}
                         </div>
                       </div>
 
                       <div className="text-right">
-                        <div className="font-bold text-white text-sm">₹{job.totalAmountInr}</div>
+                        <div className="font-bold text-slate-900 text-sm">₹{job.totalAmountInr}</div>
                         <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-                          OTP: <span className="text-amber-400 font-bold">{job.handoverOtp}</span>
+                          OTP: <span className="text-amber-600 font-bold">{job.handoverOtp}</span>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="p-4 text-center text-slate-500 bg-slate-950 rounded-xl border border-slate-800 text-xs">
+                <div className="p-4 text-center text-slate-500 bg-slate-50 rounded-xl border border-slate-200 text-xs">
                   No work orders recorded yet.
                 </div>
               )}
@@ -436,18 +436,18 @@ export default function AdminCustomersPage() {
 
             {/* Admin Notes */}
             {selectedCustomer.notes && (
-              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs">
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
                 <span className="text-slate-500 block text-[11px] font-semibold">Account Manager Notes:</span>
-                <p className="text-slate-300 mt-0.5">{selectedCustomer.notes}</p>
+                <p className="text-slate-700 mt-0.5">{selectedCustomer.notes}</p>
               </div>
             )}
 
             {/* Close Button */}
-            <div className="flex justify-end pt-3 border-t border-slate-800">
+            <div className="flex justify-end pt-3 border-t border-slate-200">
               <button
                 type="button"
                 onClick={() => setIsDossierOpen(false)}
-                className="px-5 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold hover:bg-slate-700 transition"
+                className="px-5 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold hover:bg-slate-200 transition border border-slate-200"
               >
                 Close Dossier
               </button>
@@ -458,17 +458,17 @@ export default function AdminCustomersPage() {
 
       {/* Add Customer Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-xl font-black text-white">Add Customer Account</h2>
-                <p className="text-xs text-slate-400">Create new consumer profile and service destination address.</p>
+                <h2 className="text-xl font-black text-slate-900">Add Customer Account</h2>
+                <p className="text-xs text-slate-500">Create new consumer profile and service destination address.</p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsAddModalOpen(false)}
-                className="p-2 text-slate-400 hover:text-white rounded-lg bg-slate-800 text-sm font-bold"
+                className="p-2 text-slate-400 hover:text-slate-700 rounded-lg bg-slate-100 hover:bg-slate-200 text-sm font-bold"
               >
                 ✕
               </button>
@@ -476,68 +476,68 @@ export default function AdminCustomersPage() {
 
             <form onSubmit={handleCreateCustomer} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">Full Name *</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Full Name *</label>
                 <input
                   required
                   placeholder="e.g. Rahul Kapoor"
                   value={newCust.fullName}
                   onChange={(e) => setNewCust({ ...newCust, fullName: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs outline-none focus:border-blue-500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 text-xs outline-none focus:border-blue-500 focus:bg-white"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Phone Number *</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Phone Number *</label>
                   <input
                     required
                     placeholder="+919800011223"
                     value={newCust.phone}
                     onChange={(e) => setNewCust({ ...newCust, phone: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 text-xs outline-none focus:border-blue-500 focus:bg-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Email</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Email</label>
                   <input
                     type="email"
                     placeholder="user@example.com"
                     value={newCust.email}
                     onChange={(e) => setNewCust({ ...newCust, email: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 text-xs outline-none focus:border-blue-500 focus:bg-white"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">Premises Address *</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Premises Address *</label>
                 <input
                   required
                   placeholder="Flat/House number, Apartment, Landmark"
                   value={newCust.defaultAddressLine}
                   onChange={(e) => setNewCust({ ...newCust, defaultAddressLine: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs outline-none focus:border-blue-500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 text-xs outline-none focus:border-blue-500 focus:bg-white"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Default Pincode *</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Default Pincode *</label>
                   <input
                     required
                     maxLength={6}
                     placeholder="400001"
                     value={newCust.defaultPincode}
                     onChange={(e) => setNewCust({ ...newCust, defaultPincode: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs outline-none focus:border-blue-500 font-mono"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 text-xs outline-none focus:border-blue-500 focus:bg-white font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Protection Plan</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Protection Plan</label>
                   <select
                     value={newCust.activeSubscriptionPlan}
                     onChange={(e) => setNewCust({ ...newCust, activeSubscriptionPlan: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 text-xs outline-none focus:border-blue-500 focus:bg-white"
                   >
                     <option value="NONE">None (Standard)</option>
                     <option value="ZEX_SHIELD_1MO">Zex Shield 1-Mo (₹199)</option>
@@ -547,11 +547,11 @@ export default function AdminCustomersPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700 transition"
+                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold hover:bg-slate-200 transition border border-slate-200"
                 >
                   Cancel
                 </button>

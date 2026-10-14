@@ -153,13 +153,13 @@ export default function AdminPartnersPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-widest bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-widest bg-blue-50 text-blue-700 border border-blue-200 uppercase">
               ADM-SCR-02 & ADM-SCR-03
             </span>
-            <span className="text-xs text-slate-400 font-medium">Pan-India Franchise Governance</span>
+            <span className="text-xs text-slate-500 font-medium">Pan-India Franchise Governance</span>
           </div>
-          <h1 className="text-2xl font-black text-white mt-1">Franchise Partners & State Allocations</h1>
-          <p className="text-sm text-slate-400">
+          <h1 className="text-2xl font-black text-slate-900 mt-1">Franchise Partners & State Allocations</h1>
+          <p className="text-sm text-slate-500">
             Multi-tenant territorial management, state license allocations, postal quotas, and commission governance.
           </p>
         </div>
@@ -176,37 +176,37 @@ export default function AdminPartnersPage() {
 
       {/* Macro Telemetry KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Franchises</div>
-          <div className="text-2xl font-black text-white mt-1">{totalPartners}</div>
-          <div className="text-[11px] text-emerald-400 font-medium mt-1">✓ Tier-1 Operational Hubs</div>
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs hover:shadow-md transition-shadow">
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Franchises</div>
+          <div className="text-2xl font-black text-slate-900 mt-1">{totalPartners}</div>
+          <div className="text-[11px] text-emerald-600 font-medium mt-1">✓ Tier-1 Operational Hubs</div>
         </div>
 
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pincodes Managed</div>
-          <div className="text-2xl font-black text-emerald-400 mt-1">{activePincodes}</div>
-          <div className="text-[11px] text-slate-400 font-medium mt-1">Postal boundary coverage</div>
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs hover:shadow-md transition-shadow">
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pincodes Managed</div>
+          <div className="text-2xl font-black text-emerald-600 mt-1">{activePincodes}</div>
+          <div className="text-[11px] text-slate-500 font-medium mt-1">Postal boundary coverage</div>
         </div>
 
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Rostered Fleet</div>
-          <div className="text-2xl font-black text-blue-400 mt-1">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs hover:shadow-md transition-shadow">
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Rostered Fleet</div>
+          <div className="text-2xl font-black text-blue-600 mt-1">
             {activeTechnicians} <span className="text-xs text-slate-500 font-normal">/ {totalFleetCapacity} Quota</span>
           </div>
-          <div className="text-[11px] text-slate-400 font-medium mt-1">Certified field workforce</div>
+          <div className="text-[11px] text-slate-500 font-medium mt-1">Certified field workforce</div>
         </div>
 
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Avg Platform Cut</div>
-          <div className="text-2xl font-black text-amber-400 mt-1">15.0%</div>
-          <div className="text-[11px] text-slate-400 font-medium mt-1">Standardized Escrow Split</div>
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs hover:shadow-md transition-shadow">
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Avg Platform Cut</div>
+          <div className="text-2xl font-black text-amber-600 mt-1">15.0%</div>
+          <div className="text-[11px] text-slate-500 font-medium mt-1">Standardized Escrow Split</div>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between shadow-xs">
         {/* Status Tabs */}
-        <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800 w-full md:w-auto">
+        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 w-full md:w-auto">
           {['ALL', 'ACTIVE', 'PENDING_APPROVAL', 'SUSPENDED'].map((st) => (
             <button
               key={st}
@@ -214,8 +214,8 @@ export default function AdminPartnersPage() {
               onClick={() => setStatusFilter(st)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
                 statusFilter === st
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               {st === 'ALL' ? 'All Status' : st.replace('_', ' ')}
@@ -228,7 +228,7 @@ export default function AdminPartnersPage() {
           <select
             value={stateFilter}
             onChange={(e) => setStateFilter(e.target.value)}
-            className="bg-slate-950 border border-slate-800 text-white text-xs rounded-xl px-3 py-2 outline-none focus:border-blue-500"
+            className="bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-xl px-3 py-2 outline-none focus:border-blue-500 focus:bg-white"
           >
             <option value="ALL">All States</option>
             <option value="Maharashtra">Maharashtra Hub</option>
@@ -243,7 +243,7 @@ export default function AdminPartnersPage() {
               placeholder="Search entity, CIN, director..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 text-white text-xs rounded-xl px-3 py-2 outline-none focus:border-blue-500 placeholder:text-slate-600"
+              className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-xl px-3 py-2 outline-none focus:border-blue-500 focus:bg-white placeholder:text-slate-400"
             />
           </form>
         </div>
@@ -251,9 +251,9 @@ export default function AdminPartnersPage() {
 
       {/* Partner Directory List */}
       {loading ? (
-        <div className="p-12 text-center text-slate-400">Loading franchise directory...</div>
+        <div className="p-12 text-center text-slate-500">Loading franchise directory...</div>
       ) : partners.length === 0 ? (
-        <div className="p-12 text-center text-slate-500 bg-slate-900/30 rounded-2xl border border-slate-800">
+        <div className="p-12 text-center text-slate-500 bg-white rounded-2xl border border-slate-200 shadow-xs">
           No franchise partners match your filter.
         </div>
       ) : (
@@ -265,27 +265,27 @@ export default function AdminPartnersPage() {
             return (
               <div
                 key={p.id}
-                className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition flex flex-col justify-between gap-5"
+                className="bg-white border border-slate-200 rounded-2xl p-5 hover:shadow-md transition flex flex-col justify-between gap-5 shadow-xs"
               >
                 <div>
                   {/* Top Bar of Card */}
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-base font-black text-white">{p.entityName}</span>
+                        <span className="text-base font-black text-slate-900">{p.entityName}</span>
                         <span
                           className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
                             p.status === 'ACTIVE'
-                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                               : p.status === 'PENDING_APPROVAL'
-                              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                              : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                              ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                              : 'bg-red-50 text-red-700 border border-red-200'
                           }`}
                         >
                           {p.status.replace('_', ' ')}
                         </span>
                       </div>
-                      <div className="text-xs text-slate-400 mt-1 flex items-center gap-3">
+                      <div className="text-xs text-slate-500 mt-1 flex items-center gap-3">
                         <span>👤 {p.directorName}</span>
                         <span>•</span>
                         <span>📞 {p.phone}</span>
@@ -293,22 +293,22 @@ export default function AdminPartnersPage() {
                     </div>
 
                     <div className="text-right">
-                      <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-900/30 text-blue-300 border border-blue-800/40">
+                      <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
                         {p.stateLicensed}
                       </span>
                     </div>
                   </div>
 
                   {/* Quotas & Capacity Bar */}
-                  <div className="grid grid-cols-2 gap-3 mt-4 bg-slate-950/70 p-3.5 rounded-xl border border-slate-800/80">
+                  <div className="grid grid-cols-2 gap-3 mt-4 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                     <div>
-                      <div className="flex justify-between text-[11px] font-medium text-slate-400">
+                      <div className="flex justify-between text-[11px] font-medium text-slate-600">
                         <span>Pincodes Covered</span>
-                        <span className="text-white font-bold">
+                        <span className="text-slate-900 font-bold">
                           {p.activePincodesCount || 0} / {p.maxPincodeQuota}
                         </span>
                       </div>
-                      <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-1.5">
+                      <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden mt-1.5">
                         <div
                           className="bg-emerald-500 h-full rounded-full transition-all"
                           style={{ width: `${Math.min(100, pincodePct)}%` }}
@@ -317,15 +317,15 @@ export default function AdminPartnersPage() {
                     </div>
 
                     <div>
-                      <div className="flex justify-between text-[11px] font-medium text-slate-400">
+                      <div className="flex justify-between text-[11px] font-medium text-slate-600">
                         <span>Technician Fleet</span>
-                        <span className="text-white font-bold">
+                        <span className="text-slate-900 font-bold">
                           {p.activeTechnicianCount || 0} / {p.activeTechnicianQuota}
                         </span>
                       </div>
-                      <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-1.5">
+                      <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden mt-1.5">
                         <div
-                          className="bg-blue-500 h-full rounded-full transition-all"
+                          className="bg-blue-600 h-full rounded-full transition-all"
                           style={{ width: `${Math.min(100, techPct)}%` }}
                         />
                       </div>
@@ -333,27 +333,27 @@ export default function AdminPartnersPage() {
                   </div>
 
                   {/* Legal & Finance Snapshot */}
-                  <div className="grid grid-cols-3 gap-2 mt-3 text-[11px] text-slate-400">
+                  <div className="grid grid-cols-3 gap-2 mt-3 text-[11px] text-slate-500">
                     <div className="truncate">
                       <span className="text-slate-500 block text-[10px]">CIN Registration</span>
-                      <span className="font-mono text-slate-300">{p.companyRegistrationNumber}</span>
+                      <span className="font-mono text-slate-800 font-semibold">{p.companyRegistrationNumber}</span>
                     </div>
                     <div className="truncate">
                       <span className="text-slate-500 block text-[10px]">GSTIN Number</span>
-                      <span className="font-mono text-slate-300">{p.gstin}</span>
+                      <span className="font-mono text-slate-800 font-semibold">{p.gstin}</span>
                     </div>
                     <div className="truncate text-right">
                       <span className="text-slate-500 block text-[10px]">Revenue Share</span>
-                      <span className="text-amber-400 font-bold">15% Cut / 15% Plat</span>
+                      <span className="text-amber-700 font-bold">15% Cut / 15% Plat</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Footer Buttons */}
-                <div className="flex items-center justify-between pt-3 border-t border-slate-800/80 gap-3">
+                <div className="flex items-center justify-between pt-3 border-t border-slate-100 gap-3">
                   <div className="text-[11px] text-slate-500">
                     Allocated States:{' '}
-                    <span className="text-slate-300 font-medium">
+                    <span className="text-slate-800 font-medium">
                       {(p.allocatedStates || [p.stateLicensed]).join(', ')}
                     </span>
                   </div>
@@ -365,7 +365,7 @@ export default function AdminPartnersPage() {
                         setSelectedPartner(p);
                         setIsDossierOpen(true);
                       }}
-                      className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition flex items-center gap-1.5"
+                      className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold transition flex items-center gap-1.5"
                     >
                       <span>📂</span>
                       <span>Dossier & Quotas</span>
@@ -374,7 +374,7 @@ export default function AdminPartnersPage() {
                       <button
                         type="button"
                         onClick={() => handleUpdateDossier(p.id, { status: 'SUSPENDED' })}
-                        className="px-2.5 py-1.5 rounded-lg bg-red-950/40 hover:bg-red-900/60 text-red-300 text-xs font-bold transition border border-red-800/40"
+                        className="px-2.5 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold transition border border-red-200"
                       >
                         Suspend
                       </button>
@@ -382,7 +382,7 @@ export default function AdminPartnersPage() {
                       <button
                         type="button"
                         onClick={() => handleUpdateDossier(p.id, { status: 'ACTIVE' })}
-                        className="px-2.5 py-1.5 rounded-lg bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 text-xs font-bold transition border border-emerald-800/40"
+                        className="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold transition border border-emerald-200"
                       >
                         Activate
                       </button>
@@ -397,54 +397,54 @@ export default function AdminPartnersPage() {
 
       {/* ADM-SCR-03: Partner Dossier & State Allocation Drawer/Modal */}
       {isDossierOpen && selectedPartner && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full p-6 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full p-6 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-start justify-between">
               <div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
                   ADM-SCR-03 · Partner Dossier
                 </span>
-                <h2 className="text-xl font-black text-white mt-1">{selectedPartner.entityName}</h2>
-                <p className="text-xs text-slate-400">
-                  Territory ID: <span className="font-mono text-slate-300">{selectedPartner.id}</span>
+                <h2 className="text-xl font-black text-slate-900 mt-1">{selectedPartner.entityName}</h2>
+                <p className="text-xs text-slate-500">
+                  Territory ID: <span className="font-mono text-slate-700">{selectedPartner.id}</span>
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsDossierOpen(false)}
-                className="p-2 text-slate-400 hover:text-white rounded-lg bg-slate-800 text-sm font-bold"
+                className="p-2 text-slate-400 hover:text-slate-700 rounded-lg bg-slate-100 hover:bg-slate-200 text-sm font-bold"
               >
                 ✕
               </button>
             </div>
 
             {/* Legal & Banking Grid */}
-            <div className="grid grid-cols-2 gap-4 bg-slate-950 p-4 rounded-2xl border border-slate-800 text-xs">
+            <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs">
               <div>
-                <span className="text-slate-500 block text-[11px]">Managing Director</span>
-                <span className="text-white font-bold">{selectedPartner.directorName}</span>
-                <span className="text-slate-400 block text-[11px] mt-0.5">{selectedPartner.email}</span>
-                <span className="text-slate-400 block text-[11px]">{selectedPartner.phone}</span>
+                <span className="text-slate-500 block text-[11px] font-medium">Managing Director</span>
+                <span className="text-slate-900 font-bold">{selectedPartner.directorName}</span>
+                <span className="text-slate-600 block text-[11px] mt-0.5">{selectedPartner.email}</span>
+                <span className="text-slate-600 block text-[11px]">{selectedPartner.phone}</span>
               </div>
               <div>
-                <span className="text-slate-500 block text-[11px]">Statutory Registration</span>
-                <span className="text-slate-300 block font-mono">CIN: {selectedPartner.companyRegistrationNumber}</span>
-                <span className="text-slate-300 block font-mono">GSTIN: {selectedPartner.gstin}</span>
-                <span className="text-emerald-400 text-[11px] font-semibold mt-1 block">
+                <span className="text-slate-500 block text-[11px] font-medium">Statutory Registration</span>
+                <span className="text-slate-800 block font-mono font-medium">CIN: {selectedPartner.companyRegistrationNumber}</span>
+                <span className="text-slate-800 block font-mono font-medium">GSTIN: {selectedPartner.gstin}</span>
+                <span className="text-emerald-700 text-[11px] font-semibold mt-1 block">
                   ✓ Verified by Ministry of Corporate Affairs
                 </span>
               </div>
-              <div className="col-span-2 pt-3 border-t border-slate-800/80">
-                <span className="text-slate-500 block text-[11px]">Banking & Escrow Settlement Account</span>
+              <div className="col-span-2 pt-3 border-t border-slate-200">
+                <span className="text-slate-500 block text-[11px] font-medium">Banking & Escrow Settlement Account</span>
                 <div className="flex items-center justify-between mt-1">
-                  <div className="text-slate-300">
-                    <span className="font-bold text-white">{selectedPartner.bankName}</span>
-                    <span className="block text-[11px] font-mono text-slate-400">
+                  <div className="text-slate-700">
+                    <span className="font-bold text-slate-900">{selectedPartner.bankName}</span>
+                    <span className="block text-[11px] font-mono text-slate-500">
                       A/C: {selectedPartner.bankAccountNumber} · IFSC: {selectedPartner.ifscCode}
                     </span>
                   </div>
-                  <span className="px-2 py-1 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-bold">
+                  <span className="px-2 py-1 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
                     NPCI Verified
                   </span>
                 </div>
@@ -453,10 +453,10 @@ export default function AdminPartnersPage() {
 
             {/* Interactive Quota Modifiers */}
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-white">Quotas & Revenue Share Overrides</h3>
+              <h3 className="text-sm font-bold text-slate-900">Quotas & Revenue Share Overrides</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Max Pincodes Quota</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Max Pincodes Quota</label>
                   <input
                     type="number"
                     value={selectedPartner.maxPincodeQuota}
@@ -466,11 +466,11 @@ export default function AdminPartnersPage() {
                         maxPincodeQuota: Number(e.target.value),
                       })
                     }
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 text-xs outline-none focus:border-blue-500 focus:bg-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Max Technician Fleet Quota</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Max Technician Fleet Quota</label>
                   <input
                     type="number"
                     value={selectedPartner.activeTechnicianQuota}
@@ -480,11 +480,11 @@ export default function AdminPartnersPage() {
                         activeTechnicianQuota: Number(e.target.value),
                       })
                     }
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 text-xs outline-none focus:border-blue-500 focus:bg-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Platform Revenue Share (%)</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Platform Revenue Share (%)</label>
                   <input
                     type="number"
                     step="0.5"
@@ -495,11 +495,11 @@ export default function AdminPartnersPage() {
                         platformRevenueSharePct: Number(e.target.value),
                       })
                     }
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 text-xs outline-none focus:border-blue-500 focus:bg-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Franchise Commission Share (%)</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Franchise Commission Share (%)</label>
                   <input
                     type="number"
                     step="0.5"
@@ -510,18 +510,18 @@ export default function AdminPartnersPage() {
                         partnerRevenueSharePct: Number(e.target.value),
                       })
                     }
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 text-xs outline-none focus:border-blue-500 focus:bg-white"
                   />
                 </div>
               </div>
             </div>
 
             {/* Save Buttons */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
               <button
                 type="button"
                 onClick={() => setIsDossierOpen(false)}
-                className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700 transition"
+                className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold hover:bg-slate-200 transition border border-slate-200"
               >
                 Close
               </button>
@@ -547,17 +547,17 @@ export default function AdminPartnersPage() {
 
       {/* Onboard New Partner Modal */}
       {isOnboardModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-xl w-full p-6 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-xl w-full p-6 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-xl font-black text-white">Onboard Franchise Partner</h2>
-                <p className="text-xs text-slate-400">Register new regional operations hub and allocate state jurisdiction.</p>
+                <h2 className="text-xl font-black text-slate-900">Onboard Franchise Partner</h2>
+                <p className="text-xs text-slate-500">Register new regional operations hub and allocate state jurisdiction.</p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsOnboardModalOpen(false)}
-                className="p-2 text-slate-400 hover:text-white rounded-lg bg-slate-800 text-sm font-bold"
+                className="p-2 text-slate-400 hover:text-slate-700 rounded-lg bg-slate-100 hover:bg-slate-200 text-sm font-bold"
               >
                 ✕
               </button>
@@ -566,55 +566,55 @@ export default function AdminPartnersPage() {
             <form onSubmit={handleOnboardSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Entity Name *</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Entity Name *</label>
                   <input
                     required
                     type="text"
                     placeholder="e.g. Tamil Nadu Power Grid Solutions Pvt Ltd"
                     value={newPartner.entityName}
                     onChange={(e) => setNewPartner({ ...newPartner, entityName: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 text-xs outline-none focus:border-blue-500 focus:bg-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Director Name *</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Director Name *</label>
                   <input
                     required
                     type="text"
                     placeholder="e.g. Ramesh Krishnan"
                     value={newPartner.directorName}
                     onChange={(e) => setNewPartner({ ...newPartner, directorName: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 text-xs outline-none focus:border-blue-500 focus:bg-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Director Phone *</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Director Phone *</label>
                   <input
                     required
                     type="tel"
                     placeholder="+919840012345"
                     value={newPartner.phone}
                     onChange={(e) => setNewPartner({ ...newPartner, phone: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 text-xs outline-none focus:border-blue-500 focus:bg-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Email *</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Email *</label>
                   <input
                     required
                     type="email"
                     placeholder="ops@partner.in"
                     value={newPartner.email}
                     onChange={(e) => setNewPartner({ ...newPartner, email: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 text-xs outline-none focus:border-blue-500 focus:bg-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Primary State *</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Primary State *</label>
                   <select
                     value={newPartner.stateLicensed}
                     onChange={(e) => setNewPartner({ ...newPartner, stateLicensed: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 text-xs outline-none focus:border-blue-500 focus:bg-white"
                   >
                     <option value="Maharashtra">Maharashtra</option>
                     <option value="Delhi NCR">Delhi NCR</option>
@@ -625,33 +625,33 @@ export default function AdminPartnersPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">GSTIN (15 Digits) *</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">GSTIN (15 Digits) *</label>
                   <input
                     required
                     type="text"
                     placeholder="33AAAAA0000A1Z5"
                     value={newPartner.gstin}
                     onChange={(e) => setNewPartner({ ...newPartner, gstin: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs outline-none focus:border-blue-500 uppercase font-mono"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 text-xs outline-none focus:border-blue-500 focus:bg-white uppercase font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Bank Name</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Bank Name</label>
                   <input
                     type="text"
                     placeholder="HDFC Bank"
                     value={newPartner.bankName}
                     onChange={(e) => setNewPartner({ ...newPartner, bankName: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 text-xs outline-none focus:border-blue-500 focus:bg-white"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setIsOnboardModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700 transition"
+                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold hover:bg-slate-200 transition border border-slate-200"
                 >
                   Cancel
                 </button>
