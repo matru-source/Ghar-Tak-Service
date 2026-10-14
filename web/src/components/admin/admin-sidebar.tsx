@@ -20,38 +20,38 @@ export interface NavSection {
 
 const ADMIN_NAVIGATION: NavSection[] = [
   {
-    title: 'NATIONAL OPERATIONS',
+    title: 'OPERATIONS',
     items: [
-      { name: 'National Telemetry', href: '/admin', icon: '⚡' },
-      { name: 'Live Dispatch Console', href: '/admin/dispatch', icon: '🛰️', badge: 'Live', badgeColor: 'bg-emerald-500' },
-      { name: 'Work Orders Queue', href: '/admin/jobs', icon: '📋', badge: '3', badgeColor: 'bg-blue-600' },
-      { name: 'Critical SLA Escalations', href: '/admin/escalations', icon: '🚨', badge: '1', badgeColor: 'bg-red-500 animate-pulse' },
+      { name: 'Dashboard', href: '/admin', icon: '⚡' },
+      { name: 'Live Dispatch', href: '/admin/dispatch', icon: '🛰️', badge: 'Live', badgeColor: 'bg-emerald-500' },
+      { name: 'Work Orders', href: '/admin/jobs', icon: '📋', badge: '3', badgeColor: 'bg-blue-600' },
+      { name: 'Escalations', href: '/admin/escalations', icon: '🚨', badge: '1', badgeColor: 'bg-red-500 animate-pulse' },
     ],
   },
   {
-    title: 'FLEET & TERRITORY',
+    title: 'PARTNERS & FLEET',
     items: [
-      { name: 'Franchise Partners', href: '/admin/partners', icon: '🏢' },
-      { name: 'Pincode Territories', href: '/admin/pincodes', icon: '📍' },
-      { name: 'Technician Fleet & KYC', href: '/admin/technicians', icon: '👷', badge: '1 KYC', badgeColor: 'bg-amber-500' },
-      { name: 'Customer Lifetime Profiles', href: '/admin/customers', icon: '👥' },
+      { name: 'Partners', href: '/admin/partners', icon: '🏢' },
+      { name: 'Pincodes & Areas', href: '/admin/pincodes', icon: '📍' },
+      { name: 'Technicians', href: '/admin/technicians', icon: '👷', badge: '1 KYC', badgeColor: 'bg-amber-500' },
+      { name: 'Customers', href: '/admin/customers', icon: '👥' },
     ],
   },
   {
-    title: 'FINANCE & TREASURY',
+    title: 'FINANCE',
     items: [
-      { name: 'Central Ledgers & Escrow', href: '/admin/finance', icon: '🏦' },
-      { name: 'Commission Split Rules', href: '/admin/commissions', icon: '⚖️' },
-      { name: '18% GST Tax Invoices', href: '/admin/invoices', icon: '🧾' },
+      { name: 'Accounts & Ledgers', href: '/admin/finance', icon: '🏦' },
+      { name: 'Commissions', href: '/admin/commissions', icon: '⚖️' },
+      { name: 'Invoices', href: '/admin/invoices', icon: '🧾' },
     ],
   },
   {
-    title: 'GOVERNANCE & AUDIT',
+    title: 'SUPPORT & SYSTEM',
     items: [
-      { name: 'Zex Shield Subscriptions', href: '/admin/subscriptions', icon: '🛡️' },
-      { name: 'Support Tickets Desk', href: '/admin/support', icon: '🎫' },
-      { name: 'Tamper-Evident WORM Logs', href: '/admin/audit', icon: '📜' },
-      { name: 'Platform Settings & APIs', href: '/admin/settings', icon: '⚙️' },
+      { name: 'Subscriptions', href: '/admin/subscriptions', icon: '🛡️' },
+      { name: 'Support Tickets', href: '/admin/support', icon: '🎫' },
+      { name: 'Audit Logs', href: '/admin/audit', icon: '📜' },
+      { name: 'Settings', href: '/admin/settings', icon: '⚙️' },
     ],
   },
 ];
@@ -96,7 +96,7 @@ export function AdminSidebar() {
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium">
-              <span>National Command Console</span>
+              <span>Operations Console</span>
               <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 v2.4
@@ -161,7 +161,7 @@ export function AdminSidebar() {
               <div className="text-xs font-bold text-slate-900 leading-tight">Vikram Malhotra</div>
               <div className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-                SUPER_ADMIN
+                Super Admin
               </div>
             </div>
           </div>
