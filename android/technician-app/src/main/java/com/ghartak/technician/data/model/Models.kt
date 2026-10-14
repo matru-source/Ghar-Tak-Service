@@ -21,7 +21,14 @@ data class TechnicianProfile(
     @SerializedName("rating") val rating: Double,
     @SerializedName("safetyKitSerial") val safetyKitSerial: String? = null,
     @SerializedName("insulatedGlovesVerified") val insulatedGlovesVerified: Boolean = false,
-    @SerializedName("totalJobsCompleted") val totalJobsCompleted: Int = 0
+    @SerializedName("totalJobsCompleted") val totalJobsCompleted: Int = 0,
+    @SerializedName("email") val email: String = "rajakumar1995@gmail.com",
+    @SerializedName("location") val location: String = "Mumbai, Maharashtra",
+    @SerializedName("languages") val languages: String = "English, Hindi, Marathi",
+    @SerializedName("specialization") val specialization: String = "Electrical Installation, AC, Fan, Wiring",
+    @SerializedName("experience") val experience: String = "5+ Years",
+    @SerializedName("license") val license: String = "1000V Safety Certified",
+    @SerializedName("serviceArea") val serviceArea: String = "Mumbai & Surrounding Areas"
 )
 
 data class TechnicianJob(

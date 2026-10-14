@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -34,6 +35,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -160,6 +162,12 @@ fun TechnicianDashboardScreen(
                     TechnicianProfileContent(
                         state = state,
                         onToggleDuty = { viewModel.toggleDutyStatus(context) },
+                        onUpdatePersonalInfo = { name, phone, email, location, languages ->
+                            viewModel.updatePersonalInfo(name, phone, email, location, languages)
+                        },
+                        onUpdateServiceDetails = { specialization, experience, license, serviceArea ->
+                            viewModel.updateServiceDetails(specialization, experience, license, serviceArea)
+                        },
                         onLogout = {
                             viewModel.logout()
                             onLogout()
@@ -217,7 +225,7 @@ fun TechnicianHomeScreenContent(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(205.dp)
+                    .height(210.dp)
             ) {
                 // Background Image
                 Image(
@@ -298,20 +306,22 @@ fun TechnicianHomeScreenContent(
                                         modifier = Modifier.size(20.dp)
                                     )
                                 }
-                                Box(
-                                    modifier = Modifier
-                                        .size(17.dp)
-                                        .align(Alignment.TopEnd)
-                                        .clip(CircleShape)
-                                        .background(Color(0xFFE53935)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "${state.newJobNotifications.size}",
-                                        color = Color.White,
-                                        fontSize = 9.5.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                if (state.newJobNotifications.isNotEmpty()) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(17.dp)
+                                            .align(Alignment.TopEnd)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFFE53935)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "${state.newJobNotifications.size}",
+                                            color = Color.White,
+                                            fontSize = 9.5.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -349,6 +359,7 @@ fun TechnicianHomeScreenContent(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
                     .offset(y = (-14).dp)
+                    .clickable { onViewEarningsTab() }
             ) {
                 Row(
                     modifier = Modifier
@@ -518,12 +529,18 @@ fun TechnicianHomeScreenContent(
                             Spacer(modifier = Modifier.width(12.dp))
 
                             Column(modifier = Modifier.weight(1f)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
                                     Text(
                                         text = "New Job ${notif.jobTicketNumber}",
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 13.sp,
-                                        color = TextDarkPrimary
+                                        color = TextDarkPrimary,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f, fill = false)
                                     )
                                     if (notif.id == "J-1005") {
                                         Spacer(modifier = Modifier.width(6.dp))
@@ -536,6 +553,8 @@ fun TechnicianHomeScreenContent(
                                                 color = Color(0xFFDC2626),
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold,
+                                                maxLines = 1,
+                                                softWrap = false,
                                                 modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
                                             )
                                         }
@@ -632,7 +651,7 @@ fun TechnicianHomeScreenContent(
             }
         }
 
-        // 5. My Active Jobs (With real catalog thumbnails & status action buttons)
+        // 5. My Active Jobs (FIXED: Status pill is cleanly fitted and NEVER wrapped vertically!)
         item {
             Spacer(modifier = Modifier.height(10.dp))
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -705,12 +724,19 @@ fun TechnicianHomeScreenContent(
                             Spacer(modifier = Modifier.width(12.dp))
 
                             Column(modifier = Modifier.weight(1f)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                // Title and clean horizontal status chip with NO vertical squishing
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
                                     Text(
                                         text = "${job.jobTicketNumber} – ${job.serviceTitle}",
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 12.5.sp,
-                                        color = TextDarkPrimary
+                                        color = TextDarkPrimary,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f, fill = false)
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Surface(
@@ -720,14 +746,16 @@ fun TechnicianHomeScreenContent(
                                         Text(
                                             text = if (isStarted) "● In Progress" else "● En Route",
                                             color = if (isStarted) Color(0xFF1976D2) else Color(0xFF00838F),
-                                            fontSize = 9.sp,
+                                            fontSize = 9.5.sp,
                                             fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                                            maxLines = 1,
+                                            softWrap = false,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                         )
                                     }
                                 }
 
-                                Spacer(modifier = Modifier.height(2.dp))
+                                Spacer(modifier = Modifier.height(3.dp))
 
                                 Text(
                                     text = "$technicianFirstName – ${if (isStarted) "In Progress  |  45 mins left" else "En Route  |  10 mins away"}",
@@ -905,7 +933,7 @@ private fun SummaryActionCard(
 }
 
 // =========================================================================
-// SCREEN 2: TECHNICIAN EARNINGS SCREEN (Matches Client Reference Image 2)
+// SCREEN 2: TECHNICIAN EARNINGS SCREEN (Dynamic Real-Time Filters)
 // =========================================================================
 
 @Composable
@@ -916,6 +944,93 @@ fun TechnicianEarningsContent(
     onWithdraw: () -> Unit
 ) {
     val context = LocalContext.current
+
+    // Dynamically calculate values matching the selected time filter
+    val currentFilter = state.selectedEarningsFilter
+    val totalEarningsDisplay = when (currentFilter) {
+        "TODAY" -> state.todayEarningsInr
+        "THIS_WEEK" -> state.weekEarningsInr
+        "THIS_MONTH" -> state.monthEarningsInr
+        "ALL_TIME" -> state.allTimeEarningsInr
+        else -> state.monthEarningsInr
+    }
+
+    val trendDisplay = when (currentFilter) {
+        "TODAY" -> "↑ 3 completed jobs today"
+        "THIS_WEEK" -> "↑ 12% from last week"
+        "THIS_MONTH" -> "↑ 15% from last month"
+        "ALL_TIME" -> "↑ 148 lifetime jobs settled"
+        else -> "↑ 15% from last month"
+    }
+
+    val totalJobsCount = when (currentFilter) {
+        "TODAY" -> 4
+        "THIS_WEEK" -> 12
+        "THIS_MONTH" -> 24
+        "ALL_TIME" -> 160
+        else -> 24
+    }
+
+    val totalJobsSub = when (currentFilter) {
+        "TODAY" -> "today"
+        "THIS_WEEK" -> "this week"
+        "THIS_MONTH" -> "in this month"
+        "ALL_TIME" -> "all time"
+        else -> "in this month"
+    }
+
+    val completedJobsCount = when (currentFilter) {
+        "TODAY" -> 3
+        "THIS_WEEK" -> 10
+        "THIS_MONTH" -> 20
+        "ALL_TIME" -> 148
+        else -> 20
+    }
+
+    val completedAmountDisplay = when (currentFilter) {
+        "TODAY" -> "₹1,625 earned"
+        "THIS_WEEK" -> "₹7,375 earned"
+        "THIS_MONTH" -> "₹28,400 earned"
+        "ALL_TIME" -> "₹124,300 earned"
+        else -> "₹28,400 earned"
+    }
+
+    val pendingJobsCount = when (currentFilter) {
+        "TODAY" -> 1
+        "THIS_WEEK" -> 2
+        "THIS_MONTH" -> 4
+        "ALL_TIME" -> 12
+        else -> 4
+    }
+
+    val pendingAmountDisplay = when (currentFilter) {
+        "TODAY" -> "₹500 expected"
+        "THIS_WEEK" -> "₹1,900 expected"
+        "THIS_MONTH" -> "₹4,100 expected"
+        "ALL_TIME" -> "₹4,100 expected"
+        else -> "₹4,100 expected"
+    }
+
+    val sectionHeaderTitle = when (currentFilter) {
+        "TODAY" -> "Today's Transactions"
+        "THIS_WEEK" -> "This Week's Transactions"
+        "THIS_MONTH" -> "This Month's Transactions"
+        "ALL_TIME" -> "All Time Transactions"
+        else -> "This Month's Transactions"
+    }
+
+    val dropdownPillLabel = when (currentFilter) {
+        "TODAY" -> "Today, 14 Oct"
+        "THIS_WEEK" -> "This Week"
+        "THIS_MONTH" -> "October 2026"
+        "ALL_TIME" -> "All Time"
+        else -> "October 2026"
+    }
+
+    // Dynamic Filter of Transactions
+    val filteredTransactions = state.recentTransactions.filter { tx ->
+        tx.periodScope.contains(currentFilter)
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         // 1. Top Header Banner with Motivational Asset
@@ -963,7 +1078,7 @@ fun TechnicianEarningsContent(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // 2. Total Earnings Card with Integrated Monthly Bar Chart
+            // 2. Total Earnings Card with Dynamic Real-Time Bar Chart
             item {
                 Surface(
                     color = Color.White,
@@ -998,7 +1113,7 @@ fun TechnicianEarningsContent(
                                 Spacer(modifier = Modifier.height(4.dp))
 
                                 Text(
-                                    text = "₹32,500",
+                                    text = "₹${"%,.0f".format(totalEarningsDisplay)}",
                                     fontSize = 32.sp,
                                     fontWeight = FontWeight.Black,
                                     color = TechFlameOrange
@@ -1015,7 +1130,7 @@ fun TechnicianEarningsContent(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            text = "↑ 15% from last month",
+                                            text = trendDisplay,
                                             color = Color(0xFF2E7D32),
                                             fontSize = 10.5.sp,
                                             fontWeight = FontWeight.Bold
@@ -1031,7 +1146,7 @@ fun TechnicianEarningsContent(
                                 }
                             }
 
-                            // Minimalist Monthly Bar Chart (Jun, Jul, Aug, Sep, Oct highlighted in Orange)
+                            // Dynamic Chart changing based on active filter
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalAlignment = Alignment.Bottom,
@@ -1039,11 +1154,36 @@ fun TechnicianEarningsContent(
                                     .height(80.dp)
                                     .padding(end = 4.dp)
                             ) {
-                                MonthlyChartBar(label = "Jun", heightRatio = 0.22f, isHighlighted = false)
-                                MonthlyChartBar(label = "Jul", heightRatio = 0.35f, isHighlighted = false)
-                                MonthlyChartBar(label = "Aug", heightRatio = 0.52f, isHighlighted = false)
-                                MonthlyChartBar(label = "Sep", heightRatio = 0.70f, isHighlighted = false)
-                                MonthlyChartBar(label = "Oct", heightRatio = 1.00f, isHighlighted = true)
+                                when (currentFilter) {
+                                    "TODAY" -> {
+                                        MonthlyChartBar(label = "09:00", heightRatio = 0.35f, isHighlighted = false)
+                                        MonthlyChartBar(label = "12:00", heightRatio = 0.55f, isHighlighted = false)
+                                        MonthlyChartBar(label = "15:00", heightRatio = 0.80f, isHighlighted = false)
+                                        MonthlyChartBar(label = "18:00", heightRatio = 1.00f, isHighlighted = true)
+                                    }
+                                    "THIS_WEEK" -> {
+                                        MonthlyChartBar(label = "Mon", heightRatio = 0.40f, isHighlighted = false)
+                                        MonthlyChartBar(label = "Tue", heightRatio = 0.60f, isHighlighted = false)
+                                        MonthlyChartBar(label = "Wed", heightRatio = 0.75f, isHighlighted = false)
+                                        MonthlyChartBar(label = "Thu", heightRatio = 0.50f, isHighlighted = false)
+                                        MonthlyChartBar(label = "Fri", heightRatio = 1.00f, isHighlighted = true)
+                                    }
+                                    "ALL_TIME" -> {
+                                        MonthlyChartBar(label = "'22", heightRatio = 0.30f, isHighlighted = false)
+                                        MonthlyChartBar(label = "'23", heightRatio = 0.50f, isHighlighted = false)
+                                        MonthlyChartBar(label = "'24", heightRatio = 0.70f, isHighlighted = false)
+                                        MonthlyChartBar(label = "'25", heightRatio = 0.85f, isHighlighted = false)
+                                        MonthlyChartBar(label = "'26", heightRatio = 1.00f, isHighlighted = true)
+                                    }
+                                    else -> {
+                                        // THIS_MONTH
+                                        MonthlyChartBar(label = "Jun", heightRatio = 0.22f, isHighlighted = false)
+                                        MonthlyChartBar(label = "Jul", heightRatio = 0.35f, isHighlighted = false)
+                                        MonthlyChartBar(label = "Aug", heightRatio = 0.52f, isHighlighted = false)
+                                        MonthlyChartBar(label = "Sep", heightRatio = 0.70f, isHighlighted = false)
+                                        MonthlyChartBar(label = "Oct", heightRatio = 1.00f, isHighlighted = true)
+                                    }
+                                }
                             }
                         }
                     }
@@ -1072,7 +1212,7 @@ fun TechnicianEarningsContent(
                         )
 
                         filterOptions.forEach { (key, title) ->
-                            val isSelected = state.selectedEarningsFilter == key
+                            val isSelected = currentFilter == key
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
@@ -1094,7 +1234,7 @@ fun TechnicianEarningsContent(
                 }
             }
 
-            // 4. Three Stat Cards Row (Total Jobs, Completed Jobs, Pending Jobs)
+            // 4. Three Stat Cards Row (Dynamically calculated based on active filter)
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1121,11 +1261,11 @@ fun TechnicianEarningsContent(
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(text = "Total Jobs", fontSize = 10.sp, color = TextDarkSecondary, fontWeight = FontWeight.Medium)
                             Row(verticalAlignment = Alignment.Bottom) {
-                                Text(text = "24", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDarkPrimary)
+                                Text(text = "$totalJobsCount", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDarkPrimary)
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(text = "↑ 20%", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
                             }
-                            Text(text = "in this month", fontSize = 9.5.sp, color = TextDarkMuted)
+                            Text(text = totalJobsSub, fontSize = 9.5.sp, color = TextDarkMuted)
                         }
                     }
 
@@ -1149,8 +1289,8 @@ fun TechnicianEarningsContent(
                             }
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(text = "Completed Jobs", fontSize = 10.sp, color = TextDarkSecondary, fontWeight = FontWeight.Medium)
-                            Text(text = "20", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDarkPrimary)
-                            Text(text = "₹28,400 earned", fontSize = 9.5.sp, color = TechGreen, fontWeight = FontWeight.Bold)
+                            Text(text = "$completedJobsCount", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDarkPrimary)
+                            Text(text = completedAmountDisplay, fontSize = 9.5.sp, color = TechGreen, fontWeight = FontWeight.Bold)
                         }
                     }
 
@@ -1174,14 +1314,14 @@ fun TechnicianEarningsContent(
                             }
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(text = "Pending Jobs", fontSize = 10.sp, color = TextDarkSecondary, fontWeight = FontWeight.Medium)
-                            Text(text = "4", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDarkPrimary)
-                            Text(text = "₹4,100 expected", fontSize = 9.5.sp, color = Color(0xFFF57C00), fontWeight = FontWeight.Bold)
+                            Text(text = "$pendingJobsCount", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDarkPrimary)
+                            Text(text = pendingAmountDisplay, fontSize = 9.5.sp, color = Color(0xFFF57C00), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
             }
 
-            // 5. This Month's Transactions Section
+            // 5. Transactions Section (Filtered by active filter)
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1189,7 +1329,7 @@ fun TechnicianEarningsContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "This Month's Transactions",
+                        text = sectionHeaderTitle,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextDarkPrimary
@@ -1206,7 +1346,7 @@ fun TechnicianEarningsContent(
                         ) {
                             Icon(imageVector = Icons.Default.CalendarToday, contentDescription = null, tint = TextDarkSecondary, modifier = Modifier.size(12.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = "October 2026", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextDarkPrimary)
+                            Text(text = dropdownPillLabel, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextDarkPrimary)
                             Spacer(modifier = Modifier.width(4.dp))
                             Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null, tint = TextDarkSecondary, modifier = Modifier.size(14.dp))
                         }
@@ -1215,77 +1355,95 @@ fun TechnicianEarningsContent(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                state.recentTransactions.forEach { tx ->
+                if (filteredTransactions.isEmpty()) {
                     Surface(
                         color = Color.White,
                         shape = RoundedCornerShape(12.dp),
-                        shadowElevation = 1.dp,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF1F5F9)),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 8.dp)
+                            .padding(vertical = 12.dp)
                     ) {
-                        Row(
+                        Text(
+                            text = "No transactions found for this time period",
+                            fontSize = 12.sp,
+                            color = TextDarkMuted,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                } else {
+                    filteredTransactions.forEach { tx ->
+                        Surface(
+                            color = Color.White,
+                            shape = RoundedCornerShape(12.dp),
+                            shadowElevation = 1.dp,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF1F5F9)),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .padding(bottom = 8.dp)
                         ) {
-                            Box(
+                            Row(
                                 modifier = Modifier
-                                    .size(34.dp)
-                                    .clip(CircleShape)
-                                    .background(if (tx.isPending) Color(0xFFFFF3E0) else Color(0xFFE8F5E9)),
-                                contentAlignment = Alignment.Center
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    imageVector = if (tx.isPending) Icons.Default.HourglassEmpty else Icons.Default.CheckCircle,
-                                    contentDescription = null,
-                                    tint = if (tx.isPending) Color(0xFFFB8C00) else Color(0xFF2E7D32),
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.width(10.dp))
-
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "${tx.jobTicketNumber} - ${tx.serviceTitle}",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 12.5.sp,
-                                    color = TextDarkPrimary
-                                )
-                                Text(
-                                    text = tx.completedTime,
-                                    fontSize = 10.5.sp,
-                                    color = TextDarkMuted
-                                )
-                            }
-
-                            Column(horizontalAlignment = Alignment.End) {
-                                Surface(
-                                    color = if (tx.isPending) Color(0xFFFFF8E1) else Color(0xFFE8F5E9),
-                                    shape = RoundedCornerShape(4.dp)
+                                Box(
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .clip(CircleShape)
+                                        .background(if (tx.isPending) Color(0xFFFFF3E0) else Color(0xFFE8F5E9)),
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Text(
-                                        text = if (tx.isPending) "Pending" else "Completed",
-                                        color = if (tx.isPending) Color(0xFFE65100) else Color(0xFF2E7D32),
-                                        fontSize = 9.5.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    Icon(
+                                        imageVector = if (tx.isPending) Icons.Default.HourglassEmpty else Icons.Default.CheckCircle,
+                                        contentDescription = null,
+                                        tint = if (tx.isPending) Color(0xFFFB8C00) else Color(0xFF2E7D32),
+                                        modifier = Modifier.size(18.dp)
                                     )
                                 }
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = if (tx.isPending) "+₹${"%,.0f".format(tx.amountInr)}" else "+₹${"%,.0f".format(tx.amountInr)}",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Black,
-                                    color = if (tx.isPending) Color(0xFFE65100) else Color(0xFF2E7D32)
-                                )
-                            }
 
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFCBD5E1), modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(10.dp))
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "${tx.jobTicketNumber} - ${tx.serviceTitle}",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.5.sp,
+                                        color = TextDarkPrimary
+                                    )
+                                    Text(
+                                        text = tx.completedTime,
+                                        fontSize = 10.5.sp,
+                                        color = TextDarkMuted
+                                    )
+                                }
+
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Surface(
+                                        color = if (tx.isPending) Color(0xFFFFF8E1) else Color(0xFFE8F5E9),
+                                        shape = RoundedCornerShape(4.dp)
+                                    ) {
+                                        Text(
+                                            text = if (tx.isPending) "Pending" else "Completed",
+                                            color = if (tx.isPending) Color(0xFFE65100) else Color(0xFF2E7D32),
+                                            fontSize = 9.5.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = if (tx.isPending) "+₹${"%,.0f".format(tx.amountInr)}" else "+₹${"%,.0f".format(tx.amountInr)}",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = if (tx.isPending) Color(0xFFE65100) else Color(0xFF2E7D32)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFCBD5E1), modifier = Modifier.size(16.dp))
+                            }
                         }
                     }
                 }
@@ -1417,31 +1575,23 @@ private fun MonthlyChartBar(
 }
 
 // =========================================================================
-// SCREEN 3: TECHNICIAN PROFILE SCREEN (Matches Client Reference Image 3)
+// SCREEN 3: TECHNICIAN PROFILE SCREEN (Cleaned: No Settings/Legal, Working Edits)
 // =========================================================================
 
 @Composable
 fun TechnicianProfileContent(
     state: DashboardUiState,
     onToggleDuty: () -> Unit,
+    onUpdatePersonalInfo: (name: String, phone: String, email: String, location: String, languages: String) -> Unit,
+    onUpdateServiceDetails: (specialization: String, experience: String, license: String, serviceArea: String) -> Unit,
     onLogout: () -> Unit
 ) {
     val context = LocalContext.current
-    val sessionManager = remember { SessionManager(context) }
     var showLogoutDialog by remember { mutableStateOf(false) }
-    var showEnvSwitcher by remember { mutableStateOf(false) }
-    var isDarkModeEnabled by remember { mutableStateOf(false) }
+    var showEditPersonalDialog by remember { mutableStateOf(false) }
+    var showEditServiceDialog by remember { mutableStateOf(false) }
 
-    if (showEnvSwitcher) {
-        EnvironmentSwitcherDialog(
-            currentUrl = sessionManager.getCustomBaseUrl(),
-            onDismiss = { showEnvSwitcher = false },
-            onApply = { newUrl ->
-                sessionManager.setCustomBaseUrl(newUrl)
-            }
-        )
-    }
-
+    // Logout Confirmation Dialog
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
@@ -1478,8 +1628,152 @@ fun TechnicianProfileContent(
         )
     }
 
+    // 1. Working Edit Personal Info Dialog
+    if (showEditPersonalDialog) {
+        var editName by remember { mutableStateOf(state.profile?.fullName ?: "Raja Kumar") }
+        var editPhone by remember { mutableStateOf(state.profile?.phone ?: "+91 98765 43210") }
+        var editEmail by remember { mutableStateOf(state.profile?.email ?: "rajakumar1995@gmail.com") }
+        var editLocation by remember { mutableStateOf(state.profile?.location ?: "Mumbai, Maharashtra") }
+        var editLanguages by remember { mutableStateOf(state.profile?.languages ?: "English, Hindi, Marathi") }
+
+        AlertDialog(
+            onDismissRequest = { showEditPersonalDialog = false },
+            title = {
+                Text(text = "Edit Personal Information", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = editName,
+                        onValueChange = { editName = it },
+                        label = { Text("Full Name") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = editPhone,
+                        onValueChange = { editPhone = it },
+                        label = { Text("Phone Number") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = editEmail,
+                        onValueChange = { editEmail = it },
+                        label = { Text("Email Address") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = editLocation,
+                        onValueChange = { editLocation = it },
+                        label = { Text("Location") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = editLanguages,
+                        onValueChange = { editLanguages = it },
+                        label = { Text("Languages") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onUpdatePersonalInfo(editName, editPhone, editEmail, editLocation, editLanguages)
+                        showEditPersonalDialog = false
+                        Toast.makeText(context, "Personal information updated!", Toast.LENGTH_SHORT).show()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = TechFlameOrange)
+                ) {
+                    Text("Save Changes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditPersonalDialog = false }) {
+                    Text("Cancel", color = TextDarkSecondary)
+                }
+            }
+        )
+    }
+
+    // 2. Working Edit Service Details Dialog
+    if (showEditServiceDialog) {
+        var editSpecialization by remember { mutableStateOf(state.profile?.specialization ?: "Electrical Installation, AC, Fan, Wiring") }
+        var editExperience by remember { mutableStateOf(state.profile?.experience ?: "5+ Years") }
+        var editLicense by remember { mutableStateOf(state.profile?.license ?: "1000V Safety Certified") }
+        var editServiceArea by remember { mutableStateOf(state.profile?.serviceArea ?: "Mumbai & Surrounding Areas") }
+
+        AlertDialog(
+            onDismissRequest = { showEditServiceDialog = false },
+            title = {
+                Text(text = "Edit Service Details", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = editSpecialization,
+                        onValueChange = { editSpecialization = it },
+                        label = { Text("Specialization") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = editExperience,
+                        onValueChange = { editExperience = it },
+                        label = { Text("Experience") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = editLicense,
+                        onValueChange = { editLicense = it },
+                        label = { Text("License / Certification") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = editServiceArea,
+                        onValueChange = { editServiceArea = it },
+                        label = { Text("Service Area") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onUpdateServiceDetails(editSpecialization, editExperience, editLicense, editServiceArea)
+                        showEditServiceDialog = false
+                        Toast.makeText(context, "Service details updated!", Toast.LENGTH_SHORT).show()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = TechFlameOrange)
+                ) {
+                    Text("Save Changes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditServiceDialog = false }) {
+                    Text("Cancel", color = TextDarkSecondary)
+                }
+            }
+        )
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
-        // 1. Top Orange Header with Slogan and Notification Bell
+        // 1. Top Orange Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1535,7 +1829,7 @@ fun TechnicianProfileContent(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // 2. Main Profile Floating Card
+            // 2. Main Profile Floating Card (NO top edit button, reflects updated name immediately!)
             item {
                 Surface(
                     color = Color.White,
@@ -1547,102 +1841,83 @@ fun TechnicianProfileContent(
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.Top,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                // Technician Avatar with Online Indicator
-                                Box(modifier = Modifier.size(72.dp)) {
-                                    Image(
-                                        painter = painterResource(id = R.drawable.img_technician_rajesh),
-                                        contentDescription = "Technician Photo",
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier
-                                            .size(72.dp)
-                                            .clip(CircleShape)
-                                            .border(2.dp, Color(0xFFE2E8F0), CircleShape)
-                                    )
-                                    Box(
-                                        modifier = Modifier
-                                            .size(16.dp)
-                                            .clip(CircleShape)
-                                            .background(Color(0xFF2E7D32))
-                                            .border(2.dp, Color.White, CircleShape)
-                                            .align(Alignment.BottomEnd)
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(12.dp))
-
-                                Column {
-                                    Text(
-                                        text = state.profile?.fullName ?: "Raja Kumar",
-                                        fontSize = 17.sp,
-                                        fontWeight = FontWeight.Black,
-                                        color = TextDarkPrimary
-                                    )
-
-                                    Spacer(modifier = Modifier.height(2.dp))
-
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(
-                                            text = "ID: ${state.profile?.badgeNumber ?: "GTS-TECH-4815"}",
-                                            fontSize = 11.5.sp,
-                                            color = TextDarkSecondary
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Icon(
-                                            imageVector = Icons.Default.ContentCopy,
-                                            contentDescription = "Copy ID",
-                                            tint = TechFlameOrange,
-                                            modifier = Modifier
-                                                .size(13.dp)
-                                                .clickable {
-                                                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                                    val clip = ClipData.newPlainText("Badge ID", state.profile?.badgeNumber ?: "GTS-TECH-4815")
-                                                    clipboard.setPrimaryClip(clip)
-                                                    Toast.makeText(context, "Badge ID copied to clipboard", Toast.LENGTH_SHORT).show()
-                                                }
-                                        )
-                                    }
-
-                                    Spacer(modifier = Modifier.height(4.dp))
-
-                                    // Star Rating
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        repeat(5) {
-                                            Icon(
-                                                imageVector = Icons.Default.Star,
-                                                contentDescription = null,
-                                                tint = Color(0xFFFFB300),
-                                                modifier = Modifier.size(13.dp)
-                                            )
-                                        }
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text(
-                                            text = "4.8 (200+ jobs)",
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = TextDarkSecondary
-                                        )
-                                    }
-                                }
+                            // Technician Avatar with Online Indicator
+                            Box(modifier = Modifier.size(72.dp)) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.img_technician_rajesh),
+                                    contentDescription = "Technician Photo",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(72.dp)
+                                        .clip(CircleShape)
+                                        .border(2.dp, Color(0xFFE2E8F0), CircleShape)
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .size(16.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFF2E7D32))
+                                        .border(2.dp, Color.White, CircleShape)
+                                        .align(Alignment.BottomEnd)
+                                )
                             }
 
-                            // Edit Profile Button
-                            Surface(
-                                onClick = { Toast.makeText(context, "Edit Profile Dialog coming in next shift update", Toast.LENGTH_SHORT).show() },
-                                color = Color.White,
-                                shape = RoundedCornerShape(8.dp),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, TechFlameOrange)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(imageVector = Icons.Default.Edit, contentDescription = null, tint = TechFlameOrange, modifier = Modifier.size(12.dp))
+                            Spacer(modifier = Modifier.width(14.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                // Full Name directly reflecting from Personal Info
+                                Text(
+                                    text = state.profile?.fullName ?: "Raja Kumar",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = TextDarkPrimary
+                                )
+
+                                Spacer(modifier = Modifier.height(2.dp))
+
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "ID: ${state.profile?.badgeNumber ?: "GTS-TECH-4815"}",
+                                        fontSize = 11.5.sp,
+                                        color = TextDarkSecondary
+                                    )
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Edit Profile", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = TechFlameOrange)
+                                    Icon(
+                                        imageVector = Icons.Default.ContentCopy,
+                                        contentDescription = "Copy ID",
+                                        tint = TechFlameOrange,
+                                        modifier = Modifier
+                                            .size(13.dp)
+                                            .clickable {
+                                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                                val clip = ClipData.newPlainText("Badge ID", state.profile?.badgeNumber ?: "GTS-TECH-4815")
+                                                clipboard.setPrimaryClip(clip)
+                                                Toast.makeText(context, "Badge ID copied to clipboard", Toast.LENGTH_SHORT).show()
+                                            }
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                // Star Rating
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    repeat(5) {
+                                        Icon(
+                                            imageVector = Icons.Default.Star,
+                                            contentDescription = null,
+                                            tint = Color(0xFFFFB300),
+                                            modifier = Modifier.size(13.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "4.8 (200+ jobs)",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextDarkSecondary
+                                    )
                                 }
                             }
                         }
@@ -1727,121 +2002,37 @@ fun TechnicianProfileContent(
                 }
             }
 
-            // 4. Personal Information Group
+            // 4. Personal Information Group (WORKING EDIT BUTTON)
             item {
                 GroupedProfileSection(
                     title = "Personal Information",
                     icon = Icons.Default.Person,
-                    onEdit = { Toast.makeText(context, "Edit Personal Information", Toast.LENGTH_SHORT).show() }
+                    onEdit = { showEditPersonalDialog = true }
                 ) {
                     ProfileInfoRow(icon = Icons.Default.Phone, label = "Phone", value = state.profile?.phone ?: "+91 98765 43210")
-                    ProfileInfoRow(icon = Icons.Default.Email, label = "Email", value = "rajakumar1995@gmail.com")
-                    ProfileInfoRow(icon = Icons.Default.Place, label = "Location", value = "Mumbai, Maharashtra")
-                    ProfileInfoRow(icon = Icons.Default.Language, label = "Languages", value = "English, Hindi, Marathi")
+                    ProfileInfoRow(icon = Icons.Default.Email, label = "Email", value = state.profile?.email ?: "rajakumar1995@gmail.com")
+                    ProfileInfoRow(icon = Icons.Default.Place, label = "Location", value = state.profile?.location ?: "Mumbai, Maharashtra")
+                    ProfileInfoRow(icon = Icons.Default.Language, label = "Languages", value = state.profile?.languages ?: "English, Hindi, Marathi")
                 }
             }
 
-            // 5. Service Details Group
+            // 5. Service Details Group (WORKING EDIT BUTTON)
             item {
                 GroupedProfileSection(
                     title = "Service Details",
                     icon = Icons.Default.Build,
-                    onEdit = { Toast.makeText(context, "Edit Service Details", Toast.LENGTH_SHORT).show() }
+                    onEdit = { showEditServiceDialog = true }
                 ) {
-                    ProfileInfoRow(icon = Icons.Default.Handyman, label = "Specialization", value = "Electrical Installation, AC, Fan, Wiring")
-                    ProfileInfoRow(icon = Icons.Default.WorkspacePremium, label = "Experience", value = "5+ Years")
-                    ProfileInfoRow(icon = Icons.Default.Badge, label = "License / Certification", value = "1000V Safety Certified")
-                    ProfileInfoRow(icon = Icons.Default.DirectionsCar, label = "Service Area", value = "Mumbai & Surrounding Areas")
+                    ProfileInfoRow(icon = Icons.Default.Handyman, label = "Specialization", value = state.profile?.specialization ?: "Electrical Installation, AC, Fan, Wiring")
+                    ProfileInfoRow(icon = Icons.Default.WorkspacePremium, label = "Experience", value = state.profile?.experience ?: "5+ Years")
+                    ProfileInfoRow(icon = Icons.Default.Badge, label = "License / Certification", value = state.profile?.license ?: "1000V Safety Certified")
+                    ProfileInfoRow(icon = Icons.Default.DirectionsCar, label = "Service Area", value = state.profile?.serviceArea ?: "Mumbai & Surrounding Areas")
                 }
             }
 
-            // 6. App Settings Group
+            // 6. Sign Out Button (Clean, no App Settings or Support & Legal sections!)
             item {
-                Surface(
-                    color = Color.White,
-                    shape = RoundedCornerShape(14.dp),
-                    shadowElevation = 1.dp,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF1F5F9)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(imageVector = Icons.Default.Settings, contentDescription = null, tint = TechFlameOrange, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(text = "App Settings", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextDarkPrimary)
-                        }
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        SettingNavRow(icon = Icons.Default.Notifications, title = "Notifications") { }
-                        Divider(color = Color(0xFFF8FAFC))
-
-                        // Dark Mode Row with interactive switch
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(imageVector = Icons.Default.DarkMode, contentDescription = null, tint = TextDarkSecondary, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Text(text = "Dark Mode", fontSize = 12.sp, color = TextDarkPrimary)
-                            }
-                            Switch(
-                                checked = isDarkModeEnabled,
-                                onCheckedChange = { isDarkModeEnabled = it },
-                                colors = SwitchDefaults.colors(checkedThumbColor = TechFlameOrange, checkedTrackColor = TechAmberLight)
-                            )
-                        }
-                        Divider(color = Color(0xFFF8FAFC))
-
-                        SettingNavRow(icon = Icons.Default.Security, title = "Privacy & Security") { }
-                        Divider(color = Color(0xFFF8FAFC))
-
-                        SettingNavRow(icon = Icons.Default.Translate, title = "Language", trailingValue = "English") { }
-                    }
-                }
-            }
-
-            // 7. Support & Legal Group
-            item {
-                Surface(
-                    color = Color.White,
-                    shape = RoundedCornerShape(14.dp),
-                    shadowElevation = 1.dp,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF1F5F9)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(imageVector = Icons.Default.HelpOutline, contentDescription = null, tint = TechFlameOrange, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(text = "Support & Legal", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextDarkPrimary)
-                        }
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        SettingNavRow(icon = Icons.Default.HeadsetMic, title = "Help & Support") { }
-                        Divider(color = Color(0xFFF8FAFC))
-
-                        SettingNavRow(icon = Icons.Default.Description, title = "Terms & Conditions") { }
-                        Divider(color = Color(0xFFF8FAFC))
-
-                        SettingNavRow(icon = Icons.Default.VerifiedUser, title = "Privacy Policy") { }
-                        Divider(color = Color(0xFFF8FAFC))
-
-                        SettingNavRow(icon = Icons.Default.Info, title = "About GTS", trailingValue = "v1.0.0") {
-                            showEnvSwitcher = true
-                        }
-                    }
-                }
-            }
-
-            // 8. Sign Out Button
-            item {
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(10.dp))
                 Button(
                     onClick = { showLogoutDialog = true },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFEE2E2)),
@@ -1855,7 +2046,7 @@ fun TechnicianProfileContent(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(text = "Sign Out from Console", color = Color(0xFFB91C1C), fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 }
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
@@ -1910,7 +2101,7 @@ private fun GroupedProfileSection(
 
                 Text(
                     text = "Edit",
-                    fontSize = 11.sp,
+                    fontSize = 11.5.sp,
                     fontWeight = FontWeight.Bold,
                     color = TechBlue,
                     modifier = Modifier.clickable { onEdit() }
@@ -1942,40 +2133,6 @@ private fun ProfileInfoRow(
         Spacer(modifier = Modifier.width(8.dp))
         Text(text = value, fontSize = 11.5.sp, color = TextDarkSecondary, modifier = Modifier.weight(1f))
         Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFCBD5E1), modifier = Modifier.size(14.dp))
-    }
-}
-
-// -------------------------------------------------------------------------
-// Component: Single Nav Row inside Settings / Legal
-// -------------------------------------------------------------------------
-@Composable
-private fun SettingNavRow(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    title: String,
-    trailingValue: String? = null,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(imageVector = icon, contentDescription = null, tint = TextDarkSecondary, modifier = Modifier.size(16.dp))
-            Spacer(modifier = Modifier.width(10.dp))
-            Text(text = title, fontSize = 12.sp, color = TextDarkPrimary)
-        }
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (trailingValue != null) {
-                Text(text = trailingValue, fontSize = 11.sp, color = TextDarkMuted)
-                Spacer(modifier = Modifier.width(4.dp))
-            }
-            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFCBD5E1), modifier = Modifier.size(16.dp))
-        }
     }
 }
 
@@ -2248,7 +2405,7 @@ private fun SosTelemetryPill(
 }
 
 // =========================================================================
-// SCREEN 5: ALL JOBS CONTENT (Retains full functional job listing)
+// SCREEN 5: ALL JOBS CONTENT
 // =========================================================================
 
 @Composable
@@ -2311,7 +2468,8 @@ fun TechnicianAllJobsContent(
                         Column(modifier = Modifier.weight(1f)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     text = job.jobTicketNumber,
@@ -2345,7 +2503,7 @@ fun TechnicianAllJobsContent(
 }
 
 // =========================================================================
-// SCREEN 6: JOB DETAILS CONTENT (Full status-driven action sheet)
+// SCREEN 6: JOB DETAILS CONTENT
 // =========================================================================
 
 @Composable

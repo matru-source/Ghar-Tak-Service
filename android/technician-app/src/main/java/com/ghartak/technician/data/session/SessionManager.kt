@@ -251,6 +251,35 @@ class SessionManager(context: Context) {
         prefs.edit().putBoolean(KEY_GLOVES_VERIFIED, verified).apply()
     }
 
+    fun getEmail(): String = prefs.getString(KEY_EMAIL, "rajakumar1995@gmail.com") ?: "rajakumar1995@gmail.com"
+    fun getLocation(): String = prefs.getString(KEY_LOCATION, "Mumbai, Maharashtra") ?: "Mumbai, Maharashtra"
+    fun getLanguages(): String = prefs.getString(KEY_LANGUAGES, "English, Hindi, Marathi") ?: "English, Hindi, Marathi"
+    fun getSpecialization(): String = prefs.getString(KEY_SPECIALIZATION, "Electrical Installation, AC, Fan, Wiring") ?: "Electrical Installation, AC, Fan, Wiring"
+    fun getExperience(): String = prefs.getString(KEY_EXPERIENCE, "5+ Years") ?: "5+ Years"
+    fun getLicense(): String = prefs.getString(KEY_LICENSE, "1000V Safety Certified") ?: "1000V Safety Certified"
+    fun getServiceArea(): String = prefs.getString(KEY_SERVICE_AREA, "Mumbai & Surrounding Areas") ?: "Mumbai & Surrounding Areas"
+
+    fun updatePersonalInfo(name: String, phone: String, email: String, location: String, languages: String) {
+        prefs.edit().apply {
+            putString(KEY_FULL_NAME, name.trim())
+            putString(KEY_PHONE, phone.trim())
+            putString(KEY_EMAIL, email.trim())
+            putString(KEY_LOCATION, location.trim())
+            putString(KEY_LANGUAGES, languages.trim())
+            apply()
+        }
+    }
+
+    fun updateServiceDetails(specialization: String, experience: String, license: String, serviceArea: String) {
+        prefs.edit().apply {
+            putString(KEY_SPECIALIZATION, specialization.trim())
+            putString(KEY_EXPERIENCE, experience.trim())
+            putString(KEY_LICENSE, license.trim())
+            putString(KEY_SERVICE_AREA, serviceArea.trim())
+            apply()
+        }
+    }
+
     fun isLoggedIn(): Boolean = prefs.getBoolean(KEY_IS_LOGGED_IN, false)
 
     fun clearSession() {

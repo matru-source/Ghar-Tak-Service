@@ -248,6 +248,13 @@ class TechnicianDashboardViewModel(
         val isOnline = sessionManager.isOnline()
         val rating = sessionManager.getRating().toDouble()
         val glovesVerified = sessionManager.isGlovesVerified()
+        val email = sessionManager.getEmail()
+        val location = sessionManager.getLocation()
+        val languages = sessionManager.getLanguages()
+        val specialization = sessionManager.getSpecialization()
+        val experience = sessionManager.getExperience()
+        val license = sessionManager.getLicense()
+        val serviceArea = sessionManager.getServiceArea()
 
         val profile = TechnicianProfile(
             id = techId,
@@ -260,7 +267,14 @@ class TechnicianDashboardViewModel(
             rating = rating,
             safetyKitSerial = "VDE-1000V-99214",
             insulatedGlovesVerified = glovesVerified,
-            totalJobsCompleted = 48
+            totalJobsCompleted = 48,
+            email = email,
+            location = location,
+            languages = languages,
+            specialization = specialization,
+            experience = experience,
+            license = license,
+            serviceArea = serviceArea
         )
 
         _uiState.value = _uiState.value.copy(
@@ -269,6 +283,37 @@ class TechnicianDashboardViewModel(
             customerRating = rating.toFloat(),
             assignedJobs = if (_uiState.value.assignedJobs.isEmpty()) getInitialMockJobs() else _uiState.value.assignedJobs
         )
+    }
+
+    fun updatePersonalInfo(name: String, phone: String, email: String, location: String, languages: String) {
+        sessionManager.updatePersonalInfo(name, phone, email, location, languages)
+        val current = _uiState.value.profile
+        if (current != null) {
+            _uiState.value = _uiState.value.copy(
+                profile = current.copy(
+                    fullName = name,
+                    phone = phone,
+                    email = email,
+                    location = location,
+                    languages = languages
+                )
+            )
+        }
+    }
+
+    fun updateServiceDetails(specialization: String, experience: String, license: String, serviceArea: String) {
+        sessionManager.updateServiceDetails(specialization, experience, license, serviceArea)
+        val current = _uiState.value.profile
+        if (current != null) {
+            _uiState.value = _uiState.value.copy(
+                profile = current.copy(
+                    specialization = specialization,
+                    experience = experience,
+                    license = license,
+                    serviceArea = serviceArea
+                )
+            )
+        }
     }
 
     fun markJobStarted(jobId: String) {
