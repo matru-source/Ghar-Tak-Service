@@ -54,8 +54,18 @@ jobs:
             echo '```' >> $GITHUB_STEP_SUMMARY
             tail -n 120 /tmp/technician_build.log >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "=== FAILED TECHNICIAN BUILD LOG TAIL ==="
+            tail -n 120 /tmp/technician_build.log
             exit 1
           }
+
+      - name: Upload Build Logs On Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-failure-logs
+          path: /tmp/*_build.log
+          if-no-files-found: ignore
 
       - name: Upload Customer App Debug APK Artifact
         uses: actions/upload-artifact@v4

@@ -1014,32 +1014,28 @@ fun TechnicianEarningsContent(
             }
         }
 
-        val (filterTitle, filterAmount, filterTrend) = when (state.selectedEarningsFilter) {
-            "TODAY" -> Triple(
-                "Total Earnings (Today)",
-                state.todayEarningsInr,
-                "↑ 2 completed jobs today"
-            )
-            "THIS_WEEK" -> Triple(
-                "Total Earnings (This Week)",
-                state.weekEarningsInr,
-                "↑ 12% from last week"
-            )
-            "THIS_MONTH" -> Triple(
-                "Total Earnings (This Month)",
-                state.monthEarningsInr,
-                "↑ 15% from last month"
-            )
-            "ALL_TIME" -> Triple(
-                "Total Earnings (All Time)",
-                state.allTimeEarningsInr,
-                "Total 48 Jobs Settled"
-            )
-            else -> Triple(
-                "Total Earnings (This Month)",
-                state.monthEarningsInr,
-                "↑ 15% from last month"
-            )
+        val filterTitle = when (state.selectedEarningsFilter) {
+            "TODAY" -> "Total Earnings (Today)"
+            "THIS_WEEK" -> "Total Earnings (This Week)"
+            "THIS_MONTH" -> "Total Earnings (This Month)"
+            "ALL_TIME" -> "Total Earnings (All Time)"
+            else -> "Total Earnings (This Month)"
+        }
+
+        val filterAmount = when (state.selectedEarningsFilter) {
+            "TODAY" -> state.todayEarningsInr
+            "THIS_WEEK" -> state.weekEarningsInr
+            "THIS_MONTH" -> state.monthEarningsInr
+            "ALL_TIME" -> state.allTimeEarningsInr
+            else -> state.monthEarningsInr
+        }
+
+        val filterTrend = when (state.selectedEarningsFilter) {
+            "TODAY" -> "↑ 2 completed jobs today"
+            "THIS_WEEK" -> "↑ 12% from last week"
+            "THIS_MONTH" -> "↑ 15% from last month"
+            "ALL_TIME" -> "Total 48 Jobs Settled"
+            else -> "↑ 15% from last month"
         }
 
         val txSectionTitle = when (state.selectedEarningsFilter) {
