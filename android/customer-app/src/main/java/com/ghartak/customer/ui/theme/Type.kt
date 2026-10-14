@@ -64,3 +64,36 @@ val Typography = Typography(
         color = TextDarkMuted
     )
 )
+
+// GTS 2.0 Specialized Typography Styles
+val GreetingHeadlineStyle = TextStyle(
+    fontFamily = FontFamily.Default,
+    fontWeight = FontWeight.Bold,
+    fontSize = 24.sp,
+    lineHeight = 30.sp,
+    color = androidx.compose.ui.graphics.Color.White
+)
+
+val SubGreetingStyle = TextStyle(
+    fontFamily = FontFamily.Default,
+    fontWeight = FontWeight.Normal,
+    fontSize = 12.sp,
+    lineHeight = 16.sp,
+    color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.9f)
+)
+
+val OtpDigitStyle = TextStyle(
+    fontFamily = FontFamily.Default,
+    fontWeight = FontWeight.Black,
+    fontSize = 26.sp,
+    lineHeight = 32.sp,
+    color = OtpDigitText
+)
+
+val ServicePriceStyle = TextStyle(
+    fontFamily = FontFamily.Default,
+    fontWeight = FontWeight.Black,
+    fontSize = 17.sp,
+    lineHeight = 22.sp,
+    color = ServicePriceDark
+)
