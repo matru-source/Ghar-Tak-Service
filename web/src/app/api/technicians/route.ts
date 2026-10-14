@@ -24,6 +24,15 @@ export async function GET(request: NextRequest) {
       search,
     });
 
+    const sortBy = searchParams.get('sortBy') || searchParams.get('orderBy');
+    if (sortBy === 'rating') {
+      technicians.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    } else if (sortBy === 'jobs') {
+      technicians.sort((a, b) => (b.totalJobsCompleted || 0) - (a.totalJobsCompleted || 0));
+    } else if (sortBy === 'distance') {
+      technicians.sort((a, b) => ((a as any).distanceKm || 0) - ((b as any).distanceKm || 0));
+    }
+
     const summary = {
       totalCount: technicians.length,
       onlineCount: technicians.filter((t) => t.isOnline).length,

@@ -400,7 +400,7 @@ fun AddressBookingScreen(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "AVAILABLE ELECTRICIANS NEAR YOU",
+                                text = "AVAILABLE PROFESSIONALS NEAR YOU",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = SapphireBlue800,
@@ -412,7 +412,7 @@ fun AddressBookingScreen(
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(
-                                text = "3 Online in ${state.pincode}",
+                                text = "${state.nearbyTechnicians.size} Online in ${state.pincode}",
                                 color = SuccessGreen,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
@@ -423,11 +423,98 @@ fun AddressBookingScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    state.nearbyTechnicians.forEach { tech ->
+                    // ==========================================
+                    // ORDER BY / SORT CONTROLS (Min Distance, Ratings, Number of Jobs)
+                    // ==========================================
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xFFF1F5F9))
+                            .padding(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(start = 4.dp, end = 2.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.FilterList,
+                                contentDescription = "Order By",
+                                tint = TextDarkSecondary,
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = "Sort:",
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextDarkSecondary
+                            )
+                        }
+
+                        TechnicianSortOption.values().forEach { option ->
+                            val isSelected = state.sortOption == option
+                            Surface(
+                                onClick = { viewModel.setSortOption(option) },
+                                modifier = Modifier.weight(1f),
+                                color = if (isSelected) SapphireBlue800 else Color.White,
+                                shape = RoundedCornerShape(8.dp),
+                                shadowElevation = if (isSelected) 1.5.dp else 0.dp,
+                                border = androidx.compose.foundation.BorderStroke(
+                                    width = 1.dp,
+                                    color = if (isSelected) SapphireBlue800 else Color(0xFFE2E8F0)
+                                )
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(vertical = 6.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    val icon = when (option) {
+                                        TechnicianSortOption.MIN_DISTANCE -> Icons.Default.NearMe
+                                        TechnicianSortOption.RATINGS -> Icons.Default.Star
+                                        TechnicianSortOption.NUMBER_OF_JOBS -> Icons.Default.Work
+                                    }
+                                    Icon(
+                                        imageVector = icon,
+                                        contentDescription = null,
+                                        tint = if (isSelected) Color.White else if (option == TechnicianSortOption.RATINGS) Color(0xFFF59E0B) else TextDarkMuted,
+                                        modifier = Modifier.size(11.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text(
+                                        text = option.shortLabel,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        fontSize = 10.sp,
+                                        color = if (isSelected) Color.White else TextDarkPrimary,
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    state.sortedTechnicians.forEach { tech ->
+                        val isBestForSort = when (state.sortOption) {
+                            TechnicianSortOption.MIN_DISTANCE -> tech.id == state.sortedTechnicians.minByOrNull { it.distanceKm }?.id
+                            TechnicianSortOption.RATINGS -> tech.id == state.sortedTechnicians.maxByOrNull { it.ratingValue }?.id
+                            TechnicianSortOption.NUMBER_OF_JOBS -> tech.id == state.sortedTechnicians.maxByOrNull { it.completedJobsCount }?.id
+                        }
+                        val highlightBadgeText = when {
+                            isBestForSort && state.sortOption == TechnicianSortOption.MIN_DISTANCE -> "FASTEST"
+                            isBestForSort && state.sortOption == TechnicianSortOption.RATINGS -> "TOP RATED"
+                            isBestForSort && state.sortOption == TechnicianSortOption.NUMBER_OF_JOBS -> "MOST JOBS"
+                            else -> null
+                        }
+
                         TechnicianRapidoCard(
                             technician = tech,
                             isSelected = state.selectedTechnicianId == tech.id,
-                            isShortestDistance = tech.id == "GTS-TECH-4091",
+                            highlightBadge = highlightBadgeText,
                             onSelect = { viewModel.selectTechnician(tech.id) }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -464,7 +551,7 @@ fun AddressBookingScreen(
 private fun TechnicianRapidoCard(
     technician: NearbyTechnician,
     isSelected: Boolean,
-    isShortestDistance: Boolean,
+    highlightBadge: String? = null,
     onSelect: () -> Unit
 ) {
     Surface(
@@ -544,15 +631,21 @@ private fun TechnicianRapidoCard(
                 Spacer(modifier = Modifier.height(2.dp))
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (isShortestDistance) {
+                    if (highlightBadge != null) {
+                        val (bgColor, textColor) = when (highlightBadge) {
+                            "FASTEST" -> Color(0xFFDCFCE7) to Color(0xFF15803D)
+                            "TOP RATED" -> Color(0xFFFEF3C7) to Color(0xFFB45309)
+                            "MOST JOBS" -> Color(0xFFEFF6FF) to Color(0xFF1D4ED8)
+                            else -> Color(0xFFF1F5F9) to Color(0xFF334155)
+                        }
                         Surface(
-                            color = Color(0xFFDCFCE7),
+                            color = bgColor,
                             shape = RoundedCornerShape(3.dp),
                             modifier = Modifier.padding(end = 6.dp)
                         ) {
                             Text(
-                                text = "FASTEST",
-                                color = Color(0xFF15803D),
+                                text = highlightBadge,
+                                color = textColor,
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Black,
                                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)

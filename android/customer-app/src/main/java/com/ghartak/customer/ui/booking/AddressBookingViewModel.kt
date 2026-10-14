@@ -13,6 +13,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+enum class TechnicianSortOption(val displayName: String, val shortLabel: String) {
+    MIN_DISTANCE("Minimum Distance", "Min Distance"),
+    RATINGS("Rating", "Ratings"),
+    NUMBER_OF_JOBS("Number of Jobs", "Jobs Done")
+}
+
 data class NearbyTechnician(
     val id: String,
     val name: String,
@@ -25,7 +31,8 @@ data class NearbyTechnician(
     val etaMinutes: Int,
     val specialty: String,
     val phone: String = "+91 98201 44091",
-    val completedJobs: String = "240+ jobs"
+    val completedJobs: String = "240+ jobs",
+    val completedJobsCount: Int = 240
 )
 
 data class AddressBookingUiState(
@@ -48,12 +55,13 @@ data class AddressBookingUiState(
     val bookingPriority: String = "EMERGENCY_60S",
     val selectedSlot: String = "Within 15-30 Mins (Emergency Dispatch)",
     val errorMessage: String? = null,
+    val sortOption: TechnicianSortOption = TechnicianSortOption.MIN_DISTANCE,
     val nearbyTechnicians: List<NearbyTechnician> = listOf(
         NearbyTechnician(
             id = "GTS-TECH-4091",
             name = "Rajesh Kumar",
             badge = "GTS-TECH-4091",
-            rating = "4.9 ★ (240+ jobs)",
+            rating = "4.9 ★",
             ratingValue = 4.9,
             distance = "1.3 km away",
             distanceKm = 1.3,
@@ -61,13 +69,14 @@ data class AddressBookingUiState(
             etaMinutes = 8,
             specialty = "MCB Panel & Earthing Specialist",
             phone = "+91 98201 44091",
-            completedJobs = "240+ jobs"
+            completedJobs = "240+ jobs",
+            completedJobsCount = 240
         ),
         NearbyTechnician(
             id = "GTS-TECH-1084",
             name = "Suresh Patil",
             badge = "GTS-TECH-1084",
-            rating = "4.8 ★ (180+ jobs)",
+            rating = "4.8 ★",
             ratingValue = 4.8,
             distance = "2.4 km away",
             distanceKm = 2.4,
@@ -75,27 +84,54 @@ data class AddressBookingUiState(
             etaMinutes = 14,
             specialty = "Wiring & High Load Installations",
             phone = "+91 98201 11084",
-            completedJobs = "180+ jobs"
+            completedJobs = "180+ jobs",
+            completedJobsCount = 180
         ),
         NearbyTechnician(
             id = "GTS-TECH-2241",
             name = "Vikram Singh",
             badge = "GTS-TECH-2241",
-            rating = "4.9 ★ (310+ jobs)",
-            ratingValue = 4.9,
+            rating = "5.0 ★",
+            ratingValue = 5.0,
             distance = "3.1 km away",
             distanceKm = 3.1,
             eta = "19 mins",
             etaMinutes = 19,
             specialty = "Appliance Anchor & Ceiling Fans",
             phone = "+91 98201 22241",
-            completedJobs = "310+ jobs"
+            completedJobs = "310+ jobs",
+            completedJobsCount = 310
+        ),
+        NearbyTechnician(
+            id = "GTS-TECH-3312",
+            name = "Amit Panda",
+            badge = "GTS-TECH-3312",
+            rating = "4.9 ★",
+            ratingValue = 4.9,
+            distance = "3.8 km away",
+            distanceKm = 3.8,
+            eta = "22 mins",
+            etaMinutes = 22,
+            specialty = "Distribution Board & Inverter Routing",
+            phone = "+91 98201 33312",
+            completedJobs = "420+ jobs",
+            completedJobsCount = 420
         )
     ),
     val selectedTechnicianId: String = "GTS-TECH-4091" // Default is shortest distance (Rajesh Kumar 1.3km)
 ) {
+    val sortedTechnicians: List<NearbyTechnician>
+        get() = when (sortOption) {
+            TechnicianSortOption.MIN_DISTANCE -> nearbyTechnicians.sortedBy { it.distanceKm }
+            TechnicianSortOption.RATINGS -> nearbyTechnicians.sortedWith(
+                compareByDescending<NearbyTechnician> { it.ratingValue }
+                    .thenByDescending { it.completedJobsCount }
+            )
+            TechnicianSortOption.NUMBER_OF_JOBS -> nearbyTechnicians.sortedByDescending { it.completedJobsCount }
+        }
+
     val selectedTechnician: NearbyTechnician
-        get() = nearbyTechnicians.find { it.id == selectedTechnicianId } ?: nearbyTechnicians.first()
+        get() = sortedTechnicians.find { it.id == selectedTechnicianId } ?: sortedTechnicians.first()
 
     val canProceed: Boolean
         get() = isPincodeServiceable && flatNumber.isNotBlank() && streetName.isNotBlank() && pincode.length == 6
@@ -137,6 +173,20 @@ class AddressBookingViewModel(
 
     fun selectTechnician(id: String) {
         _uiState.value = _uiState.value.copy(selectedTechnicianId = id)
+    }
+
+    fun setSortOption(option: TechnicianSortOption) {
+        val sorted = when (option) {
+            TechnicianSortOption.MIN_DISTANCE -> _uiState.value.nearbyTechnicians.sortedBy { it.distanceKm }
+            TechnicianSortOption.RATINGS -> _uiState.value.nearbyTechnicians.sortedWith(
+                compareByDescending<NearbyTechnician> { it.ratingValue }.thenByDescending { it.completedJobsCount }
+            )
+            TechnicianSortOption.NUMBER_OF_JOBS -> _uiState.value.nearbyTechnicians.sortedByDescending { it.completedJobsCount }
+        }
+        _uiState.value = _uiState.value.copy(
+            sortOption = option,
+            selectedTechnicianId = sorted.firstOrNull()?.id ?: _uiState.value.selectedTechnicianId
+        )
     }
 
     fun initService(id: String, title: String? = null, price: Double? = null) {
