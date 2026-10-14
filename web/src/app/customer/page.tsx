@@ -27,8 +27,48 @@ import {
   X,
   Sparkles,
   AlertTriangle,
+  PlumbingIcon,
+  HammerIcon,
+  FlameIcon,
+  CameraIcon,
+  TruckIcon,
+  BugIcon,
+  BrickIcon,
+  LayersIcon,
+  SnowflakeIcon,
+  PaintbrushIcon,
+  MegaphoneIcon,
+  ShirtIcon,
+  WindowIcon,
+  WallpaperIcon,
+  CogIcon,
+  Laptop,
 } from '@/components/ui/icons';
 import { BrandLogo, BrandMark } from '@/components/ui/brand-logo';
+
+const DOORSTEP_CATEGORIES = [
+  // Row 1 (9 categories)
+  { name: 'Electrician', icon: Zap, iconColor: 'text-amber-500', bg: 'bg-amber-50' },
+  { name: 'Carpenter', icon: HammerIcon, iconColor: 'text-amber-700', bg: 'bg-amber-50' },
+  { name: 'Plumber', icon: PlumbingIcon, iconColor: 'text-sky-600', bg: 'bg-sky-50' },
+  { name: 'Cleaner', icon: Sparkles, iconColor: 'text-teal-600', bg: 'bg-teal-50' },
+  { name: 'Gas Stove Service', icon: FlameIcon, iconColor: 'text-orange-600', bg: 'bg-orange-50' },
+  { name: 'Rajmistri', icon: BrickIcon, iconColor: 'text-amber-800', bg: 'bg-amber-50' },
+  { name: 'Laundry Service', icon: ShirtIcon, iconColor: 'text-emerald-600', bg: 'bg-emerald-50' },
+  { name: 'Packers & Movers', icon: TruckIcon, iconColor: 'text-amber-600', bg: 'bg-amber-50' },
+  { name: 'Pest Control Service', icon: BugIcon, iconColor: 'text-green-600', bg: 'bg-green-50' },
+
+  // Row 2 (9 categories)
+  { name: 'Hot And Cool', icon: SnowflakeIcon, iconColor: 'text-sky-600', bg: 'bg-sky-50' },
+  { name: 'House Painting Service', icon: PaintbrushIcon, iconColor: 'text-rose-600', bg: 'bg-rose-50' },
+  { name: 'Wallpaper', icon: WallpaperIcon, iconColor: 'text-fuchsia-600', bg: 'bg-fuchsia-50' },
+  { name: 'Aluminum And Glass Fitting services', icon: WindowIcon, iconColor: 'text-sky-600', bg: 'bg-sky-50' },
+  { name: 'Generator Technician', icon: CogIcon, iconColor: 'text-slate-600', bg: 'bg-slate-100' },
+  { name: 'False Ceiling Service', icon: LayersIcon, iconColor: 'text-indigo-600', bg: 'bg-indigo-50' },
+  { name: 'IT Service', icon: Laptop, iconColor: 'text-blue-600', bg: 'bg-blue-50' },
+  { name: 'Digital Marketer', icon: MegaphoneIcon, iconColor: 'text-purple-600', bg: 'bg-purple-50' },
+  { name: 'CCTV Service', icon: CameraIcon, iconColor: 'text-indigo-600', bg: 'bg-indigo-50' },
+];
 
 interface CustomerSession {
   id: string;
@@ -162,11 +202,18 @@ export default function CustomerDashboardPage() {
     if (!matchesSearch) return false;
 
     if (selectedCategory === 'ALL') return true;
-    if (selectedCategory === 'REPAIR') return s.categoryId.includes('repairs') || s.title.toLowerCase().includes('repair');
-    if (selectedCategory === 'INSTALL') return s.categoryId.includes('install') || s.title.toLowerCase().includes('installation');
-    if (selectedCategory === 'EMERGENCY') return s.isEmergencySosEligible;
-    if (selectedCategory === 'AUDIT') return s.categoryId.includes('commercial') || s.title.toLowerCase().includes('audit');
-    return true;
+    const catLower = selectedCategory.toLowerCase();
+    const sCatName = (s.categoryName || '').toLowerCase();
+    const sCatId = (s.categoryId || '').toLowerCase();
+    const sTitle = (s.title || '').toLowerCase();
+
+    return (
+      sCatName === catLower ||
+      sCatName.includes(catLower) ||
+      catLower.includes(sCatName) ||
+      sCatId.includes(catLower.replace(/[^a-z0-9]/g, '_')) ||
+      sTitle.includes(catLower)
+    );
   });
 
   // Handle Instant SOS Dispatch Trigger
@@ -409,67 +456,94 @@ export default function CustomerDashboardPage() {
         </section>
       )}
 
-      {/* 4. QUICK CATEGORY ICON ACTIONS (Figma 4 Grid Buttons) */}
+      {/* 4. HOUSEHOLD SERVICE AT YOUR DOORSTEP (18 Categories with Golden Circular Badges) */}
       <section className="px-4 pt-3 pb-2">
-        <div className="flex items-center justify-between mb-2.5">
-          <h2 className="font-bold text-sm text-slate-900">Quick Services</h2>
-          <span className="text-xs text-blue-600 font-semibold">4 Categories</span>
-        </div>
-
-        <div className="grid grid-cols-4 gap-2">
-          {/* Repair */}
-          <button
-            onClick={() => setSelectedCategory(selectedCategory === 'REPAIR' ? 'ALL' : 'REPAIR')}
-            className={`group flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all ${
-              selectedCategory === 'REPAIR' ? 'bg-blue-50 border border-blue-200' : 'hover:bg-slate-50'
-            }`}
-            type="button"
-          >
-            <div className="w-13 h-13 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform border border-blue-100">
-              <Wrench className="w-6 h-6" />
+        <div className="bg-white rounded-2xl border border-amber-200/90 p-4 shadow-2xs">
+          <div className="flex items-center justify-between mb-3.5">
+            <h2 className="font-bold text-base text-slate-900 tracking-tight">Household service at your doorstep</h2>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">18 Categories</span>
+              {selectedCategory !== 'ALL' && (
+                <button
+                  onClick={() => setSelectedCategory('ALL')}
+                  className="text-xs text-blue-600 font-bold hover:underline cursor-pointer"
+                  type="button"
+                >
+                  Reset
+                </button>
+              )}
             </div>
-            <span className="text-xs font-bold text-slate-800 group-hover:text-blue-600">Repair</span>
-          </button>
+          </div>
 
-          {/* Installation */}
-          <button
-            onClick={() => setSelectedCategory(selectedCategory === 'INSTALL' ? 'ALL' : 'INSTALL')}
-            className={`group flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all ${
-              selectedCategory === 'INSTALL' ? 'bg-blue-50 border border-blue-200' : 'hover:bg-slate-50'
-            }`}
-            type="button"
-          >
-            <div className="w-13 h-13 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform border border-blue-100">
-              <Zap className="w-6 h-6" />
-            </div>
-            <span className="text-xs font-bold text-slate-800 group-hover:text-blue-600">Install</span>
-          </button>
+          <div className="overflow-x-auto no-scrollbar pb-1">
+            <div className="flex flex-col gap-3 min-w-max">
+              {/* Row 1 */}
+              <div className="flex items-start gap-3.5">
+                {DOORSTEP_CATEGORIES.slice(0, 9).map((cat) => {
+                  const IconComp = cat.icon;
+                  const isSelected = selectedCategory === cat.name;
+                  return (
+                    <button
+                      key={cat.name}
+                      onClick={() => setSelectedCategory(isSelected ? 'ALL' : cat.name)}
+                      className="group flex flex-col items-center w-[74px] shrink-0 text-center transition-all cursor-pointer"
+                      type="button"
+                    >
+                      <div
+                        className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 shadow-2xs ${cat.bg} ${
+                          isSelected
+                            ? 'border-[3px] border-blue-600 scale-105 ring-2 ring-blue-300'
+                            : 'border-2 border-amber-500 hover:border-amber-600 hover:scale-105'
+                        }`}
+                      >
+                        <IconComp className={`w-7 h-7 ${cat.iconColor}`} />
+                      </div>
+                      <span
+                        className={`mt-1.5 text-[10.5px] leading-tight line-clamp-2 transition-colors ${
+                          isSelected ? 'font-bold text-blue-600' : 'font-semibold text-slate-800 group-hover:text-amber-800'
+                        }`}
+                      >
+                        {cat.name}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
 
-          {/* Rapid SOS */}
-          <button
-            onClick={() => setShowSosModal(true)}
-            className="group flex flex-col items-center gap-1.5 p-2 rounded-2xl hover:bg-orange-50 transition-colors"
-            type="button"
-          >
-            <div className="w-13 h-13 rounded-2xl bg-orange-100 text-orange-700 flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform border border-orange-200">
-              <Zap className="w-6 h-6 fill-current text-orange-600" />
+              {/* Row 2 */}
+              <div className="flex items-start gap-3.5">
+                {DOORSTEP_CATEGORIES.slice(9).map((cat) => {
+                  const IconComp = cat.icon;
+                  const isSelected = selectedCategory === cat.name;
+                  return (
+                    <button
+                      key={cat.name}
+                      onClick={() => setSelectedCategory(isSelected ? 'ALL' : cat.name)}
+                      className="group flex flex-col items-center w-[74px] shrink-0 text-center transition-all cursor-pointer"
+                      type="button"
+                    >
+                      <div
+                        className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 shadow-2xs ${cat.bg} ${
+                          isSelected
+                            ? 'border-[3px] border-blue-600 scale-105 ring-2 ring-blue-300'
+                            : 'border-2 border-amber-500 hover:border-amber-600 hover:scale-105'
+                        }`}
+                      >
+                        <IconComp className={`w-7 h-7 ${cat.iconColor}`} />
+                      </div>
+                      <span
+                        className={`mt-1.5 text-[10.5px] leading-tight line-clamp-2 transition-colors ${
+                          isSelected ? 'font-bold text-blue-600' : 'font-semibold text-slate-800 group-hover:text-amber-800'
+                        }`}
+                      >
+                        {cat.name}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <span className="text-xs font-bold text-orange-700">Rapid SOS</span>
-          </button>
-
-          {/* Safety Audit */}
-          <button
-            onClick={() => setSelectedCategory(selectedCategory === 'AUDIT' ? 'ALL' : 'AUDIT')}
-            className={`group flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all ${
-              selectedCategory === 'AUDIT' ? 'bg-blue-50 border border-blue-200' : 'hover:bg-slate-50'
-            }`}
-            type="button"
-          >
-            <div className="w-13 h-13 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform border border-blue-100">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <span className="text-xs font-bold text-slate-800 group-hover:text-blue-600">Audit</span>
-          </button>
+          </div>
         </div>
       </section>
 
@@ -477,7 +551,9 @@ export default function CustomerDashboardPage() {
       <section className="px-4 pt-3 pb-3">
         <div className="flex items-center justify-between mb-2.5">
           <div>
-            <h2 className="font-bold text-sm text-slate-900">Popular Services</h2>
+            <h2 className="font-bold text-sm text-slate-900">
+              {selectedCategory === 'ALL' ? 'Popular Services' : `${selectedCategory} Services`}
+            </h2>
             <p className="text-[11px] text-slate-500">Standardized pricing with warranty & GST</p>
           </div>
           {selectedCategory !== 'ALL' && (

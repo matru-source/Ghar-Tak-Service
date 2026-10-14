@@ -23,6 +23,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ghartak.customer.data.model.ServiceItem
+import com.ghartak.customer.data.model.ServiceCatalogRegistry
 import com.ghartak.customer.ui.theme.*
 import com.ghartak.customer.ui.util.ServiceDrawableHelper.getServiceDrawable
 
@@ -32,21 +33,15 @@ fun CustomerBookServicesView(
     onServiceSelected: (serviceId: String) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
-    var selectedFilter by remember { mutableStateOf("All") } // "All", "Electrical Repair", "Installation"
+    var selectedFilter by remember(state.selectedCategory) { mutableStateOf(state.selectedCategory.ifEmpty { "All" }) }
     var searchQuery by remember { mutableStateOf("") }
 
     val filteredServices = remember(state.services, selectedFilter, searchQuery) {
         state.services.filter { item ->
-            val matchesFilter = when (selectedFilter) {
-                "Electrical Repair" -> item.category in listOf("MCB & Panels", "Emergency Tripping", "Wiring & Rewiring", "Safety Audit") ||
-                        item.title.contains("Repair", ignoreCase = true) ||
-                        item.title.contains("Fix", ignoreCase = true) ||
-                        item.title.contains("Replacement", ignoreCase = true)
-                "Installation" -> item.category in listOf("Appliance Fix", "Wiring & Rewiring") ||
-                        item.title.contains("Install", ignoreCase = true) ||
-                        item.title.contains("Mount", ignoreCase = true) ||
-                        item.title.contains("Setup", ignoreCase = true)
-                else -> true
+            val matchesFilter = if (selectedFilter.equals("All", ignoreCase = true)) {
+                true
+            } else {
+                item.category.equals(selectedFilter, ignoreCase = true)
             }
 
             val query = searchQuery.trim().lowercase()
@@ -81,7 +76,7 @@ fun CustomerBookServicesView(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "BOOK ELECTRICAL SERVICES",
+                            text = "BOOK DOORSTEP SERVICES",
                             color = Color.White,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Black,
@@ -92,7 +87,7 @@ fun CustomerBookServicesView(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = "1000V Certified",
+                                text = "18 Categories",
                                 color = Color.White,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
@@ -104,7 +99,7 @@ fun CustomerBookServicesView(
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
-                        text = "Select any service below to enter your address & view nearby certified technicians ready for dispatch.",
+                        text = "Select any service below to enter your address & view nearby verified trade technicians ready for dispatch.",
                         color = Color(0xFFBBDEFB),
                         fontSize = 12.sp,
                         lineHeight = 16.sp
@@ -113,36 +108,36 @@ fun CustomerBookServicesView(
             }
         }
 
-        // Two Main Filter Tabs (Electrical Repair / Installation) + All
+        // Horizontal Category Filter Carousel (All + 18 Categories)
         item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFE2E8F0))
-                    .padding(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            val allFilterOptions = remember { listOf("All") + ServiceCatalogRegistry.CATEGORIES }
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(vertical = 2.dp)
             ) {
-                listOf("All", "Electrical Repair", "Installation").forEach { filter ->
-                    val isSelected = selectedFilter == filter
+                items(allFilterOptions) { filter ->
+                    val isSelected = selectedFilter.equals(filter, ignoreCase = true)
                     Surface(
-                        onClick = { selectedFilter = filter },
-                        modifier = Modifier.weight(1f),
-                        color = if (isSelected) Color.White else Color.Transparent,
-                        shape = RoundedCornerShape(10.dp),
+                        onClick = {
+                            selectedFilter = filter
+                            viewModel.selectCategory(filter)
+                        },
+                        color = if (isSelected) SapphireBlue800 else Color(0xFFF1F5F9),
+                        shape = RoundedCornerShape(20.dp),
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            if (isSelected) SapphireBlue800 else Color(0xFFCBD5E1)
+                        ),
                         shadowElevation = if (isSelected) 2.dp else 0.dp
                     ) {
-                        Box(
-                            modifier = Modifier.padding(vertical = 10.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = filter,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                fontSize = 12.sp,
-                                color = if (isSelected) SapphireBlue800 else TextDarkMuted
-                            )
-                        }
+                        Text(
+                            text = filter,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            fontSize = 12.sp,
+                            color = if (isSelected) Color.White else TextDarkPrimary,
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
+                        )
                     }
                 }
             }

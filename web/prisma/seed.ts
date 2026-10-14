@@ -144,34 +144,51 @@ async function main() {
     },
   });
 
-  // 6. Service Categories & Catalog Hierarchy
-  const repairCategory = await prisma.serviceCategory.upsert({
-    where: { slug: 'electrical-repairs' },
-    update: {},
-    create: {
-      name: 'Electrical Repairs',
-      slug: 'electrical-repairs',
-      description: 'Standard home wiring, appliances, switches & ceiling fans',
-      displayOrder: 1,
-    },
-  });
+  // 6. Service Categories & Catalog Hierarchy (18 Doorstep Categories)
+  const tradeCategories = [
+    { name: 'Aluminum And Glass Fitting services', slug: 'aluminum-and-glass-fitting-services', description: 'Sliding window tracks, glass partitions and aluminum door frames' },
+    { name: 'Carpenter', slug: 'carpenter', description: 'Door locks, furniture repair, hinge alignment and custom woodwork' },
+    { name: 'CCTV Service', slug: 'cctv-service', description: 'HD surveillance cameras, DVR hard disk repair and IP camera setup' },
+    { name: 'Cleaner', slug: 'cleaner', description: 'Full home deep cleaning, kitchen sanitization and sofa shampooing' },
+    { name: 'Digital Marketer', slug: 'digital-marketer', description: 'Google business profile SEO, social media ads and lead generation' },
+    { name: 'Electrician', slug: 'electrician', description: 'Ceiling fan, switchboard, wiring, MCB distribution panel and short circuit repair' },
+    { name: 'False Ceiling Service', slug: 'false-ceiling-service', description: 'Gypsum ceiling installation, grid repair and LED cove lighting' },
+    { name: 'Gas Stove Service', slug: 'gas-stove-service', description: 'Gas burner cleaning, pipeline leak check and auto-ignition hob repair' },
+    { name: 'Generator Technician', slug: 'generator-technician', description: 'Diesel generator routine servicing, AMF panel and alternator repair' },
+    { name: 'Hot And Cool', slug: 'hot-and-cool', description: 'AC jet service, gas top-up, geyser installation and refrigerator cooling' },
+    { name: 'House Painting Service', slug: 'house-painting-service', description: 'Interior/exterior painting, waterproofing and wall texture coating' },
+    { name: 'IT Service', slug: 'it-service', description: 'Wi-Fi router setup, laptop/PC OS formatting and printer repair' },
+    { name: 'Laundry Service', slug: 'laundry-service', description: 'Steam ironing, premium dry cleaning pickup and blanket wash' },
+    { name: 'Packers & Movers', slug: 'packers-movers', description: 'Local home shifting, intercity moving and safe furniture transit' },
+    { name: 'Pest Control Service', slug: 'pest-control-service', description: 'Cockroach herbal gel, anti-termite treatment and bed bug eradication' },
+    { name: 'Plumber', slug: 'plumber', description: 'Pipe leakage repair, tap fitting, water tank cleaning and bathroom fixtures' },
+    { name: 'Rajmistri', slug: 'rajmistri', description: 'Brick masonry, wall plastering, tile/marble laying and concrete repairs' },
+    { name: 'Wallpaper', slug: 'wallpaper', description: 'Designer wallpaper pasting, 3D wall murals and wallpaper removal' },
+  ];
 
-  const emergencyCategory = await prisma.serviceCategory.upsert({
-    where: { slug: 'emergency-sos' },
-    update: {},
-    create: {
-      name: '24/7 SOS Emergency Services',
-      slug: 'emergency-sos',
-      description: 'Rapid 15-minute response for sparking, burning smells & power outages',
-      displayOrder: 2,
-    },
-  });
+  const categoryMap: Record<string, any> = {};
+  for (let i = 0; i < tradeCategories.length; i++) {
+    const cat = tradeCategories[i];
+    const created = await prisma.serviceCategory.upsert({
+      where: { slug: cat.slug },
+      update: { name: cat.name, description: cat.description },
+      create: {
+        name: cat.name,
+        slug: cat.slug,
+        description: cat.description,
+        displayOrder: i + 1,
+      },
+    });
+    categoryMap[cat.slug] = created;
+  }
+
+  const electricianCategory = categoryMap['electrician'];
 
   const fanService = await prisma.serviceCatalog.upsert({
     where: { code: 'SRV-FAN-01' },
     update: {},
     create: {
-      categoryId: repairCategory.id,
+      categoryId: electricianCategory.id,
       title: 'Ceiling Fan Repair / Bearing Replacement',
       code: 'SRV-FAN-01',
       basePriceInr: 1059.32,
@@ -186,7 +203,7 @@ async function main() {
     where: { code: 'SRV-MCB-02' },
     update: {},
     create: {
-      categoryId: emergencyCategory.id,
+      categoryId: electricianCategory.id,
       title: 'Circuit Breaker Tripping & Short-Circuit Emergency Diagnostic',
       code: 'SRV-MCB-02',
       basePriceInr: 1250.00,

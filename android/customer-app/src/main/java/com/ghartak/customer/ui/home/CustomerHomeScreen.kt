@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -532,109 +533,74 @@ fun CustomerHomeScreen(
                     }
 
                     // ==========================================
-                    // 2. SECTION: Service Categories (4 Pastel Cards)
+                    // 2. SECTION: Household service at your doorstep (18 Categories)
                     // ==========================================
                     item {
-                        Column {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "Service Categories",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = TextDarkPrimary
-                                )
-                                Text(
-                                    text = "View All >",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = SapphireBlue800,
-                                    modifier = Modifier.clickable { currentBottomTab = 1 }
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                // 1. Repair (Pastel Blue)
-                                CategoryCard(
-                                    modifier = Modifier.weight(1f),
-                                    icon = Icons.Default.Build,
-                                    iconTint = SapphireBlue800,
-                                    bgColor = Color(0xFFF0F7FF),
-                                    borderColor = Color(0xFFD0E3FF),
-                                    label = "Repair",
-                                    subtitle = "Fix electrical issues",
-                                    isSelected = state.selectedCategory == "Repair",
-                                    onClick = {
-                                        if (state.selectedCategory == "Repair") {
-                                            viewModel.selectCategory("All")
-                                        } else {
-                                            viewModel.selectCategory("Repair")
-                                        }
-                                    }
-                                )
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFFFDE68A)),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Household service at your doorstep",
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextDarkPrimary
+                                    )
+                                    Text(
+                                        text = "View All >",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = SapphireBlue800,
+                                        modifier = Modifier.clickable { currentBottomTab = 1 }
+                                    )
+                                }
 
-                                // 2. Installation (Pastel Mint Green)
-                                CategoryCard(
-                                    modifier = Modifier.weight(1f),
-                                    icon = Icons.Default.Power,
-                                    iconTint = Color(0xFF16A34A),
-                                    bgColor = Color(0xFFF0FDF4),
-                                    borderColor = Color(0xFFBBF7D0),
-                                    label = "Installation",
-                                    subtitle = "New fittings",
-                                    isSelected = state.selectedCategory == "Installation",
-                                    onClick = {
-                                        if (state.selectedCategory == "Installation") {
-                                            viewModel.selectCategory("All")
-                                        } else {
-                                            viewModel.selectCategory("Installation")
-                                        }
-                                    }
-                                )
+                                Spacer(modifier = Modifier.height(14.dp))
 
-                                // 3. Maintenance (Pastel Amber)
-                                CategoryCard(
-                                    modifier = Modifier.weight(1f),
-                                    icon = Icons.Default.Settings,
-                                    iconTint = Color(0xFFD97706),
-                                    bgColor = Color(0xFFFFFBEB),
-                                    borderColor = Color(0xFFFDE68A),
-                                    label = "Maintenance",
-                                    subtitle = "Regular checkup",
-                                    isSelected = state.selectedCategory == "Maintenance",
-                                    onClick = {
-                                        if (state.selectedCategory == "Maintenance") {
-                                            viewModel.selectCategory("All")
-                                        } else {
-                                            viewModel.selectCategory("Maintenance")
-                                        }
-                                    }
-                                )
+                                val topRowCategories = remember { DOORSTEP_CATEGORIES.take(9) }
+                                val bottomRowCategories = remember { DOORSTEP_CATEGORIES.drop(9) }
 
-                                // 4. Emergency (Pastel Rose Red)
-                                CategoryCard(
-                                    modifier = Modifier.weight(1f),
-                                    icon = Icons.Default.NotificationsActive,
-                                    iconTint = Color(0xFFDC2626),
-                                    bgColor = Color(0xFFFEF2F2),
-                                    borderColor = Color(0xFFFECACA),
-                                    label = "Emergency",
-                                    subtitle = "24x7 support",
-                                    isSelected = state.selectedCategory == "Emergency",
-                                    onClick = {
-                                        if (state.selectedCategory == "Emergency") {
-                                            viewModel.selectCategory("All")
-                                        } else {
-                                            viewModel.selectCategory("Emergency")
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .horizontalScroll(rememberScrollState()),
+                                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                                ) {
+                                    // Row 1 (9 categories)
+                                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        topRowCategories.forEach { cat ->
+                                            DoorstepCategoryBadge(
+                                                item = cat,
+                                                isSelected = state.selectedCategory.equals(cat.name, ignoreCase = true),
+                                                onClick = {
+                                                    viewModel.selectCategory(cat.name)
+                                                }
+                                            )
                                         }
                                     }
-                                )
+
+                                    // Row 2 (9 categories)
+                                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        bottomRowCategories.forEach { cat ->
+                                            DoorstepCategoryBadge(
+                                                item = cat,
+                                                isSelected = state.selectedCategory.equals(cat.name, ignoreCase = true),
+                                                onClick = {
+                                                    viewModel.selectCategory(cat.name)
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -1113,62 +1079,81 @@ fun QuickActionCard(
 }
 
 // -------------------------------------------------------------
-// Component: Pastel Category Card (Repair, Installation, Maintenance, Emergency)
+// Component: Household Service Doorstep Category Badge (18 Categories)
 // -------------------------------------------------------------
+data class DoorstepCategory(
+    val name: String,
+    val icon: ImageVector,
+    val iconTint: Color,
+    val bgColor: Color
+)
+
+val DOORSTEP_CATEGORIES = listOf(
+    // Row 1 (9 categories)
+    DoorstepCategory("Electrician", Icons.Default.Bolt, Color(0xFFD97706), Color(0xFFFEF3C7)),
+    DoorstepCategory("Carpenter", Icons.Default.Carpenter, Color(0xFFB45309), Color(0xFFFEF3C7)),
+    DoorstepCategory("Plumber", Icons.Default.Plumbing, Color(0xFF0284C7), Color(0xFFE0F2FE)),
+    DoorstepCategory("Cleaner", Icons.Default.CleaningServices, Color(0xFF0D9488), Color(0xFFCCFBF1)),
+    DoorstepCategory("Gas Stove Service", Icons.Default.LocalFireDepartment, Color(0xFFEA580C), Color(0xFFFFEDD5)),
+    DoorstepCategory("Rajmistri", Icons.Default.Foundation, Color(0xFFB45309), Color(0xFFFEF3C7)),
+    DoorstepCategory("Laundry Service", Icons.Default.LocalLaundryService, Color(0xFF059669), Color(0xFFD1FAE5)),
+    DoorstepCategory("Packers & Movers", Icons.Default.LocalShipping, Color(0xFFD97706), Color(0xFFFEF3C7)),
+    DoorstepCategory("Pest Control Service", Icons.Default.BugReport, Color(0xFF16A34A), Color(0xFFDCFCE7)),
+
+    // Row 2 (9 categories)
+    DoorstepCategory("Hot And Cool", Icons.Default.AcUnit, Color(0xFF0284C7), Color(0xFFE0F2FE)),
+    DoorstepCategory("House Painting Service", Icons.Default.FormatPaint, Color(0xFFE11D48), Color(0xFFFFE4E6)),
+    DoorstepCategory("Wallpaper", Icons.Default.Wallpaper, Color(0xFFC026D3), Color(0xFFFAE8FF)),
+    DoorstepCategory("Aluminum And Glass Fitting services", Icons.Default.Window, Color(0xFF0284C7), Color(0xFFE0F2FE)),
+    DoorstepCategory("Generator Technician", Icons.Default.Engineering, Color(0xFF475569), Color(0xFFF1F5F9)),
+    DoorstepCategory("False Ceiling Service", Icons.Default.Layers, Color(0xFF6366F1), Color(0xFFEEF2FF)),
+    DoorstepCategory("IT Service", Icons.Default.Computer, Color(0xFF2563EB), Color(0xFFDBEAFE)),
+    DoorstepCategory("Digital Marketer", Icons.Default.Campaign, Color(0xFF9333EA), Color(0xFFF3E8FF)),
+    DoorstepCategory("CCTV Service", Icons.Default.Videocam, Color(0xFF4F46E5), Color(0xFFEEF2FF))
+)
+
 @Composable
-fun CategoryCard(
-    modifier: Modifier = Modifier,
-    icon: ImageVector,
-    iconTint: Color,
-    bgColor: Color,
-    borderColor: Color,
-    label: String,
-    subtitle: String,
+fun DoorstepCategoryBadge(
+    item: DoorstepCategory,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    Surface(
-        onClick = onClick,
-        color = bgColor,
-        shape = ShapeCardSmall,
-        border = androidx.compose.foundation.BorderStroke(
-            width = if (isSelected) 2.dp else 1.dp,
-            color = if (isSelected) iconTint else borderColor
-        ),
-        shadowElevation = if (isSelected) 2.dp else 0.dp,
-        modifier = modifier.height(92.dp)
+    Column(
+        modifier = Modifier
+            .width(76.dp)
+            .clickable(onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(6.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .size(60.dp)
+                .clip(CircleShape)
+                .background(item.bgColor)
+                .border(
+                    width = if (isSelected) 3.dp else 2.dp,
+                    color = if (isSelected) SapphireBlue800 else Color(0xFFF59E0B),
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = iconTint,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.height(5.dp))
-            Text(
-                text = label,
-                fontSize = 11.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
-                color = TextDarkPrimary,
-                textAlign = TextAlign.Center,
-                maxLines = 1
-            )
-            Spacer(modifier = Modifier.height(1.dp))
-            Text(
-                text = subtitle,
-                fontSize = 9.sp,
-                color = TextDarkMuted,
-                textAlign = TextAlign.Center,
-                maxLines = 1
+                imageVector = item.icon,
+                contentDescription = item.name,
+                tint = if (isSelected) SapphireBlue800 else item.iconTint,
+                modifier = Modifier.size(28.dp)
             )
         }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = item.name,
+            fontSize = 10.5.sp,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+            color = if (isSelected) SapphireBlue800 else TextDarkPrimary,
+            textAlign = TextAlign.Center,
+            lineHeight = 13.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
