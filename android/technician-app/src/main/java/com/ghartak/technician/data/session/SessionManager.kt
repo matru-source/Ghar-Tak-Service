@@ -128,6 +128,9 @@ class SessionManager(context: Context) {
             e.printStackTrace()
         }
 
+        val registeredTrade = trade.trim().ifEmpty { "Electrician" }
+        prefs.edit().putString(KEY_SPECIALIZATION, registeredTrade).apply()
+
         val profile = TechnicianProfile(
             id = techId,
             badgeNumber = badgeNumber,
@@ -137,9 +140,10 @@ class SessionManager(context: Context) {
             assignedPincode = pincode.trim().ifEmpty { "400001" },
             isOnline = true,
             rating = 4.9,
-            safetyKitSerial = "VDE-1000V-99214",
+            safetyKitSerial = "GTS-SAFETY-KIT-99214",
             insulatedGlovesVerified = false,
-            totalJobsCompleted = 0
+            totalJobsCompleted = 0,
+            specialization = registeredTrade
         )
         saveSession("token_${System.currentTimeMillis()}", profile)
         return profile
@@ -261,10 +265,10 @@ class SessionManager(context: Context) {
     fun getEmail(): String = prefs.getString(KEY_EMAIL, "rajakumar1995@gmail.com") ?: "rajakumar1995@gmail.com"
     fun getLocation(): String = prefs.getString(KEY_LOCATION, "Mumbai, Maharashtra") ?: "Mumbai, Maharashtra"
     fun getLanguages(): String = prefs.getString(KEY_LANGUAGES, "English, Hindi, Marathi") ?: "English, Hindi, Marathi"
-    fun getSpecialization(): String = prefs.getString(KEY_SPECIALIZATION, "Electrical Installation, AC, Fan, Wiring") ?: "Electrical Installation, AC, Fan, Wiring"
+    fun getSpecialization(): String = prefs.getString(KEY_SPECIALIZATION, "Electrician") ?: "Electrician"
     fun getExperience(): String = prefs.getString(KEY_EXPERIENCE, "5+ Years") ?: "5+ Years"
-    fun getLicense(): String = prefs.getString(KEY_LICENSE, "1000V Safety Certified") ?: "1000V Safety Certified"
-    fun getServiceArea(): String = prefs.getString(KEY_SERVICE_AREA, "Mumbai & Surrounding Areas") ?: "Mumbai & Surrounding Areas"
+    fun getLicense(): String = prefs.getString(KEY_LICENSE, "Trade Certified Professional") ?: "Trade Certified Professional"
+    fun getServiceArea(): String = prefs.getString(KEY_SERVICE_AREA, "Doorstep Territory") ?: "Doorstep Territory"
 
     fun updatePersonalInfo(name: String, phone: String, email: String, location: String, languages: String) {
         prefs.edit().apply {

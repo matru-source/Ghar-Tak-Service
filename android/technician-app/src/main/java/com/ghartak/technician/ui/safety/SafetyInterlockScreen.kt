@@ -115,13 +115,13 @@ fun SafetyInterlockScreen(
                 title = {
                     Column {
                         Text(
-                            text = "1000V SAFETY INTERLOCK",
+                            text = if (state.tradeCategory.contains("Electric", ignoreCase = true) || state.tradeCategory.contains("Voltage", ignoreCase = true)) "1000V SAFETY INTERLOCK" else "PRE-WORK PROTOCOL CHECK",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
                         )
                         Text(
-                            text = "Ticket: ${state.ticketNumber} • VDE Compliance",
+                            text = "Ticket: ${state.ticketNumber} • ${state.tradeCategory}",
                             fontSize = 11.sp,
                             color = FlameOrange
                         )
@@ -174,7 +174,7 @@ fun SafetyInterlockScreen(
                             }
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(
-                                text = "VDE 1000V INSULATED GLOVES",
+                                text = state.ppeSectionTitle,
                                 color = TextPrimary,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp
@@ -197,19 +197,19 @@ fun SafetyInterlockScreen(
                     Spacer(modifier = Modifier.height(14.dp))
 
                     SafetyCheckboxItem(
-                        title = "Visual Air Leak & Puncture Test Passed",
-                        subtitle = "Roll cuff toward fingers to ensure no pinhole air escape",
-                        checked = state.punctureCheckConfirmed,
-                        onCheckedChange = { viewModel.togglePunctureCheck(it) }
+                        title = state.ppeItem1Title,
+                        subtitle = state.ppeItem1Subtitle,
+                        checked = state.safetyGlovesConfirmed,
+                        onCheckedChange = { viewModel.toggleGlovesConfirmed(it) }
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
 
                     SafetyCheckboxItem(
-                        title = "Class 0 (1000V AC) Gloves Worn",
-                        subtitle = "Insulated gloves donned with leather over-gloves for mechanical protection",
-                        checked = state.safetyGlovesConfirmed,
-                        onCheckedChange = { viewModel.toggleGlovesConfirmed(it) }
+                        title = state.ppeItem2Title,
+                        subtitle = state.ppeItem2Subtitle,
+                        checked = state.punctureCheckConfirmed,
+                        onCheckedChange = { viewModel.togglePunctureCheck(it) }
                     )
                 }
             }
@@ -237,7 +237,7 @@ fun SafetyInterlockScreen(
                         }
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = "MAIN MCB POWER ISOLATION",
+                            text = state.isolationSectionTitle,
                             color = TextPrimary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.sp
@@ -247,8 +247,8 @@ fun SafetyInterlockScreen(
                     Spacer(modifier = Modifier.height(14.dp))
 
                     SafetyCheckboxItem(
-                        title = "Main Incoming DP / 4-Pole MCB Flipped OFF",
-                        subtitle = "Confirmed 0.0V AC across phase busbars using calibrated multimeter",
+                        title = state.isolationItemTitle,
+                        subtitle = state.isolationItemSubtitle,
                         checked = state.safetyMcbSwitchConfirmed,
                         onCheckedChange = { viewModel.toggleMcbConfirmed(it) }
                     )
@@ -308,13 +308,13 @@ fun SafetyInterlockScreen(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = "Capture Open Distribution Board Photo",
+                                    text = state.photoCardTitle,
                                     color = TextPrimary,
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Text(
-                                    text = "Real photographic proof of MCB turned off before commencing work",
+                                    text = state.photoCardSubtitle,
                                     color = TextMuted,
                                     fontSize = 11.sp,
                                     textAlign = TextAlign.Center
@@ -436,18 +436,18 @@ fun SafetyInterlockScreen(
                     Column {
                         Text(
                             text = if (state.isInterlockClear)
-                                "INTERLOCK DISENGAGED • READY TO COMMENCE WORK"
+                                "PROTOCOLS VERIFIED • READY TO COMMENCE WORK"
                             else
-                                "INTERLOCK ACTIVE • 3 OF 3 PROTOCOLS REQUIRED",
+                                "CHECKLIST ACTIVE • ALL PROTOCOLS REQUIRED",
                             color = if (state.isInterlockClear) SafetyGreen else SafetyAmber,
                             fontWeight = FontWeight.Bold,
                             fontSize = 12.sp
                         )
                         Text(
                             text = if (state.isInterlockClear)
-                                "System will notify customer and regional hub of safe circuit access."
+                                "System verified pre-service safety & inspection protocols for customer & hub."
                             else
-                                "All physical checks must be checked and confirmed above.",
+                                "All trade safety items and pre-work photo must be confirmed above.",
                             color = TextMuted,
                             fontSize = 10.sp
                         )

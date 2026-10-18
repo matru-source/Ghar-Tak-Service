@@ -534,8 +534,22 @@ fun NavigationScreen(
 
                         Spacer(modifier = Modifier.height(6.dp))
 
+                        val isElectrical = state.serviceTitle.lowercase().let {
+                            it.contains("electr") || it.contains("wire") || it.contains("mcb") || it.contains("panel") || it.contains("fan") || it.contains("ac") || it.contains("generator")
+                        }
+                        val arrivalNotice = if (isElectrical) {
+                            "Customer has been notified of your arrival. Next: confirm 1000V high-voltage safety interlock before opening consumer unit."
+                        } else {
+                            "Customer has been notified of your arrival. Next: confirm pre-work protocol checklist and inspection photo before commencing service."
+                        }
+                        val proceedButtonText = if (isElectrical) {
+                            "PROCEED TO 1000V SAFETY INTERLOCK"
+                        } else {
+                            "PROCEED TO PRE-WORK PROTOCOL CHECK"
+                        }
+
                         Text(
-                            text = "Customer has been notified of your arrival. Next: confirm 1000V high-voltage safety interlock before opening consumer unit.",
+                            text = arrivalNotice,
                             color = TextSecondary,
                             fontSize = 11.sp,
                             textAlign = TextAlign.Center
@@ -551,7 +565,7 @@ fun NavigationScreen(
                         ) {
                             Icon(imageVector = Icons.Default.Shield, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("PROCEED TO 1000V SAFETY INTERLOCK", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 12.sp)
+                            Text(proceedButtonText, fontWeight = FontWeight.Bold, color = Color.White, fontSize = 12.sp)
                         }
                     }
                 }

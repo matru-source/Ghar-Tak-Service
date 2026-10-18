@@ -583,6 +583,7 @@ fun CustomerHomeScreen(
                                                 isSelected = state.selectedCategory.equals(cat.name, ignoreCase = true),
                                                 onClick = {
                                                     viewModel.selectCategory(cat.name)
+                                                    currentBottomTab = 1
                                                 }
                                             )
                                         }
@@ -596,6 +597,7 @@ fun CustomerHomeScreen(
                                                 isSelected = state.selectedCategory.equals(cat.name, ignoreCase = true),
                                                 onClick = {
                                                     viewModel.selectCategory(cat.name)
+                                                    currentBottomTab = 1
                                                 }
                                             )
                                         }

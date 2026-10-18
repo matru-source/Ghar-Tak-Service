@@ -61,6 +61,27 @@ private val TechEmergencyRedDark = Color(0xFFB71C1C)
 private val TechEmergencyPink = Color(0xFFFEE2E2)
 private val TechSurfaceBorder = Color(0xFFE2E8F0)
 
+val TECH_DOORSTEP_CATEGORIES = listOf(
+    "Aluminum And Glass Fitting services",
+    "Carpenter",
+    "CCTV Service",
+    "Cleaner",
+    "Digital Marketer",
+    "Electrician",
+    "False Ceiling Service",
+    "Gas Stove Service",
+    "Generator Technician",
+    "Hot And Cool",
+    "House Painting Service",
+    "IT Service",
+    "Laundry Service",
+    "Packers & Movers",
+    "Pest Control Service",
+    "Plumber",
+    "Rajmistri",
+    "Wallpaper"
+)
+
 // Helper: resolves realistic repair object image for jobs and notifications
 fun getServiceDrawableRes(serviceTitle: String, iconType: String = ""): Int {
     return when {
@@ -1707,10 +1728,11 @@ fun TechnicianProfileContent(
 
     // 2. Working Edit Service Details Dialog
     if (showEditServiceDialog) {
-        var editSpecialization by remember { mutableStateOf(state.profile?.specialization ?: "Electrical Installation, AC, Fan, Wiring") }
+        var editSpecialization by remember { mutableStateOf(state.profile?.specialization ?: "Electrician") }
+        var editSpecializationExpanded by remember { mutableStateOf(false) }
         var editExperience by remember { mutableStateOf(state.profile?.experience ?: "5+ Years") }
-        var editLicense by remember { mutableStateOf(state.profile?.license ?: "1000V Safety Certified") }
-        var editServiceArea by remember { mutableStateOf(state.profile?.serviceArea ?: "Mumbai & Surrounding Areas") }
+        var editLicense by remember { mutableStateOf(state.profile?.license ?: "Trade Certified Professional") }
+        var editServiceArea by remember { mutableStateOf(state.profile?.serviceArea ?: "Doorstep Territory") }
 
         AlertDialog(
             onDismissRequest = { showEditServiceDialog = false },
@@ -1722,13 +1744,43 @@ fun TechnicianProfileContent(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    OutlinedTextField(
-                        value = editSpecialization,
-                        onValueChange = { editSpecialization = it },
-                        label = { Text("Specialization") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedTextField(
+                            value = editSpecialization,
+                            onValueChange = { editSpecialization = it },
+                            label = { Text("Trade Specialization (18 Categories)") },
+                            trailingIcon = {
+                                IconButton(onClick = { editSpecializationExpanded = !editSpecializationExpanded }) {
+                                    Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Trade")
+                                }
+                            },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        DropdownMenu(
+                            expanded = editSpecializationExpanded,
+                            onDismissRequest = { editSpecializationExpanded = false },
+                            modifier = Modifier
+                                .fillMaxWidth(0.75f)
+                                .heightIn(max = 280.dp)
+                        ) {
+                            TECH_DOORSTEP_CATEGORIES.forEach { category ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = category,
+                                            fontSize = 13.sp,
+                                            fontWeight = if (editSpecialization == category) FontWeight.Bold else FontWeight.Normal
+                                        )
+                                    },
+                                    onClick = {
+                                        editSpecialization = category
+                                        editSpecializationExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
                     OutlinedTextField(
                         value = editExperience,
                         onValueChange = { editExperience = it },
@@ -2023,7 +2075,7 @@ fun TechnicianProfileContent(
                     icon = Icons.Default.Build,
                     onEdit = { showEditServiceDialog = true }
                 ) {
-                    ProfileInfoRow(icon = Icons.Default.Build, label = "Specialization", value = state.profile?.specialization ?: "Electrical Installation, AC, Fan, Wiring")
+                    ProfileInfoRow(icon = Icons.Default.Build, label = "Specialization", value = state.profile?.specialization ?: "Electrician")
                     ProfileInfoRow(icon = Icons.Default.WorkHistory, label = "Experience", value = state.profile?.experience ?: "5+ Years")
                     ProfileInfoRow(icon = Icons.Default.VerifiedUser, label = "License / Certification", value = state.profile?.license ?: "1000V Safety Certified")
                     ProfileInfoRow(icon = Icons.Default.LocationCity, label = "Service Area", value = state.profile?.serviceArea ?: "Mumbai & Surrounding Areas")
@@ -2662,6 +2714,15 @@ fun TechnicianJobDetailsContent(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
+                    val isElectrical = job.serviceTitle.lowercase().let {
+                        it.contains("electr") || it.contains("wire") || it.contains("mcb") || it.contains("panel") || it.contains("fan") || it.contains("ac") || it.contains("generator")
+                    }
+                    val startJobButtonText = if (isElectrical) {
+                        "Start Job (1000V Safety Interlock)"
+                    } else {
+                        "Start Job (Pre-Work Safety Check)"
+                    }
+
                     Button(
                         onClick = onStartJob,
                         colors = ButtonDefaults.buttonColors(containerColor = TechFlameOrange),
@@ -2672,7 +2733,7 @@ fun TechnicianJobDetailsContent(
                     ) {
                         Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Start Job (1000V Safety Interlock)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text(startJobButtonText, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                     }
                 }
             }

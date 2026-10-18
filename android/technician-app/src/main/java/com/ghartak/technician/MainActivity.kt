@@ -128,12 +128,30 @@ class MainActivity : ComponentActivity() {
 
                         composable("safety/{jobId}") { backStackEntry ->
                             val jobId = backStackEntry.arguments?.getString("jobId") ?: "job_mh_live_01"
+                            val currentJob = dashboardViewModel.uiState.value.assignedJobs.find { it.id == jobId }
+                                ?: dashboardViewModel.uiState.value.selectedJob
+                            val jobTitle = currentJob?.serviceTitle ?: "Doorstep Service"
+                            val ticket = currentJob?.jobTicketNumber ?: "GTS-MH-9821"
+
+                            LaunchedEffect(jobId) {
+                                safetyViewModel.initJob(jobId, ticket, jobTitle)
+                            }
+
+                            val isElectric = jobTitle.lowercase().let {
+                                it.contains("electr") || it.contains("wire") || it.contains("mcb") || it.contains("panel") || it.contains("fan") || it.contains("ac") || it.contains("generator")
+                            }
+
                             SafetyInterlockScreen(
                                 jobId = jobId,
                                 viewModel = safetyViewModel,
                                 onBack = { navController.popBackStack() },
                                 onSafetyPassed = {
-                                    Toast.makeText(this@MainActivity, "⚡ 1000V Safety Interlock Disengaged! Circuit Work Unlocked", Toast.LENGTH_LONG).show()
+                                    val toastMsg = if (isElectric) {
+                                        "⚡ 1000V Safety Interlock Disengaged! Circuit Work Unlocked"
+                                    } else {
+                                        "✓ Pre-Service Inspection Verified! Service Work Unlocked"
+                                    }
+                                    Toast.makeText(this@MainActivity, toastMsg, Toast.LENGTH_LONG).show()
                                     dashboardViewModel.markJobStarted(jobId)
                                     navController.navigate("dashboard") {
                                         popUpTo("dashboard") { inclusive = true }

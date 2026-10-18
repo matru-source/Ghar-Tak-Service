@@ -43,6 +43,27 @@ private val GtsHeaderGradientStart = Color(0xFF083C74)
 private val GtsHeaderGradientMid = Color(0xFF0056B3)
 private val SuccessGreen = Color(0xFF00C853)
 
+private val DOORSTEP_TRADE_CATEGORIES = listOf(
+    "Aluminum And Glass Fitting services",
+    "Carpenter",
+    "CCTV Service",
+    "Cleaner",
+    "Digital Marketer",
+    "Electrician",
+    "False Ceiling Service",
+    "Gas Stove Service",
+    "Generator Technician",
+    "Hot And Cool",
+    "House Painting Service",
+    "IT Service",
+    "Laundry Service",
+    "Packers & Movers",
+    "Pest Control Service",
+    "Plumber",
+    "Rajmistri",
+    "Wallpaper"
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TechnicianAuthScreen(
@@ -56,6 +77,7 @@ fun TechnicianAuthScreen(
     var lastClickTime by remember { mutableStateOf(0L) }
     var showEnvSwitcher by remember { mutableStateOf(false) }
     var showGoogleAccountChooser by remember { mutableStateOf(false) }
+    var expandedTradeMenu by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.isLoggedIn) {
         if (state.isLoggedIn) {
@@ -806,25 +828,55 @@ fun TechnicianAuthScreen(
                             Spacer(modifier = Modifier.height(10.dp))
 
                             Text(
-                                text = "Trade Certification / Specialty",
+                                text = "Trade Category / Specialty",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = TextDarkPrimary
                             )
                             Spacer(modifier = Modifier.height(6.dp))
-                            OutlinedTextField(
-                                value = state.tradeSpecialty,
-                                onValueChange = { viewModel.onTradeChanged(it) },
-                                placeholder = { Text("e.g. 1000V Certified Electrician", fontSize = 13.sp, color = Color(0xFF94A3B8)) },
-                                leadingIcon = { Icon(Icons.Default.Build, contentDescription = null, tint = SapphireBlue800, modifier = Modifier.size(18.dp)) },
-                                singleLine = true,
-                                shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = SapphireBlue800,
-                                    unfocusedBorderColor = Color(0xFFE2E8F0)
-                                ),
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                            Box(modifier = Modifier.fillMaxWidth()) {
+                                OutlinedTextField(
+                                    value = state.tradeSpecialty,
+                                    onValueChange = { viewModel.onTradeChanged(it) },
+                                    placeholder = { Text("Select or enter your trade specialty", fontSize = 13.sp, color = Color(0xFF94A3B8)) },
+                                    leadingIcon = { Icon(Icons.Default.Build, contentDescription = null, tint = SapphireBlue800, modifier = Modifier.size(18.dp)) },
+                                    trailingIcon = {
+                                        IconButton(onClick = { expandedTradeMenu = !expandedTradeMenu }) {
+                                            Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Trade")
+                                        }
+                                    },
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = SapphireBlue800,
+                                        unfocusedBorderColor = Color(0xFFE2E8F0)
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                DropdownMenu(
+                                    expanded = expandedTradeMenu,
+                                    onDismissRequest = { expandedTradeMenu = false },
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.85f)
+                                        .heightIn(max = 280.dp)
+                                ) {
+                                    DOORSTEP_TRADE_CATEGORIES.forEach { category ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    text = category,
+                                                    fontSize = 13.sp,
+                                                    fontWeight = if (state.tradeSpecialty == category) FontWeight.Bold else FontWeight.Normal
+                                                )
+                                            },
+                                            onClick = {
+                                                viewModel.onTradeChanged(category)
+                                                expandedTradeMenu = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
 
                             Spacer(modifier = Modifier.height(10.dp))
 

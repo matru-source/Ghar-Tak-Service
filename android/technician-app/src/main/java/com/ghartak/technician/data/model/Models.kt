@@ -25,10 +25,10 @@ data class TechnicianProfile(
     @SerializedName("email") val email: String = "rajakumar1995@gmail.com",
     @SerializedName("location") val location: String = "Mumbai, Maharashtra",
     @SerializedName("languages") val languages: String = "English, Hindi, Marathi",
-    @SerializedName("specialization") val specialization: String = "Electrical Installation, AC, Fan, Wiring",
+    @SerializedName("specialization") val specialization: String = "Electrician",
     @SerializedName("experience") val experience: String = "5+ Years",
-    @SerializedName("license") val license: String = "1000V Safety Certified",
-    @SerializedName("serviceArea") val serviceArea: String = "Mumbai & Surrounding Areas"
+    @SerializedName("license") val license: String = "Trade Certified Professional",
+    @SerializedName("serviceArea") val serviceArea: String = "Doorstep Territory"
 )
 
 data class TechnicianJob(

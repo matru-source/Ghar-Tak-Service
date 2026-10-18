@@ -181,14 +181,20 @@ fun DispatchAlertScreen(
                             fontWeight = FontWeight.Bold
                         )
 
+                        val isElectrical = job.serviceTitle.lowercase().let {
+                            it.contains("electr") || it.contains("wire") || it.contains("mcb") || it.contains("panel") || it.contains("fan") || it.contains("ac") || it.contains("generator")
+                        }
+                        val protocolBadgeText = if (isElectrical) "⚡ 1000V PROTOCOL" else "🛡️ VERIFIED TRADE PROTOCOL"
+                        val badgeColor = if (isElectrical) SafetyRed else FlameOrange
+
                         Surface(
-                            color = SafetyRed.copy(alpha = 0.15f),
+                            color = badgeColor.copy(alpha = 0.15f),
                             shape = RoundedCornerShape(6.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, SafetyRed.copy(alpha = 0.4f))
+                            border = androidx.compose.foundation.BorderStroke(1.dp, badgeColor.copy(alpha = 0.4f))
                         ) {
                             Text(
-                                text = "⚡ 1000V PROTOCOL",
-                                color = SafetyRed,
+                                text = protocolBadgeText,
+                                color = badgeColor,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)

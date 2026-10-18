@@ -19,7 +19,7 @@ data class TechnicianAuthUiState(
     val confirmPassword: String = "",
     val fullName: String = "",
     val phoneNumber: String = "",
-    val tradeSpecialty: String = "1000V Certified Senior Electrician",
+    val tradeSpecialty: String = "Electrician",
     val pincode: String = "400001",
 
     // Registration Step & OTP
@@ -278,7 +278,7 @@ class TechnicianAuthViewModel(
         val password = state.password.trim()
         val confirmPass = state.confirmPassword.trim()
         val phone = state.phoneNumber.trim()
-        val trade = state.tradeSpecialty.trim().ifEmpty { "1000V Certified Electrician" }
+        val trade = state.tradeSpecialty.trim().ifEmpty { "Electrician" }
         val pincode = state.pincode.trim().ifEmpty { "400001" }
 
         if (password.length < 6) {
