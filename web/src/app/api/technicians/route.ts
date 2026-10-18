@@ -52,3 +52,44 @@ export async function GET(request: NextRequest) {
     return apiError('Failed to fetch technicians fleet roster', 500, error instanceof Error ? error.message : String(error));
   }
 }
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const {
+      fullName,
+      phone,
+      email,
+      pincode,
+      trade,
+      badgeNumber,
+      id,
+    } = body;
+
+    if (!fullName || fullName.trim().length < 2) {
+      return apiError("'fullName' is required", 400);
+    }
+    if (!phone || phone.trim().length < 10) {
+      return apiError("Valid 10-digit 'phone' is required", 400);
+    }
+
+    const registered = await db.registerTechnician({
+      id,
+      badgeNumber,
+      fullName,
+      phone,
+      email,
+      trade,
+      pincode: pincode || '400001',
+    });
+
+    return apiSuccess(
+      registered,
+      `Technician ${registered.fullName} successfully registered and connected to dispatch roster`,
+      201
+    );
+  } catch (error) {
+    return apiError('Failed to register technician', 500, error instanceof Error ? error.message : String(error));
+  }
+}
+

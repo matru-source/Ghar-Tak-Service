@@ -22,6 +22,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 data class NavigationUiState(
     val jobId: String = "job_live_01",
     val ticketNumber: String = "GTS-OD-1001",
+    val serviceTitle: String = "Doorstep Service Order",
     val customerName: String = "Valued Customer",
     val customerPhone: String = "+91 98765 43210",
     val customerAddress: String = "Customer Doorstep Address",
@@ -51,6 +52,7 @@ class NavigationViewModel(
         _uiState.value = _uiState.value.copy(
             jobId = job.id,
             ticketNumber = job.jobTicketNumber,
+            serviceTitle = job.serviceTitle,
             customerName = job.customerName,
             customerPhone = job.customerPhone,
             customerAddress = job.customerAddressText,

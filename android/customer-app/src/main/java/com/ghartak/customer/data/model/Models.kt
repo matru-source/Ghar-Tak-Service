@@ -62,6 +62,9 @@ data class Job(
 )
 
 data class CreateJobRequest(
+    @SerializedName("customerId") val customerId: String? = null,
+    @SerializedName("customerName") val customerName: String? = null,
+    @SerializedName("customerPhone") val customerPhone: String? = null,
     @SerializedName("serviceId") val serviceId: String,
     @SerializedName("technicianId") val technicianId: String? = null,
     @SerializedName("pincode") val pincode: String,
@@ -70,6 +73,19 @@ data class CreateJobRequest(
     @SerializedName("customerLongitude") val customerLongitude: Double? = null,
     @SerializedName("priority") val priority: String = "NORMAL",
     @SerializedName("paymentMethod") val paymentMethod: String? = "UPI"
+)
+
+data class PastOrderItem(
+    val ticketNumber: String,
+    val invoiceNumber: String,
+    val serviceTitle: String,
+    val dateText: String,
+    val technicianName: String,
+    val amountInr: Double,
+    val taxableAmount: Double,
+    val cgstAmount: Double,
+    val sgstAmount: Double,
+    val status: String = "COMPLETED"
 )
 
 /**

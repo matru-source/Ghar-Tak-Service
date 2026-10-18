@@ -89,3 +89,14 @@ data class TelemetryPingResponse(
     @SerializedName("isDoorstepNearby") val isDoorstepNearby: Boolean,
     @SerializedName("updatedStatus") val updatedStatus: String?
 )
+
+data class RegisterTechnicianRequest(
+    @SerializedName("id") val id: String? = null,
+    @SerializedName("badgeNumber") val badgeNumber: String? = null,
+    @SerializedName("fullName") val fullName: String,
+    @SerializedName("phone") val phone: String,
+    @SerializedName("email") val email: String? = null,
+    @SerializedName("trade") val trade: String? = null,
+    @SerializedName("pincode") val pincode: String
+)
+

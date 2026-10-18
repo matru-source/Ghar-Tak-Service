@@ -2,10 +2,12 @@ package com.ghartak.customer.data.session
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.ghartak.customer.data.model.PastOrderItem
 import com.ghartak.customer.data.model.UserProfile
+import org.json.JSONArray
 import org.json.JSONObject
 
-class SessionManager(context: Context) {
+class SessionManager(val context: Context) {
 
     private val prefs: SharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
@@ -22,6 +24,7 @@ class SessionManager(context: Context) {
         private const val KEY_USERS_REGISTRY = "key_users_registry"
         private const val KEY_CUSTOM_BASE_URL = "key_custom_base_url"
         private const val KEY_USER_PROFILE_IMAGE = "key_user_profile_image"
+        private const val KEY_PAST_ORDERS = "key_past_orders"
 
         // Active Job & Invoice Persistence Keys
         private const val KEY_ACTIVE_JOB_ID = "key_active_job_id"
@@ -333,5 +336,56 @@ class SessionManager(context: Context) {
             putBoolean(KEY_IS_LOGGED_IN, false)
             apply()
         }
+    }
+
+    fun getPastOrders(): List<PastOrderItem> {
+        val jsonStr = prefs.getString(KEY_PAST_ORDERS, null) ?: return emptyList()
+        return try {
+            val arr = JSONArray(jsonStr)
+            val list = mutableListOf<PastOrderItem>()
+            for (i in 0 until arr.length()) {
+                val obj = arr.getJSONObject(i)
+                list.add(
+                    PastOrderItem(
+                        ticketNumber = obj.optString("ticketNumber"),
+                        invoiceNumber = obj.optString("invoiceNumber"),
+                        serviceTitle = obj.optString("serviceTitle"),
+                        dateText = obj.optString("dateText"),
+                        technicianName = obj.optString("technicianName"),
+                        amountInr = obj.optDouble("amountInr"),
+                        taxableAmount = obj.optDouble("taxableAmount"),
+                        cgstAmount = obj.optDouble("cgstAmount"),
+                        sgstAmount = obj.optDouble("sgstAmount"),
+                        status = obj.optString("status", "COMPLETED")
+                    )
+                )
+            }
+            list
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    fun addCompletedOrder(order: PastOrderItem) {
+        val existing = getPastOrders().toMutableList()
+        existing.removeAll { it.ticketNumber == order.ticketNumber || it.invoiceNumber == order.invoiceNumber }
+        existing.add(0, order)
+        val arr = JSONArray()
+        for (item in existing) {
+            val obj = JSONObject().apply {
+                put("ticketNumber", item.ticketNumber)
+                put("invoiceNumber", item.invoiceNumber)
+                put("serviceTitle", item.serviceTitle)
+                put("dateText", item.dateText)
+                put("technicianName", item.technicianName)
+                put("amountInr", item.amountInr)
+                put("taxableAmount", item.taxableAmount)
+                put("cgstAmount", item.cgstAmount)
+                put("sgstAmount", item.sgstAmount)
+                put("status", item.status)
+            }
+            arr.put(obj)
+        }
+        prefs.edit().putString(KEY_PAST_ORDERS, arr.toString()).apply()
     }
 }

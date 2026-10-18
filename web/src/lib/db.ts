@@ -194,6 +194,60 @@ export const db = {
     return dbStore.technicians.find((t) => t.userId === userId) || null;
   },
 
+  async registerTechnician(params: {
+    id?: string;
+    badgeNumber?: string;
+    fullName: string;
+    phone: string;
+    email?: string;
+    trade?: string;
+    pincode: string;
+    partnerId?: string;
+  }) {
+    const cleanPin = (params.pincode || '400001').trim();
+    const techId = params.id || `tech_${Math.floor(1000 + Math.random() * 9000)}`;
+    const badgeNumber = params.badgeNumber || `GTS-TECH-${Math.floor(3000 + Math.random() * 7000)}`;
+    const isOdisha = cleanPin.startsWith('75') || cleanPin.startsWith('76') || cleanPin.startsWith('77');
+    const partnerId = params.partnerId || (isOdisha ? 'part_odisha_01' : 'part_mumbai_01');
+    const defaultLat = isOdisha ? 19.3150 : 18.9220;
+    const defaultLng = isOdisha ? 84.7941 : 72.8347;
+
+    const newRecord = {
+      id: techId,
+      userId: `usr_${techId}`,
+      partnerId,
+      badgeNumber,
+      fullName: params.fullName.trim(),
+      phone: params.phone.trim(),
+      rating: 5.0,
+      totalJobsCompleted: 0,
+      isOnline: true,
+      currentLatitude: defaultLat,
+      currentLongitude: defaultLng,
+      assignedPincode: cleanPin,
+      kycStatus: 'VERIFIED' as const,
+      electricalLicenseNumber: `LIC-${cleanPin}-${Math.floor(1000 + Math.random() * 9000)}`,
+      insulatedGlovesVerified: true,
+      safetyKitSerial: `KIT-${Math.floor(10000 + Math.random() * 90000)}`,
+      email: params.email?.trim() || `${techId}@ghartak.in`,
+      trade: params.trade || 'Certified Professional',
+    };
+
+    const existingIndex = dbStore.technicians.findIndex(
+      (t) => t.id === techId || t.phone === newRecord.phone || (params.email && (t as any).email === params.email)
+    );
+    if (existingIndex >= 0) {
+      dbStore.technicians[existingIndex] = {
+        ...dbStore.technicians[existingIndex],
+        ...newRecord,
+      };
+      return dbStore.technicians[existingIndex];
+    } else {
+      dbStore.technicians.unshift(newRecord);
+      return newRecord;
+    }
+  },
+
   async updateTechnicianKyc(
     id: string,
     data: {
@@ -522,6 +576,8 @@ export const db = {
 
   async createJob(params: {
     customerId: string;
+    customerName?: string;
+    customerPhone?: string;
     technicianId?: string;
     serviceId: string;
     pincode: string;
@@ -556,8 +612,8 @@ export const db = {
     }
 
     const customerUser = dbStore.users.find((u) => u.id === params.customerId || u.phone === params.customerId);
-    const customerName = customerUser ? customerUser.fullName : 'Valued Customer';
-    const customerPhone = customerUser ? customerUser.phone : '+919876543213';
+    const customerName = params.customerName || (customerUser ? customerUser.fullName : 'Valued Customer');
+    const customerPhone = params.customerPhone || (customerUser ? customerUser.phone : '+919876543213');
 
     // Direct or Algorithmic Dispatch
     let assignedTech: any = null;

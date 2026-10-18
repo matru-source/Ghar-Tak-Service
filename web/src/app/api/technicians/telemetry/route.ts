@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
         etaMinutes: etaMinutes ?? undefined,
       },
       details: {
-        technicianName: tech?.fullName || 'Rajesh Kumar',
+        technicianName: tech?.fullName || targetJob?.technicianName || 'Field Technician',
         distanceRemainingKm,
         isDoorstepNearby,
         batteryLevelPct: typeof batteryLevelPct === 'number' ? batteryLevelPct : 85,

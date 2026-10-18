@@ -124,6 +124,11 @@ class JobCompleteViewModel(
                 Log.w("GTS_COMPLETE", "Network completion fallback handled: ${e.message}")
             } finally {
                 delay(400) // Fast snappy transition
+                try {
+                    SessionManager(context).incrementJobsCompleted()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
                 _uiState.value = _uiState.value.copy(
                     isSubmitting = false,
                     isCompleted = true,

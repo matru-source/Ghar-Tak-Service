@@ -108,10 +108,12 @@ class PaymentViewModel(
 
                 Log.d("GTS_JOB_CREATE", "Creating real job on backend: service=${_uiState.value.serviceId}, tech=${_uiState.value.technicianId}, pin=${_uiState.value.pincode}, coords=($resolvedLat, $resolvedLng)")
 
-                // Allow up to 25 seconds for cloud server wake-up/processing (avoids premature offline fallback)
                 val response = kotlinx.coroutines.withTimeoutOrNull(25000L) {
                     api.createJob(
                         CreateJobRequest(
+                            customerId = sessionManager.getUserId(),
+                            customerName = sessionManager.getUserName(),
+                            customerPhone = sessionManager.getUserPhone(),
                             serviceId = _uiState.value.serviceId,
                             technicianId = _uiState.value.technicianId.ifEmpty { null },
                             pincode = _uiState.value.pincode,

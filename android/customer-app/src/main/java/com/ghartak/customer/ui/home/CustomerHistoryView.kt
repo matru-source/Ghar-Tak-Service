@@ -39,44 +39,8 @@ fun CustomerHistoryView(
     onBookServiceAgain: () -> Unit = {}
 ) {
     val context = LocalContext.current
-
-    val pastOrders = remember {
-        listOf(
-            PastOrderItem(
-                ticketNumber = "GTS-MH-6430",
-                invoiceNumber = "INV-2026-MH-1720",
-                serviceTitle = "Full Home MCB Panel Replacement & Earth Leakage Fix",
-                dateText = "Oct 07, 2026 • 01:19 PM",
-                technicianName = "Rajesh Kumar (GTS-TECH-4091)",
-                amountInr = 2948.82,
-                taxableAmount = 2499.00,
-                cgstAmount = 224.91,
-                sgstAmount = 224.91
-            ),
-            PastOrderItem(
-                ticketNumber = "GTS-MH-1001",
-                invoiceNumber = "INV-2026-MH-1689",
-                serviceTitle = "Inverter Backup Bypass & Heavy Load Rewiring",
-                dateText = "Oct 08, 2026 • 01:18 PM",
-                technicianName = "Rajesh Kumar (GTS-TECH-4091)",
-                amountInr = 2183.00,
-                taxableAmount = 1850.00,
-                cgstAmount = 166.50,
-                sgstAmount = 166.50
-            ),
-            PastOrderItem(
-                ticketNumber = "GTS-MH-0922",
-                invoiceNumber = "INV-2026-MH-1420",
-                serviceTitle = "Ceiling Fan / Chandelier Safe Anchor Mount",
-                dateText = "Sep 28, 2026 • 11:30 AM",
-                technicianName = "Suresh Patil (GTS-TECH-3012)",
-                amountInr = 349.00,
-                taxableAmount = 295.76,
-                cgstAmount = 26.62,
-                sgstAmount = 26.62
-            )
-        )
-    }
+    val sessionManager = remember { com.ghartak.customer.data.session.SessionManager(context) }
+    var pastOrders by remember { mutableStateOf(sessionManager.getPastOrders()) }
 
     LazyColumn(
         modifier = Modifier
@@ -86,47 +50,115 @@ fun CustomerHistoryView(
     ) {
         item { Spacer(modifier = Modifier.height(4.dp)) }
 
-        // Header Summary Card
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = SapphireBlue800)
-            ) {
-                Column(modifier = Modifier.padding(18.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+        if (pastOrders.isEmpty()) {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 24.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(28.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Column {
-                            Text(
-                                text = "ORDER & INVOICE HISTORY",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFFBBDEFB),
-                                letterSpacing = 1.sp
-                            )
-                            Text(
-                                text = "3 Completed Service Records",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
+                        Box(
+                            modifier = Modifier
+                                .size(68.dp)
+                                .background(Color(0xFFEFF6FF), RoundedCornerShape(34.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ReceiptLong,
+                                contentDescription = null,
+                                tint = SapphireBlue600,
+                                modifier = Modifier.size(34.dp)
                             )
                         }
-                        Icon(
-                            imageVector = Icons.Default.ReceiptLong,
-                            contentDescription = null,
-                            tint = Color(0xFFFFD54F),
-                            modifier = Modifier.size(28.dp)
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Text(
+                            text = "No Past Bookings Yet",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF0F172A)
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "Your completed household services and downloadable GST tax invoices will appear here in real time after service completion.",
+                            fontSize = 13.sp,
+                            color = Color(0xFF64748B),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            lineHeight = 18.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        Button(
+                            onClick = onBookServiceAgain,
+                            colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue600),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Book Your First Service", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        }
+                    }
+                }
+            }
+        } else {
+            // Header Summary Card
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = SapphireBlue800)
+                ) {
+                    Column(modifier = Modifier.padding(18.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = "ORDER & INVOICE HISTORY",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFBBDEFB),
+                                    letterSpacing = 1.sp
+                                )
+                                Text(
+                                    text = "${pastOrders.size} Completed Service Record${if (pastOrders.size > 1) "s" else ""}",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                            Icon(
+                                imageVector = Icons.Default.ReceiptLong,
+                                contentDescription = null,
+                                tint = Color(0xFFFFD54F),
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "Download official GST tax invoices with 12-month service warranty protection anytime.",
+                            fontSize = 11.sp,
+                            color = Color(0xFFE3F2FD)
                         )
                     }
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = "Download official GST tax invoices with 12-month service warranty protection anytime.",
-                        fontSize = 11.sp,
-                        color = Color(0xFFE3F2FD)
-                    )
                 }
             }
         }

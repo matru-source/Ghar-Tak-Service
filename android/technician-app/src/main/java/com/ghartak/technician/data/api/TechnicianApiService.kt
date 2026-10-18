@@ -6,6 +6,12 @@ import retrofit2.http.*
 
 interface TechnicianApiService {
 
+    // Registration & Onboarding
+    @POST("technicians")
+    suspend fun registerTechnician(
+        @Body request: RegisterTechnicianRequest
+    ): Response<ApiResponse<TechnicianProfile>>
+
     // Profile & Availability
     @GET("technicians/{id}")
     suspend fun getProfile(@Path("id") technicianId: String): Response<ApiResponse<TechnicianProfile>>

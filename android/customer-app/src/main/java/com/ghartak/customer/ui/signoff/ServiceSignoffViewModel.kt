@@ -141,6 +141,25 @@ class ServiceSignoffViewModel(
 
     fun submitFeedbackAndSignoff(onSuccess: () -> Unit) {
         viewModelScope.launch {
+            val state = _uiState.value
+            try {
+                sessionManager.addCompletedOrder(
+                    com.ghartak.customer.data.model.PastOrderItem(
+                        ticketNumber = state.ticketNumber,
+                        invoiceNumber = state.invoiceNumber,
+                        serviceTitle = state.serviceTitle,
+                        dateText = java.text.SimpleDateFormat("MMM dd, yyyy • hh:mm a", java.util.Locale.ENGLISH).format(java.util.Date()),
+                        technicianName = "${state.technicianName} (${state.technicianBadge})",
+                        amountInr = state.totalAmountInr,
+                        taxableAmount = state.basePriceInr,
+                        cgstAmount = state.cgstInr,
+                        sgstAmount = state.sgstInr,
+                        status = "COMPLETED"
+                    )
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
             delay(600)
             _uiState.value = _uiState.value.copy(isSubmitted = true)
             onSuccess()

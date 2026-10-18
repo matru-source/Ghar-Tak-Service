@@ -3,7 +3,9 @@ package com.ghartak.technician.ui.auth
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ghartak.technician.data.api.ApiClient
 import com.ghartak.technician.data.api.BrevoEmailService
+import com.ghartak.technician.data.model.RegisterTechnicianRequest
 import com.ghartak.technician.data.model.TechnicianProfile
 import com.ghartak.technician.data.session.SessionManager
 import kotlinx.coroutines.delay
@@ -309,6 +311,24 @@ class TechnicianAuthViewModel(
                 trade = trade,
                 pincode = pincode
             )
+
+            // Register with backend database so customer app and dispatch board can assign work
+            try {
+                val api = ApiClient.getService(sessionManager.context)
+                api.registerTechnician(
+                    RegisterTechnicianRequest(
+                        id = profile.id,
+                        badgeNumber = profile.badgeNumber,
+                        fullName = profile.fullName,
+                        phone = profile.phone,
+                        email = profile.email,
+                        trade = profile.specialization,
+                        pincode = profile.assignedPincode
+                    )
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
 
             _uiState.value = _uiState.value.copy(
                 isLoading = false,

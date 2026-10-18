@@ -46,3 +46,11 @@ export async function PATCH(
     return apiError('Failed to update availability status', 500, error instanceof Error ? error.message : String(error));
   }
 }
+
+export async function POST(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  return PATCH(request, context);
+}
+

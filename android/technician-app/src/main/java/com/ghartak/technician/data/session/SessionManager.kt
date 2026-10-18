@@ -5,7 +5,7 @@ import android.content.SharedPreferences
 import com.ghartak.technician.data.model.TechnicianProfile
 import org.json.JSONObject
 
-class SessionManager(context: Context) {
+class SessionManager(val context: Context) {
 
     private val prefs: SharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
@@ -21,6 +21,7 @@ class SessionManager(context: Context) {
         private const val KEY_IS_ONLINE = "key_is_online"
         private const val KEY_RATING = "key_rating"
         private const val KEY_GLOVES_VERIFIED = "key_gloves_verified"
+        private const val KEY_TOTAL_JOBS = "key_total_jobs"
         private const val KEY_IS_LOGGED_IN = "key_is_logged_in"
         private const val KEY_TECHNICIANS_REGISTRY = "key_technicians_registry"
         private const val KEY_EMAIL = "key_email"
@@ -229,9 +230,16 @@ class SessionManager(context: Context) {
             putBoolean(KEY_IS_ONLINE, profile.isOnline)
             putFloat(KEY_RATING, profile.rating.toFloat())
             putBoolean(KEY_GLOVES_VERIFIED, profile.insulatedGlovesVerified)
+            putInt(KEY_TOTAL_JOBS, profile.totalJobsCompleted)
             putBoolean(KEY_IS_LOGGED_IN, true)
             apply()
         }
+    }
+
+    fun getTotalJobsCompleted(): Int = prefs.getInt(KEY_TOTAL_JOBS, 0)
+
+    fun incrementJobsCompleted() {
+        prefs.edit().putInt(KEY_TOTAL_JOBS, getTotalJobsCompleted() + 1).apply()
     }
 
     fun getAuthToken(): String? = prefs.getString(KEY_AUTH_TOKEN, null)

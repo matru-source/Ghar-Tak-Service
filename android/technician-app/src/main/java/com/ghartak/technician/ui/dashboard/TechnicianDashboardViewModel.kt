@@ -267,7 +267,7 @@ class TechnicianDashboardViewModel(
             rating = rating,
             safetyKitSerial = "VDE-1000V-99214",
             insulatedGlovesVerified = glovesVerified,
-            totalJobsCompleted = 48,
+            totalJobsCompleted = sessionManager.getTotalJobsCompleted(),
             email = email,
             location = location,
             languages = languages,
@@ -281,7 +281,7 @@ class TechnicianDashboardViewModel(
             profile = profile,
             isOnline = isOnline,
             customerRating = rating.toFloat(),
-            assignedJobs = if (_uiState.value.assignedJobs.isEmpty()) getInitialMockJobs() else _uiState.value.assignedJobs
+            assignedJobs = _uiState.value.assignedJobs
         )
     }
 
@@ -385,46 +385,7 @@ class TechnicianDashboardViewModel(
     }
 
     private fun getInitialMockJobs(): List<TechnicianJob> {
-        return listOf(
-            TechnicianJob(
-                id = "job_1003",
-                jobTicketNumber = "#J-1003",
-                serviceTitle = "Light Repair",
-                pincode = "400001",
-                customerName = "Suresh Patel",
-                customerPhone = "+91 98765 43210",
-                customerAddressText = "123, Main Street, Mumbai",
-                customerLatitude = 18.9220,
-                customerLongitude = 72.8347,
-                status = "STARTED",
-                priority = "NORMAL",
-                totalAmountInr = 1250.0,
-                safetyGlovesConfirmed = true,
-                safetyMcbSwitchConfirmed = true,
-                handoverOtp = "4819",
-                scheduledAt = "In Progress | 45 mins left",
-                createdAt = "15 mins ago"
-            ),
-            TechnicianJob(
-                id = "job_1001",
-                jobTicketNumber = "#J-1001",
-                serviceTitle = "Fan Installation",
-                pincode = "400001",
-                customerName = "Amit Sharma",
-                customerPhone = "+91 98765 43210",
-                customerAddressText = "45, Park Avenue, Mumbai",
-                customerLatitude = 18.9145,
-                customerLongitude = 72.8211,
-                status = "EN_ROUTE",
-                priority = "NORMAL",
-                totalAmountInr = 1250.0,
-                safetyGlovesConfirmed = false,
-                safetyMcbSwitchConfirmed = false,
-                handoverOtp = "4819",
-                scheduledAt = "En Route | 10 mins away",
-                createdAt = "5 mins ago"
-            )
-        )
+        return emptyList()
     }
 
     fun toggleDutyStatus(context: Context) {
@@ -459,7 +420,6 @@ class TechnicianDashboardViewModel(
 
     fun getJobById(jobId: String): TechnicianJob? {
         return _uiState.value.assignedJobs.find { it.id == jobId || it.jobTicketNumber == jobId }
-            ?: _uiState.value.notificationJobs.find { it.id == jobId || it.jobTicketNumber == jobId }
             ?: _uiState.value.incomingDispatchAlert?.takeIf { it.id == jobId || it.jobTicketNumber == jobId }
             ?: incomingJobsCache[jobId]
             ?: incomingJobsCache.values.firstOrNull { it.id == jobId || it.jobTicketNumber == jobId }
