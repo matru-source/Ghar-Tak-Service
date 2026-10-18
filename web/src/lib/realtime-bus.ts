@@ -43,6 +43,7 @@ interface Subscriber {
   role?: string;
   partnerId?: string;
   technicianId?: string;
+  customerId?: string;
   jobId?: string;
   listener: EventListener;
   connectedAt: Date;
@@ -64,6 +65,7 @@ class RealtimeEventBus {
       role?: string;
       partnerId?: string;
       technicianId?: string;
+      customerId?: string;
       jobId?: string;
     }
   ): () => void {
@@ -72,6 +74,7 @@ class RealtimeEventBus {
       role: filters?.role,
       partnerId: filters?.partnerId,
       technicianId: filters?.technicianId,
+      customerId: filters?.customerId,
       jobId: filters?.jobId,
       listener,
       connectedAt: new Date(),
@@ -106,6 +109,7 @@ class RealtimeEventBus {
       try {
         // Scope filters
         if (sub.jobId && fullEvent.jobId && sub.jobId !== fullEvent.jobId) continue;
+        if (sub.customerId && fullEvent.customerId && sub.customerId !== fullEvent.customerId) continue;
         if (sub.technicianId && fullEvent.technicianId) {
           const sId = sub.technicianId.toLowerCase().replace(/[^a-z0-9]/g, '');
           const eId = fullEvent.technicianId.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -113,7 +117,21 @@ class RealtimeEventBus {
             continue;
           }
         }
-        if (sub.partnerId && fullEvent.partnerId && sub.partnerId !== fullEvent.partnerId) continue;
+        if (sub.partnerId && fullEvent.partnerId && sub.partnerId !== 'ALL' && fullEvent.partnerId !== 'ALL') {
+          const sP = sub.partnerId.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const eP = fullEvent.partnerId.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const isMahS = sP.includes('mah') || sP.includes('mumbai');
+          const isMahE = eP.includes('mah') || eP.includes('mumbai');
+          const isOdiS = sP.includes('odi') || sP.includes('puri') || sP.includes('bbsr');
+          const isOdiE = eP.includes('odi') || eP.includes('puri') || eP.includes('bbsr');
+          if (isMahS && isMahE) {
+            // matches territory
+          } else if (isOdiS && isOdiE) {
+            // matches territory
+          } else if (sP !== eP) {
+            continue;
+          }
+        }
 
         sub.listener(fullEvent);
       } catch (err) {

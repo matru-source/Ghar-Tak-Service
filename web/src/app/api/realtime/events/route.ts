@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
   const role = searchParams.get('role') || undefined;
   const partnerId = searchParams.get('partnerId') || undefined;
   const technicianId = searchParams.get('technicianId') || undefined;
+  const customerId = searchParams.get('customerId') || undefined;
   const jobId = searchParams.get('jobId') || undefined;
 
   const subscriberId = `sub_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -37,6 +38,7 @@ export async function GET(request: NextRequest) {
           role: role || 'ANONYMOUS',
           partnerId,
           technicianId,
+          customerId,
           jobId,
           activeNodes: realtimeBus.getTelemetry().activeConnections + 1,
         },
@@ -54,7 +56,7 @@ export async function GET(request: NextRequest) {
             // Controller closed by client
           }
         },
-        { role, partnerId, technicianId, jobId }
+        { role, partnerId, technicianId, customerId, jobId }
       );
 
       // 3. Heartbeat Keep-Alive every 15 seconds

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { dbStore } from '@/lib/mock-data';
+import { realtimeBus } from '@/lib/realtime-bus';
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,7 +12,21 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search') || undefined;
     const priority = searchParams.get('priority') || undefined;
 
-    let jobs = dbStore.jobs.filter((j) => j.partnerId === partnerId);
+    const isMatchingPartner = (jPartnerId: string, targetId: string) => {
+      if (targetId === 'ALL') return true;
+      if (jPartnerId === targetId) return true;
+      const cleanJ = (jPartnerId || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const cleanT = (targetId || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (cleanJ.includes('mah') || cleanJ.includes('mumbai')) {
+        return cleanT.includes('mah') || cleanT.includes('mumbai');
+      }
+      if (cleanJ.includes('odisha') || cleanJ.includes('puri') || cleanJ.includes('bbsr')) {
+        return cleanT.includes('odisha') || cleanT.includes('puri') || cleanT.includes('bbsr');
+      }
+      return cleanJ === cleanT;
+    };
+
+    let jobs = dbStore.jobs.filter((j) => isMatchingPartner(j.partnerId, partnerId));
 
     if (status && status !== 'ALL') {
       jobs = jobs.filter((j) => j.status === status);
@@ -35,14 +50,14 @@ export async function GET(req: NextRequest) {
     }
 
     // Dispatch metrics
-    const allHubJobs = dbStore.jobs.filter((j) => j.partnerId === partnerId);
+    const allHubJobs = dbStore.jobs.filter((j) => isMatchingPartner(j.partnerId, partnerId));
     const unassignedCount = allHubJobs.filter((j) => !j.technicianId || j.status === 'PENDING_DISPATCH').length;
     const inProgressCount = allHubJobs.filter((j) => j.status === 'IN_PROGRESS').length;
     const escalatedCount = allHubJobs.filter((j) => j.status === 'ESCALATED_SLA').length;
     const completedCount = allHubJobs.filter((j) => j.status === 'WORK_COMPLETED' || j.status === 'SETTLED').length;
 
     // Available standby technicians in hub
-    const standbyTechnicians = dbStore.technicians.filter((t) => t.partnerId === partnerId && t.isOnline);
+    const standbyTechnicians = dbStore.technicians.filter((t) => isMatchingPartner(t.partnerId, partnerId) && t.isOnline);
 
     return NextResponse.json({
       success: true,
@@ -98,6 +113,29 @@ export async function PATCH(req: NextRequest) {
       resourceId: updatedJob.jobTicketNumber,
       payloadSummary: `Maharashtra Hub updated ${updatedJob.jobTicketNumber}: status=${updatedJob.status}, tech=${updatedJob.technicianName}`,
     });
+
+    if (technicianId) {
+      realtimeBus.publish({
+        type: 'TECH_DISPATCHED',
+        jobId: updatedJob.id,
+        ticketNumber: updatedJob.jobTicketNumber,
+        partnerId: updatedJob.partnerId,
+        technicianId: updatedJob.technicianId,
+        customerId: updatedJob.customerId,
+        pincode: updatedJob.pincode,
+        status: updatedJob.status,
+        details: {
+          acceptanceTimerSeconds: 60,
+          technicianName: updatedJob.technicianName,
+          payoutShareInr: Math.round(updatedJob.totalAmountInr * 0.7),
+          serviceTitle: updatedJob.serviceTitle,
+          totalAmountInr: updatedJob.totalAmountInr,
+          customerName: updatedJob.customerName,
+          customerPhone: updatedJob.customerPhone,
+          customerAddress: updatedJob.customerAddressText,
+        },
+      });
+    }
 
     return NextResponse.json({
       success: true,
