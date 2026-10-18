@@ -104,15 +104,21 @@ class PaymentViewModel(
 
             try {
                 val api = ApiClient.getService(context)
-                val response = kotlinx.coroutines.withTimeoutOrNull(2000L) {
+                val pinInfo = com.ghartak.customer.util.IndianPincodeResolver.getOfflineFallback(_uiState.value.pincode)
+                val resolvedLat = if (pinInfo.stateCode == "OD") 19.3149 else 18.9220
+                val resolvedLng = if (pinInfo.stateCode == "OD") 84.7941 else 72.8347
+
+                val response = kotlinx.coroutines.withTimeoutOrNull(15000L) {
                     api.createJob(
                         CreateJobRequest(
                             serviceId = _uiState.value.serviceId,
+                            technicianId = _uiState.value.technicianId.ifEmpty { null },
                             pincode = _uiState.value.pincode,
                             customerAddressText = _uiState.value.addressText,
-                            customerLatitude = 18.9220,
-                            customerLongitude = 72.8347,
-                            priority = _uiState.value.priority
+                            customerLatitude = resolvedLat,
+                            customerLongitude = resolvedLng,
+                            priority = _uiState.value.priority,
+                            paymentMethod = _uiState.value.selectedPaymentMethod
                         )
                     )
                 }

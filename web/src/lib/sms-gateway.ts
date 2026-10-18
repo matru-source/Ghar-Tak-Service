@@ -100,9 +100,63 @@ export class SmsGateway {
 
     const messageText = (templateMeta.format as any)(params);
     const start = Date.now();
+    let deliveryStatus: 'DELIVERED' | 'QUEUED' | 'FAILED' = 'DELIVERED';
 
-    // Simulated provider dispatch latency (25-50ms)
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    // 1. Live Fast2SMS Indian SMS Route (Direct OTP Delivery)
+    if (SMS_GATEWAY_CONFIG.provider === 'FAST2SMS' && process.env.FAST2SMS_API_KEY) {
+      try {
+        const rawNumbers = cleanPhone.replace('+91', '').trim();
+        const fast2SmsRes = await fetch('https://www.fast2sms.com/dev/bulkV2', {
+          method: 'POST',
+          headers: {
+            authorization: process.env.FAST2SMS_API_KEY,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            route: 'otp',
+            variables_values: String(params.otp || '1234'),
+            numbers: rawNumbers,
+          }),
+        });
+        const json = await fast2SmsRes.json();
+        deliveryStatus = json.return ? 'DELIVERED' : 'FAILED';
+      } catch {
+        deliveryStatus = 'FAILED';
+      }
+    } else if (
+      SMS_GATEWAY_CONFIG.provider === 'TWILIO' &&
+      process.env.TWILIO_ACCOUNT_SID &&
+      process.env.TWILIO_AUTH_TOKEN &&
+      process.env.TWILIO_PHONE_NUMBER
+    ) {
+      // 2. Live Twilio International SMS Route
+      try {
+        const auth = Buffer.from(
+          `${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`
+        ).toString('base64');
+        const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${process.env.TWILIO_ACCOUNT_SID}/Messages.json`;
+        const bodyParams = new URLSearchParams();
+        bodyParams.append('To', cleanPhone);
+        bodyParams.append('From', process.env.TWILIO_PHONE_NUMBER);
+        bodyParams.append('Body', messageText);
+
+        const twilioRes = await fetch(twilioUrl, {
+          method: 'POST',
+          headers: {
+            Authorization: `Basic ${auth}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: bodyParams.toString(),
+        });
+        deliveryStatus = twilioRes.ok ? 'DELIVERED' : 'FAILED';
+      } catch {
+        deliveryStatus = 'FAILED';
+      }
+    } else {
+      // 3. Fallback Sandbox Mode
+      await new Promise((resolve) => setTimeout(resolve, 30));
+    }
+
     const latencyMs = Date.now() - start;
 
     const record: SmsMessageRecord = {
@@ -111,7 +165,7 @@ export class SmsGateway {
       templateType,
       messageText,
       provider: SMS_GATEWAY_CONFIG.provider,
-      deliveryStatus: 'DELIVERED',
+      deliveryStatus,
       dltTemplateId: templateMeta.dltId,
       latencyMs,
       timestamp: new Date().toISOString(),

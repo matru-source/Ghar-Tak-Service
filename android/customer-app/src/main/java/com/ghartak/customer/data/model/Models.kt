@@ -63,11 +63,13 @@ data class Job(
 
 data class CreateJobRequest(
     @SerializedName("serviceId") val serviceId: String,
+    @SerializedName("technicianId") val technicianId: String? = null,
     @SerializedName("pincode") val pincode: String,
     @SerializedName("customerAddressText") val customerAddressText: String,
     @SerializedName("customerLatitude") val customerLatitude: Double? = null,
     @SerializedName("customerLongitude") val customerLongitude: Double? = null,
-    @SerializedName("priority") val priority: String = "NORMAL"
+    @SerializedName("priority") val priority: String = "NORMAL",
+    @SerializedName("paymentMethod") val paymentMethod: String? = "UPI"
 )
 
 /**

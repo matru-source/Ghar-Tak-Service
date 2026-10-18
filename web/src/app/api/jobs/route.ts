@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       customerId,
+      technicianId,
       serviceId,
       pincode,
       customerAddressText,
@@ -77,6 +78,7 @@ export async function POST(request: NextRequest) {
 
     const newJob = await db.createJob({
       customerId: activeCustomerId,
+      technicianId: technicianId || undefined,
       serviceId,
       pincode,
       customerAddressText: customerAddressText.trim(),

@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { generateAndStoreOtp, normalizePhoneNumber } from '@/lib/otp';
+import { SmsGateway } from '@/lib/sms-gateway';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
 
 export async function OPTIONS() {
@@ -22,10 +23,19 @@ export async function POST(request: NextRequest) {
 
     const { code, expiresAt } = generateAndStoreOtp(cleanPhone);
 
+    // Dispatch real SMS via configured provider (Fast2SMS / Twilio / Mock Sandbox)
+    let smsRecord = null;
+    try {
+      smsRecord = await SmsGateway.sendSms(cleanPhone, 'AUTH_LOGIN_OTP', { otp: code });
+    } catch (smsErr) {
+      console.warn(`[SMS_DISPATCH_WARNING] Could not dispatch SMS:`, smsErr);
+    }
+
     return apiSuccess(
       {
         phone: cleanPhone,
         expiresAt: expiresAt.toISOString(),
+        smsDeliveryStatus: smsRecord?.deliveryStatus || 'QUEUED',
         // Return devOtp in development so mobile developers and testers can log in immediately
         devOtp: process.env.NODE_ENV !== 'production' ? code : undefined,
       },
