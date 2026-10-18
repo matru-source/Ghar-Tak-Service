@@ -192,8 +192,8 @@ class TechnicianDashboardViewModel(
                 customerName = notif.customerName,
                 customerPhone = notif.customerPhone,
                 customerAddressText = notif.customerAddress,
-                customerLatitude = 18.9220,
-                customerLongitude = 72.8347,
+                customerLatitude = if (notif.pincode.startsWith("75") || notif.pincode.startsWith("76") || notif.pincode.startsWith("77")) 19.3150 else 18.9220,
+                customerLongitude = if (notif.pincode.startsWith("75") || notif.pincode.startsWith("76") || notif.pincode.startsWith("77")) 84.7941 else 72.8347,
                 status = "EN_ROUTE",
                 priority = "NORMAL",
                 totalAmountInr = notif.amountInr,
@@ -455,29 +455,73 @@ class TechnicianDashboardViewModel(
         }
     }
 
+    private val incomingJobsCache = java.util.concurrent.ConcurrentHashMap<String, TechnicianJob>()
+
+    fun getJobById(jobId: String): TechnicianJob? {
+        return _uiState.value.assignedJobs.find { it.id == jobId || it.jobTicketNumber == jobId }
+            ?: _uiState.value.notificationJobs.find { it.id == jobId || it.jobTicketNumber == jobId }
+            ?: _uiState.value.incomingDispatchAlert?.takeIf { it.id == jobId || it.jobTicketNumber == jobId }
+            ?: incomingJobsCache[jobId]
+            ?: incomingJobsCache.values.firstOrNull { it.id == jobId || it.jobTicketNumber == jobId }
+    }
+
+    fun cacheIncomingJob(job: TechnicianJob) {
+        incomingJobsCache[job.id] = job
+        incomingJobsCache[job.jobTicketNumber] = job
+    }
+
     fun connectRealtimeBus(context: Context) {
         val techId = sessionManager.getTechnicianId()
         realtimeStreamManager.connect(techId) { eventType, data ->
             Log.d("GTS_TECH_EVENT", "Received: $eventType - $data")
             if (eventType == "TECH_DISPATCHED" || eventType == "JOB_CREATED") {
-                val jobId = data.optString("jobId", "job_mh_${System.currentTimeMillis() % 1000}")
+                val jobId = data.optString("jobId").ifEmpty { "job_${System.currentTimeMillis() % 10000}" }
+                val details = data.optJSONObject("details")
+
+                val serviceTitle = details?.optString("serviceTitle")
+                    ?: data.optString("serviceTitle", "Doorstep Service Order")
+                val customerName = details?.optString("customerName")
+                    ?: data.optString("customerName", "Valued Customer")
+                val customerPhone = details?.optString("customerPhone")
+                    ?: data.optString("customerPhone", "+91 98765 43210")
+                val customerAddress = details?.optString("customerAddress")
+                    ?: data.optString("customerAddress", "Customer Doorstep Address")
+                val pin = details?.optString("pincode")
+                    ?: data.optString("pincode", sessionManager.getPincode())
+                val ticket = data.optString("ticketNumber").ifEmpty {
+                    val statePrefix = if (pin.startsWith("75") || pin.startsWith("76") || pin.startsWith("77")) "OD" else "MH"
+                    "GTS-$statePrefix-${(1000..9999).random()}"
+                }
+                val totalAmount = if (details != null && details.has("totalAmountInr")) {
+                    details.optDouble("totalAmountInr", 352.82)
+                } else if (data.has("totalAmountInr")) {
+                    data.optDouble("totalAmountInr", 352.82)
+                } else 352.82
+
+                val lat = details?.optDouble("customerLatitude")
+                    ?: if (pin.startsWith("75") || pin.startsWith("76") || pin.startsWith("77")) 19.3150 else 18.9220
+                val lng = details?.optDouble("customerLongitude")
+                    ?: if (pin.startsWith("75") || pin.startsWith("76") || pin.startsWith("77")) 84.7941 else 72.8347
+
                 val inboundJob = TechnicianJob(
                     id = jobId,
-                    jobTicketNumber = "GTS-MH-" + (1000..9999).random(),
-                    serviceTitle = data.optString("serviceTitle", "Emergency Electrical Panel Diagnostic"),
-                    pincode = sessionManager.getPincode(),
-                    customerName = data.optString("customerName", "Customer"),
-                    customerPhone = data.optString("customerPhone", "+919876543210"),
-                    customerAddressText = data.optString("customerAddress", "Service Location"),
-                    customerLatitude = 19.0607,
-                    customerLongitude = 72.8267,
+                    jobTicketNumber = ticket,
+                    serviceTitle = serviceTitle,
+                    pincode = pin,
+                    customerName = customerName,
+                    customerPhone = customerPhone,
+                    customerAddressText = customerAddress,
+                    customerLatitude = lat,
+                    customerLongitude = lng,
                     status = "DISPATCHED",
-                    priority = "CRITICAL_SAFETY",
-                    totalAmountInr = 1499.0,
+                    priority = details?.optString("priority", "STANDARD") ?: "STANDARD",
+                    totalAmountInr = totalAmount,
                     safetyGlovesConfirmed = false,
                     safetyMcbSwitchConfirmed = false,
-                    handoverOtp = "3829"
+                    handoverOtp = (1000..9999).random().toString()
                 )
+
+                cacheIncomingJob(inboundJob)
                 _uiState.value = _uiState.value.copy(incomingDispatchAlert = inboundJob)
             }
         }

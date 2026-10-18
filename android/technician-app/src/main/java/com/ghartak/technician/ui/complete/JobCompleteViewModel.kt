@@ -17,12 +17,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
 data class JobCompleteUiState(
-    val jobId: String = "job_mh_live_01",
-    val ticketNumber: String = "GTS-MH-9821",
-    val serviceTitle: String = "Full Home MCB Panel Replacement & Earth Leakage Fix",
-    val customerName: String = "Vikram Deshmukh",
-    val totalAmountInr: Double = 2499.0,
-    val technicianPayoutInr: Double = 1749.30,
+    val jobId: String = "job_live_01",
+    val ticketNumber: String = "GTS-OD-1001",
+    val serviceTitle: String = "Doorstep Service Order",
+    val customerName: String = "Valued Customer",
+    val totalAmountInr: Double = 352.82,
+    val technicianPayoutInr: Double = 247.0,
     val enteredOtp: String = "",
     val afterPhotoUri: String? = null,
     val afterPhotoBitmap: Bitmap? = null,

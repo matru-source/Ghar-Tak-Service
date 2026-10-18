@@ -69,7 +69,7 @@ class DispatchAlertViewModel(
 
     fun acceptDispatch(
         context: Context,
-        jobId: String,
+        job: TechnicianJob,
         onSuccess: (TechnicianJob) -> Unit
     ) {
         countdownJob?.cancel()
@@ -78,10 +78,10 @@ class DispatchAlertViewModel(
             val techId = sessionManager.getTechnicianId()
 
             try {
-                val response = withTimeoutOrNull(2000L) {
+                val response = withTimeoutOrNull(15000L) {
                     val api = ApiClient.getService(context)
                     api.respondToDispatch(
-                        jobId = jobId,
+                        jobId = job.id,
                         request = DispatchActionRequest(
                             technicianId = techId,
                             action = "ACCEPT"
@@ -93,35 +93,46 @@ class DispatchAlertViewModel(
                     _uiState.value = _uiState.value.copy(isAccepting = false)
                     onSuccess(response.body()!!.data!!)
                 } else {
-                    handleFallbackAccept(jobId, onSuccess)
+                    handleFallbackAccept(job, onSuccess)
                 }
             } catch (e: Throwable) {
                 Log.w("GTS_DISPATCH", "Network dispatch accept fallback: ${e.message}")
-                handleFallbackAccept(jobId, onSuccess)
+                handleFallbackAccept(job, onSuccess)
             }
         }
     }
 
-    private fun handleFallbackAccept(jobId: String, onSuccess: (TechnicianJob) -> Unit) {
-        _uiState.value = _uiState.value.copy(isAccepting = false)
-        val fallbackJob = TechnicianJob(
+    fun acceptDispatch(
+        context: Context,
+        jobId: String,
+        onSuccess: (TechnicianJob) -> Unit
+    ) {
+        val pin = sessionManager.getPincode().ifEmpty { "760001" }
+        val isOdisha = pin.startsWith("75") || pin.startsWith("76") || pin.startsWith("77")
+        val fallback = TechnicianJob(
             id = jobId,
-            jobTicketNumber = "GTS-MH-9821",
-            serviceTitle = "Emergency High-Voltage Panel Tripping & MCB Replacement",
-            pincode = "400001",
-            customerName = "Vikram Deshmukh",
-            customerPhone = "+919822334455",
-            customerAddressText = "Flat 402, Sea Crest Towers, Colaba, Mumbai",
-            customerLatitude = 18.9220,
-            customerLongitude = 72.8347,
+            jobTicketNumber = "GTS-${if (isOdisha) "OD" else "MH"}-${(1000..9999).random()}",
+            serviceTitle = "Doorstep Service Order",
+            pincode = pin,
+            customerName = "Customer ($pin)",
+            customerPhone = "+91 98765 43210",
+            customerAddressText = "Doorstep Delivery Address, PIN: $pin",
+            customerLatitude = if (isOdisha) 19.3150 else 18.9220,
+            customerLongitude = if (isOdisha) 84.7941 else 72.8347,
             status = "ASSIGNED",
-            priority = "HIGH_VOLTAGE",
-            totalAmountInr = 2499.0,
+            priority = "STANDARD",
+            totalAmountInr = 352.82,
             safetyGlovesConfirmed = false,
             safetyMcbSwitchConfirmed = false,
             handoverOtp = "4819"
         )
-        onSuccess(fallbackJob)
+        acceptDispatch(context, fallback, onSuccess)
+    }
+
+    private fun handleFallbackAccept(job: TechnicianJob, onSuccess: (TechnicianJob) -> Unit) {
+        _uiState.value = _uiState.value.copy(isAccepting = false)
+        val acceptedJob = job.copy(status = "ASSIGNED")
+        onSuccess(acceptedJob)
     }
 
     fun rejectDispatch(

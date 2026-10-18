@@ -106,7 +106,13 @@ class RealtimeEventBus {
       try {
         // Scope filters
         if (sub.jobId && fullEvent.jobId && sub.jobId !== fullEvent.jobId) continue;
-        if (sub.technicianId && fullEvent.technicianId && sub.technicianId !== fullEvent.technicianId) continue;
+        if (sub.technicianId && fullEvent.technicianId) {
+          const sId = sub.technicianId.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const eId = fullEvent.technicianId.toLowerCase().replace(/[^a-z0-9]/g, '');
+          if (sId !== eId && !sId.includes(eId) && !eId.includes(sId)) {
+            continue;
+          }
+        }
         if (sub.partnerId && fullEvent.partnerId && sub.partnerId !== fullEvent.partnerId) continue;
 
         sub.listener(fullEvent);

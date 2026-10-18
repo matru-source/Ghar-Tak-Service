@@ -20,15 +20,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
 data class NavigationUiState(
-    val jobId: String = "job_mh_live_01",
-    val ticketNumber: String = "GTS-MH-9821",
-    val customerName: String = "Vikram Deshmukh",
-    val customerPhone: String = "+919822334455",
-    val customerAddress: String = "Flat 402, Sea Crest Towers, Colaba, Mumbai",
-    val customerLat: Double = 18.9067,
-    val customerLng: Double = 72.8147,
-    val currentLat: Double = 18.9220,
-    val currentLng: Double = 72.8347,
+    val jobId: String = "job_live_01",
+    val ticketNumber: String = "GTS-OD-1001",
+    val customerName: String = "Valued Customer",
+    val customerPhone: String = "+91 98765 43210",
+    val customerAddress: String = "Customer Doorstep Address",
+    val customerLat: Double = 19.3150,
+    val customerLng: Double = 84.7941,
+    val currentLat: Double = 19.3200,
+    val currentLng: Double = 84.8000,
     val distanceRemainingKm: Double = 1.4,
     val etaMinutes: Int = 6,
     val speedKmh: Double = 24.0,
@@ -77,10 +77,14 @@ class NavigationViewModel(
             else -> Tuple5(1.4, 6, 24.0, "Head South on Shahid Bhagat Singh Rd", false)
         }
 
-        // Interpolate moving GPS coordinates towards customer location
+        // Interpolate moving GPS coordinates towards actual customer location
         val fraction = nextStep.toDouble() / 3.0
-        val newLat = 18.9220 + (18.9067 - 18.9220) * fraction
-        val newLng = 72.8347 + (72.8147 - 72.8347) * fraction
+        val targetLat = _uiState.value.customerLat
+        val targetLng = _uiState.value.customerLng
+        val startLat = targetLat + 0.015
+        val startLng = targetLng + 0.015
+        val newLat = startLat + (targetLat - startLat) * fraction
+        val newLng = startLng + (targetLng - startLng) * fraction
 
         _uiState.value = _uiState.value.copy(
             transitStep = nextStep,

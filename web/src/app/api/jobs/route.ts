@@ -108,6 +108,11 @@ export async function POST(request: NextRequest) {
         priority: newJob.priority,
         technicianName: newJob.technicianName,
         customerAddress: newJob.customerAddressText,
+        customerName: newJob.customerName,
+        customerPhone: newJob.customerPhone,
+        pincode: newJob.pincode,
+        customerLatitude: newJob.customerLatitude,
+        customerLongitude: newJob.customerLongitude,
       },
     });
 
@@ -124,6 +129,14 @@ export async function POST(request: NextRequest) {
           acceptanceTimerSeconds: 60,
           technicianName: newJob.technicianName,
           payoutShareInr: Math.round(newJob.totalAmountInr * 0.7),
+          serviceTitle: newJob.serviceTitle,
+          totalAmountInr: newJob.totalAmountInr,
+          customerName: newJob.customerName,
+          customerPhone: newJob.customerPhone,
+          customerAddress: newJob.customerAddressText,
+          pincode: newJob.pincode,
+          customerLatitude: newJob.customerLatitude,
+          customerLongitude: newJob.customerLongitude,
         },
       });
     }

@@ -314,7 +314,7 @@ fun DispatchAlertScreen(
             // Primary Action: ACCEPT DISPATCH
             Button(
                 onClick = {
-                    viewModel.acceptDispatch(context, job.id, onAccepted)
+                    viewModel.acceptDispatch(context, job, onAccepted)
                 },
                 enabled = !state.isAccepting && !state.isRejecting && state.remainingSeconds > 0,
                 modifier = Modifier

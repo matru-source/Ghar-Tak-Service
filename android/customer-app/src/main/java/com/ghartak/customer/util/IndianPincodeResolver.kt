@@ -162,4 +162,55 @@ object IndianPincodeResolver {
             else -> "27AAACG1234F1Z5"
         }
     }
+
+    /**
+     * Resolves realistic GPS coordinates for accurate tracking based on Indian Pincode.
+     * Prevents false distance calculations relative to Mumbai for Odisha (760001, 759013) or other states.
+     */
+    fun getCoordinatesForPincode(pincode: String): Pair<Double, Double> {
+        val cleanPin = pincode.filter { it.isDigit() }.take(6)
+        val prefix = cleanPin.take(2).toIntOrNull() ?: 40
+
+        return when (cleanPin) {
+            "760001" -> 19.3150 to 84.7941 // Brahmapur, Odisha
+            "759013" -> 20.6600 to 85.5900 // Dhenkanal, Odisha
+            "751001", "751024" -> 20.2961 to 85.8245 // Bhubaneswar, Odisha
+            "753001" -> 20.4625 to 85.8830 // Cuttack, Odisha
+            "769001" -> 22.2604 to 84.8536 // Rourkela, Odisha
+            "400001" -> 18.9220 to 72.8347 // Fort Mumbai, Maharashtra
+            "400050" -> 19.0596 to 72.8295 // Bandra, Mumbai
+            "411001" -> 18.5204 to 73.8567 // Pune
+            "110001" -> 28.6139 to 77.2090 // New Delhi
+            "560001" -> 12.9716 to 77.5946 // Bengaluru
+            "600001" -> 13.0827 to 80.2707 // Chennai
+            "700001" -> 22.5726 to 88.3639 // Kolkata
+            "500001" -> 17.3850 to 78.4867 // Hyderabad
+            "380001" -> 23.0225 to 72.5714 // Ahmedabad
+            "302001" -> 26.9124 to 75.7873 // Jaipur
+            "226001" -> 26.8467 to 80.9462 // Lucknow
+            "800001" -> 25.5941 to 85.1376 // Patna
+            else -> {
+                when (prefix) {
+                    in 75..77 -> 19.3150 to 84.7941 // Odisha default
+                    in 40..44 -> 18.9220 to 72.8347 // Maharashtra default
+                    11 -> 28.6139 to 77.2090 // Delhi
+                    in 12..13 -> 29.0588 to 76.0856 // Haryana
+                    in 14..16 -> 31.1471 to 75.3412 // Punjab
+                    in 20..28 -> 26.8467 to 80.9462 // UP
+                    in 30..34 -> 26.9124 to 75.7873 // Rajasthan
+                    in 36..39 -> 23.0225 to 72.5714 // Gujarat
+                    in 45..48 -> 22.9734 to 78.6569 // MP
+                    49 -> 21.2787 to 81.8661 // Chhattisgarh
+                    in 50..53 -> 17.3850 to 78.4867 // Telangana/AP
+                    in 56..59 -> 12.9716 to 77.5946 // Karnataka
+                    in 60..64 -> 13.0827 to 80.2707 // Tamil Nadu
+                    in 67..69 -> 10.8505 to 76.2711 // Kerala
+                    in 70..74 -> 22.5726 to 88.3639 // West Bengal
+                    78, 79 -> 26.1445 to 91.7362 // Assam / North East
+                    in 80..85 -> 25.5941 to 85.1376 // Bihar
+                    else -> 19.3150 to 84.7941 // Default to Odisha hub
+                }
+            }
+        }
+    }
 }

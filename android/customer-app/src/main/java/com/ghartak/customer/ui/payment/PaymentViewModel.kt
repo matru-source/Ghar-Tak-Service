@@ -104,11 +104,12 @@ class PaymentViewModel(
 
             try {
                 val api = ApiClient.getService(context)
-                val pinInfo = com.ghartak.customer.util.IndianPincodeResolver.getOfflineFallback(_uiState.value.pincode)
-                val resolvedLat = if (pinInfo.stateCode == "OD") 19.3149 else 18.9220
-                val resolvedLng = if (pinInfo.stateCode == "OD") 84.7941 else 72.8347
+                val (resolvedLat, resolvedLng) = com.ghartak.customer.util.IndianPincodeResolver.getCoordinatesForPincode(_uiState.value.pincode)
 
-                val response = kotlinx.coroutines.withTimeoutOrNull(15000L) {
+                Log.d("GTS_JOB_CREATE", "Creating real job on backend: service=${_uiState.value.serviceId}, tech=${_uiState.value.technicianId}, pin=${_uiState.value.pincode}, coords=($resolvedLat, $resolvedLng)")
+
+                // Allow up to 25 seconds for cloud server wake-up/processing (avoids premature offline fallback)
+                val response = kotlinx.coroutines.withTimeoutOrNull(25000L) {
                     api.createJob(
                         CreateJobRequest(
                             serviceId = _uiState.value.serviceId,
@@ -125,13 +126,14 @@ class PaymentViewModel(
 
                 if (response != null && response.isSuccessful && response.body()?.data != null) {
                     val job = response.body()!!.data!!
+                    Log.d("GTS_JOB_CREATE", "Real job created successfully on backend! Ticket: ${job.jobTicketNumber}, ID: ${job.id}")
                     sessionManager.saveActiveJob(
                         id = job.id,
                         title = _uiState.value.serviceTitle,
                         basePrice = _uiState.value.basePriceInr,
                         gst = _uiState.value.gst18PctInr,
                         total = _uiState.value.totalAmountInr,
-                        technicianName = _uiState.value.technicianName,
+                        technicianName = job.technicianName ?: _uiState.value.technicianName,
                         technicianBadge = "GTS-TECH-4091",
                         ticketNumber = job.jobTicketNumber,
                         stateCode = _uiState.value.stateCode,
@@ -145,10 +147,13 @@ class PaymentViewModel(
                     )
                     onSuccess(job.id)
                 } else {
+                    val code = response?.code()
+                    val errorBody = response?.errorBody()?.string()
+                    Log.w("GTS_JOB_CREATE", "Network job create response unsuccessful: code=$code, error=$errorBody. Using local session fallback.")
                     handleFallbackSuccess(onSuccess)
                 }
             } catch (e: Exception) {
-                Log.w("GTS_JOB_CREATE", "Network job create fallback: ${e.message}")
+                Log.w("GTS_JOB_CREATE", "Network job create error: ${e.message}. Using local session fallback.")
                 handleFallbackSuccess(onSuccess)
             }
         }

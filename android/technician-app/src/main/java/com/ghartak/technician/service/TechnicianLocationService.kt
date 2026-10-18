@@ -80,9 +80,11 @@ class TechnicianLocationService : Service() {
         serviceScope.launch {
             val sessionManager = SessionManager(applicationContext)
             val techId = sessionManager.getTechnicianId()
+            val pin = sessionManager.getPincode().ifEmpty { "760001" }
+            val isOdisha = pin.startsWith("75") || pin.startsWith("76") || pin.startsWith("77")
 
-            var currentLat = 18.9220
-            var currentLng = 72.8347
+            var currentLat = if (isOdisha) 19.3150 else 18.9220
+            var currentLng = if (isOdisha) 84.7941 else 72.8347
 
             while (isRunning && isActive) {
                 try {

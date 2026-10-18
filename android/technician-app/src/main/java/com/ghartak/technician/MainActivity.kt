@@ -89,21 +89,28 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("dispatch_alert/{jobId}") { backStackEntry ->
-                            val jobId = backStackEntry.arguments?.getString("jobId") ?: "job_mh_live_01"
-                            val currentJob = dashboardViewModel.uiState.collectAsState().value.assignedJobs.find { it.id == jobId }
+                            val jobId = backStackEntry.arguments?.getString("jobId") ?: "job_live_01"
+                            val resolvedPincode = sessionManager.getPincode().ifEmpty { "760001" }
+                            val isOdisha = resolvedPincode.startsWith("75") || resolvedPincode.startsWith("76") || resolvedPincode.startsWith("77")
+                            val stateCode = if (isOdisha) "OD" else "MH"
+                            val defaultLat = if (isOdisha) 19.3150 else 18.9220
+                            val defaultLng = if (isOdisha) 84.7941 else 72.8347
+
+                            val currentJob = dashboardViewModel.getJobById(jobId)
+                                ?: dashboardViewModel.uiState.collectAsState().value.assignedJobs.find { it.id == jobId }
                                 ?: TechnicianJob(
                                     id = jobId,
-                                    jobTicketNumber = "GTS-MH-9821",
-                                    serviceTitle = "Emergency High-Voltage Panel Tripping & MCB Replacement",
-                                    pincode = "400001",
-                                    customerName = "Vikram Deshmukh",
-                                    customerPhone = "+919822334455",
-                                    customerAddressText = "Flat 402, Sea Crest Towers, Colaba, Mumbai",
-                                    customerLatitude = 18.9220,
-                                    customerLongitude = 72.8347,
+                                    jobTicketNumber = "GTS-$stateCode-${(1000..9999).random()}",
+                                    serviceTitle = "Doorstep Service Order",
+                                    pincode = resolvedPincode,
+                                    customerName = "Customer ($resolvedPincode)",
+                                    customerPhone = "+91 98765 43210",
+                                    customerAddressText = "Doorstep Delivery Address, PIN: $resolvedPincode",
+                                    customerLatitude = defaultLat,
+                                    customerLongitude = defaultLng,
                                     status = "DISPATCHED",
-                                    priority = "HIGH_VOLTAGE",
-                                    totalAmountInr = 2499.0,
+                                    priority = "STANDARD",
+                                    totalAmountInr = 352.82,
                                     safetyGlovesConfirmed = false,
                                     safetyMcbSwitchConfirmed = false,
                                     handoverOtp = "4819"
