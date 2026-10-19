@@ -173,7 +173,7 @@ object IndianPincodeResolver {
 
         return when (cleanPin) {
             "760001" -> 19.3150 to 84.7941 // Brahmapur, Odisha
-            "759013" -> 20.6600 to 85.5900 // Dhenkanal, Odisha
+            "759001", "759013" -> 20.6600 to 85.5900 // Dhenkanal, Odisha
             "751001", "751024" -> 20.2961 to 85.8245 // Bhubaneswar, Odisha
             "753001" -> 20.4625 to 85.8830 // Cuttack, Odisha
             "769001" -> 22.2604 to 84.8536 // Rourkela, Odisha

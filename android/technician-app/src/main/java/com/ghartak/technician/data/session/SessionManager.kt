@@ -137,6 +137,7 @@ class SessionManager(val context: Context) {
         }
 
         prefs.edit().apply {
+            putString(KEY_PINCODE, cleanPin)
             putString(KEY_SPECIALIZATION, resolvedTrade)
             putString(KEY_EXPERIENCE, resolvedExp)
             putString(KEY_LOCATION, resolvedLoc)
@@ -336,24 +337,81 @@ class SessionManager(val context: Context) {
     fun getServiceArea(): String = prefs.getString(KEY_SERVICE_AREA, "") ?: ""
 
     fun updatePersonalInfo(name: String, phone: String, email: String, location: String, languages: String) {
+        val extractedPin = Regex("\\b\\d{6}\\b").find(location)?.value
         prefs.edit().apply {
             putString(KEY_FULL_NAME, name.trim())
             putString(KEY_PHONE, phone.trim())
             putString(KEY_EMAIL, email.trim())
             putString(KEY_LOCATION, location.trim())
             putString(KEY_LANGUAGES, languages.trim())
+            if (!extractedPin.isNullOrEmpty()) {
+                putString(KEY_PINCODE, extractedPin)
+            }
             apply()
         }
+
+        val cleanEmail = email.trim().lowercase()
+        val phoneKey = phone.filter { it.isDigit() }.takeLast(10)
+        val registryStr = prefs.getString(KEY_TECHNICIANS_REGISTRY, "{}") ?: "{}"
+        try {
+            val json = JSONObject(registryStr)
+            val key = when {
+                json.has(cleanEmail) -> cleanEmail
+                phoneKey.isNotEmpty() && json.has(phoneKey) -> phoneKey
+                else -> null
+            }
+            if (key != null) {
+                val techObj = json.getJSONObject(key)
+                techObj.put("fullName", name.trim())
+                techObj.put("phone", phone.trim())
+                techObj.put("email", email.trim())
+                techObj.put("location", location.trim())
+                techObj.put("languages", languages.trim())
+                if (!extractedPin.isNullOrEmpty()) {
+                    techObj.put("pincode", extractedPin)
+                }
+                json.put(key, techObj)
+                prefs.edit().putString(KEY_TECHNICIANS_REGISTRY, json.toString()).apply()
+            }
+        } catch (_: Exception) {}
     }
 
     fun updateServiceDetails(specialization: String, experience: String, license: String, serviceArea: String) {
+        val extractedPin = Regex("\\b\\d{6}\\b").find(serviceArea)?.value
         prefs.edit().apply {
             putString(KEY_SPECIALIZATION, specialization.trim())
             putString(KEY_EXPERIENCE, experience.trim())
             putString(KEY_LICENSE, license.trim())
             putString(KEY_SERVICE_AREA, serviceArea.trim())
+            if (!extractedPin.isNullOrEmpty()) {
+                putString(KEY_PINCODE, extractedPin)
+            }
             apply()
         }
+
+        val cleanEmail = getEmail().trim().lowercase()
+        val phoneKey = getPhone().filter { it.isDigit() }.takeLast(10)
+        val registryStr = prefs.getString(KEY_TECHNICIANS_REGISTRY, "{}") ?: "{}"
+        try {
+            val json = JSONObject(registryStr)
+            val key = when {
+                json.has(cleanEmail) -> cleanEmail
+                phoneKey.isNotEmpty() && json.has(phoneKey) -> phoneKey
+                else -> null
+            }
+            if (key != null) {
+                val techObj = json.getJSONObject(key)
+                techObj.put("trade", specialization.trim())
+                techObj.put("experience", experience.trim())
+                techObj.put("license", license.trim())
+                techObj.put("serviceArea", serviceArea.trim())
+                if (!extractedPin.isNullOrEmpty()) {
+                    techObj.put("pincode", extractedPin)
+                }
+                json.put(key, techObj)
+                prefs.edit().putString(KEY_TECHNICIANS_REGISTRY, json.toString()).apply()
+            }
+        } catch (_: Exception) {}
     }
 
     fun isLoggedIn(): Boolean = prefs.getBoolean(KEY_IS_LOGGED_IN, false)

@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ghartak.technician.data.api.ApiClient
+import com.ghartak.technician.data.model.RegisterTechnicianRequest
 import com.ghartak.technician.data.model.TechnicianJob
 import com.ghartak.technician.data.model.TechnicianProfile
 import com.ghartak.technician.data.realtime.RealtimeStreamManager
@@ -206,6 +207,35 @@ class TechnicianDashboardViewModel(
             availableWithdrawalInr = monthE,
             assignedJobs = _uiState.value.assignedJobs
         )
+        syncProfileToServer()
+    }
+
+    fun syncProfileToServer() {
+        viewModelScope.launch {
+            try {
+                val pin = sessionManager.getPincode().ifEmpty {
+                    Regex("\\b\\d{6}\\b").find(sessionManager.getServiceArea())?.value ?: "760001"
+                }
+                val techId = sessionManager.getTechnicianId()
+                val api = ApiClient.getService(sessionManager.context)
+                val req = RegisterTechnicianRequest(
+                    id = techId.ifEmpty { null },
+                    badgeNumber = sessionManager.getBadgeNumber().ifEmpty { null },
+                    fullName = sessionManager.getFullName(),
+                    phone = sessionManager.getPhone().ifEmpty { "+91 9876543210" },
+                    email = sessionManager.getEmail().ifEmpty { null },
+                    trade = sessionManager.getSpecialization(),
+                    pincode = pin
+                )
+                val res = api.registerTechnician(req)
+                if (res.isSuccessful && techId.isNotEmpty()) {
+                    api.updateAvailability(techId, mapOf("isOnline" to sessionManager.isOnline()))
+                }
+                Log.d("TechnicianSync", "Synced profile for $techId ($pin - ${sessionManager.getSpecialization()}) to server: ${res.isSuccessful}")
+            } catch (e: Exception) {
+                Log.w("TechnicianSync", "Failed to sync technician profile to server: ${e.message}")
+            }
+        }
     }
 
     fun updatePersonalInfo(name: String, phone: String, email: String, location: String, languages: String) {
@@ -218,10 +248,12 @@ class TechnicianDashboardViewModel(
                     phone = phone,
                     email = email,
                     location = location,
-                    languages = languages
+                    languages = languages,
+                    assignedPincode = sessionManager.getPincode()
                 )
             )
         }
+        syncProfileToServer()
     }
 
     fun updateServiceDetails(specialization: String, experience: String, license: String, serviceArea: String) {
@@ -233,10 +265,12 @@ class TechnicianDashboardViewModel(
                     specialization = specialization,
                     experience = experience,
                     license = license,
-                    serviceArea = serviceArea
+                    serviceArea = serviceArea,
+                    assignedPincode = sessionManager.getPincode()
                 )
             )
         }
+        syncProfileToServer()
     }
 
     fun markJobStarted(jobId: String) {
@@ -323,19 +357,26 @@ class TechnicianDashboardViewModel(
             try {
                 val api = ApiClient.getService(context)
                 val techId = sessionManager.getTechnicianId()
-                api.updateAvailability(techId, mapOf("isOnline" to newStatus))
+                val resp = api.updateAvailability(techId, mapOf("isOnline" to newStatus))
 
                 sessionManager.setOnline(newStatus)
                 _uiState.value = _uiState.value.copy(
                     isOnline = newStatus,
                     isUpdatingStatus = false
                 )
+
+                if (newStatus || !resp.isSuccessful) {
+                    syncProfileToServer()
+                }
             } catch (e: Exception) {
                 sessionManager.setOnline(newStatus)
                 _uiState.value = _uiState.value.copy(
                     isOnline = newStatus,
                     isUpdatingStatus = false
                 )
+                if (newStatus) {
+                    syncProfileToServer()
+                }
                 Log.w("GTS_TECH", "Local duty state toggled to $newStatus: ${e.message}")
             }
         }
