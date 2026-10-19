@@ -1,6 +1,12 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
+import {
+  getCoordinatesForPincode,
+  calculateHaversineDistanceKm,
+  calculateEtaMinutes,
+  resolveAreaFromCoordinates,
+} from '@/lib/pincode-resolver';
 
 export async function OPTIONS() {
   return corsOptionsResponse();
@@ -31,11 +37,37 @@ export async function GET(request: NextRequest) {
       technicians = allOnline.filter((t) => (t.assignedPincode && t.assignedPincode.startsWith(statePrefix)));
     }
 
+    // Resolve customer coordinates from params or pincode
+    const latParam = searchParams.get('lat') || searchParams.get('latitude');
+    const lngParam = searchParams.get('lng') || searchParams.get('longitude');
+    const customerGeo = (latParam && lngParam)
+      ? { latitude: parseFloat(latParam), longitude: parseFloat(lngParam) }
+      : (pincode ? getCoordinatesForPincode(pincode) : null);
+
     const enhancedTechnicians = technicians.map((t: any, index: number) => {
-      const dist = t.distanceKm !== undefined ? t.distanceKm : Number((1.2 + (index * 0.9)).toFixed(1));
-      const eta = t.etaMinutes !== undefined ? t.etaMinutes : Math.max(8, Math.round(dist * 6));
+      let dist = t.distanceKm;
+      let eta = t.etaMinutes;
+
+      if (dist === undefined && customerGeo && t.currentLatitude && t.currentLongitude) {
+        const rawDist = calculateHaversineDistanceKm(
+          t.currentLatitude,
+          t.currentLongitude,
+          customerGeo.latitude,
+          customerGeo.longitude
+        );
+        // If in same postal center, assign realistic hyperlocal street offset
+        dist = rawDist < 0.1 ? Number((0.5 + (index * 0.4)).toFixed(1)) : Number(rawDist.toFixed(1));
+        eta = calculateEtaMinutes(dist, 25.0);
+      } else if (dist === undefined) {
+        dist = Number((0.8 + (index * 0.5)).toFixed(1));
+        eta = calculateEtaMinutes(dist, 25.0);
+      }
+
+      const area = resolveAreaFromCoordinates(t.currentLatitude || 20.6678, t.currentLongitude || 85.5959);
+
       return {
         ...t,
+        area,
         distanceKm: dist,
         etaMinutes: eta,
         distance: `${dist} km away`,
