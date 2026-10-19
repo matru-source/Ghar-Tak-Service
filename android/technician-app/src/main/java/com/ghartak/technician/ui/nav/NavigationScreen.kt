@@ -389,6 +389,63 @@ fun NavigationScreen(
                         fontSize = 12.sp
                     )
 
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Live Area & GPS Coordinate Chips
+                    Surface(
+                        color = SlateDark800,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .clip(CircleShape)
+                                        .background(FlameOrange)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Your GPS Area: ${state.currentAreaName.ifEmpty { "Locating" }}",
+                                    color = TextPrimary,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Text(
+                                text = "Lat: ${"%.4f".format(state.currentLat)}, Lng: ${"%.4f".format(state.currentLng)}",
+                                color = TextMuted,
+                                fontSize = 10.sp,
+                                modifier = Modifier.padding(start = 14.dp, top = 2.dp)
+                            )
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .clip(CircleShape)
+                                        .background(SafetyGreen)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Customer Area: ${state.customerAreaName.ifEmpty { "Customer Doorstep" }}",
+                                    color = SafetyGreen,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Text(
+                                text = "Lat: ${"%.4f".format(state.customerLat)}, Lng: ${"%.4f".format(state.customerLng)}",
+                                color = TextMuted,
+                                fontSize = 10.sp,
+                                modifier = Modifier.padding(start = 14.dp, top = 2.dp)
+                            )
+                        }
+                    }
+
                     Spacer(modifier = Modifier.height(14.dp))
 
                     Row(

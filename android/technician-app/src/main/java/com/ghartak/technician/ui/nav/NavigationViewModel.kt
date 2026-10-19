@@ -26,19 +26,21 @@ data class NavigationUiState(
     val customerName: String = "Valued Customer",
     val customerPhone: String = "+91 98765 43210",
     val customerAddress: String = "Customer Doorstep Address",
-    val customerLat: Double = 19.3150,
-    val customerLng: Double = 84.7941,
-    val currentLat: Double = 19.3200,
-    val currentLng: Double = 84.8000,
-    val distanceRemainingKm: Double = 1.4,
-    val etaMinutes: Int = 6,
+    val customerLat: Double = 20.6600,
+    val customerLng: Double = 85.5900,
+    val currentLat: Double = 20.6680,
+    val currentLng: Double = 85.5980,
+    val distanceRemainingKm: Double = 1.2,
+    val etaMinutes: Int = 5,
     val speedKmh: Double = 24.0,
     val heading: Double = 195.0,
-    val currentManeuver: String = "Head South on Shahid Bhagat Singh Rd",
-    val nextManeuver: String = "In 400m, turn left toward Sea Crest Lane",
+    val currentManeuver: String = "Head towards customer doorstep",
+    val nextManeuver: String = "Follow navigation route to destination",
     val transitStep: Int = 0,
     val hasArrivedDoorstep: Boolean = false,
-    val isPinging: Boolean = false
+    val isPinging: Boolean = false,
+    val currentAreaName: String = "",
+    val customerAreaName: String = ""
 )
 
 class NavigationViewModel(
@@ -48,34 +50,22 @@ class NavigationViewModel(
     private val _uiState = MutableStateFlow(NavigationUiState())
     val uiState: StateFlow<NavigationUiState> = _uiState.asStateFlow()
 
-    private fun calculateHaversineKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-        val r = 6371.0
-        val dLat = Math.toRadians(lat2 - lat1)
-        val dLon = Math.toRadians(lon2 - lon1)
-        val a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2)
-        val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-        return r * c
-    }
-
     fun initJob(job: TechnicianJob) {
-        val pin = job.pincode
-        val isOdisha = pin.startsWith("75") || pin.startsWith("76") || pin.startsWith("77")
-        val defaultLat = if (isOdisha) 19.3150 else 18.9067
-        val defaultLng = if (isOdisha) 84.7941 else 72.8147
+        val (resolvedLat, resolvedLng) = com.ghartak.technician.util.IndianPincodeResolver.getCoordinatesForPincode(job.pincode)
+        val targetLat = if (job.customerLatitude != null && job.customerLatitude > 0.0) job.customerLatitude else resolvedLat
+        val targetLng = if (job.customerLongitude != null && job.customerLongitude > 0.0) job.customerLongitude else resolvedLng
 
         val context = sessionManager.context
         val hasFine = ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         val lm = context.getSystemService(Context.LOCATION_SERVICE) as? android.location.LocationManager
-        var currentLat = defaultLat + 0.012
-        var currentLng = defaultLng + 0.012
+        var currentLat = targetLat + 0.010
+        var currentLng = targetLng + 0.010
 
         if (hasFine && lm != null) {
             try {
                 val loc = lm.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
                     ?: lm.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER)
-                if (loc != null) {
+                if (loc != null && loc.latitude != 0.0 && loc.longitude != 0.0) {
                     currentLat = loc.latitude
                     currentLng = loc.longitude
                 }
@@ -84,11 +74,12 @@ class NavigationViewModel(
             }
         }
 
-        val targetLat = job.customerLatitude ?: defaultLat
-        val targetLng = job.customerLongitude ?: defaultLng
-        val realDist = calculateHaversineKm(currentLat, currentLng, targetLat, targetLng)
-        val roundedDist = Math.max(0.1, (Math.round(realDist * 10.0) / 10.0).toDouble())
-        val calcEta = Math.max(2, (roundedDist * 4).toInt())
+        val realDist = com.ghartak.technician.util.IndianPincodeResolver.calculateHaversineDistanceKm(currentLat, currentLng, targetLat, targetLng)
+        val roundedDist = Math.max(0.05, (Math.round(realDist * 100.0) / 100.0))
+        val calcEta = com.ghartak.technician.util.IndianPincodeResolver.calculateEtaMinutes(roundedDist)
+
+        val customerArea = com.ghartak.technician.util.IndianPincodeResolver.resolveAreaFromCoordinates(targetLat, targetLng)
+        val techArea = com.ghartak.technician.util.IndianPincodeResolver.resolveAreaFromCoordinates(currentLat, currentLng)
 
         _uiState.value = _uiState.value.copy(
             jobId = job.id,
@@ -104,45 +95,55 @@ class NavigationViewModel(
             distanceRemainingKm = roundedDist,
             etaMinutes = calcEta,
             transitStep = 0,
-            hasArrivedDoorstep = false
+            hasArrivedDoorstep = false,
+            currentAreaName = techArea,
+            customerAreaName = customerArea,
+            currentManeuver = "Head towards $customerArea",
+            nextManeuver = "Follow live arterial route to doorstep ($roundedDist km)"
         )
     }
 
     /**
-     * Advance transit simulation step (1.4 km -> 0.8 km -> 0.3 km -> 0.03 km Doorstep Arrival)
+     * Advance transit simulation step (Realistic interpolated approach -> Doorstep Arrival)
      * Pings the live backend API each step to broadcast real-time GPS coordinates!
      */
     fun advanceTransitStep(context: Context) {
         val nextStep = (_uiState.value.transitStep + 1).coerceAtMost(3)
-
-        val addr = _uiState.value.customerAddress.ifEmpty { "Customer Doorstep" }
-        val street = addr.split(",").firstOrNull()?.trim()?.ifEmpty { "Destination" } ?: "Destination"
-
-        val (dist, eta, speed, maneuver, arrived) = when (nextStep) {
-            1 -> Tuple5(0.85, 3, 28.0, "Continue towards $street for 600m", false)
-            2 -> Tuple5(0.28, 1, 15.0, "Turn towards $street (200m to doorstep)", false)
-            3 -> Tuple5(0.03, 0, 0.0, "Arrived at $addr (Doorstep Geofence)", true)
-            else -> Tuple5(1.4, 6, 24.0, "Head towards $street", false)
-        }
-
-        // Interpolate moving GPS coordinates towards actual customer location
-        val fraction = nextStep.toDouble() / 3.0
         val targetLat = _uiState.value.customerLat
         val targetLng = _uiState.value.customerLng
-        val startLat = targetLat + 0.015
-        val startLng = targetLng + 0.015
+        val customerArea = _uiState.value.customerAreaName.ifEmpty {
+            com.ghartak.technician.util.IndianPincodeResolver.resolveAreaFromCoordinates(targetLat, targetLng)
+        }
+
+        val fraction = nextStep.toDouble() / 3.0
+        val startLat = targetLat + 0.012
+        val startLng = targetLng + 0.012
         val newLat = startLat + (targetLat - startLat) * fraction
         val newLng = startLng + (targetLng - startLng) * fraction
+
+        val remainingDist = if (nextStep == 3) 0.03 else com.ghartak.technician.util.IndianPincodeResolver.calculateHaversineDistanceKm(newLat, newLng, targetLat, targetLng)
+        val roundedDist = Math.max(0.03, (Math.round(remainingDist * 100.0) / 100.0))
+        val eta = com.ghartak.technician.util.IndianPincodeResolver.calculateEtaMinutes(roundedDist)
+        val newTechArea = com.ghartak.technician.util.IndianPincodeResolver.resolveAreaFromCoordinates(newLat, newLng)
+
+        val (dist, calcEta, speed, maneuver, arrived) = when (nextStep) {
+            1 -> Tuple5(roundedDist, eta, 28.0, "Continue towards $customerArea for ${(roundedDist * 1000).toInt()}m", false)
+            2 -> Tuple5(roundedDist, eta, 16.0, "Approaching doorstep in $customerArea (${(roundedDist * 1000).toInt()}m away)", false)
+            3 -> Tuple5(0.03, 0, 0.0, "Arrived at $customerArea (Doorstep Geofence)", true)
+            else -> Tuple5(roundedDist, eta, 24.0, "Head towards $customerArea", false)
+        }
 
         _uiState.value = _uiState.value.copy(
             transitStep = nextStep,
             distanceRemainingKm = dist,
-            etaMinutes = eta,
+            etaMinutes = calcEta,
             speedKmh = speed,
             currentManeuver = maneuver,
             hasArrivedDoorstep = arrived,
             currentLat = newLat,
-            currentLng = newLng
+            currentLng = newLng,
+            currentAreaName = newTechArea,
+            customerAreaName = customerArea
         )
 
         // Ping backend telemetry endpoint with fast timeout

@@ -147,6 +147,139 @@ fun CustomerTrackingScreen(
             // 2. Tactical Midnight Live Map Visualizer with City Grid & SSE Beacon
             LiveElectricianTrackingMap(state = state)
 
+            // 2.5 Real-Time GPS Telemetry & Area Localization Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = ShapeCard,
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
+            ) {
+                Column(
+                    modifier = Modifier.padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = "🇮🇳", fontSize = 14.sp)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "LIVE GPS TELEMETRY & LOCATIONS",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = TextDarkMuted,
+                                letterSpacing = 0.5.sp
+                            )
+                        }
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = SapphireBlue800.copy(alpha = 0.1f)
+                        ) {
+                            Text(
+                                text = "${"%.2f".format(state.distanceKm)} km apart",
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = SapphireBlue800
+                            )
+                        }
+                    }
+
+                    // Technician Location Row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            modifier = Modifier.size(32.dp),
+                            shape = CircleShape,
+                            color = Color(0xFF10B981).copy(alpha = 0.15f)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Navigation,
+                                    contentDescription = null,
+                                    tint = Color(0xFF059669),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Technician Current Area",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextDarkMuted,
+                                fontSize = 10.sp
+                            )
+                            Text(
+                                text = state.techAreaName.ifBlank { "Resolving GPS location..." },
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = TextDarkPrimary
+                            )
+                            if (state.techLatitude != 0.0 && state.techLongitude != 0.0) {
+                                Text(
+                                    text = "Lat: ${"%.4f".format(state.techLatitude)}, Lng: ${"%.4f".format(state.techLongitude)}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = TextDarkMuted,
+                                    fontSize = 9.5.sp
+                                )
+                            }
+                        }
+                    }
+
+                    Divider(color = SurfaceBorder.copy(alpha = 0.5f), thickness = 0.8.dp)
+
+                    // Customer Destination Location Row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            modifier = Modifier.size(32.dp),
+                            shape = CircleShape,
+                            color = Color(0xFFEF4444).copy(alpha = 0.15f)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.LocationOn,
+                                    contentDescription = null,
+                                    tint = Color(0xFFDC2626),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Your Doorstep Destination Area",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextDarkMuted,
+                                fontSize = 10.sp
+                            )
+                            Text(
+                                text = state.destAreaName.ifBlank { "Doorstep Destination" },
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = TextDarkPrimary
+                            )
+                            if (state.destLatitude != 0.0 && state.destLongitude != 0.0) {
+                                Text(
+                                    text = "Lat: ${"%.4f".format(state.destLatitude)}, Lng: ${"%.4f".format(state.destLongitude)}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = TextDarkMuted,
+                                    fontSize = 9.5.sp
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             // 3. Assigned Verified Electrician Profile Card (Image 2 Match)
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -891,6 +1024,15 @@ fun LiveElectricianTrackingMap(state: CustomerTrackingUiState) {
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold
                         )
+                        if (state.techAreaName.isNotBlank()) {
+                            Text(
+                                text = "📍 ${state.techAreaName}",
+                                color = Color(0xFFFFD54F),
+                                fontSize = 8.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1
+                            )
+                        }
                         Text(
                             text = if (state.transitStep >= 3 || state.status == "ARRIVED") "At Doorstep" else "${state.etaMinutes} mins away",
                             color = Color(0xFF00E5FF),
@@ -1047,7 +1189,11 @@ fun LiveElectricianTrackingMap(state: CustomerTrackingUiState) {
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "${"%.1f".format(state.distanceKm)} km • Arriving in ${state.etaMinutes} mins",
+                        text = if (state.destAreaName.isNotBlank()) {
+                            "${"%.1f".format(state.distanceKm)} km • ${state.destAreaName}"
+                        } else {
+                            "${"%.1f".format(state.distanceKm)} km • Arriving in ${state.etaMinutes} mins"
+                        },
                         color = Color.White,
                         fontSize = 10.5.sp,
                         fontWeight = FontWeight.Bold

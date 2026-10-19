@@ -1,8 +1,14 @@
 import { NextRequest } from 'next/server';
-import { db, calculateHaversineDistanceKm } from '@/lib/db';
+import { db } from '@/lib/db';
 import { dbStore } from '@/lib/mock-data';
 import { realtimeBus } from '@/lib/realtime-bus';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
+import {
+  getCoordinatesForPincode,
+  resolveAreaFromCoordinates,
+  calculateHaversineDistanceKm,
+  calculateEtaMinutes,
+} from '@/lib/pincode-resolver';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,18 +57,22 @@ export async function POST(request: NextRequest) {
     let isDoorstepNearby = false;
     let targetJob = null;
 
+    let techArea = resolveAreaFromCoordinates(latitude, longitude);
+    let customerArea = '';
+
     if (jobId) {
       targetJob = dbStore.jobs.find((j) => j.id === jobId || j.jobTicketNumber === jobId);
       if (targetJob) {
-        const isOdisha = targetJob.pincode?.startsWith('75') || targetJob.pincode?.startsWith('76') || targetJob.pincode?.startsWith('77');
-        const destLat = targetJob.customerLatitude || (isOdisha ? 19.3150 : 18.9067);
-        const destLng = targetJob.customerLongitude || (isOdisha ? 84.7941 : 72.8147);
+        const destGeo = getCoordinatesForPincode(targetJob.pincode || '759001');
+        const destLat = targetJob.customerLatitude || destGeo.latitude;
+        const destLng = targetJob.customerLongitude || destGeo.longitude;
+        customerArea = resolveAreaFromCoordinates(destLat, destLng);
 
         const rawDist = calculateHaversineDistanceKm(latitude, longitude, destLat, destLng);
         distanceRemainingKm = Number(rawDist.toFixed(2));
 
-        // Urban transit speed (22 km/h Mumbai average)
-        etaMinutes = Math.max(1, Math.round((distanceRemainingKm / 22.0) * 60));
+        // Transit speed (25 km/h average)
+        etaMinutes = calculateEtaMinutes(distanceRemainingKm, 25.0);
 
         // Geofence Doorstep Check (under 50 meters = 0.05 km)
         if (distanceRemainingKm <= 0.05 && (targetJob.status === 'EN_ROUTE' || targetJob.status === 'ASSIGNED')) {
@@ -107,6 +117,8 @@ export async function POST(request: NextRequest) {
         technicianName: tech?.fullName || targetJob?.technicianName || 'Field Technician',
         distanceRemainingKm,
         isDoorstepNearby,
+        technicianArea: techArea,
+        customerArea: customerArea || undefined,
         batteryLevelPct: typeof batteryLevelPct === 'number' ? batteryLevelPct : 85,
         isOnline: tech?.isOnline ?? true,
       },
@@ -117,6 +129,8 @@ export async function POST(request: NextRequest) {
         technicianId,
         jobId: targetJob?.jobTicketNumber || jobId,
         coordinates: { latitude, longitude },
+        technicianArea: techArea,
+        customerArea: customerArea || undefined,
         distanceRemainingKm,
         etaMinutes,
         isDoorstepNearby,
@@ -150,26 +164,34 @@ export async function GET(request: NextRequest) {
       }
       const tech = dbStore.technicians.find((t) => t.id === job.technicianId);
 
-      const isOdisha = job.pincode?.startsWith('75') || job.pincode?.startsWith('76') || job.pincode?.startsWith('77');
-      const destLat = job.customerLatitude || (isOdisha ? 19.3150 : 18.9067);
-      const destLng = job.customerLongitude || (isOdisha ? 84.7941 : 72.8147);
-      const techLat = tech?.currentLatitude || (isOdisha ? 19.3150 : 18.9220);
-      const techLng = tech?.currentLongitude || (isOdisha ? 84.7941 : 72.8250);
+      const destGeo = getCoordinatesForPincode(job.pincode || '759001');
+      const destLat = job.customerLatitude || destGeo.latitude;
+      const destLng = job.customerLongitude || destGeo.longitude;
+      const techLat = tech?.currentLatitude || destLat;
+      const techLng = tech?.currentLongitude || destLng;
 
       const dist = Number(calculateHaversineDistanceKm(techLat, techLng, destLat, destLng).toFixed(2));
-      const eta = Math.max(1, Math.round((dist / 22.0) * 60));
+      const eta = calculateEtaMinutes(dist, 25.0);
+      const techArea = resolveAreaFromCoordinates(techLat, techLng);
+      const destArea = resolveAreaFromCoordinates(destLat, destLng);
 
       return apiSuccess({
         jobTicketNumber: job.jobTicketNumber,
         status: job.status,
         handoverOtp: job.handoverOtp,
-        destination: { latitude: destLat, longitude: destLng, address: job.customerAddressText },
+        destination: {
+          latitude: destLat,
+          longitude: destLng,
+          address: job.customerAddressText,
+          area: destArea,
+        },
         technician: {
           id: tech?.id || job.technicianId,
           name: tech?.fullName || job.technicianName,
           phone: tech?.phone,
           rating: tech?.rating || 4.9,
           coordinates: { latitude: techLat, longitude: techLng },
+          area: techArea,
           distanceKm: dist,
           etaMinutes: eta,
           isOnline: tech?.isOnline ?? true,

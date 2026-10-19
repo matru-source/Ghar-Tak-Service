@@ -8,6 +8,7 @@ import crypto from 'crypto';
 import { prisma } from './prisma';
 import { dbStore, SubscriptionTierRecord, SubscriptionRecord, WormAuditLogRecord } from './mock-data';
 import { calculateIndianGst18 } from './tax-engine';
+import { getCoordinatesForPincode } from './pincode-resolver';
 
 let lastDbCheck = 0;
 let cachedDbConnected = false;
@@ -237,8 +238,9 @@ export const db = {
     const badgeNumber = params.badgeNumber || `GTS-TECH-${Math.floor(3000 + Math.random() * 7000)}`;
     const isOdisha = cleanPin.startsWith('75') || cleanPin.startsWith('76') || cleanPin.startsWith('77');
     const partnerId = params.partnerId || (isOdisha ? 'part_odisha_01' : 'part_mumbai_01');
-    const defaultLat = isOdisha ? 19.3150 : 18.9220;
-    const defaultLng = isOdisha ? 84.7941 : 72.8347;
+    const geo = getCoordinatesForPincode(cleanPin);
+    const defaultLat = geo.latitude;
+    const defaultLng = geo.longitude;
 
     const newRecord = {
       id: techId,
@@ -561,7 +563,7 @@ export const db = {
         const matchesTech =
           j.technicianId === filter.technicianId ||
           (tech && (j.technicianId === tech.id || j.technicianId === tech.badgeNumber)) ||
-          (techPin && j.pincode === techPin && (j.status === 'ASSIGNED' || j.status === 'PENDING_DISPATCH' || j.status === 'DISPATCHED'));
+          (techPin && j.pincode === techPin && (j.status === 'ASSIGNED' || j.status === 'PENDING_DISPATCH' || (j.status as string) === 'DISPATCHED'));
         if (!matchesTech) return false;
       } else if (filter?.pincode && j.pincode !== filter.pincode) {
         return false;
@@ -748,8 +750,8 @@ export const db = {
       serviceTitle: service.title,
       pincode: params.pincode,
       customerAddressText: params.customerAddressText,
-      customerLatitude: params.customerLatitude || (assignedTech?.currentLatitude || (params.pincode.startsWith('75') || params.pincode.startsWith('76') || params.pincode.startsWith('77') ? 19.3150 : 18.9067)),
-      customerLongitude: params.customerLongitude || (assignedTech?.currentLongitude || (params.pincode.startsWith('75') || params.pincode.startsWith('76') || params.pincode.startsWith('77') ? 84.7941 : 72.8147)),
+      customerLatitude: params.customerLatitude || (assignedTech?.currentLatitude || getCoordinatesForPincode(params.pincode).latitude),
+      customerLongitude: params.customerLongitude || (assignedTech?.currentLongitude || getCoordinatesForPincode(params.pincode).longitude),
       status: (assignedTech ? 'ASSIGNED' : 'PENDING_DISPATCH') as
         | 'PENDING_DISPATCH'
         | 'ASSIGNED'
@@ -988,7 +990,7 @@ export const db = {
     }
 
     const now = new Date().toISOString();
-    job.status = 'COMPLETED';
+    (job as any).status = 'COMPLETED';
     job.completedAt = now;
     if (data.afterPhotoUrl) job.afterPhotoUrl = data.afterPhotoUrl;
     if (data.customerRating) job.customerRating = data.customerRating;

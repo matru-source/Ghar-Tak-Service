@@ -4,6 +4,11 @@
 // ==============================================================================
 
 import { calculateHaversineDistanceKm } from './db';
+import {
+  getCoordinatesForPincode,
+  getAreaForPincode,
+  resolveAreaFromCoordinates,
+} from './pincode-resolver';
 
 export interface GeocodeResult {
   formattedAddress: string;
@@ -27,20 +32,11 @@ export interface DistanceMatrixResult {
   recommendedRoute: string;
 }
 
-// Landmark database for South Mumbai & Maharashtra Hubs
-const KNOWN_PINCODE_CENTROIDS: Record<string, { lat: number; lng: number; district: string; state: string; label: string }> = {
-  '400001': { lat: 18.9067, lng: 72.8147, district: 'Mumbai City', state: 'Maharashtra', label: 'Colaba, Mumbai Hub' },
-  '400005': { lat: 18.9150, lng: 72.8220, district: 'Mumbai City', state: 'Maharashtra', label: 'Cuffe Parade & Colaba PO' },
-  '400020': { lat: 18.9320, lng: 72.8260, district: 'Mumbai City', state: 'Maharashtra', label: 'Churchgate & Marine Drive' },
-  '400021': { lat: 18.9260, lng: 72.8230, district: 'Mumbai City', state: 'Maharashtra', label: 'Nariman Point Financial District' },
-  '411001': { lat: 18.5196, lng: 73.8753, district: 'Pune', state: 'Maharashtra', label: 'Pune Camp & Central Sector' },
-};
-
 export const MAPS_CONFIG = {
   provider: (process.env.MAPS_PROVIDER || 'GOOGLE_MAPS_SANDBOX') as 'GOOGLE_MAPS' | 'GOOGLE_MAPS_SANDBOX',
   apiKey: process.env.GOOGLE_MAPS_API_KEY || 'AIzaSyMockElectriCareGoogleMapsKey_2026',
   countryCode: 'IN',
-  urbanAvgSpeedKmH: 22.0, // Mumbai average transit speed
+  urbanAvgSpeedKmH: 25.0,
 };
 
 export class GoogleMapsService {
@@ -50,9 +46,10 @@ export class GoogleMapsService {
   static async geocodeAddress(addressText: string, pincode?: string): Promise<GeocodeResult> {
     const raw = addressText.trim();
     const pinMatch = raw.match(/\b\d{6}\b/) || (pincode ? [pincode] : null);
-    const pin = pinMatch ? pinMatch[0] : '400001';
+    const pin = pinMatch ? pinMatch[0] : (pincode?.trim() || '759001');
 
-    const centroid = KNOWN_PINCODE_CENTROIDS[pin] || KNOWN_PINCODE_CENTROIDS['400001'];
+    const centroid = getCoordinatesForPincode(pin);
+    const area = getAreaForPincode(pin);
 
     // Add subtle micro-offset based on address hash for distinct visual markers
     let hash = 0;
@@ -60,16 +57,16 @@ export class GoogleMapsService {
     const latOffset = ((hash % 100) / 10000) * 0.5;
     const lngOffset = (((hash >> 2) % 100) / 10000) * 0.5;
 
-    const lat = Math.round((centroid.lat + latOffset) * 10000) / 10000;
-    const lng = Math.round((centroid.lng + lngOffset) * 10000) / 10000;
+    const lat = Math.round((centroid.latitude + latOffset) * 10000) / 10000;
+    const lng = Math.round((centroid.longitude + lngOffset) * 10000) / 10000;
 
     return {
-      formattedAddress: `${raw}, ${centroid.district}, ${centroid.state} - ${pin}, India`,
+      formattedAddress: `${raw}, ${area} - ${pin}, India`,
       latitude: lat,
       longitude: lng,
       pincode: pin,
-      district: centroid.district,
-      state: centroid.state,
+      district: area,
+      state: 'India',
       placeId: `ChIJ_${Buffer.from(raw).toString('base64').substring(0, 16)}`,
       accuracy: 'ROOFTOP',
     };
@@ -79,28 +76,17 @@ export class GoogleMapsService {
    * Reverse Geocoding: Converts GPS lat/lng to formatted postal address
    */
   static async reverseGeocode(latitude: number, longitude: number): Promise<GeocodeResult> {
-    // Find closest centroid
-    let closestPin = '400001';
-    let minDistance = Infinity;
+    const areaName = resolveAreaFromCoordinates(latitude, longitude);
 
-    for (const [pin, centroid] of Object.entries(KNOWN_PINCODE_CENTROIDS)) {
-      const dist = calculateHaversineDistanceKm(latitude, longitude, centroid.lat, centroid.lng);
-      if (dist < minDistance) {
-        minDistance = dist;
-        closestPin = pin;
-      }
-    }
-
-    const centroid = KNOWN_PINCODE_CENTROIDS[closestPin];
     return {
-      formattedAddress: `Sector Landmark near ${centroid.label}, ${centroid.district}, ${centroid.state} - ${closestPin}, India`,
+      formattedAddress: `Near ${areaName}, India`,
       latitude,
       longitude,
-      pincode: closestPin,
-      district: centroid.district,
-      state: centroid.state,
+      pincode: '759001',
+      district: areaName,
+      state: 'India',
       placeId: `ChIJ_rev_${Math.round(latitude * 1000)}_${Math.round(longitude * 1000)}`,
-      accuracy: minDistance < 1.0 ? 'ROOFTOP' : 'GEOMETRIC_CENTER',
+      accuracy: 'GEOMETRIC_CENTER',
     };
   }
 
@@ -118,12 +104,12 @@ export class GoogleMapsService {
       destination.longitude
     );
 
-    // Urban road tortuosity factor (~1.25x direct line distance in dense city grids)
-    const roadDistanceKm = Math.round(rawHaversine * 1.25 * 100) / 100;
+    // Urban road tortuosity factor (~1.20x direct line distance in city roads)
+    const roadDistanceKm = Math.round(rawHaversine * 1.20 * 100) / 100;
 
-    // Calculate transit duration: transit time + 4 mins initial dispatch overhead
+    // Calculate transit duration: transit time + 3 mins dispatch overhead
     const baseMinutes = (roadDistanceKm / MAPS_CONFIG.urbanAvgSpeedKmH) * 60;
-    const durationMinutes = Math.max(5, Math.round(baseMinutes + 4));
+    const durationMinutes = Math.max(3, Math.round(baseMinutes + 3));
 
     // Determine traffic status based on transit time
     const trafficStatus: 'NORMAL' | 'MODERATE_CONGESTION' | 'HEAVY_TRAFFIC' =
@@ -137,7 +123,7 @@ export class GoogleMapsService {
       durationMinutes,
       durationFormatted: `${durationMinutes} mins`,
       trafficStatus,
-      recommendedRoute: `via Shahid Bhagat Singh Rd & Colaba Causeway (${roadDistanceKm} km)`,
+      recommendedRoute: `via Direct Arterial Corridor (${roadDistanceKm} km)`,
     };
   }
 
@@ -148,10 +134,10 @@ export class GoogleMapsService {
     pincode: string,
     latitude: number,
     longitude: number,
-    maxRadiusKm = 10.0
+    maxRadiusKm = 25.0
   ): { isWithinTerritory: boolean; distanceToCenterKm: number; allowedRadiusKm: number } {
-    const centroid = KNOWN_PINCODE_CENTROIDS[pincode] || KNOWN_PINCODE_CENTROIDS['400001'];
-    const distFromCenter = calculateHaversineDistanceKm(latitude, longitude, centroid.lat, centroid.lng);
+    const centroid = getCoordinatesForPincode(pincode);
+    const distFromCenter = calculateHaversineDistanceKm(latitude, longitude, centroid.latitude, centroid.longitude);
 
     return {
       isWithinTerritory: distFromCenter <= maxRadiusKm,
@@ -164,7 +150,7 @@ export class GoogleMapsService {
     return {
       provider: MAPS_CONFIG.provider,
       apiKeyConfigured: !!MAPS_CONFIG.apiKey,
-      supportedClusters: Object.keys(KNOWN_PINCODE_CENTROIDS),
+      supportedClusters: ['PAN_INDIA_ALL_CIRCLES', '759001', '400001', '110001', '560001'],
       defaultAverageTransitSpeed: `${MAPS_CONFIG.urbanAvgSpeedKmH} km/h`,
       status: 'MAPS_ENGINE_ACTIVE',
     };

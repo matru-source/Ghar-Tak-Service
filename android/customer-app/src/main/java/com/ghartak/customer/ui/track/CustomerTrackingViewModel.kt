@@ -36,7 +36,9 @@ data class CustomerTrackingUiState(
     val techLatitude: Double = 0.0,
     val techLongitude: Double = 0.0,
     val destLatitude: Double = 0.0,
-    val destLongitude: Double = 0.0
+    val destLongitude: Double = 0.0,
+    val techAreaName: String = "",
+    val destAreaName: String = ""
 )
 
 class CustomerTrackingViewModel(
@@ -57,6 +59,10 @@ class CustomerTrackingViewModel(
         val activePhone = sessionManager.getActiveJobTechnicianPhone()
         val activeOtp = sessionManager.getActiveJobOtp()
 
+        val userPin = sessionManager.getUserPincode().ifEmpty { "759001" }
+        val (initDestLat, initDestLng) = com.ghartak.customer.util.IndianPincodeResolver.getCoordinatesForPincode(userPin)
+        val initDestArea = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(initDestLat, initDestLng)
+
         _uiState.value = _uiState.value.copy(
             jobId = jobId,
             serviceTitle = activeTitle,
@@ -64,7 +70,15 @@ class CustomerTrackingViewModel(
             technicianName = activeTech,
             technicianBadge = activeBadge,
             technicianPhone = activePhone,
-            handoverOtp = activeOtp
+            handoverOtp = activeOtp,
+            destLatitude = initDestLat,
+            destLongitude = initDestLng,
+            destAreaName = initDestArea,
+            techLatitude = initDestLat + 0.010,
+            techLongitude = initDestLng + 0.010,
+            techAreaName = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(initDestLat + 0.010, initDestLng + 0.010),
+            distanceKm = 1.2,
+            etaMinutes = 5
         )
 
         // Connect to Central Real-Time SSE Bus
@@ -89,15 +103,34 @@ class CustomerTrackingViewModel(
                         val tech = data.technician
                         val dest = data.destination
                         val status = data.status ?: _uiState.value.status
-                        val isArrived = status == "ARRIVED" || tech.distanceKm <= 0.05
+
+                        val tLat = tech.coordinates.latitude
+                        val tLng = tech.coordinates.longitude
+                        val dLat = if (dest != null && dest.latitude != 0.0) dest.latitude else _uiState.value.destLatitude
+                        val dLng = if (dest != null && dest.longitude != 0.0) dest.longitude else _uiState.value.destLongitude
+
+                        val calcDist = if (tLat != 0.0 && dLat != 0.0) {
+                            com.ghartak.customer.util.IndianPincodeResolver.calculateHaversineDistanceKm(tLat, tLng, dLat, dLng)
+                        } else {
+                            tech.distanceKm
+                        }
+                        val roundedDist = Math.max(0.03, (Math.round(calcDist * 100.0) / 100.0))
+                        val calcEta = com.ghartak.customer.util.IndianPincodeResolver.calculateEtaMinutes(roundedDist)
+                        val isArrived = status == "ARRIVED" || roundedDist <= 0.05
+
+                        val resolvedTechArea = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(tLat, tLng)
+                        val resolvedDestArea = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(dLat, dLng)
+
                         _uiState.value = _uiState.value.copy(
                             status = if (isArrived && status != "COMPLETED" && status != "WORK_COMPLETED") "ARRIVED" else status,
-                            distanceKm = tech.distanceKm,
-                            etaMinutes = tech.etaMinutes,
-                            techLatitude = tech.coordinates.latitude,
-                            techLongitude = tech.coordinates.longitude,
-                            destLatitude = dest?.latitude ?: _uiState.value.destLatitude,
-                            destLongitude = dest?.longitude ?: _uiState.value.destLongitude,
+                            distanceKm = roundedDist,
+                            etaMinutes = calcEta,
+                            techLatitude = tLat,
+                            techLongitude = tLng,
+                            destLatitude = dLat,
+                            destLongitude = dLng,
+                            techAreaName = resolvedTechArea,
+                            destAreaName = resolvedDestArea,
                             technicianName = tech.name ?: _uiState.value.technicianName,
                             technicianPhone = tech.phone ?: _uiState.value.technicianPhone,
                             technicianRating = tech.rating,
@@ -150,17 +183,32 @@ class CustomerTrackingViewModel(
             "TECH_LOCATION_UPDATE" -> {
                 val loc = data.optJSONObject("location")
                 val details = data.optJSONObject("details")
-                val dist = details?.optDouble("distanceRemainingKm", _uiState.value.distanceKm) ?: _uiState.value.distanceKm
-                val eta = loc?.optInt("etaMinutes", _uiState.value.etaMinutes) ?: _uiState.value.etaMinutes
                 val lat = loc?.optDouble("latitude", _uiState.value.techLatitude) ?: _uiState.value.techLatitude
                 val lng = loc?.optDouble("longitude", _uiState.value.techLongitude) ?: _uiState.value.techLongitude
-                val arrived = details?.optBoolean("isDoorstepNearby", false) ?: false
+                val dLat = _uiState.value.destLatitude
+                val dLng = _uiState.value.destLongitude
+
+                val realDist = if (lat != 0.0 && dLat != 0.0) {
+                    com.ghartak.customer.util.IndianPincodeResolver.calculateHaversineDistanceKm(lat, lng, dLat, dLng)
+                } else {
+                    details?.optDouble("distanceRemainingKm", _uiState.value.distanceKm) ?: _uiState.value.distanceKm
+                }
+                val roundedDist = Math.max(0.03, (Math.round(realDist * 100.0) / 100.0))
+                val calcEta = com.ghartak.customer.util.IndianPincodeResolver.calculateEtaMinutes(roundedDist)
+                val arrived = (details?.optBoolean("isDoorstepNearby", false) ?: false) || roundedDist <= 0.05
+
+                val techArea = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(lat, lng)
+                val destArea = _uiState.value.destAreaName.ifEmpty {
+                    com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(dLat, dLng)
+                }
 
                 _uiState.value = _uiState.value.copy(
-                    distanceKm = dist,
-                    etaMinutes = eta,
+                    distanceKm = roundedDist,
+                    etaMinutes = calcEta,
                     techLatitude = lat,
                     techLongitude = lng,
+                    techAreaName = techArea,
+                    destAreaName = destArea,
                     isDoorstepArrived = arrived || _uiState.value.isDoorstepArrived,
                     status = if (arrived) "ARRIVED" else "EN_ROUTE"
                 )
@@ -193,24 +241,38 @@ class CustomerTrackingViewModel(
 
     /**
      * Staging Demo Transit Simulation:
-     * Step 0: 1.4 km (6 mins) -> Step 1: 0.85 km (3 mins) -> Step 2: 0.28 km (1 min) -> Step 3: 30m Doorstep Arrived
+     * Realistic interpolated movement from technician origin to customer destination
      */
     fun simulateStepCloser() {
         val nextStep = (_uiState.value.transitStep + 1).coerceAtMost(3)
+        val targetLat = _uiState.value.destLatitude
+        val targetLng = _uiState.value.destLongitude
+        val fraction = nextStep.toDouble() / 3.0
 
-        val (dist, eta, status, arrived) = when (nextStep) {
-            1 -> Tuple4(0.85, 3, "EN_ROUTE", false)
-            2 -> Tuple4(0.28, 1, "EN_ROUTE", false)
-            3 -> Tuple4(0.03, 0, "ARRIVED", true)
-            else -> Tuple4(1.4, 6, "EN_ROUTE", false)
+        val startLat = targetLat + 0.012
+        val startLng = targetLng + 0.012
+        val newLat = startLat + (targetLat - startLat) * fraction
+        val newLng = startLng + (targetLng - startLng) * fraction
+
+        val simDist = if (nextStep == 3) 0.03 else com.ghartak.customer.util.IndianPincodeResolver.calculateHaversineDistanceKm(newLat, newLng, targetLat, targetLng)
+        val roundedDist = Math.max(0.03, (Math.round(simDist * 100.0) / 100.0))
+        val simEta = com.ghartak.customer.util.IndianPincodeResolver.calculateEtaMinutes(roundedDist)
+        val simArea = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(newLat, newLng)
+
+        val (status, arrived) = when (nextStep) {
+            3 -> "ARRIVED" to true
+            else -> "EN_ROUTE" to false
         }
 
         _uiState.value = _uiState.value.copy(
             transitStep = nextStep,
-            distanceKm = dist,
-            etaMinutes = eta,
+            distanceKm = roundedDist,
+            etaMinutes = simEta,
             status = status,
-            isDoorstepArrived = arrived
+            isDoorstepArrived = arrived,
+            techLatitude = newLat,
+            techLongitude = newLng,
+            techAreaName = simArea
         )
     }
 

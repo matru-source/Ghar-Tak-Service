@@ -105,8 +105,8 @@ class TechnicianDashboardViewModel(
                 customerName = notif.customerName,
                 customerPhone = notif.customerPhone,
                 customerAddressText = notif.customerAddress,
-                customerLatitude = if (notif.pincode.startsWith("75") || notif.pincode.startsWith("76") || notif.pincode.startsWith("77")) 19.3150 else 18.9220,
-                customerLongitude = if (notif.pincode.startsWith("75") || notif.pincode.startsWith("76") || notif.pincode.startsWith("77")) 84.7941 else 72.8347,
+                customerLatitude = com.ghartak.technician.util.IndianPincodeResolver.getCoordinatesForPincode(notif.pincode).first,
+                customerLongitude = com.ghartak.technician.util.IndianPincodeResolver.getCoordinatesForPincode(notif.pincode).second,
                 status = "EN_ROUTE",
                 priority = "NORMAL",
                 totalAmountInr = notif.amountInr,
@@ -439,9 +439,7 @@ class TechnicianDashboardViewModel(
                         }
 
                         val alertJob = if (firstAlert != null && _uiState.value.incomingDispatchAlert == null) {
-                            val isOdisha = firstAlert.pincode.startsWith("75") || firstAlert.pincode.startsWith("76") || firstAlert.pincode.startsWith("77")
-                            val defaultLat = if (isOdisha) 19.3150 else 18.9220
-                            val defaultLng = if (isOdisha) 84.7941 else 72.8347
+                            val (defaultLat, defaultLng) = com.ghartak.technician.util.IndianPincodeResolver.getCoordinatesForPincode(firstAlert.pincode)
                             val alert = TechnicianJob(
                                 id = firstAlert.id,
                                 jobTicketNumber = firstAlert.jobTicketNumber,
