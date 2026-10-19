@@ -111,6 +111,7 @@ fun TechnicianDashboardScreen(
 
     LaunchedEffect(Unit) {
         viewModel.connectRealtimeBus(context)
+        viewModel.pollBackendAssignedJobs(context)
     }
 
     Scaffold(
@@ -359,7 +360,7 @@ fun TechnicianHomeScreenContent(
                         )
                         Spacer(modifier = Modifier.height(3.dp))
                         Text(
-                            text = "ID: ${state.profile?.badgeNumber ?: "GTS-TECH-4815"}  |  Pincodes: ${state.profile?.assignedPincode ?: "400001"}, 400002",
+                            text = "ID: ${state.profile?.badgeNumber ?: "GTS-TECH-4815"}  |  Pincode: ${state.profile?.assignedPincode ?: "759001"}",
                             color = Color.White.copy(alpha = 0.92f),
                             fontSize = 11.5.sp,
                             fontWeight = FontWeight.Medium
@@ -517,6 +518,53 @@ fun TechnicianHomeScreenContent(
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
+
+                if (state.newJobNotifications.isEmpty()) {
+                    Surface(
+                        color = Color.White,
+                        shape = RoundedCornerShape(14.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF1F5F9)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFE8F5E9)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = TechGreen,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "All Clear • Online for Dispatch",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    color = TextDarkPrimary
+                                )
+                                Text(
+                                    text = "Live bookings dispatched from territory ${state.profile?.assignedPincode ?: "service area"} will alert here instantly.",
+                                    fontSize = 11.sp,
+                                    color = TextDarkMuted
+                                )
+                            }
+                        }
+                    }
+                }
 
                 state.newJobNotifications.forEach { notif ->
                     val serviceDrawable = getServiceDrawableRes(notif.serviceTitle, notif.iconType)
@@ -976,20 +1024,24 @@ fun TechnicianEarningsContent(
         else -> state.monthEarningsInr
     }
 
-    val trendDisplay = when (currentFilter) {
-        "TODAY" -> "↑ 3 completed jobs today"
-        "THIS_WEEK" -> "↑ 12% from last week"
-        "THIS_MONTH" -> "↑ 15% from last month"
-        "ALL_TIME" -> "↑ 148 lifetime jobs settled"
-        else -> "↑ 15% from last month"
+    val trendDisplay = if (state.jobsCompletedCount == 0 && totalEarningsDisplay == 0.0) {
+        "New Professional • Ready for jobs"
+    } else {
+        when (currentFilter) {
+            "TODAY" -> "↑ ${if (state.todayEarningsInr > 0) "Active" else "0"} jobs today"
+            "THIS_WEEK" -> "↑ Verified payouts"
+            "THIS_MONTH" -> "↑ ${state.jobsCompletedCount} jobs completed"
+            "ALL_TIME" -> "↑ ${state.jobsCompletedCount} lifetime jobs settled"
+            else -> "↑ Verified payouts"
+        }
     }
 
     val totalJobsCount = when (currentFilter) {
-        "TODAY" -> 4
-        "THIS_WEEK" -> 12
-        "THIS_MONTH" -> 24
-        "ALL_TIME" -> 160
-        else -> 24
+        "TODAY" -> if (state.todayEarningsInr > 0) 1 else 0
+        "THIS_WEEK" -> state.jobsCompletedCount
+        "THIS_MONTH" -> state.jobsCompletedCount
+        "ALL_TIME" -> state.jobsCompletedCount + state.assignedJobs.size
+        else -> state.jobsCompletedCount
     }
 
     val totalJobsSub = when (currentFilter) {
@@ -1001,35 +1053,22 @@ fun TechnicianEarningsContent(
     }
 
     val completedJobsCount = when (currentFilter) {
-        "TODAY" -> 3
-        "THIS_WEEK" -> 10
-        "THIS_MONTH" -> 20
-        "ALL_TIME" -> 148
-        else -> 20
+        "TODAY" -> if (state.todayEarningsInr > 0) 1 else 0
+        "THIS_WEEK" -> state.jobsCompletedCount
+        "THIS_MONTH" -> state.jobsCompletedCount
+        "ALL_TIME" -> state.jobsCompletedCount
+        else -> state.jobsCompletedCount
     }
 
-    val completedAmountDisplay = when (currentFilter) {
-        "TODAY" -> "₹1,625 earned"
-        "THIS_WEEK" -> "₹7,375 earned"
-        "THIS_MONTH" -> "₹28,400 earned"
-        "ALL_TIME" -> "₹124,300 earned"
-        else -> "₹28,400 earned"
-    }
+    val completedAmountDisplay = "₹${"%,.0f".format(totalEarningsDisplay)} earned"
 
-    val pendingJobsCount = when (currentFilter) {
-        "TODAY" -> 1
-        "THIS_WEEK" -> 2
-        "THIS_MONTH" -> 4
-        "ALL_TIME" -> 12
-        else -> 4
-    }
+    val pendingJobsCount = state.assignedJobs.count { it.status != "COMPLETED" && it.status != "CANCELLED" }
 
-    val pendingAmountDisplay = when (currentFilter) {
-        "TODAY" -> "₹500 expected"
-        "THIS_WEEK" -> "₹1,900 expected"
-        "THIS_MONTH" -> "₹4,100 expected"
-        "ALL_TIME" -> "₹4,100 expected"
-        else -> "₹4,100 expected"
+    val pendingAmountDisplay = if (pendingJobsCount > 0) {
+        val expected = state.assignedJobs.filter { it.status != "COMPLETED" && it.status != "CANCELLED" }.sumOf { it.totalAmountInr }
+        "₹${"%,.0f".format(expected)} expected"
+    } else {
+        "₹0 expected"
     }
 
     val sectionHeaderTitle = when (currentFilter) {
@@ -1175,34 +1214,35 @@ fun TechnicianEarningsContent(
                                     .height(80.dp)
                                     .padding(end = 4.dp)
                             ) {
+                                val hasEarnings = totalEarningsDisplay > 0
                                 when (currentFilter) {
                                     "TODAY" -> {
-                                        MonthlyChartBar(label = "09:00", heightRatio = 0.35f, isHighlighted = false)
-                                        MonthlyChartBar(label = "12:00", heightRatio = 0.55f, isHighlighted = false)
-                                        MonthlyChartBar(label = "15:00", heightRatio = 0.80f, isHighlighted = false)
-                                        MonthlyChartBar(label = "18:00", heightRatio = 1.00f, isHighlighted = true)
+                                        MonthlyChartBar(label = "09:00", heightRatio = if (hasEarnings) 0.35f else 0.08f, isHighlighted = false)
+                                        MonthlyChartBar(label = "12:00", heightRatio = if (hasEarnings) 0.55f else 0.08f, isHighlighted = false)
+                                        MonthlyChartBar(label = "15:00", heightRatio = if (hasEarnings) 0.80f else 0.08f, isHighlighted = false)
+                                        MonthlyChartBar(label = "18:00", heightRatio = if (hasEarnings) 1.00f else 0.08f, isHighlighted = hasEarnings)
                                     }
                                     "THIS_WEEK" -> {
-                                        MonthlyChartBar(label = "Mon", heightRatio = 0.40f, isHighlighted = false)
-                                        MonthlyChartBar(label = "Tue", heightRatio = 0.60f, isHighlighted = false)
-                                        MonthlyChartBar(label = "Wed", heightRatio = 0.75f, isHighlighted = false)
-                                        MonthlyChartBar(label = "Thu", heightRatio = 0.50f, isHighlighted = false)
-                                        MonthlyChartBar(label = "Fri", heightRatio = 1.00f, isHighlighted = true)
+                                        MonthlyChartBar(label = "Mon", heightRatio = if (hasEarnings) 0.40f else 0.08f, isHighlighted = false)
+                                        MonthlyChartBar(label = "Tue", heightRatio = if (hasEarnings) 0.60f else 0.08f, isHighlighted = false)
+                                        MonthlyChartBar(label = "Wed", heightRatio = if (hasEarnings) 0.75f else 0.08f, isHighlighted = false)
+                                        MonthlyChartBar(label = "Thu", heightRatio = if (hasEarnings) 0.50f else 0.08f, isHighlighted = false)
+                                        MonthlyChartBar(label = "Fri", heightRatio = if (hasEarnings) 1.00f else 0.08f, isHighlighted = hasEarnings)
                                     }
                                     "ALL_TIME" -> {
-                                        MonthlyChartBar(label = "'22", heightRatio = 0.30f, isHighlighted = false)
-                                        MonthlyChartBar(label = "'23", heightRatio = 0.50f, isHighlighted = false)
-                                        MonthlyChartBar(label = "'24", heightRatio = 0.70f, isHighlighted = false)
-                                        MonthlyChartBar(label = "'25", heightRatio = 0.85f, isHighlighted = false)
-                                        MonthlyChartBar(label = "'26", heightRatio = 1.00f, isHighlighted = true)
+                                        MonthlyChartBar(label = "'22", heightRatio = if (hasEarnings) 0.30f else 0.08f, isHighlighted = false)
+                                        MonthlyChartBar(label = "'23", heightRatio = if (hasEarnings) 0.50f else 0.08f, isHighlighted = false)
+                                        MonthlyChartBar(label = "'24", heightRatio = if (hasEarnings) 0.70f else 0.08f, isHighlighted = false)
+                                        MonthlyChartBar(label = "'25", heightRatio = if (hasEarnings) 0.85f else 0.08f, isHighlighted = false)
+                                        MonthlyChartBar(label = "'26", heightRatio = if (hasEarnings) 1.00f else 0.08f, isHighlighted = hasEarnings)
                                     }
                                     else -> {
                                         // THIS_MONTH
-                                        MonthlyChartBar(label = "Jun", heightRatio = 0.22f, isHighlighted = false)
-                                        MonthlyChartBar(label = "Jul", heightRatio = 0.35f, isHighlighted = false)
-                                        MonthlyChartBar(label = "Aug", heightRatio = 0.52f, isHighlighted = false)
-                                        MonthlyChartBar(label = "Sep", heightRatio = 0.70f, isHighlighted = false)
-                                        MonthlyChartBar(label = "Oct", heightRatio = 1.00f, isHighlighted = true)
+                                        MonthlyChartBar(label = "Jun", heightRatio = if (hasEarnings) 0.22f else 0.08f, isHighlighted = false)
+                                        MonthlyChartBar(label = "Jul", heightRatio = if (hasEarnings) 0.35f else 0.08f, isHighlighted = false)
+                                        MonthlyChartBar(label = "Aug", heightRatio = if (hasEarnings) 0.52f else 0.08f, isHighlighted = false)
+                                        MonthlyChartBar(label = "Sep", heightRatio = if (hasEarnings) 0.70f else 0.08f, isHighlighted = false)
+                                        MonthlyChartBar(label = "Oct", heightRatio = if (hasEarnings) 1.00f else 0.08f, isHighlighted = hasEarnings)
                                     }
                                 }
                             }
@@ -1651,11 +1691,11 @@ fun TechnicianProfileContent(
 
     // 1. Working Edit Personal Info Dialog
     if (showEditPersonalDialog) {
-        var editName by remember { mutableStateOf(state.profile?.fullName ?: "Raja Kumar") }
-        var editPhone by remember { mutableStateOf(state.profile?.phone ?: "+91 98765 43210") }
-        var editEmail by remember { mutableStateOf(state.profile?.email ?: "rajakumar1995@gmail.com") }
-        var editLocation by remember { mutableStateOf(state.profile?.location ?: "Mumbai, Maharashtra") }
-        var editLanguages by remember { mutableStateOf(state.profile?.languages ?: "English, Hindi, Marathi") }
+        var editName by remember { mutableStateOf(state.profile?.fullName ?: "") }
+        var editPhone by remember { mutableStateOf(state.profile?.phone ?: "") }
+        var editEmail by remember { mutableStateOf(state.profile?.email ?: "") }
+        var editLocation by remember { mutableStateOf(state.profile?.location ?: "Odisha, India") }
+        var editLanguages by remember { mutableStateOf(state.profile?.languages ?: "Odia, English, Hindi") }
 
         AlertDialog(
             onDismissRequest = { showEditPersonalDialog = false },
@@ -1964,8 +2004,10 @@ fun TechnicianProfileContent(
                                         )
                                     }
                                     Spacer(modifier = Modifier.width(4.dp))
+                                    val jobsCount = state.jobsCompletedCount
+                                    val ratingHeader = if (jobsCount == 0) "5.0 (New Professional)" else "${"%.1f".format(state.customerRating)} ($jobsCount jobs)"
                                     Text(
-                                        text = "4.8 (200+ jobs)",
+                                        text = ratingHeader,
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = TextDarkSecondary
@@ -1995,19 +2037,21 @@ fun TechnicianProfileContent(
                         Divider(color = Color(0xFFF1F5F9))
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // 4 Metrics Row (247 Total Jobs, 232 Completed, 12 Pending, 4.8 Rating)
+                        // 4 Metrics Row (Dynamic: Total Jobs, Completed, Pending, Rating)
+                        val totalJobs = state.jobsCompletedCount + state.jobsPendingCount
+                        val ratingVal = if (state.jobsCompletedCount == 0) "5.0" else "%.1f".format(state.customerRating)
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceAround,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            ProfileStatColumn(icon = Icons.Default.Work, iconTint = TechFlameOrange, value = "247", label = "Total Jobs")
+                            ProfileStatColumn(icon = Icons.Default.Work, iconTint = TechFlameOrange, value = "$totalJobs", label = "Total Jobs")
                             Divider(modifier = Modifier.height(26.dp).width(1.dp), color = Color(0xFFE2E8F0))
-                            ProfileStatColumn(icon = Icons.Default.CheckCircle, iconTint = TechGreen, value = "232", label = "Completed")
+                            ProfileStatColumn(icon = Icons.Default.CheckCircle, iconTint = TechGreen, value = "${state.jobsCompletedCount}", label = "Completed")
                             Divider(modifier = Modifier.height(26.dp).width(1.dp), color = Color(0xFFE2E8F0))
-                            ProfileStatColumn(icon = Icons.Default.Schedule, iconTint = Color(0xFFF57C00), value = "12", label = "Pending")
+                            ProfileStatColumn(icon = Icons.Default.Schedule, iconTint = Color(0xFFF57C00), value = "${state.jobsPendingCount}", label = "Pending")
                             Divider(modifier = Modifier.height(26.dp).width(1.dp), color = Color(0xFFE2E8F0))
-                            ProfileStatColumn(icon = Icons.Default.Star, iconTint = Color(0xFF1976D2), value = "4.8", label = "Rating")
+                            ProfileStatColumn(icon = Icons.Default.Star, iconTint = Color(0xFF1976D2), value = ratingVal, label = "Rating")
                         }
                     }
                 }
@@ -2061,10 +2105,10 @@ fun TechnicianProfileContent(
                     icon = Icons.Default.Person,
                     onEdit = { showEditPersonalDialog = true }
                 ) {
-                    ProfileInfoRow(icon = Icons.Default.Phone, label = "Phone", value = state.profile?.phone ?: "+91 98765 43210")
-                    ProfileInfoRow(icon = Icons.Default.Email, label = "Email", value = state.profile?.email ?: "rajakumar1995@gmail.com")
-                    ProfileInfoRow(icon = Icons.Default.Place, label = "Location", value = state.profile?.location ?: "Mumbai, Maharashtra")
-                    ProfileInfoRow(icon = Icons.Default.Language, label = "Languages", value = state.profile?.languages ?: "English, Hindi, Marathi")
+                    ProfileInfoRow(icon = Icons.Default.Phone, label = "Phone", value = state.profile?.phone ?: "Not Provided")
+                    ProfileInfoRow(icon = Icons.Default.Email, label = "Email", value = state.profile?.email ?: "Not Provided")
+                    ProfileInfoRow(icon = Icons.Default.Place, label = "Location", value = state.profile?.location ?: "Odisha, India")
+                    ProfileInfoRow(icon = Icons.Default.Language, label = "Languages", value = state.profile?.languages ?: "Odia, English, Hindi")
                 }
             }
 
@@ -2488,6 +2532,46 @@ fun TechnicianAllJobsContent(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
+            if (state.assignedJobs.isEmpty()) {
+                item {
+                    Surface(
+                        color = Color.White,
+                        shape = RoundedCornerShape(14.dp),
+                        shadowElevation = 1.dp,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF1F5F9)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(28.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.WorkOutline,
+                                contentDescription = null,
+                                tint = TechFlameOrange,
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = "No Jobs in Queue",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                color = TextDarkPrimary
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "New bookings from your service territory (${state.profile?.location ?: "Odisha, India"}) will appear here automatically upon customer assignment.",
+                                fontSize = 12.sp,
+                                color = TextDarkMuted,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
+            }
+
             items(state.assignedJobs) { job ->
                 val serviceDrawable = getServiceDrawableRes(job.serviceTitle)
 

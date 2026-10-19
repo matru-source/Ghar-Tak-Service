@@ -43,111 +43,20 @@ data class DashboardUiState(
     val profile: TechnicianProfile? = null,
     val isOnline: Boolean = true,
     val isUpdatingStatus: Boolean = false,
-    val todayEarningsInr: Double = 1250.0,
-    val weekEarningsInr: Double = 8400.0,
-    val monthEarningsInr: Double = 32500.0,
-    val allTimeEarningsInr: Double = 128400.0,
-    val availableWithdrawalInr: Double = 12000.0,
-    val jobsTodayCount: Int = 4,
-    val jobsCompletedCount: Int = 2,
-    val jobsPendingCount: Int = 2,
-    val customerRating: Float = 4.9f,
-    val selectedEarningsFilter: String = "THIS_MONTH", // "TODAY", "THIS_WEEK", "THIS_MONTH", "ALL_TIME"
-    val newJobNotifications: List<InboundJobNotification> = listOf(
-        InboundJobNotification(
-            id = "J-1005",
-            jobTicketNumber = "#J-1005",
-            serviceTitle = "Fan Installation",
-            scheduledTime = "10:30 AM",
-            pincode = "400001",
-            customerName = "Amit Sharma",
-            customerPhone = "+91 98765 43210",
-            customerAddress = "123, Main Street, Mumbai",
-            amountInr = 1250.0,
-            commissionInr = 750.0,
-            iconType = "FAN"
-        ),
-        InboundJobNotification(
-            id = "J-1006",
-            jobTicketNumber = "#J-1006",
-            serviceTitle = "AC Installation",
-            scheduledTime = "2:00 PM",
-            pincode = "400002",
-            customerName = "Pooja Mehta",
-            customerPhone = "+91 98765 54321",
-            customerAddress = "88, Marine Drive, Mumbai",
-            amountInr = 2000.0,
-            commissionInr = 1200.0,
-            iconType = "AC"
-        )
-    ),
+    val todayEarningsInr: Double = 0.0,
+    val weekEarningsInr: Double = 0.0,
+    val monthEarningsInr: Double = 0.0,
+    val allTimeEarningsInr: Double = 0.0,
+    val availableWithdrawalInr: Double = 0.0,
+    val jobsTodayCount: Int = 0,
+    val jobsCompletedCount: Int = 0,
+    val jobsPendingCount: Int = 0,
+    val customerRating: Float = 5.0f,
+    val selectedEarningsFilter: String = "TODAY", // "TODAY", "THIS_WEEK", "THIS_MONTH", "ALL_TIME"
+    val newJobNotifications: List<InboundJobNotification> = emptyList(),
     val assignedJobs: List<TechnicianJob> = emptyList(),
     val selectedJob: TechnicianJob? = null,
-    val recentTransactions: List<EarningsTransaction> = listOf(
-        EarningsTransaction(
-            id = "tx_1",
-            jobTicketNumber = "#J-1003",
-            serviceTitle = "Light Repair",
-            completedTime = "Completed Today at 09:30 AM",
-            amountInr = 750.0,
-            isPending = false,
-            periodScope = setOf("TODAY", "THIS_WEEK", "THIS_MONTH", "ALL_TIME")
-        ),
-        EarningsTransaction(
-            id = "tx_2",
-            jobTicketNumber = "#J-1005",
-            serviceTitle = "Fan Installation",
-            completedTime = "Pending Completion",
-            amountInr = 500.0,
-            isPending = true,
-            periodScope = setOf("TODAY", "THIS_WEEK", "THIS_MONTH", "ALL_TIME")
-        ),
-        EarningsTransaction(
-            id = "tx_3",
-            jobTicketNumber = "#J-1000",
-            serviceTitle = "AC Repair",
-            completedTime = "Completed Yesterday at 04:00 PM",
-            amountInr = 1200.0,
-            isPending = false,
-            periodScope = setOf("THIS_WEEK", "THIS_MONTH", "ALL_TIME")
-        ),
-        EarningsTransaction(
-            id = "tx_4",
-            jobTicketNumber = "#J-0998",
-            serviceTitle = "Wiring Fix",
-            completedTime = "Completed 2 days ago at 11:00 AM",
-            amountInr = 900.0,
-            isPending = false,
-            periodScope = setOf("THIS_WEEK", "THIS_MONTH", "ALL_TIME")
-        ),
-        EarningsTransaction(
-            id = "tx_5",
-            jobTicketNumber = "#J-0985",
-            serviceTitle = "Switchboard Upgrade",
-            completedTime = "Completed 10 days ago",
-            amountInr = 1450.0,
-            isPending = false,
-            periodScope = setOf("THIS_MONTH", "ALL_TIME")
-        ),
-        EarningsTransaction(
-            id = "tx_6",
-            jobTicketNumber = "#J-0970",
-            serviceTitle = "Inverter Wiring",
-            completedTime = "Completed 20 days ago",
-            amountInr = 2800.0,
-            isPending = false,
-            periodScope = setOf("THIS_MONTH", "ALL_TIME")
-        ),
-        EarningsTransaction(
-            id = "tx_7",
-            jobTicketNumber = "#J-0890",
-            serviceTitle = "Substation Breaker Fix",
-            completedTime = "Completed last month",
-            amountInr = 4500.0,
-            isPending = false,
-            periodScope = setOf("ALL_TIME")
-        )
-    ),
+    val recentTransactions: List<EarningsTransaction> = emptyList(),
     val incomingDispatchAlert: TechnicianJob? = null,
     val isWithdrawing: Boolean = false,
     val withdrawSuccessMessage: String? = null,
@@ -277,10 +186,21 @@ class TechnicianDashboardViewModel(
             serviceArea = serviceArea
         )
 
+        val completed = sessionManager.getTotalJobsCompleted()
+        val todayE = sessionManager.getTodayEarnings()
+        val weekE = sessionManager.getWeekEarnings()
+        val monthE = sessionManager.getMonthEarnings()
+
         _uiState.value = _uiState.value.copy(
             profile = profile,
             isOnline = isOnline,
             customerRating = rating.toFloat(),
+            jobsCompletedCount = completed,
+            todayEarningsInr = todayE,
+            weekEarningsInr = weekE,
+            monthEarningsInr = monthE,
+            allTimeEarningsInr = monthE,
+            availableWithdrawalInr = monthE,
             assignedJobs = _uiState.value.assignedJobs
         )
     }
@@ -359,6 +279,8 @@ class TechnicianDashboardViewModel(
         val ticket = completedJob?.jobTicketNumber ?: "#J-1006"
         val service = completedJob?.serviceTitle ?: "AC Installation"
 
+        sessionManager.addEarnings(finalPayout)
+
         val newTx = EarningsTransaction(
             id = "tx_${System.currentTimeMillis()}",
             jobTicketNumber = ticket,
@@ -428,6 +350,58 @@ class TechnicianDashboardViewModel(
     fun cacheIncomingJob(job: TechnicianJob) {
         incomingJobsCache[job.id] = job
         incomingJobsCache[job.jobTicketNumber] = job
+    }
+
+    fun pollBackendAssignedJobs(context: Context) {
+        viewModelScope.launch {
+            try {
+                val api = ApiClient.getService(context)
+                val techId = sessionManager.getTechnicianId()
+                val response = kotlinx.coroutines.withTimeoutOrNull(8000L) {
+                    api.getAssignedJobs(technicianId = techId)
+                }
+                if (response != null && response.isSuccessful && response.body()?.data != null) {
+                    val dataMap = response.body()!!.data!!
+                    val rawJobs = (dataMap["jobs"] as? List<*>) ?: emptyList<Any>()
+                    val activeInbound = rawJobs.mapNotNull { raw ->
+                        val m = raw as? Map<*, *> ?: return@mapNotNull null
+                        val status = m["status"]?.toString() ?: ""
+                        if (status != "PENDING_DISPATCH" && status != "ASSIGNED" && status != "DISPATCHED") return@mapNotNull null
+                        val id = m["id"]?.toString() ?: return@mapNotNull null
+                        val ticket = m["jobTicketNumber"]?.toString() ?: "#J-${id.takeLast(4)}"
+                        val service = m["serviceTitle"]?.toString() ?: "Electrical Service"
+                        val pin = m["pincode"]?.toString() ?: sessionManager.getPincode()
+                        val cName = m["customerName"]?.toString() ?: "Customer"
+                        val cPhone = m["customerPhone"]?.toString() ?: "+91 98765 43210"
+                        val cAddr = m["customerAddressText"]?.toString() ?: "Customer Address"
+                        val amount = (m["totalAmountInr"] as? Number)?.toDouble() ?: 352.82
+
+                        InboundJobNotification(
+                            id = id,
+                            jobTicketNumber = ticket,
+                            serviceTitle = service,
+                            scheduledTime = "Immediate Dispatch",
+                            pincode = pin,
+                            customerName = cName,
+                            customerPhone = cPhone,
+                            customerAddress = cAddr,
+                            amountInr = amount,
+                            commissionInr = amount * 0.7
+                        )
+                    }
+                    if (activeInbound.isNotEmpty()) {
+                        _uiState.value = _uiState.value.copy(
+                            newJobNotifications = activeInbound,
+                            jobsTodayCount = activeInbound.size + _uiState.value.jobsCompletedCount,
+                            jobsPendingCount = activeInbound.size
+                        )
+                        Log.d("GTS_TECH", "Polled ${activeInbound.size} live assigned jobs for tech $techId")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.w("GTS_TECH", "Polling backend jobs: ${e.message}")
+            }
+        }
     }
 
     fun connectRealtimeBus(context: Context) {

@@ -168,6 +168,70 @@ class AddressBookingViewModel(
                 gstinStateCode = details.gstinStateCode,
                 etaMinutes = details.etaMinutes
             )
+            loadLiveTechnicians(sessionManager.context, savedPin)
+        }
+    }
+
+    fun loadLiveTechnicians(context: Context, pin: String) {
+        viewModelScope.launch {
+            try {
+                val api = ApiClient.getService(context)
+                val response = kotlinx.coroutines.withTimeoutOrNull(8000L) {
+                    api.getAvailableTechnicians(pincode = pin.ifEmpty { "400001" }, isOnline = true)
+                }
+                if (response != null && response.isSuccessful && response.body()?.data != null) {
+                    val dataMap = response.body()!!.data!!
+                    val rawList = (dataMap["technicians"] as? List<*>) ?: emptyList<Any>()
+                    if (rawList.isNotEmpty()) {
+                        val parsed = rawList.mapNotNull { raw ->
+                            val item = raw as? Map<*, *> ?: return@mapNotNull null
+                            val id = item["id"]?.toString() ?: item["badgeNumber"]?.toString() ?: "tech_${(1000..9999).random()}"
+                            val name = item["fullName"]?.toString() ?: item["name"]?.toString() ?: "Certified Professional"
+                            val badge = item["badgeNumber"]?.toString() ?: "GTS-TECH-${id.takeLast(4)}"
+                            val ratingVal = (item["rating"] as? Number)?.toDouble() ?: 5.0
+                            val completedCount = (item["totalJobsCompleted"] as? Number)?.toInt() ?: 0
+                            val phone = item["phone"]?.toString() ?: "+91 98201 44091"
+                            val trade = item["trade"]?.toString() ?: item["specialization"]?.toString() ?: "Certified Electrician"
+                            val distKm = (item["distanceKm"] as? Number)?.toDouble() ?: 1.4
+                            val etaMin = (item["etaMinutes"] as? Number)?.toInt() ?: maxOf(8, (distKm * 6).toInt())
+
+                            NearbyTechnician(
+                                id = id,
+                                name = name,
+                                badge = badge,
+                                rating = "%.1f ★".format(ratingVal),
+                                ratingValue = ratingVal,
+                                distance = "%.1f km away".format(distKm),
+                                distanceKm = distKm,
+                                eta = "$etaMin mins",
+                                etaMinutes = etaMin,
+                                specialty = trade,
+                                phone = phone,
+                                completedJobs = "$completedCount+ jobs",
+                                completedJobsCount = completedCount
+                            )
+                        }
+
+                        if (parsed.isNotEmpty()) {
+                            val sorted = when (_uiState.value.sortOption) {
+                                TechnicianSortOption.MIN_DISTANCE -> parsed.sortedBy { it.distanceKm }
+                                TechnicianSortOption.RATINGS -> parsed.sortedWith(
+                                    compareByDescending<NearbyTechnician> { it.ratingValue }
+                                        .thenByDescending { it.completedJobsCount }
+                                )
+                                TechnicianSortOption.NUMBER_OF_JOBS -> parsed.sortedByDescending { it.completedJobsCount }
+                            }
+                            _uiState.value = _uiState.value.copy(
+                                nearbyTechnicians = sorted,
+                                selectedTechnicianId = sorted.first().id
+                            )
+                            Log.d("GTS_TECH_FETCH", "Successfully loaded ${sorted.size} live technicians for pin $pin. Selected: ${sorted.first().name}")
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.w("GTS_TECH_FETCH", "Falling back to default offline technician roster: ${e.message}")
+            }
         }
     }
 
@@ -202,6 +266,7 @@ class AddressBookingViewModel(
             gst18PctInr = gst,
             totalPayableInr = total
         )
+        loadLiveTechnicians(sessionManager.context, _uiState.value.pincode)
     }
 
     fun onFlatChanged(value: String) {
@@ -247,6 +312,7 @@ class AddressBookingViewModel(
                 gstinStateCode = details.gstinStateCode,
                 etaMinutes = details.etaMinutes
             )
+            loadLiveTechnicians(context, pin)
         }
     }
 

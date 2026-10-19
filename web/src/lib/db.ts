@@ -121,6 +121,7 @@ export const db = {
     kycStatus?: string;
     search?: string;
   }) {
+    let results: any[] = [];
     if (await isDatabaseConnected()) {
       try {
         const whereClause: Record<string, unknown> = {};
@@ -141,13 +142,32 @@ export const db = {
           include: { user: true, partner: true },
           orderBy: { rating: 'desc' },
         });
-        if (liveTechs && liveTechs.length > 0) return liveTechs;
+        if (liveTechs && liveTechs.length > 0) {
+          results = liveTechs.map((t) => ({
+            id: t.id,
+            userId: t.userId,
+            partnerId: t.partnerId,
+            badgeNumber: t.badgeNumber,
+            fullName: t.user?.fullName || (t as any).fullName || 'Technician',
+            phone: t.user?.phone || (t as any).phone || '',
+            rating: t.rating,
+            totalJobsCompleted: t.totalJobsCompleted,
+            isOnline: t.isOnline,
+            currentLatitude: t.currentLatitude,
+            currentLongitude: t.currentLongitude,
+            assignedPincode: t.assignedPincode,
+            kycStatus: t.kycStatus,
+            email: t.user?.email || (t as any).email || '',
+            trade: (t as any).trade || 'Certified Professional',
+          }));
+        }
       } catch {
-        // Fallback
+        // Fallback to memory
       }
     }
 
-    return dbStore.technicians.filter((t) => {
+    // Merge in-memory registered technicians (e.g. newly signed up technicians in session)
+    const memoryTechs = dbStore.technicians.filter((t) => {
       if (filter?.partnerId && t.partnerId !== filter.partnerId) return false;
       if (filter?.pincode && t.assignedPincode !== filter.pincode) return false;
       if (filter?.isOnline !== undefined && t.isOnline !== filter.isOnline) return false;
@@ -162,6 +182,14 @@ export const db = {
       }
       return true;
     });
+
+    for (const mt of memoryTechs) {
+      if (!results.some((r) => r.id === mt.id || r.phone === mt.phone || r.badgeNumber === mt.badgeNumber)) {
+        results.unshift(mt);
+      }
+    }
+
+    return results;
   },
 
   async getTechnicianById(id: string) {

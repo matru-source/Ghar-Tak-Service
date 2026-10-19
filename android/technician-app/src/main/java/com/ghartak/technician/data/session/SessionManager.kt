@@ -200,18 +200,24 @@ class SessionManager(val context: Context) {
                 else -> return null
             }
 
+            val savedJobs = techObj.optInt("totalJobsCompleted", 0)
+            val techPin = techObj.optString("pincode", "400001")
+            val defaultLoc = if (techPin.startsWith("75") || techPin.startsWith("76") || techPin.startsWith("77")) "Odisha, India" else "Mumbai, Maharashtra"
+
             TechnicianProfile(
                 id = techObj.optString("id", "tech_rajesh_01"),
                 badgeNumber = techObj.optString("badgeNumber", "GTS-TECH-4091"),
                 fullName = techObj.optString("fullName", "Rajesh Kumar"),
                 phone = techObj.optString("phone", "+91 9811223344"),
-                partnerId = "partner_mh_01",
-                assignedPincode = techObj.optString("pincode", "400001"),
+                partnerId = if (techPin.startsWith("75") || techPin.startsWith("76") || techPin.startsWith("77")) "partner_od_01" else "partner_mh_01",
+                assignedPincode = techPin,
                 isOnline = true,
-                rating = 4.9,
+                rating = 5.0,
                 safetyKitSerial = "VDE-1000V-99214",
                 insulatedGlovesVerified = false,
-                totalJobsCompleted = 4
+                totalJobsCompleted = savedJobs,
+                location = defaultLoc,
+                specialization = techObj.optString("trade", "Certified Professional")
             )
         } catch (e: Exception) {
             null
@@ -219,6 +225,9 @@ class SessionManager(val context: Context) {
     }
 
     fun saveSession(token: String, profile: TechnicianProfile) {
+        val techPin = profile.assignedPincode
+        val defaultLoc = if (techPin.startsWith("75") || techPin.startsWith("76") || techPin.startsWith("77")) "Odisha, India" else "Mumbai, Maharashtra"
+        val defaultLang = if (techPin.startsWith("75") || techPin.startsWith("76") || techPin.startsWith("77")) "Odia, English, Hindi" else "English, Hindi, Marathi"
         prefs.edit().apply {
             putString(KEY_AUTH_TOKEN, token)
             putString(KEY_TECH_ID, profile.id)
@@ -231,6 +240,10 @@ class SessionManager(val context: Context) {
             putFloat(KEY_RATING, profile.rating.toFloat())
             putBoolean(KEY_GLOVES_VERIFIED, profile.insulatedGlovesVerified)
             putInt(KEY_TOTAL_JOBS, profile.totalJobsCompleted)
+            putString(KEY_LOCATION, profile.location ?: defaultLoc)
+            putString(KEY_LANGUAGES, profile.languages ?: defaultLang)
+            putString(KEY_EMAIL, profile.email ?: "technician@ghartak.com")
+            putString(KEY_SPECIALIZATION, profile.specialization)
             putBoolean(KEY_IS_LOGGED_IN, true)
             apply()
         }
@@ -240,6 +253,23 @@ class SessionManager(val context: Context) {
 
     fun incrementJobsCompleted() {
         prefs.edit().putInt(KEY_TOTAL_JOBS, getTotalJobsCompleted() + 1).apply()
+    }
+
+    fun getTodayEarnings(): Double = prefs.getFloat("key_today_earnings", 0.0f).toDouble()
+    fun getWeekEarnings(): Double = prefs.getFloat("key_week_earnings", 0.0f).toDouble()
+    fun getMonthEarnings(): Double = prefs.getFloat("key_month_earnings", 0.0f).toDouble()
+
+    fun addEarnings(amount: Double) {
+        val today = getTodayEarnings() + amount
+        val week = getWeekEarnings() + amount
+        val month = getMonthEarnings() + amount
+        prefs.edit().apply {
+            putFloat("key_today_earnings", today.toFloat())
+            putFloat("key_week_earnings", week.toFloat())
+            putFloat("key_month_earnings", month.toFloat())
+            apply()
+        }
+        incrementJobsCompleted()
     }
 
     fun getAuthToken(): String? = prefs.getString(KEY_AUTH_TOKEN, null)
@@ -262,7 +292,7 @@ class SessionManager(val context: Context) {
         prefs.edit().putBoolean(KEY_IS_ONLINE, online).apply()
     }
 
-    fun getRating(): Float = prefs.getFloat(KEY_RATING, 4.9f)
+    fun getRating(): Float = prefs.getFloat(KEY_RATING, 5.0f)
 
     fun isGlovesVerified(): Boolean = prefs.getBoolean(KEY_GLOVES_VERIFIED, false)
 
@@ -270,9 +300,17 @@ class SessionManager(val context: Context) {
         prefs.edit().putBoolean(KEY_GLOVES_VERIFIED, verified).apply()
     }
 
-    fun getEmail(): String = prefs.getString(KEY_EMAIL, "rajakumar1995@gmail.com") ?: "rajakumar1995@gmail.com"
-    fun getLocation(): String = prefs.getString(KEY_LOCATION, "Mumbai, Maharashtra") ?: "Mumbai, Maharashtra"
-    fun getLanguages(): String = prefs.getString(KEY_LANGUAGES, "English, Hindi, Marathi") ?: "English, Hindi, Marathi"
+    fun getEmail(): String = prefs.getString(KEY_EMAIL, "technician@ghartak.com") ?: "technician@ghartak.com"
+    fun getLocation(): String {
+        val pin = getPincode()
+        val defaultLoc = if (pin.startsWith("75") || pin.startsWith("76") || pin.startsWith("77")) "Odisha, India" else "Mumbai, Maharashtra"
+        return prefs.getString(KEY_LOCATION, defaultLoc) ?: defaultLoc
+    }
+    fun getLanguages(): String {
+        val pin = getPincode()
+        val defaultLang = if (pin.startsWith("75") || pin.startsWith("76") || pin.startsWith("77")) "Odia, English, Hindi" else "English, Hindi, Marathi"
+        return prefs.getString(KEY_LANGUAGES, defaultLang) ?: defaultLang
+    }
     fun getSpecialization(): String = prefs.getString(KEY_SPECIALIZATION, "Electrician") ?: "Electrician"
     fun getExperience(): String = prefs.getString(KEY_EXPERIENCE, "5+ Years") ?: "5+ Years"
     fun getLicense(): String = prefs.getString(KEY_LICENSE, "Trade Certified Professional") ?: "Trade Certified Professional"

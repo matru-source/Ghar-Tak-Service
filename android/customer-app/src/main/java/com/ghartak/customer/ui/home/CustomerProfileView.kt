@@ -43,6 +43,7 @@ fun CustomerProfileView(
 ) {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
+    val pastOrders = remember { sessionManager.getPastOrders() }
     var profileImageUri by remember { mutableStateOf(sessionManager.getProfileImageUri()) }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
@@ -466,7 +467,7 @@ fun CustomerProfileView(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Metric 1: Orders
+                    // Metric 1: Orders (Dynamic based on real bookings)
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
@@ -480,13 +481,23 @@ fun CustomerProfileView(
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = "3 Orders", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextDarkPrimary)
-                        Text(text = "View all →", fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold, color = SapphireBlue800)
+                        Text(
+                            text = "${pastOrders.size} Orders",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            color = TextDarkPrimary
+                        )
+                        Text(
+                            text = if (pastOrders.isEmpty()) "Book first →" else "View all →",
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = SapphireBlue800
+                        )
                     }
 
                     Divider(modifier = Modifier.height(30.dp).width(1.dp), color = SurfaceBorder)
 
-                    // Metric 2: Active AMC Shield
+                    // Metric 2: AMC Shield
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
@@ -496,12 +507,22 @@ fun CustomerProfileView(
                         Icon(
                             imageVector = Icons.Default.Shield,
                             contentDescription = null,
-                            tint = ProfileVerifiedGreen,
+                            tint = if (pastOrders.isNotEmpty()) ProfileVerifiedGreen else Color(0xFF64748B),
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = "Active AMC", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextDarkPrimary)
-                        Text(text = "View details →", fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold, color = ProfileVerifiedGreen)
+                        Text(
+                            text = if (pastOrders.isNotEmpty()) "Active AMC" else "Explore AMC",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            color = TextDarkPrimary
+                        )
+                        Text(
+                            text = if (pastOrders.isNotEmpty()) "View details →" else "View plans →",
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (pastOrders.isNotEmpty()) ProfileVerifiedGreen else SapphireBlue800
+                        )
                     }
 
                     Divider(modifier = Modifier.height(30.dp).width(1.dp), color = SurfaceBorder)
@@ -518,8 +539,17 @@ fun CustomerProfileView(
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = "5.0 ★ Rating", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextDarkPrimary)
-                        Text(text = "12 reviews", fontSize = 10.5.sp, color = TextDarkMuted)
+                        Text(
+                            text = if (pastOrders.isEmpty()) "New Member" else "5.0 ★ Rating",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            color = TextDarkPrimary
+                        )
+                        Text(
+                            text = "${pastOrders.size} review${if (pastOrders.size == 1) "" else "s"}",
+                            fontSize = 10.5.sp,
+                            color = TextDarkMuted
+                        )
                     }
                 }
             }
@@ -582,12 +612,12 @@ fun CustomerProfileView(
 
                             Surface(
                                 shape = RoundedCornerShape(20.dp),
-                                color = AmcActiveBadgeBg
+                                color = if (pastOrders.isNotEmpty()) AmcActiveBadgeBg else Color(0xFF1E293B)
                             ) {
                                 Text(
-                                    text = "ACTIVE",
+                                    text = if (pastOrders.isNotEmpty()) "ACTIVE" else "PLANS FROM ₹499",
                                     modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),
-                                    color = AmcActiveBadgeText,
+                                    color = if (pastOrders.isNotEmpty()) AmcActiveBadgeText else Color(0xFF38BDF8),
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold
                                 )

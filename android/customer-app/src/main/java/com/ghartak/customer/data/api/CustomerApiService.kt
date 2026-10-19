@@ -31,6 +31,14 @@ interface CustomerApiService {
     @GET("technicians/telemetry")
     suspend fun getLiveTracking(@Query("jobId") jobId: String): Response<ApiResponse<LiveTrackingResponse>>
 
+    // Live Technicians Fleet
+    @GET("technicians")
+    suspend fun getAvailableTechnicians(
+        @Query("pincode") pincode: String? = null,
+        @Query("isOnline") isOnline: Boolean? = true,
+        @Query("sortBy") sortBy: String? = null
+    ): Response<ApiResponse<Map<String, Any>>>
+
     // Pincode Serviceability Check
     @GET("pincodes/check-serviceable")
     suspend fun checkPincode(@Query("pincode") pincode: String): Response<ApiResponse<Map<String, Any>>>
