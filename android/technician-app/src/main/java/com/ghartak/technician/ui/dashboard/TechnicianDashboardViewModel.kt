@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ghartak.technician.data.api.ApiClient
+import com.ghartak.technician.data.model.DispatchActionRequest
 import com.ghartak.technician.data.model.RegisterTechnicianRequest
 import com.ghartak.technician.data.model.TechnicianJob
 import com.ghartak.technician.data.model.TechnicianProfile
@@ -94,11 +95,19 @@ class TechnicianDashboardViewModel(
         _uiState.value = _uiState.value.copy(currentTab = "HOME")
     }
 
+    private fun matchesJob(id1: String, ticket1: String, id2: String, ticket2: String): Boolean {
+        val cleanId1 = id1.trim().lowercase().removePrefix("job_")
+        val cleanId2 = id2.trim().lowercase().removePrefix("job_")
+        val cleanTicket1 = ticket1.trim().lowercase().removePrefix("#")
+        val cleanTicket2 = ticket2.trim().lowercase().removePrefix("#")
+        return cleanId1 == cleanId2 || cleanTicket1 == cleanTicket2 || cleanId1 == cleanTicket2 || cleanTicket1 == cleanId2
+    }
+
     fun acceptNotificationJob(notificationId: String) {
         val notif = _uiState.value.newJobNotifications.find { it.id == notificationId }
         if (notif != null) {
             val newActiveJob = TechnicianJob(
-                id = "job_${notif.id.lowercase()}",
+                id = notif.id,
                 jobTicketNumber = notif.jobTicketNumber,
                 serviceTitle = notif.serviceTitle,
                 pincode = notif.pincode,
@@ -117,8 +126,10 @@ class TechnicianDashboardViewModel(
                 createdAt = "Just now"
             )
 
-            val updatedNotifs = _uiState.value.newJobNotifications.filter { it.id != notificationId }
-            val updatedJobs = _uiState.value.assignedJobs.toMutableList().apply { add(0, newActiveJob) }
+            val updatedNotifs = _uiState.value.newJobNotifications.filter { it.id != notificationId && !matchesJob(it.id, it.jobTicketNumber, notif.id, notif.jobTicketNumber) }
+            val updatedJobs = _uiState.value.assignedJobs
+                .filter { !matchesJob(it.id, it.jobTicketNumber, notif.id, notif.jobTicketNumber) }
+                .toMutableList().apply { add(0, newActiveJob) }
 
             _uiState.value = _uiState.value.copy(
                 newJobNotifications = updatedNotifs,
@@ -126,12 +137,58 @@ class TechnicianDashboardViewModel(
                 selectedJob = newActiveJob,
                 currentTab = "JOB_DETAILS"
             )
+
+            // Broadcast real ACCEPT response to backend
+            viewModelScope.launch {
+                try {
+                    val api = ApiClient.getService(sessionManager.context)
+                    val techId = sessionManager.getTechnicianId()
+                    api.respondToDispatch(
+                        jobId = notif.id,
+                        request = DispatchActionRequest(
+                            technicianId = techId,
+                            action = "ACCEPT"
+                        )
+                    )
+                    Log.d("GTS_TECH", "Dispatched ACCEPT event for job ${notif.id} successfully")
+                } catch (e: Exception) {
+                    Log.w("GTS_TECH", "Error broadcasting dispatch acceptance: ${e.message}")
+                }
+            }
         }
     }
 
     fun rejectNotificationJob(notificationId: String) {
-        val updatedNotifs = _uiState.value.newJobNotifications.filter { it.id != notificationId }
-        _uiState.value = _uiState.value.copy(newJobNotifications = updatedNotifs)
+        val notif = _uiState.value.newJobNotifications.find { it.id == notificationId }
+        val updatedNotifs = _uiState.value.newJobNotifications.filter {
+            it.id != notificationId && (notif == null || !matchesJob(it.id, it.jobTicketNumber, notif.id, notif.jobTicketNumber))
+        }
+        val updatedJobs = _uiState.value.assignedJobs.filter {
+            if (notif != null) !matchesJob(it.id, it.jobTicketNumber, notif.id, notif.jobTicketNumber) else it.id != notificationId
+        }
+        _uiState.value = _uiState.value.copy(
+            newJobNotifications = updatedNotifs,
+            assignedJobs = updatedJobs
+        )
+
+        // Broadcast real REJECT response to backend
+        viewModelScope.launch {
+            try {
+                val api = ApiClient.getService(sessionManager.context)
+                val techId = sessionManager.getTechnicianId()
+                api.respondToDispatch(
+                    jobId = notificationId,
+                    request = DispatchActionRequest(
+                        technicianId = techId,
+                        action = "REJECT",
+                        rejectionReason = "Technician unavailable / declined"
+                    )
+                )
+                Log.d("GTS_TECH", "Dispatched REJECT event for job $notificationId successfully")
+            } catch (e: Exception) {
+                Log.w("GTS_TECH", "Error broadcasting dispatch rejection: ${e.message}")
+            }
+        }
     }
 
     fun setEarningsFilter(filter: String) {
@@ -407,14 +464,56 @@ class TechnicianDashboardViewModel(
                 if (response != null && response.isSuccessful && response.body()?.data != null) {
                     val dataMap = response.body()!!.data!!
                     val rawJobs = (dataMap["jobs"] as? List<*>) ?: emptyList<Any>()
+
+                    // 1. Extract real server active jobs (En Route, Arrived, In Progress)
+                    val serverActiveJobs = rawJobs.mapNotNull { raw ->
+                        val m = raw as? Map<*, *> ?: return@mapNotNull null
+                        val status = m["status"]?.toString() ?: ""
+                        if (status != "EN_ROUTE" && status != "ARRIVED" && status != "SAFETY_CHECKED" && status != "IN_PROGRESS" && status != "STARTED") return@mapNotNull null
+                        val id = m["id"]?.toString() ?: return@mapNotNull null
+                        val ticket = m["jobTicketNumber"]?.toString() ?: "#J-${id.takeLast(4)}"
+                        val pin = m["pincode"]?.toString() ?: sessionManager.getPincode()
+                        val (defaultLat, defaultLng) = com.ghartak.technician.util.IndianPincodeResolver.getCoordinatesForPincode(pin)
+
+                        TechnicianJob(
+                            id = id,
+                            jobTicketNumber = ticket,
+                            serviceTitle = m["serviceTitle"]?.toString() ?: "Doorstep Service",
+                            pincode = pin,
+                            customerName = m["customerName"]?.toString() ?: "Customer",
+                            customerPhone = m["customerPhone"]?.toString() ?: "+91 98765 43210",
+                            customerAddressText = m["customerAddressText"]?.toString() ?: "Customer Address",
+                            customerLatitude = (m["customerLatitude"] as? Number)?.toDouble() ?: defaultLat,
+                            customerLongitude = (m["customerLongitude"] as? Number)?.toDouble() ?: defaultLng,
+                            status = status,
+                            priority = m["priority"]?.toString() ?: "NORMAL",
+                            totalAmountInr = (m["totalAmountInr"] as? Number)?.toDouble() ?: 352.82,
+                            safetyGlovesConfirmed = (m["safetyGlovesConfirmed"] as? Boolean) ?: false,
+                            safetyMcbSwitchConfirmed = (m["safetyMcbSwitchConfirmed"] as? Boolean) ?: false,
+                            handoverOtp = m["handoverOtp"]?.toString() ?: ""
+                        )
+                    }
+
+                    // Merge active jobs, keeping local status changes if more advanced
+                    val mergedActiveJobs = (serverActiveJobs + _uiState.value.assignedJobs)
+                        .distinctBy { it.id.trim().lowercase().removePrefix("job_") }
+                        .filter { it.status != "COMPLETED" && it.status != "CANCELLED" }
+
+                    // 2. Extract inbound dispatch jobs awaiting acceptance/rejection
                     val activeInbound = rawJobs.mapNotNull { raw ->
                         val m = raw as? Map<*, *> ?: return@mapNotNull null
                         val status = m["status"]?.toString() ?: ""
                         if (status != "PENDING_DISPATCH" && status != "ASSIGNED" && status != "DISPATCHED") return@mapNotNull null
                         val id = m["id"]?.toString() ?: return@mapNotNull null
                         val ticket = m["jobTicketNumber"]?.toString() ?: "#J-${id.takeLast(4)}"
-                        val service = m["serviceTitle"]?.toString() ?: "Electrical Service"
                         val pin = m["pincode"]?.toString() ?: sessionManager.getPincode()
+
+                        // Strictly exclude jobs already accepted or active
+                        if (mergedActiveJobs.any { matchesJob(it.id, it.jobTicketNumber, id, ticket) }) {
+                            return@mapNotNull null
+                        }
+
+                        val service = m["serviceTitle"]?.toString() ?: "Doorstep Service"
                         val cName = m["customerName"]?.toString() ?: "Customer"
                         val cPhone = m["customerPhone"]?.toString() ?: "+91 98765 43210"
                         val cAddr = m["customerAddressText"]?.toString() ?: "Customer Address"
@@ -433,43 +532,43 @@ class TechnicianDashboardViewModel(
                             commissionInr = amount * 0.7
                         )
                     }
-                    if (activeInbound.isNotEmpty()) {
-                        val firstAlert = activeInbound.firstOrNull { inbound ->
-                            !_uiState.value.assignedJobs.any { it.id == inbound.id || it.jobTicketNumber == inbound.jobTicketNumber }
-                        }
 
-                        val alertJob = if (firstAlert != null && _uiState.value.incomingDispatchAlert == null) {
-                            val (defaultLat, defaultLng) = com.ghartak.technician.util.IndianPincodeResolver.getCoordinatesForPincode(firstAlert.pincode)
-                            val alert = TechnicianJob(
-                                id = firstAlert.id,
-                                jobTicketNumber = firstAlert.jobTicketNumber,
-                                serviceTitle = firstAlert.serviceTitle,
-                                pincode = firstAlert.pincode,
-                                customerName = firstAlert.customerName,
-                                customerPhone = firstAlert.customerPhone,
-                                customerAddressText = firstAlert.customerAddress,
-                                customerLatitude = defaultLat,
-                                customerLongitude = defaultLng,
-                                status = "DISPATCHED",
-                                priority = "EMERGENCY_60S",
-                                totalAmountInr = firstAlert.amountInr,
-                                safetyGlovesConfirmed = false,
-                                handoverOtp = ""
-                            )
-                            cacheIncomingJob(alert)
-                            alert
-                        } else {
-                            _uiState.value.incomingDispatchAlert
-                        }
-
-                        _uiState.value = _uiState.value.copy(
-                            newJobNotifications = activeInbound,
-                            jobsTodayCount = activeInbound.size + _uiState.value.jobsCompletedCount,
-                            jobsPendingCount = activeInbound.size,
-                            incomingDispatchAlert = alertJob
-                        )
-                        Log.d("GTS_TECH", "Polled ${activeInbound.size} live assigned jobs for tech $techId, alertJob=${alertJob?.jobTicketNumber}")
+                    val firstAlert = activeInbound.firstOrNull { inbound ->
+                        !mergedActiveJobs.any { matchesJob(it.id, it.jobTicketNumber, inbound.id, inbound.jobTicketNumber) }
                     }
+
+                    val alertJob = if (firstAlert != null && _uiState.value.incomingDispatchAlert == null) {
+                        val (defaultLat, defaultLng) = com.ghartak.technician.util.IndianPincodeResolver.getCoordinatesForPincode(firstAlert.pincode)
+                        val alert = TechnicianJob(
+                            id = firstAlert.id,
+                            jobTicketNumber = firstAlert.jobTicketNumber,
+                            serviceTitle = firstAlert.serviceTitle,
+                            pincode = firstAlert.pincode,
+                            customerName = firstAlert.customerName,
+                            customerPhone = firstAlert.customerPhone,
+                            customerAddressText = firstAlert.customerAddress,
+                            customerLatitude = defaultLat,
+                            customerLongitude = defaultLng,
+                            status = "DISPATCHED",
+                            priority = "EMERGENCY_60S",
+                            totalAmountInr = firstAlert.amountInr,
+                            safetyGlovesConfirmed = false,
+                            handoverOtp = ""
+                        )
+                        cacheIncomingJob(alert)
+                        alert
+                    } else {
+                        if (activeInbound.isEmpty()) null else _uiState.value.incomingDispatchAlert
+                    }
+
+                    _uiState.value = _uiState.value.copy(
+                        assignedJobs = mergedActiveJobs,
+                        newJobNotifications = activeInbound,
+                        jobsTodayCount = activeInbound.size + mergedActiveJobs.size + _uiState.value.jobsCompletedCount,
+                        jobsPendingCount = activeInbound.size + mergedActiveJobs.size,
+                        incomingDispatchAlert = alertJob
+                    )
+                    Log.d("GTS_TECH", "Polled ${activeInbound.size} inbound, ${mergedActiveJobs.size} active jobs for tech $techId")
                 }
             } catch (e: Exception) {
                 Log.w("GTS_TECH", "Polling backend jobs: ${e.message}")
@@ -566,7 +665,27 @@ class TechnicianDashboardViewModel(
     }
 
     fun logout() {
+        val techId = sessionManager.getTechnicianId()
+        val badge = sessionManager.getBadgeNumber()
+        val context = sessionManager.context
+
+        viewModelScope.launch {
+            try {
+                val api = ApiClient.getService(context)
+                if (techId.isNotEmpty()) {
+                    api.updateAvailability(techId, mapOf("isOnline" to false))
+                }
+                if (badge.isNotEmpty()) {
+                    api.updateAvailability(badge, mapOf("isOnline" to false))
+                }
+                Log.d("GTS_TECH", "Successfully synced OFFLINE status to cloud on logout")
+            } catch (e: Exception) {
+                Log.w("GTS_TECH", "Error setting offline status on logout: ${e.message}")
+            }
+        }
+
         dispatchPollingJob?.cancel()
+        sessionManager.setOnline(false)
         sessionManager.clearSession()
         realtimeStreamManager.disconnect()
     }

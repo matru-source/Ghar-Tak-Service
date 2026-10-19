@@ -373,7 +373,9 @@ export const db = {
       }
     }
 
-    const tech = dbStore.technicians.find((t) => t.id === id);
+    const tech = dbStore.technicians.find(
+      (t) => t.id === id || t.badgeNumber === id || (t as any).phone === id || (t as any).userId === id
+    );
     if (!tech) return null;
     tech.isOnline = isOnline;
     if (coords?.latitude !== undefined) tech.currentLatitude = coords.latitude;
@@ -843,42 +845,15 @@ export const db = {
         message: 'Dispatch accepted. Work order is EN_ROUTE to customer premises.',
       };
     } else {
-      // REJECT: Reassign or escalate
+      // REJECT: Mark cancelled so customer app immediately reflects cancellation
+      job.status = 'CANCELLED';
       job.technicianId = undefined;
       job.technicianName = undefined;
-
-      // Algorithmic Reassignment: Find next available online technician in same pincode or cluster
-      const isElectricalJob = job.serviceTitle?.toLowerCase().match(/electr|wire|mcb|panel|fan|ac|generator/);
-      const fallbacks = dbStore.technicians.filter(
-        (t) =>
-          t.id !== technicianId &&
-          (t.assignedPincode === job.pincode || !t.assignedPincode || dbStore.technicians.length <= 10) &&
-          t.isOnline &&
-          t.kycStatus !== 'REJECTED' &&
-          (!isElectricalJob || t.insulatedGlovesVerified || t.kycStatus === 'VERIFIED' || dbStore.technicians.length <= 5)
-      );
-
-      if (fallbacks.length > 0) {
-        fallbacks.sort((a, b) => b.rating - a.rating);
-        const nextTech = fallbacks[0];
-        job.technicianId = nextTech.id;
-        job.technicianName = nextTech.fullName;
-        job.status = 'ASSIGNED';
-        job.dispatchedAt = new Date().toISOString();
-        return {
-          job,
-          outcome: 'REASSIGNED',
-          reassignedTo: nextTech.fullName,
-          message: `Technician rejected (${rejectionReason || 'Declined'}). Reassigned immediately to ${nextTech.fullName}.`,
-        };
-      } else {
-        job.status = 'ESCALATED_SLA';
-        return {
-          job,
-          outcome: 'ESCALATED',
-          message: `Technician rejected (${rejectionReason || 'Declined'}). No standby technician available in ${job.pincode}. Escalated to SLA Emergency Queue.`,
-        };
-      }
+      return {
+        job,
+        outcome: 'CANCELLED',
+        message: `Technician rejected (${rejectionReason || 'Declined'}). Booking cancelled.`,
+      };
     }
   },
 
@@ -981,8 +956,8 @@ export const db = {
       throw new Error(`Job '${jobId}' not found`);
     }
 
-    if (job.status !== 'IN_PROGRESS' && job.status !== 'SAFETY_CHECKED') {
-      throw new Error(`Cannot complete job: Current status is '${job.status}'. Job must be IN_PROGRESS.`);
+    if (job.status !== 'IN_PROGRESS' && job.status !== 'SAFETY_CHECKED' && job.status !== 'ARRIVED' && job.status !== 'EN_ROUTE') {
+      throw new Error(`Cannot complete job: Current status is '${job.status}'. Job must be in active progress.`);
     }
 
     if (!data.handoverOtp || data.handoverOtp.trim() !== job.handoverOtp) {

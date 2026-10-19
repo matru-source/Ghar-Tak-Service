@@ -116,13 +116,21 @@ class CustomerTrackingViewModel(
                         }
                         val roundedDist = Math.max(0.03, (Math.round(calcDist * 100.0) / 100.0))
                         val calcEta = com.ghartak.customer.util.IndianPincodeResolver.calculateEtaMinutes(roundedDist)
-                        val isArrived = status == "ARRIVED" || roundedDist <= 0.05
+                        val isArrived = status == "ARRIVED" || (status == "EN_ROUTE" && roundedDist <= 0.05)
+                        val resolvedStatus = when {
+                            status == "COMPLETED" || status == "WORK_COMPLETED" || status == "SETTLED" -> "COMPLETED"
+                            status == "CANCELLED" -> "CANCELLED"
+                            status == "SAFETY_CHECKED" || status == "IN_PROGRESS" -> "IN_PROGRESS"
+                            isArrived -> "ARRIVED"
+                            status == "EN_ROUTE" -> "EN_ROUTE"
+                            else -> status // "ASSIGNED", "PENDING_DISPATCH"
+                        }
 
                         val resolvedTechArea = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(tLat, tLng)
                         val resolvedDestArea = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(dLat, dLng)
 
                         _uiState.value = _uiState.value.copy(
-                            status = if (isArrived && status != "COMPLETED" && status != "WORK_COMPLETED") "ARRIVED" else status,
+                            status = resolvedStatus,
                             distanceKm = roundedDist,
                             etaMinutes = calcEta,
                             techLatitude = tLat,
@@ -136,7 +144,7 @@ class CustomerTrackingViewModel(
                             technicianRating = tech.rating,
                             handoverOtp = if (!data.handoverOtp.isNullOrBlank()) data.handoverOtp else _uiState.value.handoverOtp,
                             isDoorstepArrived = isArrived || _uiState.value.isDoorstepArrived,
-                            isJobCompleted = status == "COMPLETED" || status == "WORK_COMPLETED" || status == "SETTLED"
+                            isJobCompleted = resolvedStatus == "COMPLETED"
                         )
                     }
                 } catch (e: Exception) {
@@ -180,6 +188,18 @@ class CustomerTrackingViewModel(
         Log.d("GTS_CUST_TRACK", "Received SSE event: $eventType with $data")
 
         when (eventType) {
+            "TECH_ACCEPTED" -> {
+                _uiState.value = _uiState.value.copy(
+                    status = "EN_ROUTE"
+                )
+            }
+
+            "TECH_REJECTED" -> {
+                _uiState.value = _uiState.value.copy(
+                    status = "CANCELLED"
+                )
+            }
+
             "TECH_LOCATION_UPDATE" -> {
                 val loc = data.optJSONObject("location")
                 val details = data.optJSONObject("details")
@@ -235,6 +255,20 @@ class CustomerTrackingViewModel(
                     status = "COMPLETED",
                     isJobCompleted = true
                 )
+            }
+        }
+    }
+
+    fun cancelBooking(context: Context, onCompleted: () -> Unit = {}) {
+        viewModelScope.launch {
+            try {
+                val api = ApiClient.getService(context)
+                api.cancelJob(_uiState.value.jobId)
+            } catch (e: Exception) {
+                Log.w("GTS_CUST_TRACK", "Cancel error: ${e.message}")
+            } finally {
+                _uiState.value = _uiState.value.copy(status = "CANCELLED")
+                onCompleted()
             }
         }
     }

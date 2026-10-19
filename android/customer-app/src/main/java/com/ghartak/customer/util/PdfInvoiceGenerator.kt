@@ -28,7 +28,7 @@ object PdfInvoiceGenerator {
         val customerName: String = "Customer",
         val customerPhone: String = "",
         val customerAddress: String = "",
-        val technicianName: String = "Rajesh Kumar (GTS-TECH-4091)",
+        val technicianName: String = "Certified Professional",
         val dateOfSupply: String = "Oct 15, 2026",
         val gstin: String = "21AAACG1234F1Z5 (21-OD)",
         val hsnSac: String = "998713 (Electrical installation and maintenance)",

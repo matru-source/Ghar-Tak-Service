@@ -56,10 +56,10 @@ class PaymentViewModel(
         pincode: String,
         addressText: String,
         priority: String,
-        technicianId: String = "GTS-TECH-4091",
-        technicianName: String = "Rajesh Kumar",
-        technicianBadge: String = "GTS-TECH-4091",
-        technicianPhone: String = "+91 98201 44091",
+        technicianId: String = "",
+        technicianName: String = "Certified Professional",
+        technicianBadge: String = "",
+        technicianPhone: String = "",
         stateCode: String = "OD"
     ) {
         val registered = ServiceCatalogRegistry.findService(serviceId)

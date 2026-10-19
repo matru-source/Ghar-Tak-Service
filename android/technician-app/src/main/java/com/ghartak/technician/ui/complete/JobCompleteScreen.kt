@@ -454,13 +454,31 @@ fun JobCompleteScreen(
             }
 
             if (state.errorMessage != null) {
-                Text(
-                    text = state.errorMessage ?: "",
-                    color = SafetyRed,
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center,
+                Surface(
+                    color = SafetyRed.copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, SafetyRed.copy(alpha = 0.6f)),
                     modifier = Modifier.fillMaxWidth()
-                )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = "Error",
+                            tint = SafetyRed,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = state.errorMessage ?: "",
+                            color = SafetyRed,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(6.dp))

@@ -1986,7 +1986,7 @@ fun TechnicianProfileContent(
                     )
                 }
 
-                // Bell Icon with "2" Badge
+                // Bell Icon with dynamic real notifications badge
                 Box(modifier = Modifier.size(36.dp), contentAlignment = Alignment.Center) {
                     IconButton(
                         onClick = { },
@@ -1994,17 +1994,19 @@ fun TechnicianProfileContent(
                             .size(36.dp)
                             .background(Color.White.copy(alpha = 0.2f), CircleShape)
                     ) {
-                        Icon(imageVector = Icons.Default.Notifications, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                        Icon(imageVector = Icons.Default.Notifications, contentDescription = "Notifications", tint = Color.White, modifier = Modifier.size(20.dp))
                     }
-                    Box(
-                        modifier = Modifier
-                            .size(17.dp)
-                            .align(Alignment.TopEnd)
-                            .clip(CircleShape)
-                            .background(Color(0xFFE53935)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = "2", color = Color.White, fontSize = 9.5.sp, fontWeight = FontWeight.Bold)
+                    if (state.newJobNotifications.isNotEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .size(17.dp)
+                                .align(Alignment.TopEnd)
+                                .clip(CircleShape)
+                                .background(Color(0xFFE53935)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = "${state.newJobNotifications.size}", color = Color.White, fontSize = 9.5.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }

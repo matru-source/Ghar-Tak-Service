@@ -74,8 +74,10 @@ fun CustomerHomeScreen(
     }
 
     if (showNotificationCenter) {
+        val activeTechName = sessionManager.getActiveJobTechnicianName().ifBlank { "Certified Professional" }
         NotificationCenterDialog(
             unreadCount = unreadNotificationCount,
+            technicianName = activeTechName,
             onDismiss = { showNotificationCenter = false },
             onClearAll = {
                 unreadNotificationCount = 0
@@ -1297,6 +1299,7 @@ fun ServiceItemRow(
 @Composable
 fun NotificationCenterDialog(
     unreadCount: Int,
+    technicianName: String = "Certified Professional",
     onDismiss: () -> Unit,
     onClearAll: () -> Unit,
     onTrackLive: () -> Unit
@@ -1382,7 +1385,7 @@ fun NotificationCenterDialog(
                         iconTint = SapphireBlue800,
                         iconBg = Color(0xFFEFF6FF),
                         title = "Technician En Route",
-                        subtitle = "Rajesh Kumar (Master Electrician) is on the way to your doorstep. ETA ~15 mins.",
+                        subtitle = "${technicianName.ifBlank { "Certified Professional" }} is on the way to your doorstep. ETA ~15 mins.",
                         time = "10 mins ago",
                         actionLabel = "Track Live >",
                         onAction = onTrackLive

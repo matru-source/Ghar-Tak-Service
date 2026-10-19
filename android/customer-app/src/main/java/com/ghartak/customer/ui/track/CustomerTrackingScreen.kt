@@ -23,6 +23,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -65,13 +66,21 @@ fun CustomerTrackingScreen(
                 title = {
                     Column {
                         Text(
-                            text = "LIVE ELECTRICIAN TRACKING",
+                            text = when (state.status) {
+                                "ASSIGNED", "PENDING_DISPATCH" -> "AWAITING ACCEPTANCE"
+                                "CANCELLED" -> "BOOKING DECLINED"
+                                else -> "LIVE ELECTRICIAN TRACKING"
+                            },
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = TextDarkPrimary
                         )
                         Text(
-                            text = "Ticket: ${state.ticketNumber} • Real-Time SSE",
+                            text = when (state.status) {
+                                "ASSIGNED", "PENDING_DISPATCH" -> "Ticket: ${state.ticketNumber} • Dispatched"
+                                "CANCELLED" -> "Ticket: ${state.ticketNumber} • Declined"
+                                else -> "Ticket: ${state.ticketNumber} • Real-Time SSE"
+                            },
                             fontSize = 11.sp,
                             color = SapphireBlue800
                         )
@@ -88,6 +97,7 @@ fun CustomerTrackingScreen(
                             "ARRIVED" -> SuccessGreen.copy(alpha = 0.15f)
                             "IN_PROGRESS" -> SapphireBlue800.copy(alpha = 0.15f)
                             "COMPLETED" -> SuccessGreen.copy(alpha = 0.2f)
+                            "CANCELLED" -> Color(0xFFEF4444).copy(alpha = 0.15f)
                             else -> WarningAmber.copy(alpha = 0.15f)
                         },
                         shape = RoundedCornerShape(20.dp),
@@ -105,6 +115,7 @@ fun CustomerTrackingScreen(
                                         when (state.status) {
                                             "ARRIVED", "COMPLETED" -> SuccessGreen
                                             "IN_PROGRESS" -> SapphireBlue800
+                                            "CANCELLED" -> Color(0xFFDC2626)
                                             else -> WarningAmber
                                         }
                                     )
@@ -112,6 +123,8 @@ fun CustomerTrackingScreen(
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = when (state.status) {
+                                    "ASSIGNED", "PENDING_DISPATCH" -> "DISPATCHED"
+                                    "CANCELLED" -> "DECLINED"
                                     "ARRIVED" -> "AT DOORSTEP"
                                     "IN_PROGRESS" -> "REPAIRING"
                                     "COMPLETED" -> "COMPLETED"
@@ -120,6 +133,7 @@ fun CustomerTrackingScreen(
                                 color = when (state.status) {
                                     "ARRIVED", "COMPLETED" -> SuccessGreen
                                     "IN_PROGRESS" -> SapphireBlue800
+                                    "CANCELLED" -> Color(0xFFDC2626)
                                     else -> Color(0xFFB45309)
                                 },
                                 fontSize = 10.5.sp,
@@ -141,7 +155,25 @@ fun CustomerTrackingScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 1. Lifecycle Progress Stepper (4-Stage with Timestamps)
+            when (state.status) {
+                "ASSIGNED", "PENDING_DISPATCH" -> {
+                    AwaitingTechnicianAcceptanceView(
+                        state = state,
+                        onCancelBooking = {
+                            viewModel.cancelBooking(context) {
+                                onBack()
+                            }
+                        }
+                    )
+                }
+                "CANCELLED" -> {
+                    TechnicianCancelledView(
+                        state = state,
+                        onChooseAnother = onBack
+                    )
+                }
+                else -> {
+                    // 1. Lifecycle Progress Stepper (4-Stage with Timestamps)
             TrackingLifecycleStepper(state = state)
 
             // 2. Tactical Midnight Live Map Visualizer with City Grid & SSE Beacon
@@ -574,6 +606,337 @@ fun CustomerTrackingScreen(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
+        }
+    }
+}
+
+// -------------------------------------------------------------
+// Component: Awaiting Technician Acceptance (Radar Pulse & Escrow)
+// -------------------------------------------------------------
+@Composable
+fun AwaitingTechnicianAcceptanceView(
+    state: CustomerTrackingUiState,
+    onCancelBooking: () -> Unit
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 0.95f,
+        targetValue = 1.05f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseScale"
+    )
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // 1. Radar Pulse Circle Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(96.dp)
+                        .scale(pulseScale)
+                        .clip(CircleShape)
+                        .background(SapphireBlue800.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(72.dp)
+                            .clip(CircleShape)
+                            .background(SapphireBlue800.copy(alpha = 0.2f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Surface(
+                            modifier = Modifier.size(52.dp),
+                            shape = CircleShape,
+                            color = SapphireBlue800
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Sensors,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                Text(
+                    text = "Awaiting Confirmation",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Black,
+                    color = TextDarkPrimary
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Work order dispatched to ${state.technicianName}. Waiting for the professional to confirm and accept...",
+                    fontSize = 13.sp,
+                    color = TextDarkMuted,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 18.sp
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = SapphireBlue800,
+                    trackColor = SapphireBlue800.copy(alpha = 0.15f)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Expected response: ~60 seconds",
+                    fontSize = 11.sp,
+                    color = TextDarkMuted,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+
+        // 2. Selected Technician Profile Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    modifier = Modifier.size(52.dp),
+                    shape = CircleShape,
+                    color = SapphireBlue800
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = state.technicianName.split(" ").mapNotNull { it.firstOrNull()?.toString() }.take(2).joinToString("").uppercase().ifEmpty { "TK" },
+                            color = Color.White,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 18.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(14.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = state.technicianName,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextDarkPrimary
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            imageVector = Icons.Default.Verified,
+                            contentDescription = "Verified",
+                            tint = Color(0xFF10B981),
+                            modifier = Modifier.size(15.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "${state.technicianBadge} • ${state.serviceTitle}",
+                        fontSize = 11.5.sp,
+                        color = TextDarkMuted
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "★ ${"%.1f".format(state.technicianRating)}  •  ${state.technicianCompletedJobs}",
+                        fontSize = 11.sp,
+                        color = Color(0xFFD97706),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
+
+        // 3. 100% Escrow Protection Card
+        Surface(
+            color = Color(0xFFECFDF5),
+            shape = RoundedCornerShape(14.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFA7F3D0)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Shield,
+                    contentDescription = null,
+                    tint = Color(0xFF059669),
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = "100% Escrow & Refund Protection",
+                        color = Color(0xFF065F46),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Your booking payment is safely held. If the professional cannot accept, 100% refund is credited immediately.",
+                        color = Color(0xFF047857),
+                        fontSize = 11.sp
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // 4. Cancel Request Button
+        OutlinedButton(
+            onClick = onCancelBooking,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = RoundedCornerShape(12.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE53935).copy(alpha = 0.5f))
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = null,
+                tint = Color(0xFFE53935),
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "CANCEL BOOKING REQUEST",
+                color = Color(0xFFE53935),
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp
+            )
+        }
+    }
+}
+
+// -------------------------------------------------------------
+// Component: Technician Cancelled / Declined View
+// -------------------------------------------------------------
+@Composable
+fun TechnicianCancelledView(
+    state: CustomerTrackingUiState,
+    onChooseAnother: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFCA5A5))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFFEE2E2)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Cancel,
+                        contentDescription = "Declined",
+                        tint = Color(0xFFDC2626),
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Booking Declined",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Black,
+                    color = Color(0xFF991B1B)
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = "${state.technicianName} was unable to accept your request at this time.",
+                    fontSize = 13.sp,
+                    color = TextDarkPrimary,
+                    fontWeight = FontWeight.Medium,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "No charges have been deducted. You can choose another top-rated professional near your area right now.",
+                    fontSize = 12.sp,
+                    color = TextDarkMuted,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 17.sp
+                )
+            }
+        }
+
+        // Choose Another Professional CTA Button
+        Button(
+            onClick = onChooseAnother,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
+        ) {
+            Icon(
+                imageVector = Icons.Default.PersonSearch,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "CHOOSE ANOTHER PROFESSIONAL",
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp,
+                color = Color.White
+            )
         }
     }
 }

@@ -444,6 +444,23 @@ class TechnicianAuthViewModel(
     }
 
     fun logout() {
+        val techId = sessionManager.getTechnicianId()
+        val badge = sessionManager.getBadgeNumber()
+        val context = sessionManager.context
+        viewModelScope.launch {
+            try {
+                val api = com.ghartak.technician.data.api.ApiClient.getService(context)
+                if (techId.isNotEmpty()) {
+                    api.updateAvailability(techId, mapOf("isOnline" to false))
+                }
+                if (badge.isNotEmpty()) {
+                    api.updateAvailability(badge, mapOf("isOnline" to false))
+                }
+            } catch (e: Exception) {
+                // ignore
+            }
+        }
+        sessionManager.setOnline(false)
         sessionManager.clearSession()
         _uiState.value = TechnicianAuthUiState(
             mode = "LOGIN",

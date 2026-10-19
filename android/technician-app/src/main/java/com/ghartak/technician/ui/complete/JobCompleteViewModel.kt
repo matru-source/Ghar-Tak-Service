@@ -102,16 +102,13 @@ class JobCompleteViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSubmitting = true, errorMessage = null)
 
-            var realInvoiceNumber: String? = null
             try {
-                // 15s network timeout for reliable cloud API communication
+                val api = ApiClient.getService(context)
+                val targetJobId = state.jobId.ifEmpty { "job_od_live_01" }
+
                 val res = withTimeoutOrNull(15000L) {
-                    val api = ApiClient.getService(context)
-                    val sm = SessionManager(context)
-                    val pin = sm.getPincode()
-                    val defaultJobId = if (pin.startsWith("75") || pin.startsWith("76") || pin.startsWith("77")) "job_od_live_01" else "job_mh_live_01"
                     api.completeJob(
-                        jobId = state.jobId.ifEmpty { defaultJobId },
+                        jobId = targetJobId,
                         request = JobCompleteRequest(
                             handoverOtp = state.enteredOtp,
                             afterPhotoUrl = state.afterPhotoUri ?: "local_restored_panel.jpg",
@@ -120,27 +117,51 @@ class JobCompleteViewModel(
                         )
                     )
                 }
-                if (res?.isSuccessful == true && res.body()?.data != null) {
-                    realInvoiceNumber = res.body()!!.data!!.invoiceNumber
+
+                if (res != null && res.isSuccessful && res.body()?.data != null) {
+                    // OTP Verification PASSED
+                    val realInvoiceNumber = res.body()!!.data!!.invoiceNumber
+                    val sm = SessionManager(context)
+                    try {
+                        sm.addEarnings(state.technicianPayoutInr)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                    val pin = sm.getPincode()
+                    val statePrefix = if (pin.startsWith("75") || pin.startsWith("76") || pin.startsWith("77")) "OD" else "MH"
+                    _uiState.value = _uiState.value.copy(
+                        isSubmitting = false,
+                        isCompleted = true,
+                        invoiceNumber = realInvoiceNumber ?: ("INV-2026-$statePrefix-" + (1000..9999).random()),
+                        errorMessage = null
+                    )
+                    onSuccess()
+                } else {
+                    // OTP Verification FAILED or backend rejected
+                    val errorRaw = res?.errorBody()?.string()
+                    val errorMsg = try {
+                        if (!errorRaw.isNullOrBlank()) {
+                            val json = org.json.JSONObject(errorRaw)
+                            json.optString("details", json.optString("error", "Verification failed. Invalid handover OTP."))
+                        } else {
+                            "Invalid handover OTP. The 4-digit code does not match customer's verification code."
+                        }
+                    } catch (e: Exception) {
+                        "Invalid handover OTP (${state.enteredOtp}). Please request correct OTP from customer."
+                    }
+                    _uiState.value = _uiState.value.copy(
+                        isSubmitting = false,
+                        isCompleted = false,
+                        errorMessage = errorMsg
+                    )
                 }
             } catch (e: Throwable) {
-                Log.w("GTS_COMPLETE", "Network completion fallback handled: ${e.message}")
-            } finally {
-                delay(400) // Fast snappy transition
-                val sm = SessionManager(context)
-                try {
-                    sm.addEarnings(state.technicianPayoutInr)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-                val pin = sm.getPincode()
-                val statePrefix = if (pin.startsWith("75") || pin.startsWith("76") || pin.startsWith("77")) "OD" else "MH"
+                Log.w("GTS_COMPLETE", "Network completion error: ${e.message}")
                 _uiState.value = _uiState.value.copy(
                     isSubmitting = false,
-                    isCompleted = true,
-                    invoiceNumber = realInvoiceNumber ?: ("INV-2026-$statePrefix-" + (1000..9999).random())
+                    isCompleted = false,
+                    errorMessage = "Verification error: ${e.message ?: "Unable to contact verification server. Please retry."}"
                 )
-                onSuccess()
             }
         }
     }

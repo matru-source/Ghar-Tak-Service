@@ -42,4 +42,8 @@ interface CustomerApiService {
     // Pincode Serviceability Check
     @GET("pincodes/check-serviceable")
     suspend fun checkPincode(@Query("pincode") pincode: String): Response<ApiResponse<Map<String, Any>>>
+
+    // Cancel Job
+    @POST("jobs/{id}/cancel")
+    suspend fun cancelJob(@Path("id") jobId: String): Response<ApiResponse<Map<String, Any>>>
 }
