@@ -157,6 +157,7 @@ class ServiceSignoffViewModel(
                         status = "COMPLETED"
                     )
                 )
+                sessionManager.clearActiveJob()
             } catch (e: Exception) {
                 e.printStackTrace()
             }

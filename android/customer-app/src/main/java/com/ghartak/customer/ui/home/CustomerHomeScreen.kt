@@ -751,20 +751,47 @@ fun CustomerHomeScreen(
                                             Spacer(modifier = Modifier.width(8.dp))
 
                                             // Technician Avatar & Rating
+                                            val activeTechName = remember(state.activeJobTechnician) {
+                                                state.activeJobTechnician
+                                                    .replace(" (En Route)", "")
+                                                    .replace(" (Assigned)", "")
+                                                    .trim()
+                                                    .ifEmpty { "Electrician" }
+                                            }
+                                            val initialChar = activeTechName.firstOrNull()?.uppercase() ?: "T"
+
                                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Image(
-                                                    painter = painterResource(id = R.drawable.img_technician_rajesh),
-                                                    contentDescription = "Technician Rajesh",
-                                                    contentScale = ContentScale.Crop,
-                                                    modifier = Modifier
-                                                        .size(38.dp)
-                                                        .clip(CircleShape)
-                                                        .border(1.dp, Color(0xFFCBD5E1), CircleShape)
-                                                )
+                                                if (activeTechName.contains("Rajesh", ignoreCase = true)) {
+                                                    Image(
+                                                        painter = painterResource(id = R.drawable.img_technician_rajesh),
+                                                        contentDescription = activeTechName,
+                                                        contentScale = ContentScale.Crop,
+                                                        modifier = Modifier
+                                                            .size(38.dp)
+                                                            .clip(CircleShape)
+                                                            .border(1.dp, Color(0xFFCBD5E1), CircleShape)
+                                                    )
+                                                } else {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .size(38.dp)
+                                                            .clip(CircleShape)
+                                                            .background(SapphireBlue800)
+                                                            .border(1.dp, Color(0xFFCBD5E1), CircleShape),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Text(
+                                                            text = initialChar,
+                                                            color = Color.White,
+                                                            fontSize = 15.sp,
+                                                            fontWeight = FontWeight.Bold
+                                                        )
+                                                    }
+                                                }
                                                 Spacer(modifier = Modifier.width(8.dp))
                                                 Column {
                                                     Text(
-                                                        text = "Rajesh",
+                                                        text = activeTechName,
                                                         fontSize = 12.sp,
                                                         fontWeight = FontWeight.Bold,
                                                         color = TextDarkPrimary
@@ -783,7 +810,7 @@ fun CustomerHomeScreen(
                                                         )
                                                         Spacer(modifier = Modifier.width(2.dp))
                                                         Text(
-                                                            text = "4.8",
+                                                            text = "4.9",
                                                             fontSize = 10.5.sp,
                                                             fontWeight = FontWeight.Bold,
                                                             color = TextDarkPrimary
@@ -843,7 +870,7 @@ fun CustomerHomeScreen(
                                                             color = TextDarkMuted
                                                         )
                                                         Text(
-                                                            text = "15 mins",
+                                                            text = state.activeJobEta.ifEmpty { "15 mins" },
                                                             fontSize = 11.sp,
                                                             fontWeight = FontWeight.Black,
                                                             color = SapphireBlue800

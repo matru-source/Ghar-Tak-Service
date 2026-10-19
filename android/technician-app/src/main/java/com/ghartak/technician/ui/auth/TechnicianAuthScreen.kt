@@ -78,6 +78,7 @@ fun TechnicianAuthScreen(
     var showEnvSwitcher by remember { mutableStateOf(false) }
     var showGoogleAccountChooser by remember { mutableStateOf(false) }
     var expandedTradeMenu by remember { mutableStateOf(false) }
+    var expandedExpMenu by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.isLoggedIn) {
         if (state.isLoggedIn) {
@@ -890,9 +891,123 @@ fun TechnicianAuthScreen(
                             OutlinedTextField(
                                 value = state.pincode,
                                 onValueChange = { viewModel.onPincodeChanged(it) },
-                                placeholder = { Text("6-digit postal code (e.g. 400001)", fontSize = 13.sp, color = Color(0xFF94A3B8)) },
+                                placeholder = { Text("6-digit postal code (e.g. 760001)", fontSize = 13.sp, color = Color(0xFF94A3B8)) },
                                 leadingIcon = { Icon(Icons.Default.Place, contentDescription = null, tint = SapphireBlue800, modifier = Modifier.size(18.dp)) },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = SapphireBlue800,
+                                    unfocusedBorderColor = Color(0xFFE2E8F0)
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Text(
+                                text = "Experience Level",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextDarkPrimary
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Box(modifier = Modifier.fillMaxWidth()) {
+                                OutlinedTextField(
+                                    value = state.experience,
+                                    onValueChange = { viewModel.onExperienceChanged(it) },
+                                    placeholder = { Text("e.g. 3+ Years, 5+ Years", fontSize = 13.sp, color = Color(0xFF94A3B8)) },
+                                    leadingIcon = { Icon(Icons.Default.WorkHistory, contentDescription = null, tint = SapphireBlue800, modifier = Modifier.size(18.dp)) },
+                                    trailingIcon = {
+                                        IconButton(onClick = { expandedExpMenu = !expandedExpMenu }) {
+                                            Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Experience")
+                                        }
+                                    },
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = SapphireBlue800,
+                                        unfocusedBorderColor = Color(0xFFE2E8F0)
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                DropdownMenu(
+                                    expanded = expandedExpMenu,
+                                    onDismissRequest = { expandedExpMenu = false },
+                                    modifier = Modifier.fillMaxWidth(0.85f)
+                                ) {
+                                    listOf("Fresher (< 1 Year)", "1 - 2 Years", "3 - 5 Years", "5 - 8 Years", "8+ Years Expert").forEach { exp ->
+                                        DropdownMenuItem(
+                                            text = { Text(exp, fontSize = 13.sp) },
+                                            onClick = {
+                                                viewModel.onExperienceChanged(exp)
+                                                expandedExpMenu = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Text(
+                                text = "City / Service Location",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextDarkPrimary
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            OutlinedTextField(
+                                value = state.locationCity,
+                                onValueChange = { viewModel.onLocationCityChanged(it) },
+                                placeholder = { Text("e.g. Berhampur, Odisha or Mumbai, MH", fontSize = 13.sp, color = Color(0xFF94A3B8)) },
+                                leadingIcon = { Icon(Icons.Default.LocationCity, contentDescription = null, tint = SapphireBlue800, modifier = Modifier.size(18.dp)) },
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = SapphireBlue800,
+                                    unfocusedBorderColor = Color(0xFFE2E8F0)
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Text(
+                                text = "Electrical License / Certification",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextDarkPrimary
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            OutlinedTextField(
+                                value = state.licenseNumber,
+                                onValueChange = { viewModel.onLicenseChanged(it) },
+                                placeholder = { Text("e.g. State Wireman License # or ITI", fontSize = 13.sp, color = Color(0xFF94A3B8)) },
+                                leadingIcon = { Icon(Icons.Default.VerifiedUser, contentDescription = null, tint = SapphireBlue800, modifier = Modifier.size(18.dp)) },
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = SapphireBlue800,
+                                    unfocusedBorderColor = Color(0xFFE2E8F0)
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Text(
+                                text = "Languages Spoken",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextDarkPrimary
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            OutlinedTextField(
+                                value = state.languages,
+                                onValueChange = { viewModel.onLanguagesChanged(it) },
+                                placeholder = { Text("e.g. Odia, Hindi, English", fontSize = 13.sp, color = Color(0xFF94A3B8)) },
+                                leadingIcon = { Icon(Icons.Default.Language, contentDescription = null, tint = SapphireBlue800, modifier = Modifier.size(18.dp)) },
                                 singleLine = true,
                                 shape = RoundedCornerShape(12.dp),
                                 colors = OutlinedTextFieldDefaults.colors(

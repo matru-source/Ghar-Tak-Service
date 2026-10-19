@@ -48,11 +48,47 @@ class NavigationViewModel(
     private val _uiState = MutableStateFlow(NavigationUiState())
     val uiState: StateFlow<NavigationUiState> = _uiState.asStateFlow()
 
+    private fun calculateHaversineKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val r = 6371.0
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+        val a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2)
+        val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+        return r * c
+    }
+
     fun initJob(job: TechnicianJob) {
         val pin = job.pincode
         val isOdisha = pin.startsWith("75") || pin.startsWith("76") || pin.startsWith("77")
         val defaultLat = if (isOdisha) 19.3150 else 18.9067
         val defaultLng = if (isOdisha) 84.7941 else 72.8147
+
+        val context = sessionManager.context
+        val hasFine = ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val lm = context.getSystemService(Context.LOCATION_SERVICE) as? android.location.LocationManager
+        var currentLat = defaultLat + 0.012
+        var currentLng = defaultLng + 0.012
+
+        if (hasFine && lm != null) {
+            try {
+                val loc = lm.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
+                    ?: lm.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER)
+                if (loc != null) {
+                    currentLat = loc.latitude
+                    currentLng = loc.longitude
+                }
+            } catch (e: Exception) {
+                // Keep coordinate fallback
+            }
+        }
+
+        val targetLat = job.customerLatitude ?: defaultLat
+        val targetLng = job.customerLongitude ?: defaultLng
+        val realDist = calculateHaversineKm(currentLat, currentLng, targetLat, targetLng)
+        val roundedDist = Math.max(0.1, (Math.round(realDist * 10.0) / 10.0).toDouble())
+        val calcEta = Math.max(2, (roundedDist * 4).toInt())
 
         _uiState.value = _uiState.value.copy(
             jobId = job.id,
@@ -61,10 +97,12 @@ class NavigationViewModel(
             customerName = job.customerName,
             customerPhone = job.customerPhone,
             customerAddress = job.customerAddressText,
-            customerLat = job.customerLatitude ?: defaultLat,
-            customerLng = job.customerLongitude ?: defaultLng,
-            distanceRemainingKm = 1.4,
-            etaMinutes = 6,
+            customerLat = targetLat,
+            customerLng = targetLng,
+            currentLat = currentLat,
+            currentLng = currentLng,
+            distanceRemainingKm = roundedDist,
+            etaMinutes = calcEta,
             transitStep = 0,
             hasArrivedDoorstep = false
         )

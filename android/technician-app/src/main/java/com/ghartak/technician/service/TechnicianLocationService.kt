@@ -83,16 +83,31 @@ class TechnicianLocationService : Service() {
             val pin = sessionManager.getPincode().ifEmpty { "760001" }
             val isOdisha = pin.startsWith("75") || pin.startsWith("76") || pin.startsWith("77")
 
+            val lm = applicationContext.getSystemService(Context.LOCATION_SERVICE) as? android.location.LocationManager
             var currentLat = if (isOdisha) 19.3150 else 18.9220
             var currentLng = if (isOdisha) 84.7941 else 72.8347
 
             while (isRunning && isActive) {
                 try {
+                    if (lm != null && (hasFine || hasCoarse)) {
+                        try {
+                            val lastGps = if (hasFine) lm.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER) else null
+                            val lastNet = if (hasCoarse) lm.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER) else null
+                            val best = lastGps ?: lastNet
+                            if (best != null) {
+                                currentLat = best.latitude
+                                currentLng = best.longitude
+                            }
+                        } catch (e: SecurityException) {
+                            Log.w("GTS_LOC_SVC", "Location read error: ${e.message}")
+                        }
+                    }
+
                     val api = ApiClient.getService(applicationContext)
                     val response = api.sendTelemetry(
                         TelemetryPingRequest(
                             technicianId = techId,
-                            jobId = activeJobId ?: "job_mh_live_01",
+                            jobId = activeJobId ?: "job_live_01",
                             latitude = currentLat,
                             longitude = currentLng,
                             heading = 195.0,

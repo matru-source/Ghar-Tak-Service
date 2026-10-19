@@ -333,6 +333,9 @@ class CustomerAuthViewModel(
                 pincode = pincode
             )
 
+            // Clear any stale active jobs so new accounts start completely fresh
+            sessionManager.clearActiveJob()
+
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
                 isLoggedIn = true,

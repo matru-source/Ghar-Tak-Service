@@ -119,19 +119,19 @@ class DispatchAlertViewModel(
             customerAddressText = "Doorstep Delivery Address, PIN: $pin",
             customerLatitude = if (isOdisha) 19.3150 else 18.9220,
             customerLongitude = if (isOdisha) 84.7941 else 72.8347,
-            status = "ASSIGNED",
+            status = "EN_ROUTE",
             priority = "STANDARD",
             totalAmountInr = 352.82,
             safetyGlovesConfirmed = false,
             safetyMcbSwitchConfirmed = false,
-            handoverOtp = "4819"
+            handoverOtp = ""
         )
         acceptDispatch(context, fallback, onSuccess)
     }
 
     private fun handleFallbackAccept(job: TechnicianJob, onSuccess: (TechnicianJob) -> Unit) {
         _uiState.value = _uiState.value.copy(isAccepting = false)
-        val acceptedJob = job.copy(status = "ASSIGNED")
+        val acceptedJob = job.copy(status = "EN_ROUTE")
         onSuccess(acceptedJob)
     }
 

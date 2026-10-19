@@ -550,11 +550,23 @@ export const db = {
     }
 
     return dbStore.jobs.filter((j) => {
-      if (filter?.pincode && j.pincode !== filter.pincode) return false;
-      if (filter?.partnerId && j.partnerId !== filter.partnerId) return false;
-      if (filter?.technicianId && j.technicianId !== filter.technicianId) return false;
       if (filter?.customerId && j.customerId !== filter.customerId) return false;
       if (filter?.status && j.status !== filter.status) return false;
+
+      if (filter?.technicianId) {
+        const tech = dbStore.technicians.find(
+          (t) => t.id === filter.technicianId || t.badgeNumber === filter.technicianId
+        );
+        const techPin = tech?.assignedPincode;
+        const matchesTech =
+          j.technicianId === filter.technicianId ||
+          (tech && (j.technicianId === tech.id || j.technicianId === tech.badgeNumber)) ||
+          (techPin && j.pincode === techPin && (j.status === 'ASSIGNED' || j.status === 'PENDING_DISPATCH' || j.status === 'DISPATCHED'));
+        if (!matchesTech) return false;
+      } else if (filter?.pincode && j.pincode !== filter.pincode) {
+        return false;
+      }
+      if (filter?.partnerId && j.partnerId !== filter.partnerId) return false;
       if (filter?.search) {
         const q = filter.search.toLowerCase();
         return (
@@ -699,19 +711,16 @@ export const db = {
     }
 
     if (!assignedTech) {
-      // 2. Prioritize any online mobile technician
-      const anyOnline = dbStore.technicians.filter(
-        (t) => t.isOnline && t.kycStatus !== 'REJECTED'
+      // 2. Prioritize regional online mobile technician
+      const statePrefix = params.pincode.substring(0, 2);
+      const regionalOnline = dbStore.technicians.filter(
+        (t) => t.isOnline && t.kycStatus !== 'REJECTED' && t.assignedPincode?.startsWith(statePrefix)
       );
-      if (anyOnline.length > 0) {
-        // Prioritize dynamic app-registered technicians
-        anyOnline.sort((a, b) => (b.id.startsWith('tech_') ? 1 : 0) - (a.id.startsWith('tech_') ? 1 : 0));
-        assignedTech = anyOnline[0];
+      if (regionalOnline.length > 0) {
+        // Prioritize dynamic app-registered technicians in this region
+        regionalOnline.sort((a, b) => (b.id.startsWith('tech_') ? 1 : 0) - (a.id.startsWith('tech_') ? 1 : 0));
+        assignedTech = regionalOnline[0];
       }
-    }
-
-    if (!assignedTech) {
-      assignedTech = dbStore.technicians[0] || null;
     }
 
     const now = new Date();
@@ -821,7 +830,7 @@ export const db = {
     }
 
     if (action === 'ACCEPT') {
-      job.status = 'ASSIGNED';
+      job.status = 'EN_ROUTE';
       job.technicianId = technicianId;
       const tech = dbStore.technicians.find((t) => t.id === technicianId);
       if (tech) job.technicianName = tech.fullName;
@@ -829,7 +838,7 @@ export const db = {
       return {
         job,
         outcome: 'ACCEPTED',
-        message: 'Dispatch accepted. Ready to navigate to customer premises.',
+        message: 'Dispatch accepted. Work order is EN_ROUTE to customer premises.',
       };
     } else {
       // REJECT: Reassign or escalate
@@ -873,13 +882,14 @@ export const db = {
 
   async updateJobStatus(jobId: string, newStatus: string, metadata?: { actorId?: string; reason?: string }) {
     const validTransitions: Record<string, string[]> = {
-      PENDING_DISPATCH: ['ASSIGNED', 'CANCELLED', 'ESCALATED_SLA'],
-      ASSIGNED: ['EN_ROUTE', 'CANCELLED', 'ESCALATED_SLA', 'PENDING_DISPATCH'],
+      PENDING_DISPATCH: ['ASSIGNED', 'EN_ROUTE', 'CANCELLED', 'ESCALATED_SLA'],
+      ASSIGNED: ['EN_ROUTE', 'ARRIVED', 'CANCELLED', 'ESCALATED_SLA', 'PENDING_DISPATCH'],
       EN_ROUTE: ['ARRIVED', 'CANCELLED', 'ESCALATED_SLA'],
-      ARRIVED: ['SAFETY_CHECKED', 'CANCELLED', 'ESCALATED_SLA'],
-      SAFETY_CHECKED: ['IN_PROGRESS', 'CANCELLED', 'ESCALATED_SLA'],
-      IN_PROGRESS: ['WORK_COMPLETED', 'ESCALATED_SLA', 'CANCELLED'],
-      WORK_COMPLETED: ['PAYMENT_PENDING', 'SETTLED'],
+      ARRIVED: ['SAFETY_CHECKED', 'IN_PROGRESS', 'CANCELLED', 'ESCALATED_SLA'],
+      SAFETY_CHECKED: ['IN_PROGRESS', 'WORK_COMPLETED', 'COMPLETED', 'CANCELLED', 'ESCALATED_SLA'],
+      IN_PROGRESS: ['WORK_COMPLETED', 'COMPLETED', 'ESCALATED_SLA', 'CANCELLED'],
+      WORK_COMPLETED: ['COMPLETED', 'PAYMENT_PENDING', 'SETTLED'],
+      COMPLETED: ['PAYMENT_PENDING', 'SETTLED'],
       PAYMENT_PENDING: ['SETTLED'],
       SETTLED: [],
       CANCELLED: [],
@@ -973,12 +983,12 @@ export const db = {
       throw new Error(`Cannot complete job: Current status is '${job.status}'. Job must be IN_PROGRESS.`);
     }
 
-    if (!data.handoverOtp || (data.handoverOtp.trim() !== job.handoverOtp && data.handoverOtp.trim() !== '4819')) {
+    if (!data.handoverOtp || data.handoverOtp.trim() !== job.handoverOtp) {
       throw new Error(`Invalid handover OTP. The code provided does not match customer's 4-digit verification code.`);
     }
 
     const now = new Date().toISOString();
-    job.status = 'WORK_COMPLETED';
+    job.status = 'COMPLETED';
     job.completedAt = now;
     if (data.afterPhotoUrl) job.afterPhotoUrl = data.afterPhotoUrl;
     if (data.customerRating) job.customerRating = data.customerRating;

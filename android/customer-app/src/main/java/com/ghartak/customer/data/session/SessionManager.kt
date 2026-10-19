@@ -224,19 +224,42 @@ class SessionManager(val context: Context) {
     // -------------------------------------------------------------
     // Active Job / Order Persistence (Fix for amount/service mismatch)
     // -------------------------------------------------------------
+    fun hasActiveJob(): Boolean {
+        val id = prefs.getString(KEY_ACTIVE_JOB_ID, null)
+        return !id.isNullOrBlank()
+    }
+
+    fun clearActiveJob() {
+        prefs.edit().apply {
+            remove(KEY_ACTIVE_JOB_ID)
+            remove(KEY_ACTIVE_JOB_TITLE)
+            remove(KEY_ACTIVE_JOB_BASE_PRICE)
+            remove(KEY_ACTIVE_JOB_GST)
+            remove(KEY_ACTIVE_JOB_TOTAL)
+            remove(KEY_ACTIVE_JOB_TECH_NAME)
+            remove(KEY_ACTIVE_JOB_TECH_BADGE)
+            remove(KEY_ACTIVE_JOB_TECH_PHONE)
+            remove(KEY_ACTIVE_JOB_TICKET_NO)
+            remove(KEY_ACTIVE_JOB_STATE_CODE)
+            remove(KEY_ACTIVE_JOB_GSTIN)
+            remove(KEY_ACTIVE_JOB_OTP)
+            apply()
+        }
+    }
+
     fun saveActiveJob(
         id: String,
         title: String,
         basePrice: Double,
         gst: Double,
         total: Double,
-        technicianName: String = "Rajesh Kumar",
-        technicianBadge: String = "GTS-TECH-4091",
-        technicianPhone: String = "+91 98201 44091",
-        ticketNumber: String = "GTS-OD-5638",
+        technicianName: String = "",
+        technicianBadge: String = "",
+        technicianPhone: String = "",
+        ticketNumber: String = "",
         stateCode: String = "OD",
         gstin: String = "21AAACG1234F1Z5 (21-OD)",
-        handoverOtp: String = "4819"
+        handoverOtp: String = ""
     ) {
         prefs.edit().apply {
             putString(KEY_ACTIVE_JOB_ID, id)
@@ -255,34 +278,34 @@ class SessionManager(val context: Context) {
         }
     }
 
-    fun getActiveJobOtp(): String = prefs.getString(KEY_ACTIVE_JOB_OTP, "4819") ?: "4819"
+    fun getActiveJobOtp(): String = prefs.getString(KEY_ACTIVE_JOB_OTP, "") ?: ""
 
-    fun getActiveJobId(): String = prefs.getString(KEY_ACTIVE_JOB_ID, "job_od_live_01") ?: "job_od_live_01"
+    fun getActiveJobId(): String = prefs.getString(KEY_ACTIVE_JOB_ID, "") ?: ""
 
-    fun getActiveJobTitle(): String = prefs.getString(KEY_ACTIVE_JOB_TITLE, "Fan Installation") ?: "Fan Installation"
+    fun getActiveJobTitle(): String = prefs.getString(KEY_ACTIVE_JOB_TITLE, "") ?: ""
 
     fun getActiveJobBasePrice(): Double {
-        val p = prefs.getFloat(KEY_ACTIVE_JOB_BASE_PRICE, 299.0f).toDouble()
-        return if (p > 0.0) p else 299.0
+        val p = prefs.getFloat(KEY_ACTIVE_JOB_BASE_PRICE, 0.0f).toDouble()
+        return if (p > 0.0) p else 0.0
     }
 
     fun getActiveJobGst(): Double {
-        val g = prefs.getFloat(KEY_ACTIVE_JOB_GST, 53.82f).toDouble()
+        val g = prefs.getFloat(KEY_ACTIVE_JOB_GST, 0.0f).toDouble()
         return if (g > 0.0) g else (getActiveJobBasePrice() * 0.18)
     }
 
     fun getActiveJobTotal(): Double {
-        val t = prefs.getFloat(KEY_ACTIVE_JOB_TOTAL, 352.82f).toDouble()
+        val t = prefs.getFloat(KEY_ACTIVE_JOB_TOTAL, 0.0f).toDouble()
         return if (t > 0.0) t else (getActiveJobBasePrice() + getActiveJobGst())
     }
 
-    fun getActiveJobTechnicianName(): String = prefs.getString(KEY_ACTIVE_JOB_TECH_NAME, "Rajesh Kumar") ?: "Rajesh Kumar"
+    fun getActiveJobTechnicianName(): String = prefs.getString(KEY_ACTIVE_JOB_TECH_NAME, "") ?: ""
 
-    fun getActiveJobTechnicianBadge(): String = prefs.getString(KEY_ACTIVE_JOB_TECH_BADGE, "GTS-TECH-4091") ?: "GTS-TECH-4091"
+    fun getActiveJobTechnicianBadge(): String = prefs.getString(KEY_ACTIVE_JOB_TECH_BADGE, "") ?: ""
 
-    fun getActiveJobTechnicianPhone(): String = prefs.getString(KEY_ACTIVE_JOB_TECH_PHONE, "+91 98201 44091") ?: "+91 98201 44091"
+    fun getActiveJobTechnicianPhone(): String = prefs.getString(KEY_ACTIVE_JOB_TECH_PHONE, "") ?: ""
 
-    fun getActiveJobTicketNumber(): String = prefs.getString(KEY_ACTIVE_JOB_TICKET_NO, "GTS-OD-5638") ?: "GTS-OD-5638"
+    fun getActiveJobTicketNumber(): String = prefs.getString(KEY_ACTIVE_JOB_TICKET_NO, "") ?: ""
 
     fun getActiveJobStateCode(): String = prefs.getString(KEY_ACTIVE_JOB_STATE_CODE, "OD") ?: "OD"
 

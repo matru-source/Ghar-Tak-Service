@@ -162,15 +162,38 @@ fun CustomerTrackingScreen(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box {
-                                Image(
-                                    painter = painterResource(id = R.drawable.img_technician_rajesh),
-                                    contentDescription = state.technicianName,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .size(54.dp)
-                                        .clip(CircleShape)
-                                        .border(1.5.dp, SapphireBlue800.copy(alpha = 0.25f), CircleShape)
-                                )
+                                if (state.technicianName.contains("Rajesh", ignoreCase = true)) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.img_technician_rajesh),
+                                        contentDescription = state.technicianName,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(54.dp)
+                                            .clip(CircleShape)
+                                            .border(1.5.dp, SapphireBlue800.copy(alpha = 0.25f), CircleShape)
+                                    )
+                                } else {
+                                    val initial = state.technicianName.trim().firstOrNull()?.toString()?.uppercase() ?: "T"
+                                    Box(
+                                        modifier = Modifier
+                                            .size(54.dp)
+                                            .clip(CircleShape)
+                                            .background(
+                                                androidx.compose.ui.graphics.Brush.linearGradient(
+                                                    listOf(SapphireBlue800, Color(0xFF1D4ED8))
+                                                )
+                                            )
+                                            .border(1.5.dp, Color.White, CircleShape),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = initial,
+                                            color = Color.White,
+                                            fontSize = 22.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
                                 Box(
                                     modifier = Modifier
                                         .size(15.dp)
@@ -442,14 +465,14 @@ fun TrackingLifecycleStepper(state: CustomerTrackingUiState) {
         ) {
             StepPill(
                 label = "Dispatched",
-                subLabel = "10:35 AM",
+                subLabel = "Confirmed",
                 isDone = true,
                 isActive = false
             )
             StepDivider(isDone = state.isDoorstepArrived)
             StepPill(
                 label = "Transit",
-                subLabel = if (state.isDoorstepArrived) "10:59 AM" else "In Transit",
+                subLabel = if (state.isDoorstepArrived) "Arrived" else if (state.distanceKm > 0) "${"%.1f".format(state.distanceKm)} km" else "En Route",
                 isDone = state.isDoorstepArrived,
                 isActive = !state.isDoorstepArrived
             )
@@ -775,7 +798,7 @@ fun LiveElectricianTrackingMap(state: CustomerTrackingUiState) {
                     style = Stroke(width = 6f, cap = StrokeCap.Round, join = StrokeJoin.Round)
                 )
 
-                val isArrived = state.transitStep >= 3 || state.status == "ARRIVED" || state.status == "COMPLETED"
+                val isArrived = state.transitStep >= 3 || state.status == "ARRIVED" || state.status == "COMPLETED" || state.status == "WORK_COMPLETED"
 
                 // Sharp Core Line with Animated Flowing Dashes
                 drawPath(

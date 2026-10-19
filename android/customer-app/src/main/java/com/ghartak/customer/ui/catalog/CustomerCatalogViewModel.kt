@@ -17,10 +17,10 @@ data class CatalogUiState(
     val activePincode: String = "400001",
     val activePincodeCity: String = "Colaba, Mumbai",
     val searchQuery: String = "",
-    val hasActiveJob: Boolean = true,
-    val activeJobId: String = "job_mh_live_01",
-    val activeJobTitle: String = "Fan Installation",
-    val activeJobTechnician: String = "Rajesh (En Route)",
+    val hasActiveJob: Boolean = false,
+    val activeJobId: String = "",
+    val activeJobTitle: String = "",
+    val activeJobTechnician: String = "",
     val activeJobEta: String = "15 mins",
     val services: List<ServiceItem> = emptyList(),
     val filteredServices: List<ServiceItem> = emptyList(),
@@ -47,6 +47,7 @@ class CustomerCatalogViewModel(
         val currentPincode = sessionManager.getUserPincode()
 
         val allServices = ServiceCatalogRegistry.allServices
+        val hasJob = sessionManager.hasActiveJob()
 
         _uiState.value = _uiState.value.copy(
             userName = currentName,
@@ -54,9 +55,10 @@ class CustomerCatalogViewModel(
             userEmail = currentEmail,
             userAddress = currentAddress,
             activePincode = currentPincode.ifEmpty { "760001" },
-            activeJobId = sessionManager.getActiveJobId(),
-            activeJobTitle = sessionManager.getActiveJobTitle(),
-            activeJobTechnician = "${sessionManager.getActiveJobTechnicianName()} (En Route)",
+            hasActiveJob = hasJob,
+            activeJobId = if (hasJob) sessionManager.getActiveJobId() else "",
+            activeJobTitle = if (hasJob) sessionManager.getActiveJobTitle().ifEmpty { "Doorstep Service" } else "",
+            activeJobTechnician = if (hasJob) "${sessionManager.getActiveJobTechnicianName().ifEmpty { "Electrician" }} (En Route)" else "",
             services = allServices,
             filteredServices = allServices
         )

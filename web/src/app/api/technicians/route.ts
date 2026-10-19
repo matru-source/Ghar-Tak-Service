@@ -24,14 +24,11 @@ export async function GET(request: NextRequest) {
       search,
     });
 
-    // If no exact match for this pincode, provide online technicians in region
+    // If no exact match for this pincode, provide online technicians in same 2-digit postal region
     if (technicians.length === 0 && pincode) {
       const statePrefix = pincode.substring(0, 2);
       const allOnline = await db.getAllTechnicians({ isOnline: true, kycStatus });
       technicians = allOnline.filter((t) => (t.assignedPincode && t.assignedPincode.startsWith(statePrefix)));
-      if (technicians.length === 0) {
-        technicians = allOnline;
-      }
     }
 
     const enhancedTechnicians = technicians.map((t: any, index: number) => {

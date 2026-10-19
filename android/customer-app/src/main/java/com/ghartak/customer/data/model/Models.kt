@@ -94,7 +94,15 @@ data class PastOrderItem(
 data class LiveTrackingResponse(
     @SerializedName("jobTicketNumber") val jobTicketNumber: String,
     @SerializedName("status") val status: String,
+    @SerializedName("handoverOtp") val handoverOtp: String? = null,
+    @SerializedName("destination") val destination: DestinationCoordinates? = null,
     @SerializedName("technician") val technician: TechnicianTrackingInfo
+)
+
+data class DestinationCoordinates(
+    @SerializedName("latitude") val latitude: Double,
+    @SerializedName("longitude") val longitude: Double,
+    @SerializedName("address") val address: String? = null
 )
 
 data class TechnicianTrackingInfo(

@@ -22,7 +22,11 @@ data class TechnicianAuthUiState(
     val fullName: String = "",
     val phoneNumber: String = "",
     val tradeSpecialty: String = "Electrician",
-    val pincode: String = "400001",
+    val pincode: String = "760001",
+    val experience: String = "3+ Years",
+    val locationCity: String = "",
+    val licenseNumber: String = "",
+    val languages: String = "",
 
     // Registration Step & OTP
     val signUpStep: Int = 1, // 1: Name + Email + OTP Verification, 2: Password + Phone + Trade + Pincode
@@ -84,6 +88,22 @@ class TechnicianAuthViewModel(
     fun onPincodeChanged(pincode: String) {
         val sanitized = pincode.filter { it.isDigit() }.take(6)
         _uiState.value = _uiState.value.copy(pincode = sanitized, errorMessage = null)
+    }
+
+    fun onExperienceChanged(exp: String) {
+        _uiState.value = _uiState.value.copy(experience = exp, errorMessage = null)
+    }
+
+    fun onLocationCityChanged(city: String) {
+        _uiState.value = _uiState.value.copy(locationCity = city, errorMessage = null)
+    }
+
+    fun onLicenseChanged(lic: String) {
+        _uiState.value = _uiState.value.copy(licenseNumber = lic, errorMessage = null)
+    }
+
+    fun onLanguagesChanged(lang: String) {
+        _uiState.value = _uiState.value.copy(languages = lang, errorMessage = null)
     }
 
     fun onPhoneChanged(phone: String) {
@@ -280,8 +300,8 @@ class TechnicianAuthViewModel(
         val password = state.password.trim()
         val confirmPass = state.confirmPassword.trim()
         val phone = state.phoneNumber.trim()
-        val trade = state.tradeSpecialty.trim().ifEmpty { "Electrician" }
-        val pincode = state.pincode.trim().ifEmpty { "400001" }
+        val trade = state.tradeSpecialty.trim().ifEmpty { "Certified Electrician" }
+        val pincode = state.pincode.trim().ifEmpty { "760001" }
 
         if (password.length < 6) {
             _uiState.value = state.copy(errorMessage = "Password must be at least 6 characters long.")
@@ -309,7 +329,12 @@ class TechnicianAuthViewModel(
                 phone = phone,
                 password = password,
                 trade = trade,
-                pincode = pincode
+                pincode = pincode,
+                experience = state.experience,
+                location = state.locationCity,
+                license = state.licenseNumber,
+                languages = state.languages,
+                serviceArea = "$pincode Doorstep Territory"
             )
 
             // Register with backend database so customer app and dispatch board can assign work

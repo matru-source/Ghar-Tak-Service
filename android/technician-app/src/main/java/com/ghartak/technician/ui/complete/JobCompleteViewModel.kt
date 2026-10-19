@@ -66,10 +66,6 @@ class JobCompleteViewModel(
         _uiState.value = _uiState.value.copy(enteredOtp = sanitized, errorMessage = null)
     }
 
-    fun quickFillDemoOtp(otp: String = "4819") {
-        _uiState.value = _uiState.value.copy(enteredOtp = otp, errorMessage = null)
-    }
-
     fun setAfterPhoto(photoUri: String, bitmap: Bitmap? = null) {
         _uiState.value = _uiState.value.copy(
             afterPhotoUri = photoUri,

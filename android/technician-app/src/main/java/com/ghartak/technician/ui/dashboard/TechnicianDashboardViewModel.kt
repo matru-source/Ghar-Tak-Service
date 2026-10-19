@@ -9,6 +9,9 @@ import com.ghartak.technician.data.model.TechnicianJob
 import com.ghartak.technician.data.model.TechnicianProfile
 import com.ghartak.technician.data.realtime.RealtimeStreamManager
 import com.ghartak.technician.data.session.SessionManager
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -108,7 +111,7 @@ class TechnicianDashboardViewModel(
                 totalAmountInr = notif.amountInr,
                 safetyGlovesConfirmed = false,
                 safetyMcbSwitchConfirmed = false,
-                handoverOtp = "4819",
+                handoverOtp = "",
                 scheduledAt = "${notif.serviceTitle} | ${notif.scheduledTime}",
                 createdAt = "Just now"
             )
@@ -390,16 +393,61 @@ class TechnicianDashboardViewModel(
                         )
                     }
                     if (activeInbound.isNotEmpty()) {
+                        val firstAlert = activeInbound.firstOrNull { inbound ->
+                            !_uiState.value.assignedJobs.any { it.id == inbound.id || it.jobTicketNumber == inbound.jobTicketNumber }
+                        }
+
+                        val alertJob = if (firstAlert != null && _uiState.value.incomingDispatchAlert == null) {
+                            val isOdisha = firstAlert.pincode.startsWith("75") || firstAlert.pincode.startsWith("76") || firstAlert.pincode.startsWith("77")
+                            val defaultLat = if (isOdisha) 19.3150 else 18.9220
+                            val defaultLng = if (isOdisha) 84.7941 else 72.8347
+                            val alert = TechnicianJob(
+                                id = firstAlert.id,
+                                jobTicketNumber = firstAlert.jobTicketNumber,
+                                serviceTitle = firstAlert.serviceTitle,
+                                pincode = firstAlert.pincode,
+                                customerName = firstAlert.customerName,
+                                customerPhone = firstAlert.customerPhone,
+                                customerAddressText = firstAlert.customerAddress,
+                                customerLatitude = defaultLat,
+                                customerLongitude = defaultLng,
+                                status = "DISPATCHED",
+                                priority = "EMERGENCY_60S",
+                                totalAmountInr = firstAlert.amountInr,
+                                safetyGlovesConfirmed = false,
+                                handoverOtp = ""
+                            )
+                            cacheIncomingJob(alert)
+                            alert
+                        } else {
+                            _uiState.value.incomingDispatchAlert
+                        }
+
                         _uiState.value = _uiState.value.copy(
                             newJobNotifications = activeInbound,
                             jobsTodayCount = activeInbound.size + _uiState.value.jobsCompletedCount,
-                            jobsPendingCount = activeInbound.size
+                            jobsPendingCount = activeInbound.size,
+                            incomingDispatchAlert = alertJob
                         )
-                        Log.d("GTS_TECH", "Polled ${activeInbound.size} live assigned jobs for tech $techId")
+                        Log.d("GTS_TECH", "Polled ${activeInbound.size} live assigned jobs for tech $techId, alertJob=${alertJob?.jobTicketNumber}")
                     }
                 }
             } catch (e: Exception) {
                 Log.w("GTS_TECH", "Polling backend jobs: ${e.message}")
+            }
+        }
+    }
+
+    private var dispatchPollingJob: Job? = null
+
+    fun startDispatchPolling(context: Context) {
+        dispatchPollingJob?.cancel()
+        dispatchPollingJob = viewModelScope.launch {
+            while (isActive) {
+                if (_uiState.value.isOnline) {
+                    pollBackendAssignedJobs(context)
+                }
+                delay(3000L)
             }
         }
     }
@@ -453,7 +501,7 @@ class TechnicianDashboardViewModel(
                     safetyGlovesConfirmed = false,
                     handoverOtp = details?.optString("handoverOtp")?.takeIf { it.isNotEmpty() }
                         ?: data.optString("handoverOtp").takeIf { it.isNotEmpty() }
-                        ?: "4819"
+                        ?: ""
                 )
 
                 cacheIncomingJob(inboundJob)
@@ -468,7 +516,7 @@ class TechnicianDashboardViewModel(
 
     fun acceptIncomingDispatch(job: TechnicianJob) {
         val updatedList = _uiState.value.assignedJobs.toMutableList()
-        val accepted = job.copy(status = "ASSIGNED")
+        val accepted = job.copy(status = "EN_ROUTE")
         updatedList.add(0, accepted)
         _uiState.value = _uiState.value.copy(
             assignedJobs = updatedList,
@@ -479,12 +527,14 @@ class TechnicianDashboardViewModel(
     }
 
     fun logout() {
+        dispatchPollingJob?.cancel()
         sessionManager.clearSession()
         realtimeStreamManager.disconnect()
     }
 
     override fun onCleared() {
         super.onCleared()
+        dispatchPollingJob?.cancel()
         realtimeStreamManager.disconnect()
     }
 }

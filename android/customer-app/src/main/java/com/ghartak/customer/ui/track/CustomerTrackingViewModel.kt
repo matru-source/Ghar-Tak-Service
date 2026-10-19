@@ -1,10 +1,15 @@
 package com.ghartak.customer.ui.track
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ghartak.customer.data.api.ApiClient
 import com.ghartak.customer.data.realtime.RealtimeStreamManager
 import com.ghartak.customer.data.session.SessionManager
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,26 +17,26 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 data class CustomerTrackingUiState(
-    val jobId: String = "job_od_live_01",
-    val ticketNumber: String = "GTS-OD-5638",
-    val serviceTitle: String = "Fan Installation",
-    val status: String = "EN_ROUTE",
-    val technicianName: String = "Rajesh Kumar",
-    val technicianPhone: String = "+91 98201 44091",
-    val technicianBadge: String = "GTS-TECH-4091",
-    val technicianRating: Double = 4.8,
-    val technicianCompletedJobs: String = "240+ jobs",
-    val handoverOtp: String = "4819",
-    val distanceKm: Double = 1.3,
-    val etaMinutes: Int = 15,
+    val jobId: String = "",
+    val ticketNumber: String = "",
+    val serviceTitle: String = "Doorstep Service",
+    val status: String = "ASSIGNED",
+    val technicianName: String = "Assigned Technician",
+    val technicianPhone: String = "",
+    val technicianBadge: String = "",
+    val technicianRating: Double = 5.0,
+    val technicianCompletedJobs: String = "Certified Professional",
+    val handoverOtp: String = "",
+    val distanceKm: Double = 0.0,
+    val etaMinutes: Int = 0,
     val isDoorstepArrived: Boolean = false,
     val isSafetyInterlockVerified: Boolean = false,
     val isJobCompleted: Boolean = false,
     val transitStep: Int = 0,
-    val techLatitude: Double = 19.3149,
-    val techLongitude: Double = 84.7941,
-    val destLatitude: Double = 19.3200,
-    val destLongitude: Double = 84.8000
+    val techLatitude: Double = 0.0,
+    val techLongitude: Double = 0.0,
+    val destLatitude: Double = 0.0,
+    val destLongitude: Double = 0.0
 )
 
 class CustomerTrackingViewModel(
@@ -42,6 +47,7 @@ class CustomerTrackingViewModel(
     val uiState: StateFlow<CustomerTrackingUiState> = _uiState.asStateFlow()
 
     private val realtimeStreamManager = RealtimeStreamManager()
+    private var telemetryPollingJob: Job? = null
 
     fun initTracking(jobId: String) {
         val activeTitle = sessionManager.getActiveJobTitle()
@@ -65,6 +71,46 @@ class CustomerTrackingViewModel(
         val customerId = sessionManager.getUserId()
         realtimeStreamManager.connect(customerId, jobId) { eventType, data ->
             handleRealtimeEvent(eventType, data)
+        }
+
+        // Periodic resilient HTTP telemetry polling every 3 seconds to guarantee live sync
+        startLiveTelemetryPolling(sessionManager.context, jobId)
+    }
+
+    private fun startLiveTelemetryPolling(context: Context, jobId: String) {
+        telemetryPollingJob?.cancel()
+        telemetryPollingJob = viewModelScope.launch {
+            while (isActive && !_uiState.value.isJobCompleted) {
+                try {
+                    val api = ApiClient.getService(context)
+                    val response = api.getLiveTracking(jobId)
+                    if (response.isSuccessful && response.body()?.data != null) {
+                        val data = response.body()!!.data!!
+                        val tech = data.technician
+                        val dest = data.destination
+                        val status = data.status ?: _uiState.value.status
+                        val isArrived = status == "ARRIVED" || tech.distanceKm <= 0.05
+                        _uiState.value = _uiState.value.copy(
+                            status = if (isArrived && status != "COMPLETED" && status != "WORK_COMPLETED") "ARRIVED" else status,
+                            distanceKm = tech.distanceKm,
+                            etaMinutes = tech.etaMinutes,
+                            techLatitude = tech.coordinates.latitude,
+                            techLongitude = tech.coordinates.longitude,
+                            destLatitude = dest?.latitude ?: _uiState.value.destLatitude,
+                            destLongitude = dest?.longitude ?: _uiState.value.destLongitude,
+                            technicianName = tech.name ?: _uiState.value.technicianName,
+                            technicianPhone = tech.phone ?: _uiState.value.technicianPhone,
+                            technicianRating = tech.rating,
+                            handoverOtp = if (!data.handoverOtp.isNullOrBlank()) data.handoverOtp else _uiState.value.handoverOtp,
+                            isDoorstepArrived = isArrived || _uiState.value.isDoorstepArrived,
+                            isJobCompleted = status == "COMPLETED" || status == "WORK_COMPLETED" || status == "SETTLED"
+                        )
+                    }
+                } catch (e: Exception) {
+                    // Resilient polling continues on next tick
+                }
+                delay(3000L)
+            }
         }
     }
 
@@ -177,6 +223,7 @@ class CustomerTrackingViewModel(
 
     override fun onCleared() {
         super.onCleared()
+        telemetryPollingJob?.cancel()
         realtimeStreamManager.disconnect()
     }
 }

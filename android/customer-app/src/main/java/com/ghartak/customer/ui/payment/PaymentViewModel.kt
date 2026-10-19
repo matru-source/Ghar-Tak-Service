@@ -1,9 +1,13 @@
 package com.ghartak.customer.ui.payment
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.net.Uri
 import android.util.Log
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ghartak.customer.data.api.ApiClient
@@ -18,20 +22,20 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 data class PaymentUiState(
-    val serviceId: String = "srv_fan_install",
-    val serviceTitle: String = "Fan Installation",
-    val basePriceInr: Double = 299.0,
-    val gst18PctInr: Double = 53.82,
-    val totalAmountInr: Double = 352.82,
-    val pincode: String = "760001",
-    val addressText: String = "Brahmapur, Ganjam, Odisha",
-    val priority: String = "EMERGENCY_60S",
+    val serviceId: String = "",
+    val serviceTitle: String = "",
+    val basePriceInr: Double = 0.0,
+    val gst18PctInr: Double = 0.0,
+    val totalAmountInr: Double = 0.0,
+    val pincode: String = "",
+    val addressText: String = "",
+    val priority: String = "STANDARD",
     val selectedPaymentMethod: String = "UPI_GPAY",
-    val technicianId: String = "GTS-TECH-4091",
-    val technicianName: String = "Rajesh Kumar",
-    val technicianBadge: String = "GTS-TECH-4091",
-    val technicianPhone: String = "+91 98201 44091",
-    val stateCode: String = "OD",
+    val technicianId: String = "",
+    val technicianName: String = "",
+    val technicianBadge: String = "",
+    val technicianPhone: String = "",
+    val stateCode: String = "",
     val isProcessing: Boolean = false,
     val createdJob: Job? = null,
     val createdJobId: String? = null,
@@ -110,9 +114,32 @@ class PaymentViewModel(
 
             try {
                 val api = ApiClient.getService(context)
-                val (resolvedLat, resolvedLng) = com.ghartak.customer.util.IndianPincodeResolver.getCoordinatesForPincode(_uiState.value.pincode)
+                val (fallbackLat, fallbackLng) = com.ghartak.customer.util.IndianPincodeResolver.getCoordinatesForPincode(_uiState.value.pincode)
 
-                Log.d("GTS_JOB_CREATE", "Creating real job on backend: service=${_uiState.value.serviceId}, tech=${_uiState.value.technicianId}, pin=${_uiState.value.pincode}, coords=($resolvedLat, $resolvedLng)")
+                var finalLat = fallbackLat
+                var finalLng = fallbackLng
+
+                // Read real GPS coordinates from device if available
+                val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                val hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+
+                if ((hasFine || hasCoarse) && lm != null) {
+                    try {
+                        val gpsLoc = if (hasFine) lm.getLastKnownLocation(LocationManager.GPS_PROVIDER) else null
+                        val netLoc = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+                        val bestLoc = gpsLoc ?: netLoc
+                        if (bestLoc != null && bestLoc.latitude != 0.0 && bestLoc.longitude != 0.0) {
+                            finalLat = bestLoc.latitude
+                            finalLng = bestLoc.longitude
+                            Log.d("GTS_JOB_CREATE", "Using actual device GPS coordinates for booking: ($finalLat, $finalLng)")
+                        }
+                    } catch (e: SecurityException) {
+                        Log.w("GTS_JOB_CREATE", "Location permission check warning: ${e.message}")
+                    }
+                }
+
+                Log.d("GTS_JOB_CREATE", "Creating real job on backend: service=${_uiState.value.serviceId}, tech=${_uiState.value.technicianId}, pin=${_uiState.value.pincode}, coords=($finalLat, $finalLng)")
 
                 val response = kotlinx.coroutines.withTimeoutOrNull(25000L) {
                     api.createJob(
@@ -124,8 +151,8 @@ class PaymentViewModel(
                             technicianId = _uiState.value.technicianId.ifEmpty { null },
                             pincode = _uiState.value.pincode,
                             customerAddressText = _uiState.value.addressText,
-                            customerLatitude = resolvedLat,
-                            customerLongitude = resolvedLng,
+                            customerLatitude = finalLat,
+                            customerLongitude = finalLng,
                             priority = _uiState.value.priority,
                             paymentMethod = _uiState.value.selectedPaymentMethod
                         )
@@ -147,7 +174,7 @@ class PaymentViewModel(
                         ticketNumber = job.jobTicketNumber,
                         stateCode = _uiState.value.stateCode,
                         gstin = com.ghartak.customer.util.IndianPincodeResolver.getOfflineFallback(_uiState.value.pincode).gstinStateCode,
-                        handoverOtp = job.handoverOtp ?: "4819"
+                        handoverOtp = job.handoverOtp ?: ((1000..9999).random().toString())
                     )
                     sessionManager.setUserPincode(_uiState.value.pincode)
                     _uiState.value = _uiState.value.copy(
@@ -176,6 +203,7 @@ class PaymentViewModel(
     private fun handleFallbackSuccess(onSuccess: (jobId: String) -> Unit) {
         val cleanState = _uiState.value.stateCode.ifEmpty { "OD" }
         val ticketNo = "GTS-$cleanState-" + (1000..9999).random()
+        val generatedOtp = (1000..9999).random().toString()
         val fallbackJobId = "job_${cleanState.lowercase()}_live_01"
         val fallbackJob = Job(
             id = fallbackJobId,
@@ -188,7 +216,7 @@ class PaymentViewModel(
             totalAmountInr = _uiState.value.totalAmountInr,
             technicianId = _uiState.value.technicianId,
             technicianName = _uiState.value.technicianName,
-            handoverOtp = "4819"
+            handoverOtp = generatedOtp
         )
         sessionManager.saveActiveJob(
             id = fallbackJobId,
@@ -202,7 +230,7 @@ class PaymentViewModel(
             ticketNumber = ticketNo,
             stateCode = cleanState,
             gstin = com.ghartak.customer.util.IndianPincodeResolver.getOfflineFallback(_uiState.value.pincode).gstinStateCode,
-            handoverOtp = "4819"
+            handoverOtp = generatedOtp
         )
         sessionManager.setUserPincode(_uiState.value.pincode)
         _uiState.value = _uiState.value.copy(

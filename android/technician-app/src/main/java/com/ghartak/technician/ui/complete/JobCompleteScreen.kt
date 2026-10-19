@@ -357,22 +357,6 @@ fun JobCompleteScreen(
                                 fontSize = 12.sp
                             )
                         }
-
-                        // Demo Quick Fill 1-Tap Chip
-                        Surface(
-                            color = FlameOrange.copy(alpha = 0.15f),
-                            shape = RoundedCornerShape(6.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, FlameOrange.copy(alpha = 0.4f)),
-                            modifier = Modifier.clickable { viewModel.quickFillDemoOtp("4819") }
-                        ) {
-                            Text(
-                                text = "1-TAP OTP (4819)",
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = FlameOrange,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
-                            )
-                        }
                     }
 
                     Spacer(modifier = Modifier.height(14.dp))

@@ -41,6 +41,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import android.location.LocationManager
+import android.provider.Settings
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import com.ghartak.technician.R
 import com.ghartak.technician.data.model.TechnicianJob
 import com.ghartak.technician.data.session.SessionManager
@@ -109,9 +116,34 @@ fun TechnicianDashboardScreen(
     val context = LocalContext.current
     var showSosDialog by remember { mutableStateOf(false) }
 
+    val alertJob = state.incomingDispatchAlert
+    LaunchedEffect(alertJob) {
+        if (alertJob != null) {
+            onNavigateToDispatchAlert(alertJob.id)
+        }
+    }
+
     LaunchedEffect(Unit) {
         viewModel.connectRealtimeBus(context)
         viewModel.pollBackendAssignedJobs(context)
+        viewModel.startDispatchPolling(context)
+    }
+
+    var isLocationEnabled by remember {
+        val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+        val gps = lm?.isProviderEnabled(LocationManager.GPS_PROVIDER) == true
+        val net = lm?.isProviderEnabled(LocationManager.NETWORK_PROVIDER) == true
+        val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        mutableStateOf((gps || net) && hasFine)
+    }
+
+    val locationPermLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { perms ->
+        val granted = perms[Manifest.permission.ACCESS_FINE_LOCATION] == true || perms[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+        val gps = lm?.isProviderEnabled(LocationManager.GPS_PROVIDER) == true || lm?.isProviderEnabled(LocationManager.NETWORK_PROVIDER) == true
+        isLocationEnabled = granted && gps
     }
 
     Scaffold(
@@ -215,8 +247,71 @@ fun TechnicianDashboardScreen(
         LaunchedEffect(state.incomingDispatchAlert) {
             state.incomingDispatchAlert?.let { alertJob ->
                 onNavigateToDispatchAlert(alertJob.id)
-                viewModel.dismissIncomingDispatch()
             }
+        }
+
+        // Mandatory GPS Location Dialog (blocks dashboard when GPS is disabled)
+        if (!isLocationEnabled) {
+            AlertDialog(
+                onDismissRequest = { /* Mandatory - blocking until location enabled */ },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.LocationOff,
+                        contentDescription = null,
+                        tint = Color(0xFFDC2626),
+                        modifier = Modifier.size(36.dp)
+                    )
+                },
+                title = {
+                    Text(
+                        text = "GPS Location Required",
+                        fontWeight = FontWeight.Black,
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Ghar Tak Technician Console requires device GPS to be enabled to connect to your service territory, receive incoming dispatches, and calculate real-time transit distance.\n\nPlease enable Location Services to proceed.",
+                        fontSize = 13.sp,
+                        color = TextDarkSecondary,
+                        textAlign = TextAlign.Center
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+                            val gps = lm?.isProviderEnabled(LocationManager.GPS_PROVIDER) == true || lm?.isProviderEnabled(LocationManager.NETWORK_PROVIDER) == true
+                            if (!gps) {
+                                context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                            } else {
+                                locationPermLauncher.launch(
+                                    arrayOf(
+                                        Manifest.permission.ACCESS_FINE_LOCATION,
+                                        Manifest.permission.ACCESS_COARSE_LOCATION
+                                    )
+                                )
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = TechFlameOrange)
+                    ) {
+                        Text("Enable Location", fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+                            val gps = lm?.isProviderEnabled(LocationManager.GPS_PROVIDER) == true || lm?.isProviderEnabled(LocationManager.NETWORK_PROVIDER) == true
+                            val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                            isLocationEnabled = gps && hasFine
+                        }
+                    ) {
+                        Text("Check Again", fontWeight = FontWeight.Bold, color = TextDarkSecondary)
+                    }
+                }
+            )
         }
     }
 }
@@ -1694,8 +1789,8 @@ fun TechnicianProfileContent(
         var editName by remember { mutableStateOf(state.profile?.fullName ?: "") }
         var editPhone by remember { mutableStateOf(state.profile?.phone ?: "") }
         var editEmail by remember { mutableStateOf(state.profile?.email ?: "") }
-        var editLocation by remember { mutableStateOf(state.profile?.location ?: "Odisha, India") }
-        var editLanguages by remember { mutableStateOf(state.profile?.languages ?: "Odia, English, Hindi") }
+        var editLocation by remember { mutableStateOf(state.profile?.location ?: "") }
+        var editLanguages by remember { mutableStateOf(state.profile?.languages ?: "") }
 
         AlertDialog(
             onDismissRequest = { showEditPersonalDialog = false },
@@ -1768,11 +1863,11 @@ fun TechnicianProfileContent(
 
     // 2. Working Edit Service Details Dialog
     if (showEditServiceDialog) {
-        var editSpecialization by remember { mutableStateOf(state.profile?.specialization ?: "Electrician") }
+        var editSpecialization by remember { mutableStateOf(state.profile?.specialization ?: "Certified Electrician") }
         var editSpecializationExpanded by remember { mutableStateOf(false) }
-        var editExperience by remember { mutableStateOf(state.profile?.experience ?: "5+ Years") }
-        var editLicense by remember { mutableStateOf(state.profile?.license ?: "Trade Certified Professional") }
-        var editServiceArea by remember { mutableStateOf(state.profile?.serviceArea ?: "Doorstep Territory") }
+        var editExperience by remember { mutableStateOf(state.profile?.experience ?: "") }
+        var editLicense by remember { mutableStateOf(state.profile?.license ?: "") }
+        var editServiceArea by remember { mutableStateOf(state.profile?.serviceArea ?: "") }
 
         AlertDialog(
             onDismissRequest = { showEditServiceDialog = false },
@@ -1961,7 +2056,7 @@ fun TechnicianProfileContent(
                             Column(modifier = Modifier.weight(1f)) {
                                 // Full Name directly reflecting from Personal Info
                                 Text(
-                                    text = state.profile?.fullName ?: "Raja Kumar",
+                                    text = state.profile?.fullName?.takeIf { it.isNotBlank() } ?: "Technician",
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Black,
                                     color = TextDarkPrimary
@@ -1971,7 +2066,7 @@ fun TechnicianProfileContent(
 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        text = "ID: ${state.profile?.badgeNumber ?: "GTS-TECH-4815"}",
+                                        text = "ID: ${state.profile?.badgeNumber?.takeIf { it.isNotBlank() } ?: "GTS-TECH-VERIFIED"}",
                                         fontSize = 11.5.sp,
                                         color = TextDarkSecondary
                                     )
@@ -2105,10 +2200,10 @@ fun TechnicianProfileContent(
                     icon = Icons.Default.Person,
                     onEdit = { showEditPersonalDialog = true }
                 ) {
-                    ProfileInfoRow(icon = Icons.Default.Phone, label = "Phone", value = state.profile?.phone ?: "Not Provided")
-                    ProfileInfoRow(icon = Icons.Default.Email, label = "Email", value = state.profile?.email ?: "Not Provided")
-                    ProfileInfoRow(icon = Icons.Default.Place, label = "Location", value = state.profile?.location ?: "Odisha, India")
-                    ProfileInfoRow(icon = Icons.Default.Language, label = "Languages", value = state.profile?.languages ?: "Odia, English, Hindi")
+                    ProfileInfoRow(icon = Icons.Default.Phone, label = "Phone", value = state.profile?.phone?.takeIf { it.isNotBlank() } ?: "Not Provided")
+                    ProfileInfoRow(icon = Icons.Default.Email, label = "Email", value = state.profile?.email?.takeIf { it.isNotBlank() } ?: "Not Provided")
+                    ProfileInfoRow(icon = Icons.Default.Place, label = "Location", value = state.profile?.location?.takeIf { it.isNotBlank() } ?: "Not Set (Tap Edit)")
+                    ProfileInfoRow(icon = Icons.Default.Language, label = "Languages", value = state.profile?.languages?.takeIf { it.isNotBlank() } ?: "Not Set (Tap Edit)")
                 }
             }
 
@@ -2119,10 +2214,10 @@ fun TechnicianProfileContent(
                     icon = Icons.Default.Build,
                     onEdit = { showEditServiceDialog = true }
                 ) {
-                    ProfileInfoRow(icon = Icons.Default.Build, label = "Specialization", value = state.profile?.specialization ?: "Electrician")
-                    ProfileInfoRow(icon = Icons.Default.WorkHistory, label = "Experience", value = state.profile?.experience ?: "5+ Years")
-                    ProfileInfoRow(icon = Icons.Default.VerifiedUser, label = "License / Certification", value = state.profile?.license ?: "1000V Safety Certified")
-                    ProfileInfoRow(icon = Icons.Default.LocationCity, label = "Service Area", value = state.profile?.serviceArea ?: "Mumbai & Surrounding Areas")
+                    ProfileInfoRow(icon = Icons.Default.Build, label = "Specialization", value = state.profile?.specialization?.takeIf { it.isNotBlank() } ?: "Not Set")
+                    ProfileInfoRow(icon = Icons.Default.WorkHistory, label = "Experience", value = state.profile?.experience?.takeIf { it.isNotBlank() } ?: "Not Set (Tap Edit)")
+                    ProfileInfoRow(icon = Icons.Default.VerifiedUser, label = "License / Certification", value = state.profile?.license?.takeIf { it.isNotBlank() } ?: "Not Set (Tap Edit)")
+                    ProfileInfoRow(icon = Icons.Default.LocationCity, label = "Service Area", value = state.profile?.serviceArea?.takeIf { it.isNotBlank() } ?: "Not Set (Tap Edit)")
                 }
             }
 

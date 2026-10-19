@@ -54,9 +54,9 @@ export async function POST(request: NextRequest) {
     if (jobId) {
       targetJob = dbStore.jobs.find((j) => j.id === jobId || j.jobTicketNumber === jobId);
       if (targetJob) {
-        // Customer destination: use job coords or default South Mumbai Colaba centroid (18.9067, 72.8147)
-        const destLat = targetJob.customerLatitude || 18.9067;
-        const destLng = targetJob.customerLongitude || 72.8147;
+        const isOdisha = targetJob.pincode?.startsWith('75') || targetJob.pincode?.startsWith('76') || targetJob.pincode?.startsWith('77');
+        const destLat = targetJob.customerLatitude || (isOdisha ? 19.3150 : 18.9067);
+        const destLng = targetJob.customerLongitude || (isOdisha ? 84.7941 : 72.8147);
 
         const rawDist = calculateHaversineDistanceKm(latitude, longitude, destLat, destLng);
         distanceRemainingKm = Number(rawDist.toFixed(2));
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
         etaMinutes = Math.max(1, Math.round((distanceRemainingKm / 22.0) * 60));
 
         // Geofence Doorstep Check (under 50 meters = 0.05 km)
-        if (distanceRemainingKm <= 0.05 && targetJob.status === 'EN_ROUTE') {
+        if (distanceRemainingKm <= 0.05 && (targetJob.status === 'EN_ROUTE' || targetJob.status === 'ASSIGNED')) {
           isDoorstepNearby = true;
           targetJob.status = 'ARRIVED';
 
@@ -150,10 +150,11 @@ export async function GET(request: NextRequest) {
       }
       const tech = dbStore.technicians.find((t) => t.id === job.technicianId);
 
-      const destLat = job.customerLatitude || 18.9067;
-      const destLng = job.customerLongitude || 72.8147;
-      const techLat = tech?.currentLatitude || 18.9220;
-      const techLng = tech?.currentLongitude || 72.8250;
+      const isOdisha = job.pincode?.startsWith('75') || job.pincode?.startsWith('76') || job.pincode?.startsWith('77');
+      const destLat = job.customerLatitude || (isOdisha ? 19.3150 : 18.9067);
+      const destLng = job.customerLongitude || (isOdisha ? 84.7941 : 72.8147);
+      const techLat = tech?.currentLatitude || (isOdisha ? 19.3150 : 18.9220);
+      const techLng = tech?.currentLongitude || (isOdisha ? 84.7941 : 72.8250);
 
       const dist = Number(calculateHaversineDistanceKm(techLat, techLng, destLat, destLng).toFixed(2));
       const eta = Math.max(1, Math.round((dist / 22.0) * 60));
@@ -161,6 +162,7 @@ export async function GET(request: NextRequest) {
       return apiSuccess({
         jobTicketNumber: job.jobTicketNumber,
         status: job.status,
+        handoverOtp: job.handoverOtp,
         destination: { latitude: destLat, longitude: destLng, address: job.customerAddressText },
         technician: {
           id: tech?.id || job.technicianId,

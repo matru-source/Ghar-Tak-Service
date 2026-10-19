@@ -23,6 +23,18 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.LocationManager
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.ghartak.customer.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,6 +47,45 @@ fun AddressBookingScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    var isUserLocationEnabled by remember {
+        val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+        val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val gps = lm?.isProviderEnabled(LocationManager.GPS_PROVIDER) == true || lm?.isProviderEnabled(LocationManager.NETWORK_PROVIDER) == true
+        mutableStateOf((hasFine || hasCoarse) && gps)
+    }
+
+    val customerPermLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { perms ->
+        val granted = perms[Manifest.permission.ACCESS_FINE_LOCATION] == true || perms[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+        val gps = lm?.isProviderEnabled(LocationManager.GPS_PROVIDER) == true || lm?.isProviderEnabled(LocationManager.NETWORK_PROVIDER) == true
+        isUserLocationEnabled = granted && gps
+        if (isUserLocationEnabled) {
+            viewModel.loadLiveTechnicians(context, state.pincode)
+        }
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+                val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                val hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                val gps = lm?.isProviderEnabled(LocationManager.GPS_PROVIDER) == true || lm?.isProviderEnabled(LocationManager.NETWORK_PROVIDER) == true
+                val wasEnabled = isUserLocationEnabled
+                isUserLocationEnabled = (hasFine || hasCoarse) && gps
+                if (!wasEnabled && isUserLocationEnabled) {
+                    viewModel.loadLiveTechnicians(context, state.pincode)
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     LaunchedEffect(serviceId) {
         viewModel.initService(serviceId)
@@ -498,46 +549,150 @@ fun AddressBookingScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    state.sortedTechnicians.forEach { tech ->
-                        val isBestForSort = when (state.sortOption) {
-                            TechnicianSortOption.MIN_DISTANCE -> tech.id == state.sortedTechnicians.minByOrNull { it.distanceKm }?.id
-                            TechnicianSortOption.RATINGS -> tech.id == state.sortedTechnicians.maxByOrNull { it.ratingValue }?.id
-                            TechnicianSortOption.NUMBER_OF_JOBS -> tech.id == state.sortedTechnicians.maxByOrNull { it.completedJobsCount }?.id
+                    if (!isUserLocationEnabled) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 6.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFFFEF2F2),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFCA5A5))
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.LocationOff,
+                                    contentDescription = null,
+                                    tint = Color(0xFFDC2626),
+                                    modifier = Modifier.size(36.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Location Access Required",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF991B1B)
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Please turn on device location to see certified electricians available near you in real time.",
+                                    fontSize = 11.5.sp,
+                                    color = Color(0xFF7F1D1D),
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Button(
+                                    onClick = {
+                                        val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                                        val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+                                        val gps = lm?.isProviderEnabled(LocationManager.GPS_PROVIDER) == true || lm?.isProviderEnabled(LocationManager.NETWORK_PROVIDER) == true
+                                        if (!hasFine) {
+                                            customerPermLauncher.launch(
+                                                arrayOf(
+                                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                                )
+                                            )
+                                        } else if (!gps) {
+                                            context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                                        }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Icon(Icons.Default.MyLocation, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("Turn On Location to View Technicians", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                }
+                            }
                         }
-                        val highlightBadgeText = when {
-                            isBestForSort && state.sortOption == TechnicianSortOption.MIN_DISTANCE -> "FASTEST"
-                            isBestForSort && state.sortOption == TechnicianSortOption.RATINGS -> "TOP RATED"
-                            isBestForSort && state.sortOption == TechnicianSortOption.NUMBER_OF_JOBS -> "MOST JOBS"
-                            else -> null
+                    } else if (state.nearbyTechnicians.isEmpty()) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 6.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFFF8FAFC),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0))
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PersonSearch,
+                                    contentDescription = null,
+                                    tint = TextDarkMuted,
+                                    modifier = Modifier.size(36.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "No Electricians Currently Online in Pincode ${state.pincode}",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextDarkPrimary,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Technicians registered in this pincode will appear here automatically when they toggle online in the Technician App.",
+                                    fontSize = 11.sp,
+                                    color = TextDarkMuted,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
+                        }
+                    } else {
+                        state.sortedTechnicians.forEach { tech ->
+                            val isBestForSort = when (state.sortOption) {
+                                TechnicianSortOption.MIN_DISTANCE -> tech.id == state.sortedTechnicians.minByOrNull { it.distanceKm }?.id
+                                TechnicianSortOption.RATINGS -> tech.id == state.sortedTechnicians.maxByOrNull { it.ratingValue }?.id
+                                TechnicianSortOption.NUMBER_OF_JOBS -> tech.id == state.sortedTechnicians.maxByOrNull { it.completedJobsCount }?.id
+                            }
+                            val highlightBadgeText = when {
+                                isBestForSort && state.sortOption == TechnicianSortOption.MIN_DISTANCE -> "FASTEST"
+                                isBestForSort && state.sortOption == TechnicianSortOption.RATINGS -> "TOP RATED"
+                                isBestForSort && state.sortOption == TechnicianSortOption.NUMBER_OF_JOBS -> "MOST JOBS"
+                                else -> null
+                            }
+
+                            TechnicianRapidoCard(
+                                technician = tech,
+                                isSelected = state.selectedTechnicianId == tech.id,
+                                highlightBadge = highlightBadgeText,
+                                onSelect = { viewModel.selectTechnician(tech.id) }
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
                         }
 
-                        TechnicianRapidoCard(
-                            technician = tech,
-                            isSelected = state.selectedTechnicianId == tech.id,
-                            highlightBadge = highlightBadgeText,
-                            onSelect = { viewModel.selectTechnician(tech.id) }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = 4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = SapphireBlue800,
-                            modifier = Modifier.size(13.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "Selected: ${state.selectedTechnician.name} (${state.selectedTechnician.eta} • ${state.selectedTechnician.distance}) reserved upon payment.",
-                            fontSize = 11.sp,
-                            color = TextDarkPrimary,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                        val selectedTech = state.selectedTechnician
+                        if (selectedTech != null) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = SapphireBlue800,
+                                    modifier = Modifier.size(13.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Selected: ${selectedTech.name} (${selectedTech.eta} • ${selectedTech.distance}) reserved upon payment.",
+                                    fontSize = 11.sp,
+                                    color = TextDarkPrimary,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
                     }
                 }
             }

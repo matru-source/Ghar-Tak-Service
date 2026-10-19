@@ -56,69 +56,8 @@ data class AddressBookingUiState(
     val selectedSlot: String = "Within 15-30 Mins (Emergency Dispatch)",
     val errorMessage: String? = null,
     val sortOption: TechnicianSortOption = TechnicianSortOption.MIN_DISTANCE,
-    val nearbyTechnicians: List<NearbyTechnician> = listOf(
-        NearbyTechnician(
-            id = "GTS-TECH-4091",
-            name = "Rajesh Kumar",
-            badge = "GTS-TECH-4091",
-            rating = "4.9 ★",
-            ratingValue = 4.9,
-            distance = "1.3 km away",
-            distanceKm = 1.3,
-            eta = "8 mins",
-            etaMinutes = 8,
-            specialty = "MCB Panel & Earthing Specialist",
-            phone = "+91 98201 44091",
-            completedJobs = "240+ jobs",
-            completedJobsCount = 240
-        ),
-        NearbyTechnician(
-            id = "GTS-TECH-1084",
-            name = "Suresh Patil",
-            badge = "GTS-TECH-1084",
-            rating = "4.8 ★",
-            ratingValue = 4.8,
-            distance = "2.4 km away",
-            distanceKm = 2.4,
-            eta = "14 mins",
-            etaMinutes = 14,
-            specialty = "Wiring & High Load Installations",
-            phone = "+91 98201 11084",
-            completedJobs = "180+ jobs",
-            completedJobsCount = 180
-        ),
-        NearbyTechnician(
-            id = "GTS-TECH-2241",
-            name = "Vikram Singh",
-            badge = "GTS-TECH-2241",
-            rating = "5.0 ★",
-            ratingValue = 5.0,
-            distance = "3.1 km away",
-            distanceKm = 3.1,
-            eta = "19 mins",
-            etaMinutes = 19,
-            specialty = "Appliance Anchor & Ceiling Fans",
-            phone = "+91 98201 22241",
-            completedJobs = "310+ jobs",
-            completedJobsCount = 310
-        ),
-        NearbyTechnician(
-            id = "GTS-TECH-3312",
-            name = "Amit Panda",
-            badge = "GTS-TECH-3312",
-            rating = "4.9 ★",
-            ratingValue = 4.9,
-            distance = "3.8 km away",
-            distanceKm = 3.8,
-            eta = "22 mins",
-            etaMinutes = 22,
-            specialty = "Distribution Board & Inverter Routing",
-            phone = "+91 98201 33312",
-            completedJobs = "420+ jobs",
-            completedJobsCount = 420
-        )
-    ),
-    val selectedTechnicianId: String = "GTS-TECH-4091" // Default is shortest distance (Rajesh Kumar 1.3km)
+    val nearbyTechnicians: List<NearbyTechnician> = emptyList(),
+    val selectedTechnicianId: String = ""
 ) {
     val sortedTechnicians: List<NearbyTechnician>
         get() = when (sortOption) {
@@ -130,11 +69,11 @@ data class AddressBookingUiState(
             TechnicianSortOption.NUMBER_OF_JOBS -> nearbyTechnicians.sortedByDescending { it.completedJobsCount }
         }
 
-    val selectedTechnician: NearbyTechnician
-        get() = sortedTechnicians.find { it.id == selectedTechnicianId } ?: sortedTechnicians.first()
+    val selectedTechnician: NearbyTechnician?
+        get() = sortedTechnicians.find { it.id == selectedTechnicianId } ?: sortedTechnicians.firstOrNull()
 
     val canProceed: Boolean
-        get() = isPincodeServiceable && flatNumber.isNotBlank() && streetName.isNotBlank() && pincode.length == 6
+        get() = isPincodeServiceable && flatNumber.isNotBlank() && streetName.isNotBlank() && pincode.length == 6 && selectedTechnician != null
 }
 
 class AddressBookingViewModel(
@@ -226,11 +165,30 @@ class AddressBookingViewModel(
                                 selectedTechnicianId = sorted.first().id
                             )
                             Log.d("GTS_TECH_FETCH", "Successfully loaded ${sorted.size} live technicians for pin $pin. Selected: ${sorted.first().name}")
+                        } else {
+                            _uiState.value = _uiState.value.copy(
+                                nearbyTechnicians = emptyList(),
+                                selectedTechnicianId = ""
+                            )
                         }
+                    } else {
+                        _uiState.value = _uiState.value.copy(
+                            nearbyTechnicians = emptyList(),
+                            selectedTechnicianId = ""
+                        )
                     }
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        nearbyTechnicians = emptyList(),
+                        selectedTechnicianId = ""
+                    )
                 }
             } catch (e: Exception) {
-                Log.w("GTS_TECH_FETCH", "Falling back to default offline technician roster: ${e.message}")
+                Log.w("GTS_TECH_FETCH", "Technician live fetch result: ${e.message}")
+                _uiState.value = _uiState.value.copy(
+                    nearbyTechnicians = emptyList(),
+                    selectedTechnicianId = ""
+                )
             }
         }
     }
