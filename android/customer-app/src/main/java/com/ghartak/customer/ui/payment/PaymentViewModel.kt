@@ -29,6 +29,8 @@ data class PaymentUiState(
     val selectedPaymentMethod: String = "UPI_GPAY",
     val technicianId: String = "GTS-TECH-4091",
     val technicianName: String = "Rajesh Kumar",
+    val technicianBadge: String = "GTS-TECH-4091",
+    val technicianPhone: String = "+91 98201 44091",
     val stateCode: String = "OD",
     val isProcessing: Boolean = false,
     val createdJob: Job? = null,
@@ -52,6 +54,8 @@ class PaymentViewModel(
         priority: String,
         technicianId: String = "GTS-TECH-4091",
         technicianName: String = "Rajesh Kumar",
+        technicianBadge: String = "GTS-TECH-4091",
+        technicianPhone: String = "+91 98201 44091",
         stateCode: String = "OD"
     ) {
         val registered = ServiceCatalogRegistry.findService(serviceId)
@@ -73,6 +77,8 @@ class PaymentViewModel(
             priority = priority,
             technicianId = technicianId,
             technicianName = technicianName,
+            technicianBadge = technicianBadge,
+            technicianPhone = technicianPhone,
             stateCode = stateCode.ifEmpty { "OD" }
         )
     }
@@ -136,10 +142,12 @@ class PaymentViewModel(
                         gst = _uiState.value.gst18PctInr,
                         total = _uiState.value.totalAmountInr,
                         technicianName = job.technicianName ?: _uiState.value.technicianName,
-                        technicianBadge = "GTS-TECH-4091",
+                        technicianBadge = _uiState.value.technicianBadge,
+                        technicianPhone = _uiState.value.technicianPhone,
                         ticketNumber = job.jobTicketNumber,
                         stateCode = _uiState.value.stateCode,
-                        gstin = com.ghartak.customer.util.IndianPincodeResolver.getOfflineFallback(_uiState.value.pincode).gstinStateCode
+                        gstin = com.ghartak.customer.util.IndianPincodeResolver.getOfflineFallback(_uiState.value.pincode).gstinStateCode,
+                        handoverOtp = job.handoverOtp ?: "4819"
                     )
                     sessionManager.setUserPincode(_uiState.value.pincode)
                     _uiState.value = _uiState.value.copy(
@@ -189,10 +197,12 @@ class PaymentViewModel(
             gst = _uiState.value.gst18PctInr,
             total = _uiState.value.totalAmountInr,
             technicianName = _uiState.value.technicianName,
-            technicianBadge = "GTS-TECH-4091",
+            technicianBadge = _uiState.value.technicianBadge,
+            technicianPhone = _uiState.value.technicianPhone,
             ticketNumber = ticketNo,
             stateCode = cleanState,
-            gstin = com.ghartak.customer.util.IndianPincodeResolver.getOfflineFallback(_uiState.value.pincode).gstinStateCode
+            gstin = com.ghartak.customer.util.IndianPincodeResolver.getOfflineFallback(_uiState.value.pincode).gstinStateCode,
+            handoverOtp = "4819"
         )
         sessionManager.setUserPincode(_uiState.value.pincode)
         _uiState.value = _uiState.value.copy(

@@ -49,6 +49,11 @@ class NavigationViewModel(
     val uiState: StateFlow<NavigationUiState> = _uiState.asStateFlow()
 
     fun initJob(job: TechnicianJob) {
+        val pin = job.pincode
+        val isOdisha = pin.startsWith("75") || pin.startsWith("76") || pin.startsWith("77")
+        val defaultLat = if (isOdisha) 19.3150 else 18.9067
+        val defaultLng = if (isOdisha) 84.7941 else 72.8147
+
         _uiState.value = _uiState.value.copy(
             jobId = job.id,
             ticketNumber = job.jobTicketNumber,
@@ -56,8 +61,8 @@ class NavigationViewModel(
             customerName = job.customerName,
             customerPhone = job.customerPhone,
             customerAddress = job.customerAddressText,
-            customerLat = job.customerLatitude ?: 18.9067,
-            customerLng = job.customerLongitude ?: 72.8147,
+            customerLat = job.customerLatitude ?: defaultLat,
+            customerLng = job.customerLongitude ?: defaultLng,
             distanceRemainingKm = 1.4,
             etaMinutes = 6,
             transitStep = 0,
@@ -72,11 +77,14 @@ class NavigationViewModel(
     fun advanceTransitStep(context: Context) {
         val nextStep = (_uiState.value.transitStep + 1).coerceAtMost(3)
 
+        val addr = _uiState.value.customerAddress.ifEmpty { "Customer Doorstep" }
+        val street = addr.split(",").firstOrNull()?.trim()?.ifEmpty { "Destination" } ?: "Destination"
+
         val (dist, eta, speed, maneuver, arrived) = when (nextStep) {
-            1 -> Tuple5(0.85, 3, 28.0, "Continue on Colaba Causeway for 600m", false)
-            2 -> Tuple5(0.28, 1, 15.0, "Turn Left into Sea Crest Lane (200m to destination)", false)
-            3 -> Tuple5(0.03, 0, 0.0, "Arrived at Sea Crest Towers (Doorstep Geofence)", true)
-            else -> Tuple5(1.4, 6, 24.0, "Head South on Shahid Bhagat Singh Rd", false)
+            1 -> Tuple5(0.85, 3, 28.0, "Continue towards $street for 600m", false)
+            2 -> Tuple5(0.28, 1, 15.0, "Turn towards $street (200m to doorstep)", false)
+            3 -> Tuple5(0.03, 0, 0.0, "Arrived at $addr (Doorstep Geofence)", true)
+            else -> Tuple5(1.4, 6, 24.0, "Head towards $street", false)
         }
 
         // Interpolate moving GPS coordinates towards actual customer location

@@ -145,6 +145,7 @@ export async function POST(request: NextRequest) {
           pincode: newJob.pincode,
           customerLatitude: newJob.customerLatitude,
           customerLongitude: newJob.customerLongitude,
+          handoverOtp: newJob.handoverOtp,
         },
       });
     }

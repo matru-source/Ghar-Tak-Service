@@ -106,12 +106,16 @@ class JobCompleteViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSubmitting = true, errorMessage = null)
 
+            var realInvoiceNumber: String? = null
             try {
-                // Responsive fast timeout (2.0s) so physical phones never get frozen on unreachable local backend
-                withTimeoutOrNull(2000L) {
+                // 15s network timeout for reliable cloud API communication
+                val res = withTimeoutOrNull(15000L) {
                     val api = ApiClient.getService(context)
+                    val sm = SessionManager(context)
+                    val pin = sm.getPincode()
+                    val defaultJobId = if (pin.startsWith("75") || pin.startsWith("76") || pin.startsWith("77")) "job_od_live_01" else "job_mh_live_01"
                     api.completeJob(
-                        jobId = state.jobId.ifEmpty { "job_mh_live_01" },
+                        jobId = state.jobId.ifEmpty { defaultJobId },
                         request = JobCompleteRequest(
                             handoverOtp = state.enteredOtp,
                             afterPhotoUrl = state.afterPhotoUri ?: "local_restored_panel.jpg",
@@ -120,19 +124,25 @@ class JobCompleteViewModel(
                         )
                     )
                 }
+                if (res?.isSuccessful == true && res.body()?.data != null) {
+                    realInvoiceNumber = res.body()!!.data!!.invoiceNumber
+                }
             } catch (e: Throwable) {
                 Log.w("GTS_COMPLETE", "Network completion fallback handled: ${e.message}")
             } finally {
                 delay(400) // Fast snappy transition
+                val sm = SessionManager(context)
                 try {
-                    SessionManager(context).incrementJobsCompleted()
+                    sm.addEarnings(state.technicianPayoutInr)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
+                val pin = sm.getPincode()
+                val statePrefix = if (pin.startsWith("75") || pin.startsWith("76") || pin.startsWith("77")) "OD" else "MH"
                 _uiState.value = _uiState.value.copy(
                     isSubmitting = false,
                     isCompleted = true,
-                    invoiceNumber = "INV-2026-MH-" + (1000..9999).random()
+                    invoiceNumber = realInvoiceNumber ?: ("INV-2026-$statePrefix-" + (1000..9999).random())
                 )
                 onSuccess()
             }

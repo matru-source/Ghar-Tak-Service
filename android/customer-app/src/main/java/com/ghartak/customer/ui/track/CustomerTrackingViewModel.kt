@@ -49,6 +49,7 @@ class CustomerTrackingViewModel(
         val activeTech = sessionManager.getActiveJobTechnicianName()
         val activeBadge = sessionManager.getActiveJobTechnicianBadge()
         val activePhone = sessionManager.getActiveJobTechnicianPhone()
+        val activeOtp = sessionManager.getActiveJobOtp()
 
         _uiState.value = _uiState.value.copy(
             jobId = jobId,
@@ -56,7 +57,8 @@ class CustomerTrackingViewModel(
             ticketNumber = activeTicket,
             technicianName = activeTech,
             technicianBadge = activeBadge,
-            technicianPhone = activePhone
+            technicianPhone = activePhone,
+            handoverOtp = activeOtp
         )
 
         // Connect to Central Real-Time SSE Bus

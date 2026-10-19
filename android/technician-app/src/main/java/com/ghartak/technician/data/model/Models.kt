@@ -48,7 +48,8 @@ data class TechnicianJob(
     @SerializedName("safetyMcbSwitchConfirmed") val safetyMcbSwitchConfirmed: Boolean = false,
     @SerializedName("handoverOtp") val handoverOtp: String? = null,
     @SerializedName("scheduledAt") val scheduledAt: String? = null,
-    @SerializedName("createdAt") val createdAt: String? = null
+    @SerializedName("createdAt") val createdAt: String? = null,
+    @SerializedName("invoiceNumber") val invoiceNumber: String? = null
 )
 
 data class DispatchActionRequest(

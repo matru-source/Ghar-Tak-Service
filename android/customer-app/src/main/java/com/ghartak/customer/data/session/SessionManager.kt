@@ -38,6 +38,7 @@ class SessionManager(val context: Context) {
         private const val KEY_ACTIVE_JOB_TICKET_NO = "key_active_job_ticket_no"
         private const val KEY_ACTIVE_JOB_STATE_CODE = "key_active_job_state_code"
         private const val KEY_ACTIVE_JOB_GSTIN = "key_active_job_gstin"
+        private const val KEY_ACTIVE_JOB_OTP = "key_active_job_otp"
 
         const val DEFAULT_BASE_URL = "https://ghartak-api.onrender.com/api/"
     }
@@ -234,7 +235,8 @@ class SessionManager(val context: Context) {
         technicianPhone: String = "+91 98201 44091",
         ticketNumber: String = "GTS-OD-5638",
         stateCode: String = "OD",
-        gstin: String = "21AAACG1234F1Z5 (21-OD)"
+        gstin: String = "21AAACG1234F1Z5 (21-OD)",
+        handoverOtp: String = "4819"
     ) {
         prefs.edit().apply {
             putString(KEY_ACTIVE_JOB_ID, id)
@@ -248,9 +250,12 @@ class SessionManager(val context: Context) {
             putString(KEY_ACTIVE_JOB_TICKET_NO, ticketNumber)
             putString(KEY_ACTIVE_JOB_STATE_CODE, stateCode)
             putString(KEY_ACTIVE_JOB_GSTIN, gstin)
+            putString(KEY_ACTIVE_JOB_OTP, handoverOtp)
             apply()
         }
     }
+
+    fun getActiveJobOtp(): String = prefs.getString(KEY_ACTIVE_JOB_OTP, "4819") ?: "4819"
 
     fun getActiveJobId(): String = prefs.getString(KEY_ACTIVE_JOB_ID, "job_od_live_01") ?: "job_od_live_01"
 

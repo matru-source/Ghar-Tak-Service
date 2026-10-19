@@ -43,7 +43,10 @@ fun CustomerProfileView(
 ) {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
-    val pastOrders = remember { sessionManager.getPastOrders() }
+    var pastOrders by remember { mutableStateOf(sessionManager.getPastOrders()) }
+    LaunchedEffect(Unit) {
+        pastOrders = sessionManager.getPastOrders()
+    }
     var profileImageUri by remember { mutableStateOf(sessionManager.getProfileImageUri()) }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(

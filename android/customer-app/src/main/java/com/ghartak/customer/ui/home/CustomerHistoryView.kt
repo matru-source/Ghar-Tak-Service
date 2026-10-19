@@ -41,6 +41,9 @@ fun CustomerHistoryView(
     val context = LocalContext.current
     val sessionManager = remember { com.ghartak.customer.data.session.SessionManager(context) }
     var pastOrders by remember { mutableStateOf(sessionManager.getPastOrders()) }
+    LaunchedEffect(Unit) {
+        pastOrders = sessionManager.getPastOrders()
+    }
 
     LazyColumn(
         modifier = Modifier

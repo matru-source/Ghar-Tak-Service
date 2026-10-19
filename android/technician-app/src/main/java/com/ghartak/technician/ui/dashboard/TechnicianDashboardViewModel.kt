@@ -451,8 +451,9 @@ class TechnicianDashboardViewModel(
                     priority = details?.optString("priority", "STANDARD") ?: "STANDARD",
                     totalAmountInr = totalAmount,
                     safetyGlovesConfirmed = false,
-                    safetyMcbSwitchConfirmed = false,
-                    handoverOtp = (1000..9999).random().toString()
+                    handoverOtp = details?.optString("handoverOtp")?.takeIf { it.isNotEmpty() }
+                        ?: data.optString("handoverOtp").takeIf { it.isNotEmpty() }
+                        ?: "4819"
                 )
 
                 cacheIncomingJob(inboundJob)

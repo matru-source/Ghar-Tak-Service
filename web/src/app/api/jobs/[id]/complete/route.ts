@@ -70,18 +70,21 @@ export async function POST(
       },
     });
 
-    return apiSuccess(
-      {
-        job,
-        invoice,
-        completionSummary: {
-          jobTicketNumber: job.jobTicketNumber,
-          completedAt: job.completedAt,
-          totalAmountInr: job.totalAmountInr,
-          invoiceNumber: invoice.invoiceNumber,
-          customerRating: job.customerRating || 5,
-        },
+    const responsePayload = {
+      ...job,
+      invoiceNumber: invoice.invoiceNumber,
+      invoice,
+      completionSummary: {
+        jobTicketNumber: job.jobTicketNumber,
+        completedAt: job.completedAt,
+        totalAmountInr: job.totalAmountInr,
+        invoiceNumber: invoice.invoiceNumber,
+        customerRating: job.customerRating || 5,
       },
+    };
+
+    return apiSuccess(
+      responsePayload,
       `Job '${job.jobTicketNumber}' completed and verified successfully! 18% GST Tax Invoice '${invoice.invoiceNumber}' issued.`,
       200
     );

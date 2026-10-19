@@ -40,8 +40,14 @@ export async function POST(
       },
     });
 
+    const responsePayload = {
+      ...(result.job || {}),
+      outcome: result.outcome,
+      message: result.message,
+    };
+
     return apiSuccess(
-      result,
+      responsePayload,
       result.message,
       200
     );

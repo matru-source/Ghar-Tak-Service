@@ -115,6 +115,8 @@ class MainActivity : ComponentActivity() {
                                 priority = bookingState.bookingPriority,
                                 technicianId = selectedTech.id,
                                 technicianName = selectedTech.name,
+                                technicianBadge = selectedTech.badge,
+                                technicianPhone = selectedTech.phone,
                                 stateCode = bookingState.stateCode
                             )
 
@@ -126,7 +128,7 @@ class MainActivity : ComponentActivity() {
                                     val currentSelectedTech = bookingViewModel.uiState.value.selectedTechnician
                                     val currentState = bookingViewModel.uiState.value
                                     val cleanState = currentState.stateCode.ifEmpty { sessionManager.getActiveJobStateCode() }
-                                    val ticketNo = "GTS-$cleanState-${(1000..9999).random()}"
+                                    val ticketNo = sessionManager.getActiveJobTicketNumber()
 
                                     sessionManager.saveActiveJob(
                                         id = jobId,
@@ -139,7 +141,8 @@ class MainActivity : ComponentActivity() {
                                         technicianPhone = currentSelectedTech.phone,
                                         ticketNumber = ticketNo,
                                         stateCode = cleanState,
-                                        gstin = currentState.gstinStateCode
+                                        gstin = currentState.gstinStateCode,
+                                        handoverOtp = sessionManager.getActiveJobOtp()
                                     )
                                     sessionManager.setUserPincode(currentState.pincode)
 
