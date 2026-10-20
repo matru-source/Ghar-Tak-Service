@@ -1090,15 +1090,53 @@ fun TechnicianEarningsContent(
         else -> state.monthEarningsInr
     }
 
+    // Week-over-week percentage change computed from real earnings
+    val (wowPercentageText, wowPercentageColor) = remember(state.recentTransactions, state.weekEarningsInr) {
+        val nowCal = java.util.Calendar.getInstance()
+        val currentWeek = nowCal.get(java.util.Calendar.WEEK_OF_YEAR)
+        val currentYear = nowCal.get(java.util.Calendar.YEAR)
+
+        val prevWeekCal = java.util.Calendar.getInstance().apply {
+            add(java.util.Calendar.WEEK_OF_YEAR, -1)
+        }
+        val prevWeek = prevWeekCal.get(java.util.Calendar.WEEK_OF_YEAR)
+        val prevWeekYear = prevWeekCal.get(java.util.Calendar.YEAR)
+
+        val currentWeekFromTx = state.recentTransactions.filter { tx ->
+            val tCal = java.util.Calendar.getInstance().apply { timeInMillis = tx.timestampMillis }
+            tCal.get(java.util.Calendar.YEAR) == currentYear && tCal.get(java.util.Calendar.WEEK_OF_YEAR) == currentWeek
+        }.sumOf { it.amountInr }
+
+        val currentWeekTotal = maxOf(state.weekEarningsInr, currentWeekFromTx)
+
+        val prevWeekTotal = state.recentTransactions.filter { tx ->
+            val tCal = java.util.Calendar.getInstance().apply { timeInMillis = tx.timestampMillis }
+            tCal.get(java.util.Calendar.YEAR) == prevWeekYear && tCal.get(java.util.Calendar.WEEK_OF_YEAR) == prevWeek
+        }.sumOf { it.amountInr }
+
+        when {
+            currentWeekTotal == 0.0 && prevWeekTotal == 0.0 -> Pair("—", TextDarkMuted)
+            prevWeekTotal == 0.0 -> Pair("↑ 100%", Color(0xFF2E7D32))
+            currentWeekTotal >= prevWeekTotal -> {
+                val pct = (((currentWeekTotal - prevWeekTotal) / prevWeekTotal) * 100).toInt()
+                Pair("↑ $pct%", Color(0xFF2E7D32))
+            }
+            else -> {
+                val pct = (((prevWeekTotal - currentWeekTotal) / prevWeekTotal) * 100).toInt()
+                Pair("↓ $pct%", Color(0xFFDC2626))
+            }
+        }
+    }
+
     val trendDisplay = if (state.jobsCompletedCount == 0 && totalEarningsDisplay == 0.0) {
         "New Professional • Ready for jobs"
     } else {
         when (currentFilter) {
             "TODAY" -> "↑ ${if (state.todayEarningsInr > 0) "Active" else "0"} jobs today"
-            "THIS_WEEK" -> "↑ Verified payouts"
+            "THIS_WEEK" -> "$wowPercentageText vs last week"
             "THIS_MONTH" -> "↑ ${state.jobsCompletedCount} jobs completed"
             "ALL_TIME" -> "↑ ${state.jobsCompletedCount} lifetime jobs settled"
-            else -> "↑ Verified payouts"
+            else -> "$wowPercentageText vs last week"
         }
     }
 
@@ -1279,7 +1317,127 @@ fun TechnicianEarningsContent(
                                 }
                             }
 
-                            // Dynamic Chart changing based on active filter
+                            // Dynamic Chart calculated from actual job earnings distributed by hour/day
+                            val chartBars = remember(currentFilter, state.recentTransactions, totalEarningsDisplay) {
+                                val hasEarnings = totalEarningsDisplay > 0.0
+                                if (!hasEarnings) {
+                                    when (currentFilter) {
+                                        "TODAY" -> listOf("09:00", "12:00", "15:00", "18:00").map { Triple(it, 0.08f, false) }
+                                        "THIS_WEEK" -> listOf("Mon", "Tue", "Wed", "Thu", "Fri").map { Triple(it, 0.08f, false) }
+                                        "ALL_TIME" -> listOf("'23", "'24", "'25", "'26").map { Triple(it, 0.08f, false) }
+                                        else -> listOf("Wk 1", "Wk 2", "Wk 3", "Wk 4").map { Triple(it, 0.08f, false) }
+                                    }
+                                } else {
+                                    val nowCal = java.util.Calendar.getInstance()
+                                    val currentYear = nowCal.get(java.util.Calendar.YEAR)
+                                    val currentDayOfYear = nowCal.get(java.util.Calendar.DAY_OF_YEAR)
+                                    val currentWeek = nowCal.get(java.util.Calendar.WEEK_OF_YEAR)
+                                    val currentMonth = nowCal.get(java.util.Calendar.MONTH)
+
+                                    when (currentFilter) {
+                                        "TODAY" -> {
+                                            val labels = listOf("09:00", "12:00", "15:00", "18:00")
+                                            val bins = DoubleArray(4)
+                                            state.recentTransactions.forEach { tx ->
+                                                val tCal = java.util.Calendar.getInstance().apply { timeInMillis = tx.timestampMillis }
+                                                if (tCal.get(java.util.Calendar.YEAR) == currentYear && tCal.get(java.util.Calendar.DAY_OF_YEAR) == currentDayOfYear) {
+                                                    val hour = tCal.get(java.util.Calendar.HOUR_OF_DAY)
+                                                    when {
+                                                        hour < 11 -> bins[0] += tx.amountInr
+                                                        hour in 11..13 -> bins[1] += tx.amountInr
+                                                        hour in 14..16 -> bins[2] += tx.amountInr
+                                                        else -> bins[3] += tx.amountInr
+                                                    }
+                                                }
+                                            }
+                                            if (bins.all { it == 0.0 }) {
+                                                bins[3] = totalEarningsDisplay
+                                            }
+                                            val maxVal = bins.maxOrNull() ?: 1.0
+                                            labels.mapIndexed { idx, label ->
+                                                val amount = bins[idx]
+                                                val ratio = if (maxVal > 0.0 && amount > 0.0) maxOf(0.12f, (amount / maxVal).toFloat()) else 0.08f
+                                                Triple(label, ratio, amount == maxVal && amount > 0.0)
+                                            }
+                                        }
+                                        "THIS_WEEK" -> {
+                                            val labels = listOf("Mon", "Tue", "Wed", "Thu", "Fri")
+                                            val bins = DoubleArray(5)
+                                            state.recentTransactions.forEach { tx ->
+                                                val tCal = java.util.Calendar.getInstance().apply { timeInMillis = tx.timestampMillis }
+                                                if (tCal.get(java.util.Calendar.YEAR) == currentYear && tCal.get(java.util.Calendar.WEEK_OF_YEAR) == currentWeek) {
+                                                    when (tCal.get(java.util.Calendar.DAY_OF_WEEK)) {
+                                                        java.util.Calendar.MONDAY -> bins[0] += tx.amountInr
+                                                        java.util.Calendar.TUESDAY -> bins[1] += tx.amountInr
+                                                        java.util.Calendar.WEDNESDAY -> bins[2] += tx.amountInr
+                                                        java.util.Calendar.THURSDAY -> bins[3] += tx.amountInr
+                                                        java.util.Calendar.FRIDAY, java.util.Calendar.SATURDAY, java.util.Calendar.SUNDAY -> bins[4] += tx.amountInr
+                                                    }
+                                                }
+                                            }
+                                            if (bins.all { it == 0.0 }) {
+                                                bins[4] = totalEarningsDisplay
+                                            }
+                                            val maxVal = bins.maxOrNull() ?: 1.0
+                                            labels.mapIndexed { idx, label ->
+                                                val amount = bins[idx]
+                                                val ratio = if (maxVal > 0.0 && amount > 0.0) maxOf(0.12f, (amount / maxVal).toFloat()) else 0.08f
+                                                Triple(label, ratio, amount == maxVal && amount > 0.0)
+                                            }
+                                        }
+                                        "ALL_TIME" -> {
+                                            val labels = listOf("'23", "'24", "'25", "'26")
+                                            val bins = DoubleArray(4)
+                                            state.recentTransactions.forEach { tx ->
+                                                val tCal = java.util.Calendar.getInstance().apply { timeInMillis = tx.timestampMillis }
+                                                val yr = tCal.get(java.util.Calendar.YEAR)
+                                                when {
+                                                    yr <= 2023 -> bins[0] += tx.amountInr
+                                                    yr == 2024 -> bins[1] += tx.amountInr
+                                                    yr == 2025 -> bins[2] += tx.amountInr
+                                                    else -> bins[3] += tx.amountInr
+                                                }
+                                            }
+                                            if (bins.all { it == 0.0 }) {
+                                                bins[3] = totalEarningsDisplay
+                                            }
+                                            val maxVal = bins.maxOrNull() ?: 1.0
+                                            labels.mapIndexed { idx, label ->
+                                                val amount = bins[idx]
+                                                val ratio = if (maxVal > 0.0 && amount > 0.0) maxOf(0.12f, (amount / maxVal).toFloat()) else 0.08f
+                                                Triple(label, ratio, amount == maxVal && amount > 0.0)
+                                            }
+                                        }
+                                        else -> {
+                                            // THIS_MONTH: 4 weeks
+                                            val labels = listOf("Wk 1", "Wk 2", "Wk 3", "Wk 4")
+                                            val bins = DoubleArray(4)
+                                            state.recentTransactions.forEach { tx ->
+                                                val tCal = java.util.Calendar.getInstance().apply { timeInMillis = tx.timestampMillis }
+                                                if (tCal.get(java.util.Calendar.YEAR) == currentYear && tCal.get(java.util.Calendar.MONTH) == currentMonth) {
+                                                    val day = tCal.get(java.util.Calendar.DAY_OF_MONTH)
+                                                    when {
+                                                        day <= 7 -> bins[0] += tx.amountInr
+                                                        day <= 14 -> bins[1] += tx.amountInr
+                                                        day <= 21 -> bins[2] += tx.amountInr
+                                                        else -> bins[3] += tx.amountInr
+                                                    }
+                                                }
+                                            }
+                                            if (bins.all { it == 0.0 }) {
+                                                bins[3] = totalEarningsDisplay
+                                            }
+                                            val maxVal = bins.maxOrNull() ?: 1.0
+                                            labels.mapIndexed { idx, label ->
+                                                val amount = bins[idx]
+                                                val ratio = if (maxVal > 0.0 && amount > 0.0) maxOf(0.12f, (amount / maxVal).toFloat()) else 0.08f
+                                                Triple(label, ratio, amount == maxVal && amount > 0.0)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalAlignment = Alignment.Bottom,
@@ -1287,36 +1445,12 @@ fun TechnicianEarningsContent(
                                     .height(80.dp)
                                     .padding(end = 4.dp)
                             ) {
-                                val hasEarnings = totalEarningsDisplay > 0
-                                when (currentFilter) {
-                                    "TODAY" -> {
-                                        MonthlyChartBar(label = "09:00", heightRatio = if (hasEarnings) 0.35f else 0.08f, isHighlighted = false)
-                                        MonthlyChartBar(label = "12:00", heightRatio = if (hasEarnings) 0.55f else 0.08f, isHighlighted = false)
-                                        MonthlyChartBar(label = "15:00", heightRatio = if (hasEarnings) 0.80f else 0.08f, isHighlighted = false)
-                                        MonthlyChartBar(label = "18:00", heightRatio = if (hasEarnings) 1.00f else 0.08f, isHighlighted = hasEarnings)
-                                    }
-                                    "THIS_WEEK" -> {
-                                        MonthlyChartBar(label = "Mon", heightRatio = if (hasEarnings) 0.40f else 0.08f, isHighlighted = false)
-                                        MonthlyChartBar(label = "Tue", heightRatio = if (hasEarnings) 0.60f else 0.08f, isHighlighted = false)
-                                        MonthlyChartBar(label = "Wed", heightRatio = if (hasEarnings) 0.75f else 0.08f, isHighlighted = false)
-                                        MonthlyChartBar(label = "Thu", heightRatio = if (hasEarnings) 0.50f else 0.08f, isHighlighted = false)
-                                        MonthlyChartBar(label = "Fri", heightRatio = if (hasEarnings) 1.00f else 0.08f, isHighlighted = hasEarnings)
-                                    }
-                                    "ALL_TIME" -> {
-                                        MonthlyChartBar(label = "'22", heightRatio = if (hasEarnings) 0.30f else 0.08f, isHighlighted = false)
-                                        MonthlyChartBar(label = "'23", heightRatio = if (hasEarnings) 0.50f else 0.08f, isHighlighted = false)
-                                        MonthlyChartBar(label = "'24", heightRatio = if (hasEarnings) 0.70f else 0.08f, isHighlighted = false)
-                                        MonthlyChartBar(label = "'25", heightRatio = if (hasEarnings) 0.85f else 0.08f, isHighlighted = false)
-                                        MonthlyChartBar(label = "'26", heightRatio = if (hasEarnings) 1.00f else 0.08f, isHighlighted = hasEarnings)
-                                    }
-                                    else -> {
-                                        // THIS_MONTH
-                                        MonthlyChartBar(label = "Jun", heightRatio = if (hasEarnings) 0.22f else 0.08f, isHighlighted = false)
-                                        MonthlyChartBar(label = "Jul", heightRatio = if (hasEarnings) 0.35f else 0.08f, isHighlighted = false)
-                                        MonthlyChartBar(label = "Aug", heightRatio = if (hasEarnings) 0.52f else 0.08f, isHighlighted = false)
-                                        MonthlyChartBar(label = "Sep", heightRatio = if (hasEarnings) 0.70f else 0.08f, isHighlighted = false)
-                                        MonthlyChartBar(label = "Oct", heightRatio = if (hasEarnings) 1.00f else 0.08f, isHighlighted = hasEarnings)
-                                    }
+                                chartBars.forEach { (label, ratio, isHighlighted) ->
+                                    MonthlyChartBar(
+                                        label = label,
+                                        heightRatio = ratio,
+                                        isHighlighted = isHighlighted
+                                    )
                                 }
                             }
                         }
@@ -1397,7 +1531,7 @@ fun TechnicianEarningsContent(
                             Row(verticalAlignment = Alignment.Bottom) {
                                 Text(text = "$totalJobsCount", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDarkPrimary)
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(text = "↑ 20%", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
+                                Text(text = wowPercentageText, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = wowPercentageColor)
                             }
                             Text(text = totalJobsSub, fontSize = 9.5.sp, color = TextDarkMuted)
                         }

@@ -329,6 +329,9 @@ class SessionManager(val context: Context) {
         incrementJobsCompleted()
     }
 
+    fun getSavedEarningsTransactionsJson(): String = prefs.getString("key_saved_earnings_tx_json", "[]") ?: "[]"
+    fun saveEarningsTransactionsJson(jsonStr: String) { prefs.edit().putString("key_saved_earnings_tx_json", jsonStr).apply() }
+
     fun getSavedUpiId(): String = prefs.getString("key_saved_upi_id", "") ?: ""
     fun setSavedUpiId(upi: String) { prefs.edit().putString("key_saved_upi_id", upi.trim()).apply() }
 

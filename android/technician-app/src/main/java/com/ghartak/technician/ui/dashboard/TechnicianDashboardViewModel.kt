@@ -19,6 +19,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
 
 data class InboundJobNotification(
     val id: String,
@@ -41,7 +43,8 @@ data class EarningsTransaction(
     val completedTime: String,
     val amountInr: Double,
     val isPending: Boolean = false,
-    val periodScope: Set<String> = setOf("TODAY", "THIS_WEEK", "THIS_MONTH", "ALL_TIME")
+    val periodScope: Set<String> = setOf("TODAY", "THIS_WEEK", "THIS_MONTH", "ALL_TIME"),
+    val timestampMillis: Long = System.currentTimeMillis()
 )
 
 data class DashboardUiState(
@@ -379,7 +382,8 @@ class TechnicianDashboardViewModel(
             serviceArea = serviceArea
         )
 
-        val completed = sessionManager.getTotalJobsCompleted()
+        val cachedTransactions = loadTransactionsFromSession()
+        val completed = maxOf(sessionManager.getTotalJobsCompleted(), cachedTransactions.size)
         val todayE = if (completed == 0) 0.0 else sessionManager.getTodayEarnings()
         val weekE = if (completed == 0) 0.0 else sessionManager.getWeekEarnings()
         val monthE = if (completed == 0) 0.0 else sessionManager.getMonthEarnings()
@@ -395,13 +399,15 @@ class TechnicianDashboardViewModel(
             todayEarningsInr = todayE,
             weekEarningsInr = weekE,
             monthEarningsInr = monthE,
-            allTimeEarningsInr = monthE,
+            allTimeEarningsInr = if (monthE > 0) monthE else cachedTransactions.sumOf { it.amountInr },
             availableWithdrawalInr = available,
             withdrawalHistory = withdrawals,
+            recentTransactions = cachedTransactions,
             assignedJobs = _uiState.value.assignedJobs
         )
         syncProfileToServer()
         fetchWithdrawalHistory()
+        fetchCompletedJobTransactions()
 
         if (isOnline) {
             val activeJobId = _uiState.value.assignedJobs.firstOrNull { it.status == "EN_ROUTE" || it.status == "ASSIGNED" || it.status == "IN_PROGRESS" }?.id
@@ -499,7 +505,7 @@ class TechnicianDashboardViewModel(
         )
     }
 
-    fun markJobCompleted(jobId: String, payoutInr: Double = 1400.0) {
+    fun markJobCompleted(jobId: String, payoutInr: Double = 0.0) {
         val updatedJobs = _uiState.value.assignedJobs.map { job ->
             if (job.id.equals(jobId, ignoreCase = true) || job.jobTicketNumber.equals(jobId, ignoreCase = true) || jobId.contains(job.id, ignoreCase = true)) {
                 job.copy(status = "COMPLETED")
@@ -511,21 +517,34 @@ class TechnicianDashboardViewModel(
             it.id.equals(jobId, ignoreCase = true) || it.jobTicketNumber.equals(jobId, ignoreCase = true) || jobId.contains(it.id, ignoreCase = true)
         } ?: _uiState.value.selectedJob
 
-        val finalPayout = if (completedJob != null && completedJob.totalAmountInr > 0) completedJob.totalAmountInr * 0.7 else payoutInr
-        val ticket = completedJob?.jobTicketNumber ?: "#J-1006"
-        val service = completedJob?.serviceTitle ?: "AC Installation"
+        val finalPayout = if (completedJob != null && completedJob.totalAmountInr > 0.0) {
+            completedJob.totalAmountInr * 0.70
+        } else if (payoutInr > 0.0) {
+            payoutInr * 0.70
+        } else {
+            0.0
+        }
+        val ticket = completedJob?.jobTicketNumber?.ifBlank { "#J-${jobId.takeLast(4)}" } ?: "#J-${jobId.takeLast(4)}"
+        val service = completedJob?.serviceTitle?.ifBlank { "Doorstep Service" } ?: "Doorstep Service"
 
-        sessionManager.addEarnings(finalPayout)
+        if (finalPayout > 0.0) {
+            sessionManager.addEarnings(finalPayout)
+        }
 
+        val nowTimeFormatted = java.text.SimpleDateFormat("d MMM, hh:mm a", java.util.Locale.ENGLISH).format(java.util.Date())
         val newTx = EarningsTransaction(
             id = "tx_${System.currentTimeMillis()}",
             jobTicketNumber = ticket,
             serviceTitle = service,
-            completedTime = "Completed just now",
+            completedTime = nowTimeFormatted,
             amountInr = finalPayout,
             isPending = false,
-            periodScope = setOf("TODAY", "THIS_WEEK", "THIS_MONTH", "ALL_TIME")
+            periodScope = setOf("TODAY", "THIS_WEEK", "THIS_MONTH", "ALL_TIME"),
+            timestampMillis = System.currentTimeMillis()
         )
+
+        val updatedTransactions = (listOf(newTx) + _uiState.value.recentTransactions).distinctBy { it.jobTicketNumber }
+        saveTransactionsToSession(updatedTransactions)
 
         _uiState.value = _uiState.value.copy(
             assignedJobs = updatedJobs,
@@ -537,9 +556,135 @@ class TechnicianDashboardViewModel(
             availableWithdrawalInr = _uiState.value.availableWithdrawalInr + finalPayout,
             jobsCompletedCount = _uiState.value.jobsCompletedCount + 1,
             jobsPendingCount = maxOf(0, _uiState.value.jobsPendingCount - 1),
-            recentTransactions = listOf(newTx) + _uiState.value.recentTransactions,
+            recentTransactions = updatedTransactions,
             currentTab = "HOME"
         )
+    }
+
+    private fun loadTransactionsFromSession(): List<EarningsTransaction> {
+        val raw = sessionManager.getSavedEarningsTransactionsJson()
+        if (raw.isBlank() || raw == "[]") return emptyList()
+        return try {
+            val arr = JSONArray(raw)
+            val list = mutableListOf<EarningsTransaction>()
+            for (i in 0 until arr.length()) {
+                val obj = arr.getJSONObject(i)
+                val periodsArr = obj.optJSONArray("periodScope")
+                val periods = mutableSetOf<String>()
+                if (periodsArr != null) {
+                    for (p in 0 until periodsArr.length()) {
+                        periods.add(periodsArr.getString(p))
+                    }
+                } else {
+                    periods.addAll(listOf("TODAY", "THIS_WEEK", "THIS_MONTH", "ALL_TIME"))
+                }
+                val ts = obj.optLong("timestampMillis", System.currentTimeMillis())
+                list.add(
+                    EarningsTransaction(
+                        id = obj.optString("id"),
+                        jobTicketNumber = obj.optString("jobTicketNumber"),
+                        serviceTitle = obj.optString("serviceTitle"),
+                        completedTime = obj.optString("completedTime"),
+                        amountInr = obj.optDouble("amountInr"),
+                        isPending = obj.optBoolean("isPending", false),
+                        periodScope = periods,
+                        timestampMillis = ts
+                    )
+                )
+            }
+            list
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun saveTransactionsToSession(list: List<EarningsTransaction>) {
+        try {
+            val arr = JSONArray()
+            for (tx in list) {
+                val obj = JSONObject().apply {
+                    put("id", tx.id)
+                    put("jobTicketNumber", tx.jobTicketNumber)
+                    put("serviceTitle", tx.serviceTitle)
+                    put("completedTime", tx.completedTime)
+                    put("amountInr", tx.amountInr)
+                    put("isPending", tx.isPending)
+                    put("timestampMillis", tx.timestampMillis)
+                    val pArr = JSONArray()
+                    tx.periodScope.forEach { pArr.put(it) }
+                    put("periodScope", pArr)
+                }
+                arr.put(obj)
+            }
+            sessionManager.saveEarningsTransactionsJson(arr.toString())
+        } catch (_: Exception) {
+        }
+    }
+
+    fun fetchCompletedJobTransactions() {
+        viewModelScope.launch {
+            try {
+                val api = ApiClient.getService(sessionManager.context)
+                val techId = sessionManager.getTechnicianId().ifEmpty { sessionManager.getBadgeNumber() }
+                if (techId.isBlank()) return@launch
+
+                val response = api.getAssignedJobs(technicianId = techId, status = "WORK_COMPLETED")
+                if (response.isSuccessful && response.body()?.data != null) {
+                    val dataMap = response.body()!!.data!!
+                    val rawJobs = (dataMap["jobs"] as? List<*>) ?: emptyList<Any>()
+
+                    val fetchedTransactions = rawJobs.mapNotNull { raw ->
+                        val m = raw as? Map<*, *> ?: return@mapNotNull null
+                        val id = m["id"]?.toString() ?: return@mapNotNull null
+                        val ticket = m["jobTicketNumber"]?.toString() ?: "#J-${id.takeLast(4)}"
+                        val service = m["serviceTitle"]?.toString() ?: "Doorstep Service"
+                        val totalAmount = (m["totalAmountInr"] as? Number)?.toDouble() ?: 0.0
+                        val payout = totalAmount * 0.70
+                        val completedAt = m["updatedAt"]?.toString() ?: m["createdAt"]?.toString() ?: ""
+
+                        val (timeFormatted, parsedTs) = if (completedAt.isNotBlank()) {
+                            try {
+                                val inFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.ENGLISH)
+                                val outFormat = java.text.SimpleDateFormat("d MMM, hh:mm a", java.util.Locale.ENGLISH)
+                                val d = inFormat.parse(completedAt.substring(0, 19))
+                                if (d != null) Pair(outFormat.format(d), d.time) else Pair("Completed", System.currentTimeMillis())
+                            } catch (_: Exception) {
+                                Pair("Completed", System.currentTimeMillis())
+                            }
+                        } else {
+                            Pair("Completed", System.currentTimeMillis())
+                        }
+
+                        EarningsTransaction(
+                            id = "tx_$id",
+                            jobTicketNumber = ticket,
+                            serviceTitle = service,
+                            completedTime = timeFormatted,
+                            amountInr = payout,
+                            isPending = false,
+                            periodScope = setOf("TODAY", "THIS_WEEK", "THIS_MONTH", "ALL_TIME"),
+                            timestampMillis = parsedTs
+                        )
+                    }
+
+                    val mergedTx = (fetchedTransactions + _uiState.value.recentTransactions).distinctBy { it.jobTicketNumber }
+                    saveTransactionsToSession(mergedTx)
+
+                    val totalEarnedFromTx = mergedTx.sumOf { it.amountInr }
+
+                    _uiState.value = _uiState.value.copy(
+                        recentTransactions = mergedTx,
+                        jobsCompletedCount = maxOf(_uiState.value.jobsCompletedCount, mergedTx.size),
+                        allTimeEarningsInr = maxOf(_uiState.value.allTimeEarningsInr, totalEarnedFromTx),
+                        monthEarningsInr = if (_uiState.value.monthEarningsInr <= 0.0) totalEarnedFromTx else _uiState.value.monthEarningsInr,
+                        availableWithdrawalInr = if (_uiState.value.availableWithdrawalInr <= 0.0) totalEarnedFromTx else _uiState.value.availableWithdrawalInr
+                    )
+                    Log.d("GTS_TECH", "Fetched ${fetchedTransactions.size} completed job transactions from server")
+                }
+            } catch (e: Exception) {
+                Log.w("GTS_TECH", "Failed to fetch past job transactions: ${e.message}")
+            }
+        }
     }
 
     private fun getInitialMockJobs(): List<TechnicianJob> {

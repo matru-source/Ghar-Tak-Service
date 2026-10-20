@@ -563,7 +563,16 @@ export const db = {
           (j.customerPhone.length >= 10 && cId.endsWith(j.customerPhone.slice(-10)));
         if (!matchesCustomer) return false;
       }
-      if (filter?.status && j.status !== filter.status) return false;
+      if (filter?.status) {
+        const reqStatus = filter.status.toUpperCase();
+        const isReqCompleted = reqStatus === 'WORK_COMPLETED' || reqStatus === 'COMPLETED';
+        const isJobCompleted = (j.status as string) === 'WORK_COMPLETED' || (j.status as string) === 'COMPLETED' || j.status === 'SETTLED';
+        if (isReqCompleted) {
+          if (!isJobCompleted) return false;
+        } else if (j.status !== filter.status) {
+          return false;
+        }
+      }
 
       if (filter?.technicianId) {
         const tech = dbStore.technicians.find(
