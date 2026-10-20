@@ -26,11 +26,40 @@ export default function CustomerInvoiceReceiptPage() {
   const [ratingFeedback, setRatingFeedback] = useState<string>('Exceptional! • Feedback submitted');
   const [isCopied, setIsCopied] = useState<boolean>(false);
 
+  const [customerName, setCustomerName] = useState<string>('Valued Customer');
+  const [customerAddress, setCustomerAddress] = useState<string>('Doorstep Service Location');
+  const [technicianName, setTechnicianName] = useState<string>('Assigned Fleet Technician');
+  const [technicianBadge, setTechnicianBadge] = useState<string>('#TECH-VERIFIED');
+  const [invoiceNumber, setInvoiceNumber] = useState<string>('#INV-2026-001');
+  const [serviceDate, setServiceDate] = useState<string>('Today, 11:45 AM');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const storedUser = localStorage.getItem('gts_customer_name') || localStorage.getItem('key_user_name');
+        const storedAddr = localStorage.getItem('gts_customer_address') || localStorage.getItem('key_user_address');
+        const storedTech = localStorage.getItem('gts_active_tech_name') || localStorage.getItem('key_active_job_tech_name');
+        const storedBadge = localStorage.getItem('gts_active_tech_badge') || localStorage.getItem('key_active_job_tech_badge');
+        const storedInv = localStorage.getItem('gts_active_invoice_no') || localStorage.getItem('key_active_job_ticket_no');
+
+        if (storedUser) setCustomerName(storedUser);
+        if (storedAddr) setCustomerAddress(storedAddr);
+        if (storedTech) setTechnicianName(storedTech);
+        if (storedBadge) setTechnicianBadge(storedBadge.startsWith('#') ? storedBadge : `#${storedBadge}`);
+        if (storedInv) setInvoiceNumber(storedInv.startsWith('#') ? storedInv : `#${storedInv}`);
+
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+        setServiceDate(`Today, ${timeStr}`);
+      } catch {}
+    }
+  }, []);
+
   const labels = ['Poor', 'Fair', 'Good', 'Very Good', 'Exceptional!'];
 
   const handleStarClick = (rating: number) => {
     setSelectedRating(rating);
-    setRatingFeedback(`${labels[rating - 1]} • Thank you for rating Rajesh!`);
+    setRatingFeedback(`${labels[rating - 1]} • Thank you for your rating!`);
   };
 
   const handleDownloadPdf = () => {
@@ -39,7 +68,7 @@ export default function CustomerInvoiceReceiptPage() {
 
   const handleShareReceipt = () => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText('ElectriCare Official Tax Invoice #INV-2026-001 (₹1,250.00 Paid) - Colaba 400001');
+      navigator.clipboard.writeText(`Ghar Tak Service Official Tax Invoice ${invoiceNumber} (₹1,250.00 Paid) - ${customerAddress}`);
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
     }
@@ -105,13 +134,13 @@ export default function CustomerInvoiceReceiptPage() {
               <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">
                 TAX INVOICE NUMBER
               </span>
-              <span className="font-mono text-sm font-extrabold text-slate-900">#INV-2026-001</span>
+              <span className="font-mono text-sm font-extrabold text-slate-900">{invoiceNumber}</span>
             </div>
             <div className="text-right">
               <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">
                 SERVICED ON
               </span>
-              <span className="text-xs font-bold text-slate-900">Today, 11:45 AM</span>
+              <span className="text-xs font-bold text-slate-900">{serviceDate}</span>
             </div>
           </div>
 
@@ -122,8 +151,8 @@ export default function CustomerInvoiceReceiptPage() {
                 <User className="w-3.5 h-3.5 text-blue-600" />
                 <span className="text-[10px] font-bold uppercase tracking-wider">Customer</span>
               </div>
-              <p className="font-extrabold text-xs text-slate-900 truncate">Amit Sharma</p>
-              <p className="text-[11px] text-slate-500 truncate mt-0.5">Colaba, Mumbai 400001</p>
+              <p className="font-extrabold text-xs text-slate-900 truncate">{customerName}</p>
+              <p className="text-[11px] text-slate-500 truncate mt-0.5">{customerAddress}</p>
             </div>
 
             <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
@@ -131,9 +160,9 @@ export default function CustomerInvoiceReceiptPage() {
                 <ShieldCheck className="w-3.5 h-3.5 text-orange-600" />
                 <span className="text-[10px] font-bold uppercase tracking-wider">Serviced By</span>
               </div>
-              <p className="font-extrabold text-xs text-slate-900 truncate">Rajesh Kumar</p>
+              <p className="font-extrabold text-xs text-slate-900 truncate">{technicianName}</p>
               <div className="flex items-center gap-1 mt-0.5">
-                <span className="text-[10px] font-mono font-bold text-blue-700">#TECH-4819</span>
+                <span className="text-[10px] font-mono font-bold text-blue-700">{technicianBadge}</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
                 <span className="text-[10px] text-emerald-700 font-bold">Verified</span>
               </div>

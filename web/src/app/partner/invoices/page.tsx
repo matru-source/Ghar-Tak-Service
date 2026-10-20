@@ -23,6 +23,11 @@ interface InvoiceRecord {
     jobTicketNumber: string;
     serviceTitle: string;
     pincode: string;
+    customerName?: string;
+    customerPhone?: string;
+    customerAddressText?: string;
+    technicianId?: string;
+    technicianName?: string;
   };
   customer?: {
     id: string;
@@ -35,6 +40,7 @@ interface InvoiceRecord {
     fullName: string;
     badgeNumber: string;
     electricalLicenseNumber?: string;
+    insulatedGlovesVerified?: boolean;
   };
 }
 
@@ -445,10 +451,10 @@ export default function PartnerInvoicesPage() {
                       {/* Technician */}
                       <td className="py-3.5 px-4">
                         <div className="font-bold text-slate-800">
-                          {inv.technician?.fullName || 'Rajesh Kumar'}
+                          {inv.technician?.fullName || inv.job?.technicianName || 'Fleet Specialist'}
                         </div>
                         <div className="text-[10px] text-slate-400 font-mono">
-                          {inv.technician?.badgeNumber || 'TECH-7821'}
+                          {inv.technician?.badgeNumber || (inv.job?.technicianId ? `ID: ${inv.job.technicianId}` : '—')}
                         </div>
                       </td>
 
@@ -669,23 +675,23 @@ export default function PartnerInvoicesPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="p-3.5 bg-white rounded-xl border border-slate-200 space-y-1">
                   <span className="text-[10px] font-bold uppercase text-slate-400 block">Billed To (Customer)</span>
-                  <div className="font-bold text-slate-900">{previewInvoice.customer?.fullName || 'Amit Sharma'}</div>
+                  <div className="font-bold text-slate-900">{previewInvoice.customer?.fullName || previewInvoice.job?.customerName || 'Customer'}</div>
                   <div className="text-slate-500 text-[11px]">
-                    {previewInvoice.customer?.defaultAddressLine || 'Flat 402, Sea View Apartments, Colaba, Mumbai 400001'}
+                    {previewInvoice.customer?.defaultAddressLine || previewInvoice.job?.customerAddressText || 'Customer Address'}
                   </div>
                   <div className="text-[11px] text-slate-600 font-mono">
-                    Phone: {previewInvoice.customer?.phone || '+91 9876543213'}
+                    Phone: {previewInvoice.customer?.phone || previewInvoice.job?.customerPhone || '—'}
                   </div>
                 </div>
 
                 <div className="p-3.5 bg-white rounded-xl border border-slate-200 space-y-1">
                   <span className="text-[10px] font-bold uppercase text-slate-400 block">Assigned Service Provider</span>
-                  <div className="font-bold text-slate-900">{previewInvoice.technician?.fullName || 'Rajesh Kumar'}</div>
+                  <div className="font-bold text-slate-900">{previewInvoice.technician?.fullName || previewInvoice.job?.technicianName || 'Fleet Specialist'}</div>
                   <div className="text-slate-500 text-[11px]">
-                    Badge: {previewInvoice.technician?.badgeNumber || 'TECH-7821'} &bull; Wireman License: EL-MH-2024-8849
+                    Badge: {previewInvoice.technician?.badgeNumber || (previewInvoice.job?.technicianId ? `ID: ${previewInvoice.job.technicianId}` : 'Assigned')}{previewInvoice.technician?.electricalLicenseNumber ? ` • License: ${previewInvoice.technician.electricalLicenseNumber}` : ''}
                   </div>
                   <div className="text-emerald-700 font-bold text-[11px]">
-                    1000V Insulated Gloves Class-0 Certified ✓
+                    {previewInvoice.technician?.insulatedGlovesVerified ? '1000V Insulated Gloves Class-0 Certified ✓' : 'Certified Service Specialist ✓'}
                   </div>
                 </div>
               </div>

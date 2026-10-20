@@ -359,20 +359,22 @@ function PartnerJobDetailsContent() {
                 <span>Assigned Fleet Electrician &amp; Safety Compliance</span>
               </h3>
               <span className="font-bold text-amber-400 text-xs">
-                ★ {job?.technicianProfile?.rating || 4.9} Rating
+                ★ {job?.technicianProfile?.rating || (job?.technicianName ? '5.0' : '—')} Rating
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div>
                 <div className="font-bold text-slate-100 text-sm">
-                  {job?.technicianName || 'Rajesh Kumar'}
+                  {job?.technicianName || (job?.technicianId ? 'Assigned Doorstep Specialist' : 'Unassigned / Pending Allocation')}
                 </div>
                 <div className="text-[11px] text-slate-400 font-mono mt-0.5">
-                  Badge: {job?.technicianProfile?.badgeNumber || 'TECH-7821'} &bull; Safety Kit: {job?.technicianProfile?.safetyKitSerial || 'SK-1000V-992'}
+                  Badge: {job?.technicianProfile?.badgeNumber || (job?.technicianId ? `ID: ${job.technicianId}` : '—')}{job?.technicianProfile?.safetyKitSerial ? ` • Safety Kit: ${job.technicianProfile.safetyKitSerial}` : ''}
                 </div>
                 <div className="text-[11px] text-emerald-400 mt-1">
-                  Completed {job?.technicianProfile?.totalJobsCompleted || 142} jobs with zero safety incidents.
+                  {job?.technicianProfile?.totalJobsCompleted !== undefined
+                    ? `Completed ${job.technicianProfile.totalJobsCompleted} jobs with zero safety incidents.`
+                    : (job?.technicianName ? 'Verified service specialist.' : 'Technician will be dispatched shortly.')}
                 </div>
               </div>
 

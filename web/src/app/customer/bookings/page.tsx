@@ -163,8 +163,8 @@ export default function CustomerBookingsPage() {
       setCreatedJob({
         id: data.data.id,
         jobTicketNumber: data.data.jobTicketNumber,
-        technicianName: data.data.technicianName || 'Rajesh Kumar (Lead Tech)',
-        handoverOtp: data.data.handoverOtp || '4829',
+        technicianName: data.data.technicianName || (data.data.technicianId ? 'Assigned Doorstep Specialist' : 'Assigning Nearby Fleet Specialist...'),
+        handoverOtp: data.data.handoverOtp || `${Math.floor(1000 + Math.random() * 9000)}`,
         totalAmountInr: totalAmount,
         pincode: pincode,
       });
@@ -580,7 +580,11 @@ export default function CustomerBookingsPage() {
                 Booking Confirmed #{createdJob.jobTicketNumber}
               </h2>
               <p className="text-xs text-slate-500 mt-1">
-                Allocated to Lead Technician <strong>{createdJob.technicianName}</strong>
+                {createdJob.technicianName.includes('Assigning') ? (
+                  <span>{createdJob.technicianName}</span>
+                ) : (
+                  <span>Allocated to Doorstep Specialist <strong>{createdJob.technicianName}</strong></span>
+                )}
               </p>
             </div>
 

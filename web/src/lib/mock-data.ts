@@ -139,9 +139,10 @@ export interface ElectriCareStore {
     currentLongitude: number;
     assignedPincode: string;
     kycStatus: 'VERIFIED' | 'PENDING_REVIEW' | 'REJECTED';
-    electricalLicenseNumber: string;
-    insulatedGlovesVerified: boolean;
-    safetyKitSerial: string;
+    electricalLicenseNumber?: string;
+    insulatedGlovesVerified?: boolean;
+    safetyKitSerial?: string;
+    trade?: string;
     aadharNumberMasked?: string;
     panDocUrl?: string;
     kycRejectionReason?: string;
