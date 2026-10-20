@@ -192,44 +192,11 @@ class NavigationViewModel(
     }
 
     fun startForegroundService(context: Context) {
-        try {
-            // Check location permission before attempting foreground service on Android 14
-            val hasLocation = ContextCompat.checkSelfPermission(
-                context,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
-                context,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-
-            if (!hasLocation) {
-                Log.i("GTS_NAV", "Location permission not yet granted; skipping foreground service to prevent OS crash")
-                return
-            }
-
-            val intent = Intent(context, TechnicianLocationService::class.java).apply {
-                action = TechnicianLocationService.ACTION_START
-                putExtra(TechnicianLocationService.EXTRA_JOB_ID, _uiState.value.jobId)
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
-            }
-        } catch (e: Throwable) {
-            Log.w("GTS_NAV", "Foreground service start prevented error: ${e.message}")
-        }
+        TechnicianLocationService.startService(context, _uiState.value.jobId)
     }
 
     fun stopForegroundService(context: Context) {
-        try {
-            val intent = Intent(context, TechnicianLocationService::class.java).apply {
-                action = TechnicianLocationService.ACTION_STOP
-            }
-            context.startService(intent)
-        } catch (e: Throwable) {
-            // Ignore
-        }
+        TechnicianLocationService.stopService(context)
     }
 }
 

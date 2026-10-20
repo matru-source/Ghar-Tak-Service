@@ -293,6 +293,34 @@ object IndianPincodeResolver {
         }
     }
 
+    fun getRegionalHubCodeName(pincode: String): String {
+        val cleanPin = pincode.filter { it.isDigit() }.take(6)
+        val prefix2 = cleanPin.take(2).toIntOrNull() ?: 75
+        return when (prefix2) {
+            11 -> "DL-01 Delhi NCR Hub"
+            12, 13 -> "HR-01 Haryana Urban Hub"
+            14, 15, 16 -> "PB-01 Punjab & Chandigarh Hub"
+            17 -> "HP-01 Himachal Hills Hub"
+            18, 19 -> "JK-01 J&K Valley Hub"
+            in 20..28 -> "UP-01 Uttar Pradesh Hub"
+            in 30..34 -> "RJ-01 Rajasthan Heritage Hub"
+            in 36..39 -> "GJ-01 Gujarat Industrial Hub"
+            in 40..44 -> "MH-01 Mumbai Hub"
+            in 45..48 -> "MP-01 Madhya Pradesh Hub"
+            49 -> "CG-01 Chhattisgarh Hub"
+            in 50..53 -> "TS-01 Hyderabad Hub"
+            in 56..59 -> "KA-01 Bengaluru Hub"
+            in 60..64 -> "TN-01 Chennai Hub"
+            in 67..69 -> "KL-01 Kerala Coastal Hub"
+            in 70..74 -> "WB-01 Kolkata Hub"
+            in 75..77 -> "OD-01 Odisha Regional Hub"
+            78 -> "AS-01 Assam Hub"
+            79 -> "NE-01 North East Hub"
+            in 80..85 -> "BR-01 Bihar & Jharkhand Hub"
+            else -> "OD-01 Odisha Regional Hub"
+        }
+    }
+
     fun resolveAreaFromCoordinates(lat: Double, lng: Double): String {
         if (lat == 0.0 && lng == 0.0) return "GPS Locating..."
 

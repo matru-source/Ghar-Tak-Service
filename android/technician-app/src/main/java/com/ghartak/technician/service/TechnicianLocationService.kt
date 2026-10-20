@@ -21,24 +21,103 @@ class TechnicianLocationService : Service() {
     private var isRunning = false
     private var activeJobId: String? = null
 
+    private var sensorManager: android.hardware.SensorManager? = null
+    private var compassSensor: android.hardware.Sensor? = null
+    private var lastCompassHeadingDeg: Double = 0.0
+
+    private val sensorListener = object : android.hardware.SensorEventListener {
+        override fun onSensorChanged(event: android.hardware.SensorEvent?) {
+            if (event == null) return
+            try {
+                if (event.sensor.type == android.hardware.Sensor.TYPE_ROTATION_VECTOR) {
+                    val rotationMatrix = FloatArray(9)
+                    android.hardware.SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
+                    val orientation = FloatArray(3)
+                    android.hardware.SensorManager.getOrientation(rotationMatrix, orientation)
+                    val azimuthDeg = Math.toDegrees(orientation[0].toDouble())
+                    lastCompassHeadingDeg = (azimuthDeg + 360.0) % 360.0
+                } else if (event.sensor.type == android.hardware.Sensor.TYPE_ORIENTATION) {
+                    lastCompassHeadingDeg = (event.values[0].toDouble() + 360.0) % 360.0
+                }
+            } catch (e: Throwable) {
+                // Ignore sensor calculation exceptions
+            }
+        }
+
+        override fun onAccuracyChanged(sensor: android.hardware.Sensor?, accuracy: Int) {}
+    }
+
     companion object {
         const val ACTION_START = "ACTION_START_TELEMETRY"
         const val ACTION_STOP = "ACTION_STOP_TELEMETRY"
         const val EXTRA_JOB_ID = "EXTRA_JOB_ID"
         private const val CHANNEL_ID = "channel_gts_telemetry"
         private const val NOTIFICATION_ID = 4091
+
+        fun startService(context: Context, jobId: String? = null) {
+            try {
+                val hasFine = ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                val hasCoarse = ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                if (!hasFine && !hasCoarse) {
+                    Log.i("GTS_LOC_SVC", "Location permission not yet granted; skipping service start")
+                    return
+                }
+
+                val intent = Intent(context, TechnicianLocationService::class.java).apply {
+                    action = ACTION_START
+                    if (!jobId.isNullOrBlank()) {
+                        putExtra(EXTRA_JOB_ID, jobId)
+                    }
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent)
+                } else {
+                    context.startService(intent)
+                }
+            } catch (e: Throwable) {
+                Log.w("GTS_LOC_SVC", "startService safe catch: ${e.message}")
+            }
+        }
+
+        fun stopService(context: Context) {
+            try {
+                val intent = Intent(context, TechnicianLocationService::class.java).apply {
+                    action = ACTION_STOP
+                }
+                context.startService(intent)
+            } catch (e: Throwable) {
+                Log.w("GTS_LOC_SVC", "stopService safe catch: ${e.message}")
+            }
+        }
     }
 
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
+        initCompassSensor()
+    }
+
+    private fun initCompassSensor() {
+        try {
+            sensorManager = getSystemService(Context.SENSOR_SERVICE) as? android.hardware.SensorManager
+            compassSensor = sensorManager?.getDefaultSensor(android.hardware.Sensor.TYPE_ROTATION_VECTOR)
+                ?: sensorManager?.getDefaultSensor(android.hardware.Sensor.TYPE_ORIENTATION)
+            compassSensor?.let {
+                sensorManager?.registerListener(sensorListener, it, android.hardware.SensorManager.SENSOR_DELAY_NORMAL)
+            }
+        } catch (e: Throwable) {
+            Log.w("GTS_LOC_SVC", "Compass sensor registration failed: ${e.message}")
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         try {
             when (intent?.action) {
                 ACTION_START -> {
-                    activeJobId = intent.getStringExtra(EXTRA_JOB_ID)
+                    val incomingJob = intent.getStringExtra(EXTRA_JOB_ID)
+                    if (!incomingJob.isNullOrBlank()) {
+                        activeJobId = incomingJob
+                    }
                     startForegroundServiceInternal()
                 }
                 ACTION_STOP -> {
@@ -59,8 +138,8 @@ class TechnicianLocationService : Service() {
         val hasCoarse = ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
 
         val notification = buildForegroundNotification(
-            "Active Doorstep Navigation",
-            "Doorstep transit active • Real-time GPS telemetry"
+            "Active Doorstep Operations",
+            "On-duty GPS telemetry broadcast active"
         )
 
         try {
@@ -72,7 +151,6 @@ class TechnicianLocationService : Service() {
             isRunning = true
         } catch (e: Throwable) {
             Log.w("GTS_LOC_SVC", "startForeground failed safely without crash: ${e.message}")
-            // Do not crash the app if OS restricts background start or runtime permission is missing
             stopSelf()
             return
         }
@@ -89,6 +167,16 @@ class TechnicianLocationService : Service() {
 
             while (isRunning && isActive) {
                 try {
+                    val isOnline = sessionManager.isOnline()
+                    if (!isOnline && activeJobId.isNullOrBlank()) {
+                        Log.i("GTS_LOC_SVC", "Technician off-duty and no active job assigned; terminating telemetry service")
+                        stopForegroundServiceInternal()
+                        break
+                    }
+
+                    var dynamicSpeedKmh = 0.0
+                    var dynamicHeadingDeg = lastCompassHeadingDeg
+
                     if (lm != null && (hasFine || hasCoarse)) {
                         try {
                             val lastGps = if (hasFine) lm.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER) else null
@@ -97,43 +185,65 @@ class TechnicianLocationService : Service() {
                             if (best != null) {
                                 currentLat = best.latitude
                                 currentLng = best.longitude
+
+                                if (best.hasSpeed()) {
+                                    dynamicSpeedKmh = Math.round(best.speed * 3.6 * 10.0) / 10.0
+                                }
+                                if (best.hasBearing() && best.speed > 0.5f) {
+                                    dynamicHeadingDeg = Math.round(best.bearing * 10.0) / 10.0
+                                }
                             }
                         } catch (e: SecurityException) {
                             Log.w("GTS_LOC_SVC", "Location read error: ${e.message}")
                         }
                     }
 
+                    val bm = applicationContext.getSystemService(Context.BATTERY_SERVICE) as? android.os.BatteryManager
+                    val dynamicBatteryPct = bm?.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY)?.takeIf { it in 0..100 } ?: 88
+
                     val api = ApiClient.getService(applicationContext)
+                    val targetJob = activeJobId ?: "duty_idle"
                     val response = api.sendTelemetry(
                         TelemetryPingRequest(
                             technicianId = techId,
-                            jobId = activeJobId ?: "job_live_01",
+                            jobId = targetJob,
                             latitude = currentLat,
                             longitude = currentLng,
-                            heading = 195.0,
-                            speedKmh = 22.5,
-                            batteryLevelPct = 88,
-                            isOnline = true
+                            heading = dynamicHeadingDeg,
+                            speedKmh = dynamicSpeedKmh,
+                            batteryLevelPct = dynamicBatteryPct,
+                            isOnline = isOnline
                         )
                     )
 
                     if (response.isSuccessful) {
                         val data = response.body()?.data
-                        val dist = data?.distanceRemainingKm ?: 1.2
-                        val eta = data?.etaMinutes ?: 4
-                        updateNotification("Doorstep Transit • ${dist} km away", "ETA: ${eta} mins • Live GPS Synced")
+                        if (activeJobId != null && data != null && data.distanceRemainingKm != null) {
+                            val dist = data.distanceRemainingKm
+                            val eta = data.etaMinutes ?: 4
+                            updateNotification("Doorstep Transit • ${dist} km away", "ETA: ${eta} mins • Speed: ${dynamicSpeedKmh} km/h • Battery: ${dynamicBatteryPct}%")
+                        } else {
+                            updateNotification("Ghar Tak On-Duty Active", "GPS Synced • Speed: ${dynamicSpeedKmh} km/h • Battery: ${dynamicBatteryPct}%")
+                        }
                     }
                 } catch (e: Throwable) {
                     Log.w("GTS_LOC_SVC", "Telemetry ping exception: ${e.message}")
                 }
 
-                delay(8000)
+                // Foreground ping rate: every 5000ms (5 seconds)
+                delay(5000L)
             }
         }
     }
 
     private fun stopForegroundServiceInternal() {
         isRunning = false
+        activeJobId = null
+        try {
+            sensorManager?.unregisterListener(sensorListener)
+        } catch (e: Throwable) {
+            // Ignore
+        }
         serviceScope.cancel()
         try {
             stopForeground(STOP_FOREGROUND_REMOVE)

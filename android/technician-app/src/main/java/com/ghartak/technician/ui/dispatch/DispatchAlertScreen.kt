@@ -22,8 +22,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 import com.ghartak.technician.data.model.TechnicianJob
+import com.ghartak.technician.data.session.SessionManager
 import com.ghartak.technician.ui.theme.*
+import com.ghartak.technician.util.IndianPincodeResolver
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,6 +41,54 @@ fun DispatchAlertScreen(
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     var showDeclineDialog by remember { mutableStateOf(false) }
+
+    val sessionManager = remember { SessionManager(context) }
+
+    // Dynamic regional hub derived from job destination pincode
+    val regionalHubName = remember(job.pincode) {
+        IndianPincodeResolver.getRegionalHubCodeName(job.pincode)
+    }
+
+    // Dynamic technician live location (reading LocationManager or fallback to technician's assigned base hub)
+    val (techLat, techLng) = remember(job.id) {
+        var lat = 0.0
+        var lng = 0.0
+        try {
+            val lm = context.getSystemService(Context.LOCATION_SERVICE) as? android.location.LocationManager
+            val hasFine = ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+            val hasCoarse = ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+            if (lm != null && (hasFine || hasCoarse)) {
+                val lastGps = if (hasFine) lm.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER) else null
+                val lastNet = if (hasCoarse) lm.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER) else null
+                val best = lastGps ?: lastNet
+                if (best != null && (best.latitude != 0.0 || best.longitude != 0.0)) {
+                    lat = best.latitude
+                    lng = best.longitude
+                }
+            }
+        } catch (e: SecurityException) {
+            // Ignored if permissions not granted yet
+        }
+        if (lat == 0.0 && lng == 0.0) {
+            val techPin = sessionManager.getPincode().ifEmpty { "760001" }
+            val pinCoords = IndianPincodeResolver.getCoordinatesForPincode(techPin)
+            lat = pinCoords.first
+            lng = pinCoords.second
+        }
+        lat to lng
+    }
+
+    // Dynamic customer coordinates & Haversine distance and transit ETA calculation
+    val (transitDistanceKm, transitEtaMinutes) = remember(techLat, techLng, job.customerLatitude, job.customerLongitude, job.pincode) {
+        val (destFallbackLat, destFallbackLng) = IndianPincodeResolver.getCoordinatesForPincode(job.pincode)
+        val destLat = if (job.customerLatitude != null && job.customerLatitude != 0.0) job.customerLatitude else destFallbackLat
+        val destLng = if (job.customerLongitude != null && job.customerLongitude != 0.0) job.customerLongitude else destFallbackLng
+
+        val dist = IndianPincodeResolver.calculateHaversineDistanceKm(techLat, techLng, destLat, destLng)
+        val roundedDist = Math.max(0.1, (Math.round(dist * 10.0) / 10.0))
+        val eta = IndianPincodeResolver.calculateEtaMinutes(roundedDist, 22.0)
+        roundedDist to eta
+    }
 
     LaunchedEffect(job.id) {
         viewModel.startCountdown(context) {
@@ -98,7 +151,7 @@ fun DispatchAlertScreen(
                             letterSpacing = 0.5.sp
                         )
                         Text(
-                            text = "MH-01 Mumbai Hub • Auto-Allocation Siren Active",
+                            text = "$regionalHubName • Auto-Allocation Siren Active",
                             color = TextSecondary,
                             fontSize = 11.sp
                         )
@@ -233,7 +286,7 @@ fun DispatchAlertScreen(
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "1.4 km from your live GPS • ~6 min transit",
+                                text = "$transitDistanceKm km from your live GPS • ~$transitEtaMinutes min transit",
                                 color = TextSecondary,
                                 fontSize = 11.sp
                             )

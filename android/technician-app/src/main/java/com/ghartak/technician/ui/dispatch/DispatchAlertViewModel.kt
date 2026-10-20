@@ -12,6 +12,7 @@ import com.ghartak.technician.data.api.ApiClient
 import com.ghartak.technician.data.model.DispatchActionRequest
 import com.ghartak.technician.data.model.TechnicianJob
 import com.ghartak.technician.data.session.SessionManager
+import com.ghartak.technician.service.TechnicianLocationService
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -91,7 +92,9 @@ class DispatchAlertViewModel(
 
                 if (response?.isSuccessful == true && response.body()?.data != null) {
                     _uiState.value = _uiState.value.copy(isAccepting = false)
-                    onSuccess(response.body()!!.data!!)
+                    val acceptedJob = response.body()!!.data!!
+                    TechnicianLocationService.startService(context, acceptedJob.id)
+                    onSuccess(acceptedJob)
                 } else {
                     handleFallbackAccept(job, onSuccess)
                 }
@@ -132,6 +135,7 @@ class DispatchAlertViewModel(
     private fun handleFallbackAccept(job: TechnicianJob, onSuccess: (TechnicianJob) -> Unit) {
         _uiState.value = _uiState.value.copy(isAccepting = false)
         val acceptedJob = job.copy(status = "EN_ROUTE")
+        TechnicianLocationService.startService(sessionManager.context, acceptedJob.id)
         onSuccess(acceptedJob)
     }
 

@@ -11,6 +11,7 @@ import com.ghartak.technician.data.model.TechnicianJob
 import com.ghartak.technician.data.model.TechnicianProfile
 import com.ghartak.technician.data.realtime.RealtimeStreamManager
 import com.ghartak.technician.data.session.SessionManager
+import com.ghartak.technician.service.TechnicianLocationService
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -139,6 +140,9 @@ class TechnicianDashboardViewModel(
                 selectedJob = newActiveJob,
                 currentTab = "JOB_DETAILS"
             )
+
+            // Immediately activate live GPS telemetry broadcast for the accepted work order
+            TechnicianLocationService.startService(sessionManager.context, notif.id)
 
             // Broadcast real ACCEPT response to backend
             viewModelScope.launch {
@@ -398,6 +402,11 @@ class TechnicianDashboardViewModel(
         )
         syncProfileToServer()
         fetchWithdrawalHistory()
+
+        if (isOnline) {
+            val activeJobId = _uiState.value.assignedJobs.firstOrNull { it.status == "EN_ROUTE" || it.status == "ASSIGNED" || it.status == "IN_PROGRESS" }?.id
+            TechnicianLocationService.startService(sessionManager.context, activeJobId)
+        }
     }
 
     fun syncProfileToServer() {
@@ -555,6 +564,13 @@ class TechnicianDashboardViewModel(
                     isUpdatingStatus = false
                 )
 
+                if (newStatus) {
+                    val activeJobId = _uiState.value.assignedJobs.firstOrNull { it.status == "EN_ROUTE" || it.status == "ASSIGNED" || it.status == "IN_PROGRESS" }?.id
+                    TechnicianLocationService.startService(context, activeJobId)
+                } else {
+                    TechnicianLocationService.stopService(context)
+                }
+
                 if (newStatus || !resp.isSuccessful) {
                     syncProfileToServer()
                 }
@@ -565,7 +581,11 @@ class TechnicianDashboardViewModel(
                     isUpdatingStatus = false
                 )
                 if (newStatus) {
+                    val activeJobId = _uiState.value.assignedJobs.firstOrNull { it.status == "EN_ROUTE" || it.status == "ASSIGNED" || it.status == "IN_PROGRESS" }?.id
+                    TechnicianLocationService.startService(context, activeJobId)
                     syncProfileToServer()
+                } else {
+                    TechnicianLocationService.stopService(context)
                 }
                 Log.w("GTS_TECH", "Local duty state toggled to $newStatus: ${e.message}")
             }
@@ -795,12 +815,16 @@ class TechnicianDashboardViewModel(
             incomingDispatchAlert = null,
             currentTab = "JOB_DETAILS"
         )
+        // Immediately start live telemetry for the accepted work order
+        TechnicianLocationService.startService(sessionManager.context, job.id)
     }
 
     fun logout() {
         val techId = sessionManager.getTechnicianId()
         val badge = sessionManager.getBadgeNumber()
         val context = sessionManager.context
+
+        TechnicianLocationService.stopService(context)
 
         viewModelScope.launch {
             try {
