@@ -36,10 +36,10 @@ const webhookEventsLog: Array<{
 
 export const PAYMENT_GATEWAY_CONFIG = {
   provider: (process.env.PAYMENT_PROVIDER || 'RAZORPAY_SANDBOX') as 'RAZORPAY' | 'CASHFREE' | 'RAZORPAY_SANDBOX',
-  keyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_electricare_mumbai_2026',
-  keySecret: process.env.RAZORPAY_KEY_SECRET || 'secret_mock_electricare_sandbox_key',
-  upiVpa: process.env.MERCHANT_UPI_VPA || 'electricare.escrow@hdfcbank',
-  merchantName: 'ElectriCare Engineering Platform',
+  keyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_ghartak_services_2026',
+  keySecret: process.env.RAZORPAY_KEY_SECRET || 'secret_mock_ghartak_sandbox_key',
+  upiVpa: process.env.MERCHANT_UPI_VPA || 'ghartak@icici',
+  merchantName: 'Ghar Tak Services Platform',
 };
 
 export class PaymentGateway {

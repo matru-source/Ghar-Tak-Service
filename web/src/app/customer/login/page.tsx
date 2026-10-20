@@ -138,12 +138,12 @@ export default function CustomerLoginPage() {
 
       // Store authenticated session
       const customerData = {
-        id: data.data?.customerId || 'cust_amit_01',
+        id: data.data?.customerId || `cust_${Date.now()}`,
         token: data.data?.token,
-        userId: data.data?.user?.id || 'usr_cust_01',
-        fullName: data.data?.user?.fullName || 'Amit Sharma',
+        userId: data.data?.user?.id || `usr_${Date.now()}`,
+        fullName: data.data?.user?.fullName || 'Valued Customer',
         phone: fullPhone,
-        email: data.data?.user?.email || 'amit.sharma@gmail.com',
+        email: data.data?.user?.email || '',
         defaultAddressLine: addressLine,
         defaultPincode: selectedPincode,
         isLoggedIn: true,

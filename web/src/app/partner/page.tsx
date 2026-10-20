@@ -25,6 +25,7 @@ import {
   Receipt,
   Navigation,
 } from '@/components/ui/icons';
+import { getActivePartnerId } from '@/lib/partner-session';
 
 interface JobItem {
   id: string;
@@ -139,9 +140,10 @@ export default function PartnerDashboardPage() {
   useEffect(() => {
     async function syncBackendData() {
       try {
+        const activePartner = getActivePartnerId();
         const [fleetRes, escRes] = await Promise.all([
-          fetch('/api/partner/fleet?partnerId=ptnr_mah_01').then((r) => r.json()).catch(() => null),
-          fetch('/api/partner/escalations?partnerId=ptnr_mah_01').then((r) => r.json()).catch(() => null),
+          fetch(`/api/partner/fleet?partnerId=${encodeURIComponent(activePartner)}`).then((r) => r.json()).catch(() => null),
+          fetch(`/api/partner/escalations?partnerId=${encodeURIComponent(activePartner)}`).then((r) => r.json()).catch(() => null),
         ]);
 
         if (fleetRes?.success) {

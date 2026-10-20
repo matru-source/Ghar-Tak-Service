@@ -251,12 +251,28 @@ class SafetyInterlockViewModel(
 
                 withTimeoutOrNull(15000L) {
                     val api = ApiClient.getService(context)
+                    var targetPhotoUrl = state.beforePhotoUri ?: "/uploads/service_fallback.jpg"
+
+                    if (state.beforePhotoBitmap != null) {
+                        try {
+                            val baos = java.io.ByteArrayOutputStream()
+                            state.beforePhotoBitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos)
+                            val base64Str = android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.NO_WRAP)
+                            val uploadResp = api.uploadPhoto(mapOf("base64" to base64Str))
+                            if (uploadResp.isSuccessful && uploadResp.body()?.data != null) {
+                                targetPhotoUrl = uploadResp.body()!!.data!!.url
+                            }
+                        } catch (e: Exception) {
+                            Log.w("GTS_SAFETY", "Photo upload exception: ${e.message}")
+                        }
+                    }
+
                     api.verifySafety(
                         jobId = state.jobId,
                         request = SafetyVerifyRequest(
                             safetyGlovesConfirmed = true,
                             safetyMcbSwitchConfirmed = true,
-                            beforePhotoUrl = state.beforePhotoUri ?: "https://storage.ghartak.in/evidence/service_fallback.jpg"
+                            beforePhotoUrl = targetPhotoUrl
                         )
                     )
                 }

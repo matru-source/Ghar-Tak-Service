@@ -1,6 +1,11 @@
 package com.ghartak.customer.ui.home
 
+import android.app.Activity
+import android.content.Intent
+import android.speech.RecognizerIntent
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -62,6 +67,18 @@ fun CustomerHomeScreen(
     var showEnvSwitcher by remember { mutableStateOf(false) }
     var showNotificationCenter by remember { mutableStateOf(false) }
     var showActiveJobOverwritePrompt by remember { mutableStateOf(false) }
+
+    val voiceLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val matches = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            val spokenText = matches?.firstOrNull()
+            if (!spokenText.isNullOrBlank()) {
+                viewModel.setSearchQuery(spokenText)
+            }
+        }
+    }
 
     val handleServiceClick: (String) -> Unit = { serviceId ->
         if (sessionManager.hasActiveJob()) {
@@ -415,7 +432,15 @@ fun CustomerHomeScreen(
                             // Voice Search Mic Icon
                             IconButton(
                                 onClick = {
-                                    Toast.makeText(context, "🎤 Voice Search: Listening for service query...", Toast.LENGTH_SHORT).show()
+                                    try {
+                                        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                                            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                                            putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak a service (e.g. Fan Installation, Electrician, Wiring)...")
+                                        }
+                                        voiceLauncher.launch(intent)
+                                    } catch (_: Exception) {
+                                        Toast.makeText(context, "Voice recognition service not available on this device", Toast.LENGTH_SHORT).show()
+                                    }
                                 },
                                 modifier = Modifier.size(28.dp)
                             ) {

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { getActivePartnerId } from '@/lib/partner-session';
 
 interface PartnerProfile {
   id: string;
@@ -52,7 +53,8 @@ export default function PartnerProfilePage() {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/partner/profile?partnerId=ptnr_mah_01');
+      const activePartner = getActivePartnerId();
+      const res = await fetch(`/api/partner/profile?partnerId=${encodeURIComponent(activePartner)}`);
       const data = await res.json();
       if (data.success && data.partner) {
         setPartner(data.partner);
@@ -78,11 +80,12 @@ export default function PartnerProfilePage() {
     e.preventDefault();
     setSaving(true);
     try {
+      const activePartner = partner?.id || getActivePartnerId();
       const res = await fetch('/api/partner/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          partnerId: partner?.id || 'ptnr_mah_01',
+          partnerId: activePartner,
           directorName,
           email,
           phone,
@@ -168,7 +171,7 @@ export default function PartnerProfilePage() {
               </div>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
                 <span className="font-mono font-bold text-slate-800">
-                  ID: {partner?.id || 'ptnr_mah_01'}
+                  ID: {partner?.id || getActivePartnerId()}
                 </span>
                 <span>&bull;</span>
                 <span>State: <strong className="text-slate-800 font-bold">Maharashtra</strong></span>
@@ -285,7 +288,7 @@ export default function PartnerProfilePage() {
                   <input
                     type="text"
                     disabled
-                    value={partner?.id || 'ptnr_mah_01'}
+                    value={partner?.id || getActivePartnerId()}
                     className="w-full p-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-700 cursor-not-allowed select-none"
                   />
                 </div>

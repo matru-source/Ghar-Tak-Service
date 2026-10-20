@@ -22,9 +22,9 @@ data class TechnicianProfile(
     @SerializedName("safetyKitSerial") val safetyKitSerial: String? = null,
     @SerializedName("insulatedGlovesVerified") val insulatedGlovesVerified: Boolean = false,
     @SerializedName("totalJobsCompleted") val totalJobsCompleted: Int = 0,
-    @SerializedName("email") val email: String = "rajakumar1995@gmail.com",
-    @SerializedName("location") val location: String = "Mumbai, Maharashtra",
-    @SerializedName("languages") val languages: String = "English, Hindi, Marathi",
+    @SerializedName("email") val email: String = "",
+    @SerializedName("location") val location: String = "Odisha, India",
+    @SerializedName("languages") val languages: String = "Odia, Hindi, English",
     @SerializedName("specialization") val specialization: String = "Electrician",
     @SerializedName("experience") val experience: String = "5+ Years",
     @SerializedName("license") val license: String = "Trade Certified Professional",
@@ -137,6 +137,22 @@ data class WithdrawalItem(
 data class WithdrawalListResponse(
     @SerializedName("withdrawals") val withdrawals: List<WithdrawalItem>,
     @SerializedName("count") val count: Int
+)
+
+data class EmergencySosRequest(
+    @SerializedName("technicianId") val technicianId: String,
+    @SerializedName("technicianName") val technicianName: String? = null,
+    @SerializedName("phone") val phone: String? = null,
+    @SerializedName("latitude") val latitude: Double? = null,
+    @SerializedName("longitude") val longitude: Double? = null,
+    @SerializedName("trade") val trade: String? = null,
+    @SerializedName("reason") val reason: String? = null
+)
+
+data class FileUploadResponse(
+    @SerializedName("url") val url: String,
+    @SerializedName("fileName") val fileName: String? = null,
+    @SerializedName("sizeBytes") val sizeBytes: Long? = null
 )
 
 

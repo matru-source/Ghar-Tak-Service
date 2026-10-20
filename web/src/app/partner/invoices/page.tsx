@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BrandMark } from '@/components/ui/brand-logo';
+import { getActivePartnerId } from '@/lib/partner-session';
 
 interface InvoiceRecord {
   id: string;
@@ -94,7 +95,8 @@ export default function PartnerInvoicesPage() {
   const fetchInvoices = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/partner/invoices?partnerId=ptnr_mah_01');
+      const activePartner = getActivePartnerId();
+      const res = await fetch(`/api/partner/invoices?partnerId=${encodeURIComponent(activePartner)}`);
       const data = await res.json();
       if (data.success) {
         setInvoices(data.invoices || []);
@@ -109,7 +111,8 @@ export default function PartnerInvoicesPage() {
 
   const fetchLedger = async () => {
     try {
-      const res = await fetch('/api/partner/ledger?partnerId=ptnr_mah_01');
+      const activePartner = getActivePartnerId();
+      const res = await fetch(`/api/partner/ledger?partnerId=${encodeURIComponent(activePartner)}`);
       const data = await res.json();
       if (data.success) {
         setLedgerEntries(data.entries || []);

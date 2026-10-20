@@ -238,6 +238,7 @@ fun TechnicianDashboardScreen(
                 onDismiss = { showSosDialog = false },
                 onCallEmergency = {
                     showSosDialog = false
+                    viewModel.triggerEmergencySos(context, "112_SAFETY_CALL_OUT")
                     val emergencyIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:112"))
                     context.startActivity(emergencyIntent)
                 }

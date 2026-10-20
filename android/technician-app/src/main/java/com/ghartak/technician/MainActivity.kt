@@ -207,7 +207,7 @@ class MainActivity : ComponentActivity() {
                                     customerLongitude = defaultLng,
                                     status = "DISPATCHED",
                                     priority = "STANDARD",
-                                    totalAmountInr = 352.82,
+                                    totalAmountInr = Math.round(299.0 * 1.18 * 100.0) / 100.0,
                                     safetyGlovesConfirmed = false,
                                     safetyMcbSwitchConfirmed = false,
                                     handoverOtp = ""

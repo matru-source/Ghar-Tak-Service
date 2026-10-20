@@ -19,6 +19,19 @@ export async function POST(
     const job = await db.updateJobStatus(id, 'CANCELLED', { reason });
 
     realtimeBus.publish({
+      type: 'JOB_CANCELLED',
+      jobId: id,
+      ticketNumber: job.jobTicketNumber,
+      partnerId: job.partnerId,
+      technicianId: job.technicianId,
+      status: 'CANCELLED',
+      details: {
+        reason,
+        message: 'Job cancelled by user',
+      },
+    });
+
+    realtimeBus.publish({
       type: 'TECH_REJECTED',
       jobId: id,
       ticketNumber: job.jobTicketNumber,

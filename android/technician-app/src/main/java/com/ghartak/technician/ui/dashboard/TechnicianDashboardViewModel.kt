@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ghartak.technician.data.api.ApiClient
 import com.ghartak.technician.data.model.DispatchActionRequest
+import com.ghartak.technician.data.model.EmergencySosRequest
 import com.ghartak.technician.data.model.RegisterTechnicianRequest
 import com.ghartak.technician.data.model.TechnicianJob
 import com.ghartak.technician.data.model.TechnicianProfile
@@ -236,7 +237,14 @@ class TechnicianDashboardViewModel(
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isWithdrawing = true, errorMessage = null)
-            val techId = sessionManager.getTechnicianId().ifEmpty { "tech_8785" }
+            val techId = sessionManager.getTechnicianId().ifEmpty { sessionManager.getBadgeNumber() }
+            if (techId.isBlank()) {
+                _uiState.value = _uiState.value.copy(
+                    isWithdrawing = false,
+                    errorMessage = "Active session not found. Please log in again."
+                )
+                return@launch
+            }
             val techName = sessionManager.getFullName()
             val techBadge = sessionManager.getBadgeNumber()
             val techPhone = sessionManager.getPhone()
@@ -811,7 +819,7 @@ class TechnicianDashboardViewModel(
                             customerLongitude = (m["customerLongitude"] as? Number)?.toDouble() ?: defaultLng,
                             status = status,
                             priority = m["priority"]?.toString() ?: "NORMAL",
-                            totalAmountInr = (m["totalAmountInr"] as? Number)?.toDouble() ?: 352.82,
+                            totalAmountInr = (m["totalAmountInr"] as? Number)?.toDouble() ?: (Math.round(299.0 * 1.18 * 100.0) / 100.0),
                             safetyGlovesConfirmed = (m["safetyGlovesConfirmed"] as? Boolean) ?: false,
                             safetyMcbSwitchConfirmed = (m["safetyMcbSwitchConfirmed"] as? Boolean) ?: false,
                             handoverOtp = m["handoverOtp"]?.toString() ?: ""
@@ -841,7 +849,7 @@ class TechnicianDashboardViewModel(
                         val cName = m["customerName"]?.toString() ?: "Customer"
                         val cPhone = m["customerPhone"]?.toString() ?: "+91 98765 43210"
                         val cAddr = m["customerAddressText"]?.toString() ?: "Customer Address"
-                        val amount = (m["totalAmountInr"] as? Number)?.toDouble() ?: 352.82
+                        val amount = (m["totalAmountInr"] as? Number)?.toDouble() ?: (Math.round(299.0 * 1.18 * 100.0) / 100.0)
 
                         InboundJobNotification(
                             id = id,
@@ -936,11 +944,12 @@ class TechnicianDashboardViewModel(
                     val statePrefix = if (pin.startsWith("75") || pin.startsWith("76") || pin.startsWith("77")) "OD" else "MH"
                     "GTS-$statePrefix-${(1000..9999).random()}"
                 }
+                val fallbackAmount = Math.round(299.0 * 1.18 * 100.0) / 100.0
                 val totalAmount = if (details != null && details.has("totalAmountInr")) {
-                    details.optDouble("totalAmountInr", 352.82)
+                    details.optDouble("totalAmountInr", fallbackAmount)
                 } else if (data.has("totalAmountInr")) {
-                    data.optDouble("totalAmountInr", 352.82)
-                } else 352.82
+                    data.optDouble("totalAmountInr", fallbackAmount)
+                } else fallbackAmount
 
                 val lat = details?.optDouble("customerLatitude")
                     ?: if (pin.startsWith("75") || pin.startsWith("76") || pin.startsWith("77")) 19.3150 else 18.9220
@@ -968,6 +977,48 @@ class TechnicianDashboardViewModel(
 
                 cacheIncomingJob(inboundJob)
                 _uiState.value = _uiState.value.copy(incomingDispatchAlert = inboundJob)
+            } else if (eventType == "JOB_CANCELLED") {
+                val cancelledJobId = data.optString("jobId")
+                if (cancelledJobId.isNotEmpty()) {
+                    val updatedJobs = _uiState.value.assignedJobs.filterNot { it.id == cancelledJobId }
+                    val isCurrentJobCancelled = _uiState.value.selectedJob?.id == cancelledJobId
+                    if (isCurrentJobCancelled) {
+                        TechnicianLocationService.stopService(sessionManager.context)
+                    }
+                    _uiState.value = _uiState.value.copy(
+                        assignedJobs = updatedJobs,
+                        selectedJob = if (isCurrentJobCancelled) null else _uiState.value.selectedJob,
+                        incomingDispatchAlert = if (_uiState.value.incomingDispatchAlert?.id == cancelledJobId) null else _uiState.value.incomingDispatchAlert,
+                        errorMessage = if (isCurrentJobCancelled) "Customer cancelled order $cancelledJobId." else _uiState.value.errorMessage
+                    )
+                }
+            }
+        }
+    }
+
+    fun triggerEmergencySos(context: Context, reason: String = "EMERGENCY_FIELD_SOS_TRIGGERED") {
+        viewModelScope.launch {
+            try {
+                val api = ApiClient.getService(context)
+                val profile = _uiState.value.profile
+                val techId = sessionManager.getTechnicianId().ifEmpty { sessionManager.getBadgeNumber() }
+                val pin = sessionManager.getPincode()
+                val (hubLat, hubLng) = com.ghartak.technician.util.IndianPincodeResolver.getCoordinatesForPincode(pin)
+
+                api.broadcastEmergencySos(
+                    EmergencySosRequest(
+                        technicianId = techId,
+                        technicianName = profile?.fullName ?: sessionManager.getFullName(),
+                        phone = profile?.phone ?: sessionManager.getPhone(),
+                        latitude = hubLat,
+                        longitude = hubLng,
+                        trade = profile?.specialization ?: "Electrician",
+                        reason = reason
+                    )
+                )
+                Log.d("GTS_TECH", "Emergency SOS broadcast successfully sent to operations center")
+            } catch (e: Exception) {
+                Log.w("GTS_TECH", "Emergency SOS broadcast warning: ${e.message}")
             }
         }
     }

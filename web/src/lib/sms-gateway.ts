@@ -42,27 +42,27 @@ export const DLT_TEMPLATES = {
   AUTH_LOGIN_OTP: {
     dltId: 'DLT-140716120001',
     format: (data: { otp: string }) =>
-      `Your ElectriCare verification code is ${data.otp}. Valid for 5 minutes. Do not share this OTP with anyone. - ELCARE`,
+      `Your Ghar Tak Services verification code is ${data.otp}. Valid for 5 minutes. Do not share this OTP with anyone. - GHARTAK`,
   },
   JOB_DISPATCH_ALERT: {
     dltId: 'DLT-140716120002',
     format: (data: { ticketNumber: string; areaName: string; pincode: string; fee: number }) =>
-      `[DISPATCH ALERT] New Work Order ${data.ticketNumber} assigned in ${data.areaName} (${data.pincode}). Fee: ₹${data.fee}. Please accept within 60s in ElectriCare Tech App. - ELCARE`,
+      `[DISPATCH ALERT] New Work Order ${data.ticketNumber} assigned in ${data.areaName} (${data.pincode}). Fee: ₹${data.fee}. Please accept within 60s in Ghar Tak Tech App. - GHARTAK`,
   },
   CUSTOMER_HANDOVER_OTP: {
     dltId: 'DLT-140716120003',
     format: (data: { techName: string; handoverOtp: string; ticketNumber: string }) =>
-      `Technician ${data.techName} has arrived for Work Order ${data.ticketNumber}. Share verification code ${data.handoverOtp} only upon satisfactory service completion. - ELCARE`,
+      `Technician ${data.techName} has arrived for Work Order ${data.ticketNumber}. Share verification code ${data.handoverOtp} only upon satisfactory service completion. - GHARTAK`,
   },
   SLA_BREACH_ALERT: {
     dltId: 'DLT-140716120004',
     format: (data: { ticketNumber: string; pincode: string; minutesOverdue: number }) =>
-      `[URGENT SLA ESCALATION] Ticket ${data.ticketNumber} in ${data.pincode} is ${data.minutesOverdue}m overdue. Automatic proximity reassignment initiated. - ELCARE Ops`,
+      `[URGENT SLA ESCALATION] Ticket ${data.ticketNumber} in ${data.pincode} is ${data.minutesOverdue}m overdue. Proximity reassignment initiated. - GHARTAK Ops`,
   },
   INVOICE_ISSUED: {
     dltId: 'DLT-140716120005',
     format: (data: { invoiceNumber: string; totalAmount: number; ticketNumber: string }) =>
-      `ElectriCare Tax Invoice ${data.invoiceNumber} for ₹${data.totalAmount} (Job ${data.ticketNumber}) has been generated with 18% GST. Thank you for choosing ElectriCare! - ELCARE`,
+      `Ghar Tak Services Tax Invoice ${data.invoiceNumber} for ₹${data.totalAmount} (Job ${data.ticketNumber}) has been generated with 18% GST. Thank you for choosing Ghar Tak! - GHARTAK`,
   },
 };
 

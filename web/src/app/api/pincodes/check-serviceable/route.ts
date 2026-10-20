@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         {
           serviceable: false,
           pincode: cleanPin,
-          message: `ElectriCare electrical services are not currently available in pincode ${cleanPin}. Our Maharashtra expansion team is onboarding technicians rapidly!`,
+          message: `Ghar Tak Services are not currently available in pincode ${cleanPin}. Our regional expansion team is onboarding verified technicians rapidly!`,
           waitlistAvailable: true,
         },
         'Pincode outside active territory jurisdiction',

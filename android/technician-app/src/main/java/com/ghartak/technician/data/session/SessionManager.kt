@@ -577,6 +577,10 @@ class SessionManager(val context: Context) {
     fun isLoggedIn(): Boolean = prefs.getBoolean(KEY_IS_LOGGED_IN, false)
 
     fun clearSession() {
+        val currentTechId = getTechnicianId()
+        val currentBadge = getBadgeNumber()
+        val withdrawalKey = "key_local_withdrawals_json_${currentTechId.ifEmpty { currentBadge }}"
+
         prefs.edit().apply {
             remove(KEY_AUTH_TOKEN)
             remove(KEY_TECH_ID)
@@ -588,6 +592,24 @@ class SessionManager(val context: Context) {
             remove(KEY_IS_ONLINE)
             remove(KEY_RATING)
             remove(KEY_GLOVES_VERIFIED)
+            remove(KEY_TOTAL_JOBS)
+            remove(KEY_EMAIL)
+            remove(KEY_LOCATION)
+            remove(KEY_LANGUAGES)
+            remove(KEY_SPECIALIZATION)
+            remove(KEY_EXPERIENCE)
+            remove(KEY_LICENSE)
+            remove(KEY_SERVICE_AREA)
+            remove("key_today_earnings")
+            remove("key_week_earnings")
+            remove("key_month_earnings")
+            remove("key_saved_earnings_tx_json")
+            remove("key_local_withdrawals_json")
+            remove(withdrawalKey)
+            remove("key_saved_upi_id")
+            remove("key_saved_acc_name")
+            remove("key_saved_acc_num")
+            remove("key_saved_ifsc")
             putBoolean(KEY_IS_LOGGED_IN, false)
             apply()
         }

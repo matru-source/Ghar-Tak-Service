@@ -647,23 +647,26 @@ class CustomerAuthViewModel(
     }
 
     fun loginWithGoogle(
-        selectedEmail: String = "matruprasadpanda497@gmail.com",
-        selectedName: String = "Matru Prasad Panda"
+        selectedEmail: String,
+        selectedName: String,
+        selectedPhone: String = "",
+        selectedAddress: String = "",
+        selectedPincode: String = "760001"
     ) {
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            delay(400)
+            delay(300)
             val cleanEmail = selectedEmail.trim().lowercase()
             val existingUserJson = sessionManager.getUserByEmail(cleanEmail)
 
             val name = if (existingUserJson != null && existingUserJson.optString("name", "").isNotBlank()) {
                 existingUserJson.optString("name")
             } else {
-                selectedName.trim()
+                selectedName.trim().ifEmpty { cleanEmail.substringBefore("@") }
             }
-            val phone = existingUserJson?.optString("phone", "+91 98201 44091") ?: "+91 98201 44091"
-            val address = existingUserJson?.optString("address", "Plot No. 215, Sri Vihar, Berhampur, Ganjam, Odisha - 760004") ?: "Plot No. 215, Sri Vihar, Berhampur, Ganjam, Odisha - 760004"
-            val pincode = existingUserJson?.optString("pincode", "760004") ?: "760004"
+            val phone = if (!selectedPhone.isNullOrBlank()) selectedPhone else existingUserJson?.optString("phone", "") ?: ""
+            val address = if (!selectedAddress.isNullOrBlank()) selectedAddress else existingUserJson?.optString("address", "") ?: ""
+            val pincode = if (!selectedPincode.isNullOrBlank()) selectedPincode else existingUserJson?.optString("pincode", "760001") ?: "760001"
 
             val uid = "cust_google_${System.currentTimeMillis() % 10000}"
             val profile = UserProfile(

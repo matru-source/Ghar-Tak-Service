@@ -14,7 +14,10 @@ export type RealtimeEventType =
   | 'JOB_COMPLETED'
   | 'SLA_BREACH_WARNING'
   | 'PAYOUT_TRANSFERRED'
-  | 'EMERGENCY_SOS';
+  | 'EMERGENCY_SOS'
+  | 'EMERGENCY_SOS_TRIGGERED'
+  | 'JOB_CANCELLED'
+  | 'JOB_FEEDBACK_SUBMITTED';
 
 export interface RealtimeEventPayload {
   type: RealtimeEventType;

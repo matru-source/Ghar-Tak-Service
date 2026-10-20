@@ -77,4 +77,18 @@ interface CustomerApiService {
     suspend fun enrollSubscription(
         @Body body: Map<String, Any>
     ): Response<ApiResponse<com.google.gson.JsonElement>>
+
+    // Live Customer Location Telemetry
+    @POST("jobs/{id}/customer-telemetry")
+    suspend fun sendCustomerTelemetry(
+        @Path("id") jobId: String,
+        @Body body: Map<String, Double>
+    ): Response<ApiResponse<Map<String, Any>>>
+
+    // Job Rating & Feedback Signoff
+    @POST("jobs/{id}/feedback")
+    suspend fun submitJobFeedback(
+        @Path("id") jobId: String,
+        @Body body: Map<String, Any>
+    ): Response<ApiResponse<Map<String, Any>>>
 }

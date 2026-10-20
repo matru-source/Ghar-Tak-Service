@@ -21,8 +21,8 @@ data class JobCompleteUiState(
     val ticketNumber: String = "GTS-OD-1001",
     val serviceTitle: String = "Doorstep Service Order",
     val customerName: String = "Valued Customer",
-    val totalAmountInr: Double = 352.82,
-    val technicianPayoutInr: Double = 247.0,
+    val totalAmountInr: Double = 0.0,
+    val technicianPayoutInr: Double = 0.0,
     val enteredOtp: String = "",
     val afterPhotoUri: String? = null,
     val afterPhotoBitmap: Bitmap? = null,
@@ -115,12 +115,28 @@ class JobCompleteViewModel(
                 }
 
                 val api = ApiClient.getService(context)
+                var targetPhotoUrl = state.afterPhotoUri ?: "/uploads/after_work_completed.jpg"
+
+                if (state.afterPhotoBitmap != null) {
+                    try {
+                        val baos = java.io.ByteArrayOutputStream()
+                        state.afterPhotoBitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos)
+                        val base64Str = android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.NO_WRAP)
+                        val uploadResp = api.uploadPhoto(mapOf("base64" to base64Str))
+                        if (uploadResp.isSuccessful && uploadResp.body()?.data != null) {
+                            targetPhotoUrl = uploadResp.body()!!.data!!.url
+                        }
+                    } catch (e: Exception) {
+                        Log.w("GTS_COMPLETE", "Photo upload exception: ${e.message}")
+                    }
+                }
+
                 val res = withTimeoutOrNull(15000L) {
                     api.completeJob(
                         jobId = targetJobId,
                         request = JobCompleteRequest(
                             handoverOtp = state.enteredOtp,
-                            afterPhotoUrl = state.afterPhotoUri ?: "local_completed_evidence.jpg",
+                            afterPhotoUrl = targetPhotoUrl,
                             customerRating = state.rating,
                             customerFeedback = state.feedback
                         )

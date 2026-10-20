@@ -3,6 +3,7 @@ package com.ghartak.customer.ui.signoff
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ghartak.customer.data.api.ApiClient
 import com.ghartak.customer.data.session.SessionManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +25,7 @@ data class ServiceSignoffUiState(
     val basePriceInr: Double = 299.0,
     val cgstInr: Double = 26.91,
     val sgstInr: Double = 26.91,
-    val totalAmountInr: Double = 352.82,
+    val totalAmountInr: Double = Math.round(299.0 * 1.18 * 100.0) / 100.0,
     val rating: Int = 5,
     val reviewText: String = "Specialist arrived on time, used professional safety gear, and completed the service cleanly. Inspection verified at 100%.",
     val selectedTags: Set<String> = setOf("Punctual", "Spotless Cleanup", "Expert Service"),
@@ -163,6 +164,23 @@ class ServiceSignoffViewModel(
         viewModelScope.launch {
             val state = _uiState.value
             try {
+                // 1. Submit dynamic rating & review to backend database
+                if (state.jobId.isNotBlank()) {
+                    try {
+                        val api = ApiClient.getService(sessionManager.context)
+                        api.submitJobFeedback(
+                            jobId = state.jobId,
+                            body = mapOf(
+                                "rating" to state.rating,
+                                "feedback" to state.reviewText
+                            )
+                        )
+                    } catch (netErr: Exception) {
+                        netErr.printStackTrace()
+                    }
+                }
+
+                // 2. Save completed invoice record locally for customer history
                 sessionManager.addCompletedOrder(
                     com.ghartak.customer.data.model.PastOrderItem(
                         ticketNumber = state.ticketNumber,

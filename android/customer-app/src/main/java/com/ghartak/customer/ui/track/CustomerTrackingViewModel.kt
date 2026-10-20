@@ -1,7 +1,11 @@
 package com.ghartak.customer.ui.track
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.util.Log
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ghartak.customer.data.api.ApiClient
@@ -59,9 +63,28 @@ class CustomerTrackingViewModel(
         val activePhone = sessionManager.getActiveJobTechnicianPhone()
         val activeOtp = sessionManager.getActiveJobOtp()
 
-        val userPin = sessionManager.getUserPincode().ifEmpty { "759001" }
+        val userPin = sessionManager.getUserPincode().ifEmpty { "760001" }
         val (initDestLat, initDestLng) = com.ghartak.customer.util.IndianPincodeResolver.getCoordinatesForPincode(userPin)
-        val initDestArea = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(initDestLat, initDestLng)
+
+        // Dynamically query actual customer phone GPS
+        val context = sessionManager.context
+        val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+
+        var activeDestLat = initDestLat
+        var activeDestLng = initDestLng
+        if ((hasFine || hasCoarse) && lm != null) {
+            try {
+                val loc = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                    ?: lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+                if (loc != null && loc.latitude != 0.0 && loc.longitude != 0.0) {
+                    activeDestLat = loc.latitude
+                    activeDestLng = loc.longitude
+                }
+            } catch (_: SecurityException) {}
+        }
+        val activeDestArea = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(activeDestLat, activeDestLng)
 
         _uiState.value = _uiState.value.copy(
             jobId = jobId,
@@ -71,32 +94,54 @@ class CustomerTrackingViewModel(
             technicianBadge = activeBadge,
             technicianPhone = activePhone,
             handoverOtp = activeOtp,
-            destLatitude = initDestLat,
-            destLongitude = initDestLng,
-            destAreaName = initDestArea,
-            techLatitude = initDestLat + 0.010,
-            techLongitude = initDestLng + 0.010,
-            techAreaName = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(initDestLat + 0.010, initDestLng + 0.010),
-            distanceKm = 1.2,
-            etaMinutes = 5
+            destLatitude = activeDestLat,
+            destLongitude = activeDestLng,
+            destAreaName = activeDestArea,
+            techLatitude = activeDestLat,
+            techLongitude = activeDestLng,
+            techAreaName = activeDestArea,
+            distanceKm = 0.0,
+            etaMinutes = 0
         )
 
         // Connect to Central Real-Time SSE Bus
-        val customerId = sessionManager.getUserId()
+        val customerId = sessionManager.getUserId().ifEmpty { sessionManager.getUserPhone() }
         realtimeStreamManager.connect(customerId, jobId) { eventType, data ->
             handleRealtimeEvent(eventType, data)
         }
 
-        // Periodic resilient HTTP telemetry polling every 3 seconds to guarantee live sync
+        // Periodic resilient HTTP telemetry polling every 5 seconds to guarantee live sync
         startLiveTelemetryPolling(sessionManager.context, jobId)
     }
 
     private fun startLiveTelemetryPolling(context: Context, jobId: String) {
         telemetryPollingJob?.cancel()
         telemetryPollingJob = viewModelScope.launch {
+            val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+            val hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+            val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+
             while (isActive && !_uiState.value.isJobCompleted) {
                 try {
                     val api = ApiClient.getService(context)
+
+                    // 1. Send live customer device GPS to backend so technician distance is accurate
+                    if ((hasFine || hasCoarse) && lm != null) {
+                        try {
+                            val loc = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                                ?: lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+                            if (loc != null && loc.latitude != 0.0 && loc.longitude != 0.0) {
+                                _uiState.value = _uiState.value.copy(
+                                    destLatitude = loc.latitude,
+                                    destLongitude = loc.longitude,
+                                    destAreaName = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(loc.latitude, loc.longitude)
+                                )
+                                api.sendCustomerTelemetry(jobId, mapOf("latitude" to loc.latitude, "longitude" to loc.longitude))
+                            }
+                        } catch (_: SecurityException) {}
+                    }
+
+                    // 2. Fetch live technician telemetry from backend
                     val response = api.getLiveTracking(jobId)
                     if (response.isSuccessful && response.body()?.data != null) {
                         val data = response.body()!!.data!!
@@ -266,7 +311,7 @@ class CustomerTrackingViewModel(
                 sessionManager.setActiveJobStatus("ARRIVED")
                 _uiState.value = _uiState.value.copy(
                     status = "ARRIVED",
-                    distanceKm = 0.03,
+                    distanceKm = 0.0,
                     etaMinutes = 0,
                     isDoorstepArrived = true
                 )
@@ -310,11 +355,14 @@ class CustomerTrackingViewModel(
         }
     }
 
-    /**
-     * Staging Demo Transit Simulation:
-     * Realistic interpolated movement from technician origin to customer destination
-     */
+    /* =========================================================================
+     * [TESTING FEATURE] Staging Demo Transit Simulation:
+     * Toggleable test bypass - will be removed once physical field testing completes
+     * ========================================================================= */
+    var isTestingBypassEnabled: Boolean = true
+
     fun simulateStepCloser() {
+        if (!isTestingBypassEnabled) return
         val nextStep = (_uiState.value.transitStep + 1).coerceAtMost(3)
         val targetLat = _uiState.value.destLatitude
         val targetLng = _uiState.value.destLongitude
@@ -325,7 +373,7 @@ class CustomerTrackingViewModel(
         val newLat = startLat + (targetLat - startLat) * fraction
         val newLng = startLng + (targetLng - startLng) * fraction
 
-        val simDist = if (nextStep == 3) 0.03 else com.ghartak.customer.util.IndianPincodeResolver.calculateHaversineDistanceKm(newLat, newLng, targetLat, targetLng)
+        val simDist = if (nextStep == 3) 0.0 else com.ghartak.customer.util.IndianPincodeResolver.calculateHaversineDistanceKm(newLat, newLng, targetLat, targetLng)
         val roundedDist = Math.max(0.03, (Math.round(simDist * 100.0) / 100.0))
         val simEta = com.ghartak.customer.util.IndianPincodeResolver.calculateEtaMinutes(roundedDist)
         val simArea = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(newLat, newLng)

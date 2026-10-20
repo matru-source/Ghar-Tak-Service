@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BrandMark } from '@/components/ui/brand-logo';
+import { getActivePartnerId } from '@/lib/partner-session';
 
 interface Technician {
   id: string;
@@ -65,7 +66,8 @@ export default function PartnerFleetPage() {
   const fetchFleet = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/partner/fleet?partnerId=ptnr_mah_01');
+      const activePartner = getActivePartnerId();
+      const res = await fetch(`/api/partner/fleet?partnerId=${encodeURIComponent(activePartner)}`);
       const data = await res.json();
       if (data.success) {
         setTechnicians(data.technicians || []);

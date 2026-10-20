@@ -1,7 +1,7 @@
 import { SignJWT, jwtVerify } from 'jose';
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'electricare_super_secret_jwt_key_2026_enterprise_production'
+  process.env.JWT_SECRET || 'ghartak_services_super_secret_jwt_key_2026_enterprise_production'
 );
 
 export interface TokenPayload {

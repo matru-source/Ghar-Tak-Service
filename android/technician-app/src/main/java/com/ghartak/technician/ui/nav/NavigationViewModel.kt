@@ -50,6 +50,9 @@ class NavigationViewModel(
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
+    // [TESTING FLAG] Toggle for instant doorstep arrival bypass
+    var isTestingBypassEnabled: Boolean = true
+
     private val _uiState = MutableStateFlow(NavigationUiState())
     val uiState: StateFlow<NavigationUiState> = _uiState.asStateFlow()
 
@@ -57,6 +60,16 @@ class NavigationViewModel(
     private var lastLocationTimeMs: Long = 0L
     private var lastLocationLat: Double = 0.0
     private var lastLocationLng: Double = 0.0
+
+    private fun getBatteryLevel(context: Context): Int {
+        return try {
+            val bm = context.getSystemService(Context.BATTERY_SERVICE) as? android.os.BatteryManager
+            val level = bm?.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY) ?: -1
+            if (level in 0..100) level else 85
+        } catch (_: Exception) {
+            85
+        }
+    }
 
     fun initJob(job: TechnicianJob) {
         val (resolvedLat, resolvedLng) = IndianPincodeResolver.getCoordinatesForPincode(job.pincode)
@@ -273,7 +286,7 @@ class NavigationViewModel(
                             longitude = lng,
                             heading = _uiState.value.heading,
                             speedKmh = speed,
-                            batteryLevelPct = 85,
+                            batteryLevelPct = getBatteryLevel(context),
                             isOnline = true
                         )
                     )
@@ -305,6 +318,11 @@ class NavigationViewModel(
      * Can be easily removed when testing is complete.
      * ========================================================================= */
     fun triggerOneClickDoorstepArrival(context: Context) {
+        if (!isTestingBypassEnabled) {
+            Log.d("GTS_NAV", "Testing bypass disabled; physical geofence required")
+            return
+        }
+
         val custLat = _uiState.value.customerLat
         val custLng = _uiState.value.customerLng
         val custArea = _uiState.value.customerAreaName.ifEmpty { "Customer Doorstep" }
@@ -335,7 +353,7 @@ class NavigationViewModel(
                         longitude = custLng,
                         heading = _uiState.value.heading,
                         speedKmh = 0.0,
-                        batteryLevelPct = 95,
+                        batteryLevelPct = getBatteryLevel(context),
                         isOnline = true
                     )
                 )

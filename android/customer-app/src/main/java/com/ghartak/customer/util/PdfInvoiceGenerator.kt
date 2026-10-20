@@ -48,7 +48,7 @@ object PdfInvoiceGenerator {
         val taxableCharges: Double = 299.00,
         val cgstAmount: Double = 26.91,
         val sgstAmount: Double = 26.91,
-        val totalAmount: Double = 352.82,
+        val totalAmount: Double = Math.round(299.0 * 1.18 * 100.0) / 100.0,
         val paymentMethod: String = "PAID (ONLINE • UPI)",
         val warrantyDetails: String = "6-Month Official Service Warranty Active"
     )

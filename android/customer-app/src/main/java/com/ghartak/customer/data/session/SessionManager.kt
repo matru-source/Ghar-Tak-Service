@@ -107,7 +107,7 @@ class SessionManager(val context: Context) {
         phone: String,
         password: String,
         address: String = "",
-        pincode: String = "400001"
+        pincode: String = "760001"
     ) {
         val cleanEmail = email.trim().lowercase()
         val cleanPhone = phone.filter { it.isDigit() }.takeLast(10)
@@ -120,7 +120,7 @@ class SessionManager(val context: Context) {
                 put("phone", if (phone.startsWith("+")) phone.trim() else if (cleanPhone.isNotEmpty()) "+91 $cleanPhone" else "")
                 put("password", password.trim())
                 put("address", address.trim())
-                put("pincode", pincode.trim().ifEmpty { "400001" })
+                put("pincode", pincode.trim().ifEmpty { "760001" })
             }
             json.put(cleanEmail, userObj)
             if (cleanPhone.isNotEmpty()) {
@@ -177,7 +177,7 @@ class SessionManager(val context: Context) {
         token: String,
         user: UserProfile,
         address: String = "",
-        pincode: String = "400001"
+        pincode: String = "760001"
     ) {
         prefs.edit().apply {
             putString(KEY_AUTH_TOKEN, token)
@@ -194,7 +194,7 @@ class SessionManager(val context: Context) {
 
     fun getAuthToken(): String? = prefs.getString(KEY_AUTH_TOKEN, null)
 
-    fun getUserId(): String = prefs.getString(KEY_USER_ID, "cust_01") ?: "cust_01"
+    fun getUserId(): String = prefs.getString(KEY_USER_ID, "") ?: ""
 
     fun getUserName(): String = prefs.getString(KEY_USER_NAME, "Customer") ?: "Customer"
 
@@ -453,6 +453,9 @@ class SessionManager(val context: Context) {
             remove(KEY_ACTIVE_JOB_TICKET_NO)
             remove(KEY_ACTIVE_JOB_STATE_CODE)
             remove(KEY_ACTIVE_JOB_GSTIN)
+            remove(KEY_ACTIVE_JOB_OTP)
+            remove(KEY_ACTIVE_JOB_STATUS)
+            remove(KEY_PAST_ORDERS)
             remove(KEY_SECONDARY_ADDRESS)
             remove(KEY_SECONDARY_LABEL)
             remove(KEY_HAS_ACTIVE_AMC)

@@ -85,4 +85,16 @@ interface TechnicianApiService {
     suspend fun getWithdrawals(
         @Query("technicianId") technicianId: String
     ): Response<ApiResponse<WithdrawalListResponse>>
+
+    // Emergency SOS Broadcast
+    @POST("emergency-sos")
+    suspend fun broadcastEmergencySos(
+        @Body request: EmergencySosRequest
+    ): Response<ApiResponse<Map<String, Any>>>
+
+    // Evidence & Photo Upload
+    @POST("upload")
+    suspend fun uploadPhoto(
+        @Body body: Map<String, String>
+    ): Response<ApiResponse<FileUploadResponse>>
 }
