@@ -630,8 +630,68 @@ fun NavigationScreen(
                         }
                     }
 
+                    /* =========================================================================
+                     * [TESTING FEATURE] ONE-CLICK DOORSTEP ARRIVAL
+                     * Can be cleanly removed when testing is complete.
+                     * ========================================================================= */
                     if (!state.hasArrivedDoorstep) {
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                            border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFF38BDF8))
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(text = "🧪", fontSize = 14.sp)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "TESTING MODE • INSTANT CO-LOCATION",
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Black,
+                                            color = Color(0xFF38BDF8)
+                                        )
+                                    }
+                                    Surface(
+                                        color = Color(0xFF0284C7).copy(alpha = 0.25f),
+                                        shape = RoundedCornerShape(4.dp)
+                                    ) {
+                                        Text(
+                                            text = "Bypass 5s Scan",
+                                            fontSize = 9.sp,
+                                            color = Color(0xFF7DD3FC),
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = "Directly sets technician GPS to user's exact coordinates, bypasses 5s scan, and notifies both user and technician instantly.",
+                                    fontSize = 10.5.sp,
+                                    color = Color(0xFF94A3B8)
+                                )
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Button(
+                                    onClick = { viewModel.triggerOneClickDoorstepArrival(context) },
+                                    modifier = Modifier.fillMaxWidth().height(42.dp),
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0284C7))
+                                ) {
+                                    Icon(imageVector = Icons.Default.Bolt, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("⚡ ONE-CLICK DOORSTEP (INSTANT ARRIVAL)", fontSize = 11.5.sp, fontWeight = FontWeight.Black, color = Color.White)
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
                         OutlinedButton(
                             onClick = { viewModel.manualConfirmDoorstep(context) },
                             modifier = Modifier.fillMaxWidth(),
@@ -668,7 +728,7 @@ fun NavigationScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "DOORSTEP REACHED (WITHIN 50m GEOFENCE)",
+                                text = "ARRIVED AT USER'S DOORSTEP (0.0 km)",
                                 color = SafetyGreen,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Black
@@ -681,9 +741,9 @@ fun NavigationScreen(
                             it.contains("electr") || it.contains("wire") || it.contains("mcb") || it.contains("panel") || it.contains("fan") || it.contains("ac") || it.contains("generator")
                         }
                         val arrivalNotice = if (isElectrical) {
-                            "Customer has been notified of your arrival. Next: confirm 1000V high-voltage safety interlock before opening consumer unit."
+                            "You have arrived at customer doorstep! Geofence verified. Next: confirm 1000V high-voltage safety interlock before opening consumer unit."
                         } else {
-                            "Customer has been notified of your arrival. Next: confirm pre-work protocol checklist and inspection photo before commencing service."
+                            "You have arrived at customer doorstep! Geofence verified. Next: confirm pre-work protocol checklist and inspection photo before commencing service."
                         }
                         val proceedButtonText = if (isElectrical) {
                             "PROCEED TO 1000V SAFETY INTERLOCK"

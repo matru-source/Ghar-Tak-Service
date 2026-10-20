@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     let customerArea = '';
 
     if (jobId) {
-      targetJob = dbStore.jobs.find((j) => j.id === jobId || j.jobTicketNumber === jobId);
+      targetJob = await db.findOrRecoverJob(jobId);
       if (targetJob) {
         const destGeo = getCoordinatesForPincode(targetJob.pincode || '759001');
         const destLat = targetJob.customerLatitude || destGeo.latitude;
@@ -107,15 +107,31 @@ export async function POST(request: NextRequest) {
         customerArea = resolveAreaFromCoordinates(destLat, destLng);
 
         const rawDist = calculateHaversineDistanceKm(latitude, longitude, destLat, destLng);
-        distanceRemainingKm = Number(rawDist.toFixed(2));
+        const isCoLocated = rawDist <= 0.05 || (Math.abs(latitude - destLat) < 0.0002 && Math.abs(longitude - destLng) < 0.0002);
 
-        // Transit speed (25 km/h average)
-        etaMinutes = calculateEtaMinutes(distanceRemainingKm, 25.0);
-
-        // Geofence Doorstep Check (under 50 meters = 0.05 km)
-        if (distanceRemainingKm <= 0.05 && (targetJob.status === 'EN_ROUTE' || targetJob.status === 'ASSIGNED')) {
+        if (isCoLocated) {
+          distanceRemainingKm = 0.0;
+          etaMinutes = 0;
           isDoorstepNearby = true;
-          targetJob.status = 'ARRIVED';
+          if (targetJob.status === 'EN_ROUTE' || targetJob.status === 'ASSIGNED') {
+            targetJob.status = 'ARRIVED';
+          }
+        } else {
+          distanceRemainingKm = Number(rawDist.toFixed(2));
+          etaMinutes = calculateEtaMinutes(distanceRemainingKm, 25.0);
+        }
+
+        // Geofence Doorstep Check (under 50 meters = 0.05 km or manual arrival)
+        if (isDoorstepNearby) {
+          if (await isDatabaseConnected()) {
+            try {
+              const { prisma } = await import('@/lib/prisma');
+              await prisma.job.updateMany({
+                where: { OR: [{ id: targetJob.id }, { jobTicketNumber: targetJob.jobTicketNumber }] },
+                data: { status: 'ARRIVED' as any },
+              });
+            } catch (_) {}
+          }
 
           // Broadcast Automatic Doorstep Arrival Event
           realtimeBus.publish({
@@ -196,11 +212,14 @@ export async function GET(request: NextRequest) {
 
     // If querying by jobId, find assigned technician's live coordinates
     if (jobId) {
-      const job = dbStore.jobs.find((j) => j.id === jobId || j.jobTicketNumber === jobId);
+      const job = await db.findOrRecoverJob(jobId);
       if (!job) {
         return apiError('Job not found', 404);
       }
-      const tech = dbStore.technicians.find((t) => t.id === job.technicianId);
+      let tech: any = dbStore.technicians.find((t) => t.id === job.technicianId || t.badgeNumber === (job as any).technicianBadge);
+      if (!tech && job.technicianId) {
+        tech = (await db.getTechnicianById(job.technicianId)) || undefined;
+      }
 
       const destGeo = getCoordinatesForPincode(job.pincode || '759001');
       const destLat = job.customerLatitude || destGeo.latitude;
@@ -209,32 +228,22 @@ export async function GET(request: NextRequest) {
       let techLat = tech?.currentLatitude;
       let techLng = tech?.currentLongitude;
 
-      const isCoLocated = Boolean(techLat && techLng &&
-        Math.abs(techLat - destLat) < 0.0001 &&
-        Math.abs(techLng - destLng) < 0.0001);
-
-      const statusStr = String(job.status);
-      const isPreArrival = statusStr !== 'ARRIVED' && statusStr !== 'SAFETY_CHECKED' && statusStr !== 'IN_PROGRESS' && statusStr !== 'WORK_COMPLETED' && statusStr !== 'COMPLETED';
-
-      if (!techLat || !techLng || (isCoLocated && isPreArrival)) {
-        if (tech?.assignedPincode) {
-          const hubGeo = getCoordinatesForPincode(tech.assignedPincode);
-          techLat = hubGeo.latitude;
-          techLng = hubGeo.longitude;
-        } else {
-          const baseGeo = getCoordinatesForPincode(job.pincode || '759001');
-          techLat = baseGeo.latitude;
-          techLng = baseGeo.longitude;
-        }
-
-        if (Math.abs(techLat - destLat) < 0.0001 && Math.abs(techLng - destLng) < 0.0001) {
-          techLat = Number((destLat + 0.010).toFixed(6));
-          techLng = Number((destLng + 0.008).toFixed(6));
-        }
+      // If no live coordinates yet, default to technician's assigned hub
+      if (!techLat || !techLng) {
+        const hubGeo = getCoordinatesForPincode(tech?.assignedPincode || job.pincode || '759001');
+        techLat = hubGeo.latitude;
+        techLng = hubGeo.longitude;
       }
 
-      const dist = Number(calculateHaversineDistanceKm(techLat, techLng, destLat, destLng).toFixed(2));
-      const eta = calculateEtaMinutes(dist, 25.0);
+      const rawDist = calculateHaversineDistanceKm(techLat, techLng, destLat, destLng);
+      const isDoorstep = rawDist <= 0.05 || (Math.abs(techLat - destLat) < 0.0002 && Math.abs(techLng - destLng) < 0.0002) || job.status === 'ARRIVED';
+      const dist = isDoorstep ? 0.0 : Number(rawDist.toFixed(2));
+      const eta = isDoorstep ? 0 : calculateEtaMinutes(dist, 25.0);
+
+      if (isDoorstep && (job.status === 'EN_ROUTE' || job.status === 'ASSIGNED')) {
+        job.status = 'ARRIVED';
+      }
+
       const techArea = resolveAreaFromCoordinates(techLat, techLng);
       const destArea = resolveAreaFromCoordinates(destLat, destLng);
 
@@ -257,10 +266,10 @@ export async function GET(request: NextRequest) {
         },
         technician: {
           id: tech?.id || job.technicianId,
-          badgeNumber: tech?.badgeNumber || 'GTS-TECH-101',
+          badgeNumber: tech?.badgeNumber || (job as any).technicianBadge || 'GTS-TECH-101',
           name: tech?.fullName || job.technicianName,
           phone: tech?.phone || '9876543210',
-          rating: tech?.rating || 4.9,
+          rating: tech?.rating || 5.0,
           coordinates: { latitude: techLat, longitude: techLng },
           area: techArea,
           distanceKm: dist,

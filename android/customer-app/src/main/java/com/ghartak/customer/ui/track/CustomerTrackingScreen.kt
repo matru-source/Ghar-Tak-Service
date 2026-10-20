@@ -183,11 +183,71 @@ fun CustomerTrackingScreen(
                     )
                 }
                 else -> {
-                    // 1. Lifecycle Progress Stepper (4-Stage with Timestamps)
-            TrackingLifecycleStepper(state = state)
+                    // 0. Doorstep Arrival Alert Banner (Instant doorstep delivery message)
+                    if (state.isDoorstepArrived || state.status == "ARRIVED" || state.distanceKm <= 0.05) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF0FDF4)),
+                            border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFF22C55E))
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(text = "🔔", fontSize = 20.sp)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "TECHNICIAN IS AT YOUR DOORSTEP!",
+                                        fontWeight = FontWeight.Black,
+                                        color = Color(0xFF15803D),
+                                        fontSize = 14.5.sp
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = "Technician ${state.technicianName} has arrived at your doorstep! Doorstep geofence verified (0.0 km). Please welcome the technician.",
+                                    color = Color(0xFF166534),
+                                    fontSize = 12.sp,
+                                    textAlign = TextAlign.Center
+                                )
+                                if (state.handoverOtp.isNotBlank()) {
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Surface(
+                                        color = Color(0xFFDCFCE7),
+                                        shape = RoundedCornerShape(10.dp),
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF86EFAC))
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "Handover OTP: ",
+                                                fontSize = 12.sp,
+                                                color = Color(0xFF166534),
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                            Text(
+                                                text = state.handoverOtp,
+                                                fontSize = 18.sp,
+                                                fontWeight = FontWeight.Black,
+                                                color = Color(0xFF15803D),
+                                                letterSpacing = 2.sp
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
 
-            // 2. Tactical Midnight Live Map Visualizer with City Grid & Real-Time GPS Tracking
-            LiveServiceTrackingMap(state = state)
+                    // 1. Lifecycle Progress Stepper (4-Stage with Timestamps)
+                    TrackingLifecycleStepper(state = state)
+
+                    // 2. Tactical Midnight Live Map Visualizer with City Grid & Real-Time GPS Tracking
+                    LiveServiceTrackingMap(state = state)
 
             // 2.5 Real-Time GPS Telemetry & Area Localization Card
             Card(

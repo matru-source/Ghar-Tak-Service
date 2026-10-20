@@ -297,16 +297,61 @@ class NavigationViewModel(
         }
     }
 
-    fun manualConfirmDoorstep(context: Context) {
+    /* =========================================================================
+     * [TESTING FEATURE] One-Click Doorstep Arrival
+     * Directly adopts user's lat & lng for technician, bypasses the 5s scan,
+     * immediately updates UI to Arrived at Doorstep, and broadcasts instant
+     * ARRIVED status & telemetry to backend.
+     * Can be easily removed when testing is complete.
+     * ========================================================================= */
+    fun triggerOneClickDoorstepArrival(context: Context) {
+        val custLat = _uiState.value.customerLat
+        val custLng = _uiState.value.customerLng
+        val custArea = _uiState.value.customerAreaName.ifEmpty { "Customer Doorstep" }
+
         _uiState.value = _uiState.value.copy(
+            currentLat = custLat,
+            currentLng = custLng,
             distanceRemainingKm = 0.0,
             etaMinutes = 0,
             speedKmh = 0.0,
             hasArrivedDoorstep = true,
-            currentManeuver = "Arrived at Destination (Doorstep Verified)",
-            nextManeuver = "50m Geofence Active • Ready for Safety Interlock"
+            currentAreaName = custArea,
+            currentManeuver = "ARRIVED AT USER'S DOORSTEP",
+            nextManeuver = "Doorstep Reached (0.0 km) • Ready for Customer Verification"
         )
-        pingBackendTelemetry(context, _uiState.value.customerLat, _uiState.value.customerLng, 0.0)
+
+        viewModelScope.launch {
+            try {
+                val api = ApiClient.getService(context)
+                val targetJob = _uiState.value.jobId
+
+                // 1. Send immediate telemetry with user coordinates & 0.0 km distance
+                api.sendTelemetry(
+                    TelemetryPingRequest(
+                        technicianId = sessionManager.getTechnicianId(),
+                        jobId = targetJob,
+                        latitude = custLat,
+                        longitude = custLng,
+                        heading = _uiState.value.heading,
+                        speedKmh = 0.0,
+                        batteryLevelPct = 95,
+                        isOnline = true
+                    )
+                )
+
+                // 2. Explicitly update job status to ARRIVED
+                if (targetJob.isNotBlank()) {
+                    api.updateJobStatus(targetJob, mapOf("status" to "ARRIVED"))
+                }
+            } catch (e: Throwable) {
+                Log.w("GTS_NAV", "One-click doorstep bypass warning: ${e.message}")
+            }
+        }
+    }
+
+    fun manualConfirmDoorstep(context: Context) {
+        triggerOneClickDoorstepArrival(context)
     }
 
     fun startForegroundService(context: Context) {

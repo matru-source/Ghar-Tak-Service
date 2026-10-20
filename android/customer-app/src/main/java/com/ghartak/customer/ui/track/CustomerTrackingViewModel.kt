@@ -109,19 +109,8 @@ class CustomerTrackingViewModel(
                         val dLat = if (dest != null && dest.latitude != 0.0) dest.latitude else _uiState.value.destLatitude
                         val dLng = if (dest != null && dest.longitude != 0.0) dest.longitude else _uiState.value.destLongitude
 
-                        // Guard against initial marker co-location if technician device has not sent its first GPS packet
-                        val isCoLocated = Math.abs(rawTLat - dLat) < 0.0001 && Math.abs(rawTLng - dLng) < 0.0001
-                        val isPreArrival = status != "ARRIVED" && status != "SAFETY_CHECKED" && status != "IN_PROGRESS" && status != "WORK_COMPLETED" && status != "COMPLETED"
-
-                        val (tLat, tLng) = if (isCoLocated && isPreArrival) {
-                            if (_uiState.value.techLatitude != 0.0 && Math.abs(_uiState.value.techLatitude - dLat) >= 0.0001) {
-                                _uiState.value.techLatitude to _uiState.value.techLongitude
-                            } else {
-                                (dLat + 0.010) to (dLng + 0.008)
-                            }
-                        } else {
-                            rawTLat to rawTLng
-                        }
+                        val tLat = if (rawTLat != 0.0) rawTLat else dLat
+                        val tLng = if (rawTLng != 0.0) rawTLng else dLng
 
                         val calcDist = if (tLat != 0.0 && dLat != 0.0) {
                             com.ghartak.customer.util.IndianPincodeResolver.calculateHaversineDistanceKm(tLat, tLng, dLat, dLng)
@@ -129,7 +118,7 @@ class CustomerTrackingViewModel(
                             tech.distanceKm
                         }
                         val rawDist = Math.max(0.0, Math.round(calcDist * 100.0) / 100.0)
-                        val isArrived = status == "ARRIVED" || (status == "EN_ROUTE" && rawDist <= 0.05) || status == "SAFETY_CHECKED" || status == "IN_PROGRESS" || status == "COMPLETED" || status == "WORK_COMPLETED"
+                        val isArrived = status == "ARRIVED" || rawDist <= 0.05 || (Math.abs(tLat - dLat) < 0.0002 && Math.abs(tLng - dLng) < 0.0002) || status == "SAFETY_CHECKED" || status == "IN_PROGRESS" || status == "COMPLETED" || status == "WORK_COMPLETED"
                         val roundedDist = if (isArrived) 0.0 else rawDist
                         val calcEta = if (isArrived) 0 else com.ghartak.customer.util.IndianPincodeResolver.calculateEtaMinutes(roundedDist)
                         val resolvedStatus = when {

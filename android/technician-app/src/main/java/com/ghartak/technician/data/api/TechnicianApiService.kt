@@ -42,6 +42,12 @@ interface TechnicianApiService {
     @GET("jobs/{id}")
     suspend fun getJobDetails(@Path("id") jobId: String): Response<ApiResponse<TechnicianJob>>
 
+    @PATCH("jobs/{id}")
+    suspend fun updateJobStatus(
+        @Path("id") jobId: String,
+        @Body body: Map<String, String>
+    ): Response<ApiResponse<TechnicianJob>>
+
     // 60-Second Dispatch Acceptance Siren Action
     @POST("jobs/{id}/dispatch-response")
     suspend fun respondToDispatch(
