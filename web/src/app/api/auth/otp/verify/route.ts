@@ -5,6 +5,8 @@ import { db } from '@/lib/db';
 import { dbStore } from '@/lib/mock-data';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
 
+import { getCoordinatesForPincode } from '@/lib/pincode-resolver';
+
 export async function OPTIONS() {
   return corsOptionsResponse();
 }
@@ -37,7 +39,7 @@ export async function POST(request: NextRequest) {
       user = {
         id: newUserId,
         phone: cleanPhone,
-        email: `${cleanPhone.replace('+', '')}@electricare.in`,
+        email: `${cleanPhone.replace('+', '')}@ghartak.in`,
         fullName: name,
         role: assignedRole,
         isVerified: true,
@@ -54,11 +56,11 @@ export async function POST(request: NextRequest) {
           userId: newUserId,
           fullName: name,
           phone: cleanPhone,
-          email: `${cleanPhone.replace('+', '')}@electricare.in`,
-          defaultAddressLine: 'Colaba, Mumbai',
-          defaultPincode: '400001',
-          defaultLatitude: 18.9067,
-          defaultLongitude: 72.8147,
+          email: `${cleanPhone.replace('+', '')}@ghartak.in`,
+          defaultAddressLine: 'Doorstep Service Area',
+          defaultPincode: '760001',
+          defaultLatitude: 19.3149,
+          defaultLongitude: 84.7941,
           activeSubscriptionPlan: 'NONE',
           totalOrdersCount: 0,
           totalSpendInr: 0,
@@ -66,6 +68,30 @@ export async function POST(request: NextRequest) {
           riskScore: 'LOW',
           preferredLanguage: 'HINDI',
           createdAt: new Date().toISOString(),
+        });
+      } else if (assignedRole === 'TECHNICIAN') {
+        const cleanPin = '760001';
+        const geo = getCoordinatesForPincode(cleanPin);
+        const techId = `tech_${Date.now()}`;
+        (dbStore.technicians as any[]).push({
+          id: techId,
+          userId: newUserId,
+          partnerId: 'part_odisha_01',
+          badgeNumber: `GTS-TECH-${Math.floor(1000 + Math.random() * 9000)}`,
+          fullName: name,
+          phone: cleanPhone,
+          rating: 5.0,
+          totalJobsCompleted: 0,
+          isOnline: true,
+          currentLatitude: geo.latitude,
+          currentLongitude: geo.longitude,
+          assignedPincode: cleanPin,
+          kycStatus: 'VERIFIED',
+          electricalLicenseNumber: `LIC-${cleanPin}-${Math.floor(1000 + Math.random() * 9000)}`,
+          insulatedGlovesVerified: true,
+          safetyKitSerial: `KIT-${Math.floor(10000 + Math.random() * 90000)}`,
+          email: `${cleanPhone.replace('+', '')}@ghartak.in`,
+          trade: 'Certified Professional',
         });
       }
     }

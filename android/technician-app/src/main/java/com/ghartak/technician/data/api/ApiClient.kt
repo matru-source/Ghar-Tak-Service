@@ -32,6 +32,10 @@ object ApiClient {
     fun getService(context: Context): TechnicianApiService {
         if (technicianApiService == null) {
             val sessionManager = SessionManager(context)
+            val customUrl = sessionManager.getCustomBaseUrl()
+            if (customUrl.isNotBlank()) {
+                baseUrl = if (customUrl.endsWith("/")) customUrl else "$customUrl/"
+            }
 
             val authInterceptor = Interceptor { chain ->
                 val requestBuilder = chain.request().newBuilder()

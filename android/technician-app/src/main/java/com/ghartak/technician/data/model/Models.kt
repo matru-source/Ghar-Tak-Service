@@ -101,3 +101,40 @@ data class RegisterTechnicianRequest(
     @SerializedName("pincode") val pincode: String
 )
 
+data class CreateWithdrawalRequest(
+    @SerializedName("technicianId") val technicianId: String,
+    @SerializedName("amountInr") val amountInr: Double,
+    @SerializedName("payoutMethod") val payoutMethod: String, // "UPI" or "BANK_ACCOUNT"
+    @SerializedName("upiId") val upiId: String? = null,
+    @SerializedName("accountHolderName") val accountHolderName: String? = null,
+    @SerializedName("accountNumber") val accountNumber: String? = null,
+    @SerializedName("ifscCode") val ifscCode: String? = null,
+    @SerializedName("bankName") val bankName: String? = null
+)
+
+data class WithdrawalItem(
+    @SerializedName("id") val id: String,
+    @SerializedName("technicianId") val technicianId: String,
+    @SerializedName("technicianName") val technicianName: String,
+    @SerializedName("technicianBadge") val technicianBadge: String,
+    @SerializedName("technicianPhone") val technicianPhone: String,
+    @SerializedName("amountInr") val amountInr: Double,
+    @SerializedName("payoutMethod") val payoutMethod: String,
+    @SerializedName("upiId") val upiId: String? = null,
+    @SerializedName("accountHolderName") val accountHolderName: String? = null,
+    @SerializedName("accountNumber") val accountNumber: String? = null,
+    @SerializedName("ifscCode") val ifscCode: String? = null,
+    @SerializedName("bankName") val bankName: String? = null,
+    @SerializedName("status") val status: String, // "PENDING", "PAID", "REJECTED"
+    @SerializedName("utrNumber") val utrNumber: String? = null,
+    @SerializedName("partnerMessage") val partnerMessage: String? = null,
+    @SerializedName("rejectionReason") val rejectionReason: String? = null,
+    @SerializedName("requestedAt") val requestedAt: String? = null
+)
+
+data class WithdrawalListResponse(
+    @SerializedName("withdrawals") val withdrawals: List<WithdrawalItem>,
+    @SerializedName("count") val count: Int
+)
+
+

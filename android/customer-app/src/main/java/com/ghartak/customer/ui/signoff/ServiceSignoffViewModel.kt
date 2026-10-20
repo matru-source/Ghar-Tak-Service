@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 data class ServiceSignoffUiState(
-    val jobId: String = "job_od_live_01",
+    val jobId: String = "",
     val ticketNumber: String = "",
     val serviceTitle: String = "Doorstep Service",
     val technicianName: String = "Certified Professional",

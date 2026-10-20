@@ -70,7 +70,7 @@ fun CustomerProfileView(
     // Editable form state for Edit Profile Dialog
     var editName by remember(userName) { mutableStateOf(userName) }
     var editPhone by remember(userPhone) { mutableStateOf(userPhone.ifBlank { "+91 98201 44091" }) }
-    var editEmail by remember(userEmail) { mutableStateOf(userEmail.ifBlank { "matrumatru2003@gmail.com" }) }
+    var editEmail by remember(userEmail) { mutableStateOf(userEmail.ifBlank { "matruprasadpanda497@gmail.com" }) }
     var editAddress by remember(userAddress) {
         mutableStateOf(userAddress.ifBlank { "Plot No. 215, Sri Vihar, Berhampur, Ganjam, Odisha - 760004" })
     }
@@ -389,7 +389,7 @@ fun CustomerProfileView(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = userName.ifBlank { "Matru ji" },
+                        text = userName.ifBlank { "Customer" },
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextDarkPrimary
@@ -418,7 +418,7 @@ fun CustomerProfileView(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = userEmail.ifBlank { "matrumatru2003@gmail.com" },
+                        text = userEmail.ifBlank { "matruprasadpanda497@gmail.com" },
                         fontSize = 12.5.sp,
                         color = TextDarkMuted
                     )

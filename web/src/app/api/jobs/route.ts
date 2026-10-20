@@ -77,8 +77,8 @@ export async function POST(request: NextRequest) {
       return apiError("'customerAddressText' must contain a detailed address", 400);
     }
 
-    // Default to mock customer if not passed
-    const activeCustomerId = customerId || 'cust_amit_01';
+    // Generate or use customerId
+    const activeCustomerId = customerId || `cust_${Date.now().toString(36)}`;
 
     const newJob = await db.createJob({
       customerId: activeCustomerId,

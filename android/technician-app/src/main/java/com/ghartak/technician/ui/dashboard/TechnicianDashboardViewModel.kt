@@ -64,7 +64,9 @@ data class DashboardUiState(
     val recentTransactions: List<EarningsTransaction> = emptyList(),
     val incomingDispatchAlert: TechnicianJob? = null,
     val isWithdrawing: Boolean = false,
+    val showWithdrawDialog: Boolean = false,
     val withdrawSuccessMessage: String? = null,
+    val withdrawalHistory: List<com.ghartak.technician.data.model.WithdrawalItem> = emptyList(),
     val isLoadingJobs: Boolean = false,
     val serverConnectionStatus: String = "CONNECTED TO HOST (3000)",
     val errorMessage: String? = null
@@ -195,16 +197,135 @@ class TechnicianDashboardViewModel(
         _uiState.value = _uiState.value.copy(selectedEarningsFilter = filter)
     }
 
-    fun withdrawEarnings() {
+    fun openWithdrawDialog() {
+        _uiState.value = _uiState.value.copy(showWithdrawDialog = true, withdrawSuccessMessage = null, errorMessage = null)
+    }
+
+    fun closeWithdrawDialog() {
+        _uiState.value = _uiState.value.copy(showWithdrawDialog = false, errorMessage = null)
+    }
+
+    fun getSavedUpiId(): String = sessionManager.getSavedUpiId()
+    fun getSavedAccountName(): String = sessionManager.getSavedAccountName().ifEmpty { sessionManager.getFullName() }
+    fun getSavedAccountNumber(): String = sessionManager.getSavedAccountNumber()
+    fun getSavedIfsc(): String = sessionManager.getSavedIfsc()
+
+    fun submitWithdrawal(
+        amount: Double,
+        payoutMethod: String,
+        upiId: String? = null,
+        accountHolderName: String? = null,
+        accountNumber: String? = null,
+        ifscCode: String? = null,
+        bankName: String? = null
+    ) {
+        if (amount <= 0.0 || amount > _uiState.value.availableWithdrawalInr) {
+            _uiState.value = _uiState.value.copy(
+                errorMessage = "Amount must be between ₹1 and ₹${"%,.0f".format(_uiState.value.availableWithdrawalInr)}"
+            )
+            return
+        }
+
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isWithdrawing = true)
-            kotlinx.coroutines.delay(800)
-            val withdrawnAmount = _uiState.value.availableWithdrawalInr
+            _uiState.value = _uiState.value.copy(isWithdrawing = true, errorMessage = null)
+            val techId = sessionManager.getTechnicianId().ifEmpty { "tech_8785" }
+            val techName = sessionManager.getFullName()
+            val techBadge = sessionManager.getBadgeNumber()
+            val techPhone = sessionManager.getPhone()
+
+            // Save details locally for easy re-use
+            if (payoutMethod == "UPI" && !upiId.isNullOrBlank()) {
+                sessionManager.setSavedUpiId(upiId)
+            } else if (payoutMethod == "BANK_ACCOUNT" && !accountNumber.isNullOrBlank()) {
+                sessionManager.setSavedBankDetails(
+                    accountHolderName ?: techName,
+                    accountNumber,
+                    ifscCode ?: ""
+                )
+            }
+
+            val localItem = com.ghartak.technician.data.model.WithdrawalItem(
+                id = "wth_${System.currentTimeMillis()}",
+                technicianId = techId,
+                technicianName = techName,
+                technicianBadge = techBadge,
+                technicianPhone = techPhone,
+                amountInr = amount,
+                payoutMethod = payoutMethod,
+                upiId = upiId,
+                accountHolderName = accountHolderName,
+                accountNumber = accountNumber,
+                ifscCode = ifscCode,
+                bankName = bankName,
+                status = "PENDING",
+                requestedAt = "Just now"
+            )
+
+            sessionManager.saveLocalWithdrawal(localItem)
+
+            try {
+                val api = ApiClient.getService(sessionManager.context)
+                val res = api.requestWithdrawal(
+                    com.ghartak.technician.data.model.CreateWithdrawalRequest(
+                        technicianId = techId,
+                        amountInr = amount,
+                        payoutMethod = payoutMethod,
+                        upiId = upiId,
+                        accountHolderName = accountHolderName,
+                        accountNumber = accountNumber,
+                        ifscCode = ifscCode,
+                        bankName = bankName
+                    )
+                )
+                if (res.isSuccessful && res.body()?.data != null) {
+                    val serverItem = res.body()!!.data!!
+                    sessionManager.saveLocalWithdrawal(serverItem)
+                }
+            } catch (e: Exception) {
+                Log.w("GTS_TECH", "Withdrawal remote sync info: ${e.message}")
+            }
+
+            val updatedHistory = sessionManager.getLocalWithdrawals()
+            val pendingOrPaid = updatedHistory.filter { it.status == "PENDING" || it.status == "PAID" }.sumOf { it.amountInr }
+            val newAvailable = maxOf(0.0, _uiState.value.allTimeEarningsInr - pendingOrPaid)
+
             _uiState.value = _uiState.value.copy(
                 isWithdrawing = false,
-                availableWithdrawalInr = 0.0,
-                withdrawSuccessMessage = "₹${"%,.0f".format(withdrawnAmount)} payout initiated via UPI to verified bank account."
+                showWithdrawDialog = false,
+                availableWithdrawalInr = newAvailable,
+                withdrawalHistory = updatedHistory,
+                withdrawSuccessMessage = "₹${"%,.0f".format(amount)} payout request submitted to franchise partner. Status: PENDING"
             )
+        }
+    }
+
+    fun fetchWithdrawalHistory() {
+        val techId = sessionManager.getTechnicianId()
+        val local = sessionManager.getLocalWithdrawals()
+        _uiState.value = _uiState.value.copy(withdrawalHistory = local)
+
+        if (techId.isEmpty()) return
+
+        viewModelScope.launch {
+            try {
+                val api = ApiClient.getService(sessionManager.context)
+                val res = api.getWithdrawals(techId)
+                if (res.isSuccessful && res.body()?.data != null) {
+                    val serverList = res.body()!!.data!!.withdrawals
+                    if (serverList.isNotEmpty()) {
+                        serverList.forEach { sessionManager.saveLocalWithdrawal(it) }
+                        val merged = sessionManager.getLocalWithdrawals()
+                        val pendingOrPaid = merged.filter { it.status == "PENDING" || it.status == "PAID" }.sumOf { it.amountInr }
+                        val newAvailable = maxOf(0.0, _uiState.value.allTimeEarningsInr - pendingOrPaid)
+                        _uiState.value = _uiState.value.copy(
+                            withdrawalHistory = merged,
+                            availableWithdrawalInr = newAvailable
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                Log.d("GTS_TECH", "Withdrawal fetch: ${e.message}")
+            }
         }
     }
 
@@ -248,9 +369,12 @@ class TechnicianDashboardViewModel(
         )
 
         val completed = sessionManager.getTotalJobsCompleted()
-        val todayE = sessionManager.getTodayEarnings()
-        val weekE = sessionManager.getWeekEarnings()
-        val monthE = sessionManager.getMonthEarnings()
+        val todayE = if (completed == 0) 0.0 else sessionManager.getTodayEarnings()
+        val weekE = if (completed == 0) 0.0 else sessionManager.getWeekEarnings()
+        val monthE = if (completed == 0) 0.0 else sessionManager.getMonthEarnings()
+        val withdrawals = sessionManager.getLocalWithdrawals()
+        val pendingOrPaid = withdrawals.filter { it.status == "PENDING" || it.status == "PAID" }.sumOf { it.amountInr }
+        val available = maxOf(0.0, monthE - pendingOrPaid)
 
         _uiState.value = _uiState.value.copy(
             profile = profile,
@@ -261,10 +385,12 @@ class TechnicianDashboardViewModel(
             weekEarningsInr = weekE,
             monthEarningsInr = monthE,
             allTimeEarningsInr = monthE,
-            availableWithdrawalInr = monthE,
+            availableWithdrawalInr = available,
+            withdrawalHistory = withdrawals,
             assignedJobs = _uiState.value.assignedJobs
         )
         syncProfileToServer()
+        fetchWithdrawalHistory()
     }
 
     fun syncProfileToServer() {

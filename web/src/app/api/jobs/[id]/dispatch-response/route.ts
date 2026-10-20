@@ -20,23 +20,30 @@ export async function POST(
       return apiError("'action' must be either 'ACCEPT' or 'REJECT'", 400);
     }
 
-    // Default to active test technician if none specified
-    const activeTechId = technicianId || 'tech_rajesh_01';
+    // Resolve technician ID from request or from the job record
+    let activeTechId = technicianId;
+    if (!activeTechId) {
+      const existingJob = await db.getJobById(id);
+      activeTechId = existingJob?.technicianId || 'tech_unassigned';
+    }
 
     const result = await db.respondToDispatch(id, activeTechId, action, rejectionReason);
 
-    // Broadcast Real-Time Acceptance or Rejection
+    // Broadcast Real-Time Acceptance or Rejection to both Technician and Customer
     realtimeBus.publish({
       type: action === 'ACCEPT' ? 'TECH_ACCEPTED' : 'TECH_REJECTED',
       jobId: id,
       ticketNumber: result.job?.jobTicketNumber,
       partnerId: result.job?.partnerId,
       technicianId: activeTechId,
+      customerId: result.job?.customerId,
       status: result.job?.status,
       details: {
         action,
         rejectionReason,
         message: result.message,
+        customerId: result.job?.customerId,
+        technicianName: result.job?.technicianName,
       },
     });
 

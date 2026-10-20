@@ -231,11 +231,12 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("safety/{jobId}") { backStackEntry ->
-                            val jobId = backStackEntry.arguments?.getString("jobId") ?: "job_mh_live_01"
-                            val currentJob = dashboardViewModel.uiState.value.assignedJobs.find { it.id == jobId }
+                            val jobId = backStackEntry.arguments?.getString("jobId") ?: ""
+                            val currentJob = dashboardViewModel.getJobById(jobId)
+                                ?: dashboardViewModel.uiState.value.assignedJobs.find { it.id == jobId }
                                 ?: dashboardViewModel.uiState.value.selectedJob
                             val jobTitle = currentJob?.serviceTitle ?: "Doorstep Service"
-                            val ticket = currentJob?.jobTicketNumber ?: "GTS-MH-9821"
+                            val ticket = currentJob?.jobTicketNumber ?: ("#J-" + jobId.takeLast(4).ifEmpty { "1001" })
 
                             LaunchedEffect(jobId) {
                                 safetyViewModel.initJob(jobId, ticket, jobTitle)
@@ -265,27 +266,28 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("nav/{jobId}") { backStackEntry ->
-                            val jobId = backStackEntry.arguments?.getString("jobId") ?: "job_mh_live_01"
+                            val jobId = backStackEntry.arguments?.getString("jobId") ?: ""
                             val dashState = dashboardViewModel.uiState.collectAsState().value
-                            val currentJob = dashState.assignedJobs.find {
-                                it.id.equals(jobId, ignoreCase = true) || it.jobTicketNumber.equals(jobId, ignoreCase = true)
-                            } ?: dashState.selectedJob ?: run {
-                                val userPin = sessionManager.getPincode()
-                                val (cLat, cLng) = com.ghartak.technician.util.IndianPincodeResolver.getCoordinatesForPincode(userPin)
-                                TechnicianJob(
-                                    id = jobId,
-                                    jobTicketNumber = "#J-${jobId.takeLast(4)}",
-                                    serviceTitle = "Doorstep Service Order",
-                                    pincode = userPin,
-                                    customerName = "Customer",
-                                    customerPhone = "+91 98765 43210",
-                                    customerAddressText = "Customer Address, PIN: $userPin",
-                                    customerLatitude = cLat,
-                                    customerLongitude = cLng,
-                                    status = "EN_ROUTE",
-                                    totalAmountInr = 352.82
-                                )
-                            }
+                            val currentJob = dashboardViewModel.getJobById(jobId)
+                                ?: dashState.assignedJobs.find {
+                                    it.id.equals(jobId, ignoreCase = true) || it.jobTicketNumber.equals(jobId, ignoreCase = true)
+                                } ?: dashState.selectedJob ?: run {
+                                    val userPin = sessionManager.getPincode()
+                                    val (cLat, cLng) = com.ghartak.technician.util.IndianPincodeResolver.getCoordinatesForPincode(userPin)
+                                    TechnicianJob(
+                                        id = jobId,
+                                        jobTicketNumber = "#J-${jobId.takeLast(4).ifEmpty { "1001" }}",
+                                        serviceTitle = "Doorstep Service Order",
+                                        pincode = userPin,
+                                        customerName = "Customer",
+                                        customerPhone = "",
+                                        customerAddressText = "Customer Address, PIN: $userPin",
+                                        customerLatitude = cLat,
+                                        customerLongitude = cLng,
+                                        status = "EN_ROUTE",
+                                        totalAmountInr = 0.0
+                                    )
+                                }
                             navigationViewModel.initJob(currentJob)
 
                             NavigationScreen(
@@ -301,27 +303,28 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("complete/{jobId}") { backStackEntry ->
-                            val jobId = backStackEntry.arguments?.getString("jobId") ?: "job_live_01"
+                            val jobId = backStackEntry.arguments?.getString("jobId") ?: ""
                             val dashState = dashboardViewModel.uiState.collectAsState().value
-                            val currentJob = dashState.assignedJobs.find {
-                                it.id.equals(jobId, ignoreCase = true) || it.jobTicketNumber.equals(jobId, ignoreCase = true)
-                            } ?: dashState.selectedJob ?: run {
-                                val userPin = sessionManager.getPincode()
-                                val (cLat, cLng) = com.ghartak.technician.util.IndianPincodeResolver.getCoordinatesForPincode(userPin)
-                                TechnicianJob(
-                                    id = jobId,
-                                    jobTicketNumber = "#J-${jobId.takeLast(4)}",
-                                    serviceTitle = "Doorstep Service Order",
-                                    pincode = userPin,
-                                    customerName = "Customer",
-                                    customerPhone = "+91 98765 43210",
-                                    customerAddressText = "Customer Address, PIN: $userPin",
-                                    customerLatitude = cLat,
-                                    customerLongitude = cLng,
-                                    status = "COMPLETED",
-                                    totalAmountInr = 352.82
-                                )
-                            }
+                            val currentJob = dashboardViewModel.getJobById(jobId)
+                                ?: dashState.assignedJobs.find {
+                                    it.id.equals(jobId, ignoreCase = true) || it.jobTicketNumber.equals(jobId, ignoreCase = true)
+                                } ?: dashState.selectedJob ?: run {
+                                    val userPin = sessionManager.getPincode()
+                                    val (cLat, cLng) = com.ghartak.technician.util.IndianPincodeResolver.getCoordinatesForPincode(userPin)
+                                    TechnicianJob(
+                                        id = jobId,
+                                        jobTicketNumber = "#J-${jobId.takeLast(4).ifEmpty { "1001" }}",
+                                        serviceTitle = "Doorstep Service Order",
+                                        pincode = userPin,
+                                        customerName = "Customer",
+                                        customerPhone = "",
+                                        customerAddressText = "Customer Address, PIN: $userPin",
+                                        customerLatitude = cLat,
+                                        customerLongitude = cLng,
+                                        status = "COMPLETED",
+                                        totalAmountInr = 0.0
+                                    )
+                                }
                             jobCompleteViewModel.initJob(currentJob)
 
                             JobCompleteScreen(

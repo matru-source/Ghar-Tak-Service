@@ -473,8 +473,8 @@ class CustomerAuthViewModel(
     }
 
     fun loginWithGoogle(
-        selectedEmail: String = "matrumatru2003@gmail.com",
-        selectedName: String = "Matru ji"
+        selectedEmail: String = "matruprasadpanda497@gmail.com",
+        selectedName: String = "Matru Prasad Panda"
     ) {
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {

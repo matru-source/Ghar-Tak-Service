@@ -241,12 +241,18 @@ class SafetyInterlockViewModel(
             _uiState.value = _uiState.value.copy(isSubmitting = true, errorMessage = null)
 
             try {
+                if (state.jobId.isBlank()) {
+                    _uiState.value = _uiState.value.copy(
+                        isSubmitting = false,
+                        errorMessage = "Invalid Work Order: No Job ID attached."
+                    )
+                    return@launch
+                }
+
                 withTimeoutOrNull(15000L) {
                     val api = ApiClient.getService(context)
-                    val pin = sessionManager.getPincode()
-                    val defaultJobId = if (pin.startsWith("75") || pin.startsWith("76") || pin.startsWith("77")) "job_od_live_01" else "job_mh_live_01"
                     api.verifySafety(
-                        jobId = state.jobId.ifEmpty { defaultJobId },
+                        jobId = state.jobId,
                         request = SafetyVerifyRequest(
                             safetyGlovesConfirmed = true,
                             safetyMcbSwitchConfirmed = true,

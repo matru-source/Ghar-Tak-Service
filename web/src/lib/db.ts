@@ -6,7 +6,7 @@
 
 import crypto from 'crypto';
 import { prisma } from './prisma';
-import { dbStore, SubscriptionTierRecord, SubscriptionRecord, WormAuditLogRecord } from './mock-data';
+import { dbStore, SubscriptionTierRecord, SubscriptionRecord, WormAuditLogRecord, WithdrawalRecord } from './mock-data';
 import { calculateIndianGst18 } from './tax-engine';
 import { getCoordinatesForPincode } from './pincode-resolver';
 
@@ -936,7 +936,7 @@ export const db = {
     job.status = 'SAFETY_CHECKED';
 
     await this.recordWormAuditLog({
-      actorId: job.technicianId || 'tech_rajesh_01',
+      actorId: job.technicianId || 'tech_field_operator',
       actorRole: 'TECHNICIAN',
       action: 'SAFETY_INTERLOCK_VERIFIED',
       resourceType: 'SAFETY_CHECK',
@@ -1002,7 +1002,7 @@ export const db = {
     }
 
     await this.recordWormAuditLog({
-      actorId: job.technicianId || 'tech_rajesh_01',
+      actorId: job.technicianId || 'tech_field_operator',
       actorRole: 'TECHNICIAN',
       action: 'WORK_COMPLETED_OTP_VERIFIED',
       resourceType: 'JOB',
@@ -1514,6 +1514,12 @@ export const db = {
 
     const totalLifetimeEarnedInr = payouts.reduce((sum, p) => sum + p.amountInr, 0);
 
+    const pendingOrPaidWithdrawals = (dbStore.withdrawals || []).filter(
+      (w) => (w.technicianId === tech.id || w.technicianBadge === tech.badgeNumber) && (w.status === 'PENDING' || w.status === 'PAID')
+    );
+    const totalDeductedInr = pendingOrPaidWithdrawals.reduce((sum, w) => sum + w.amountInr, 0);
+    const withdrawableBalanceInr = Math.max(0, Math.round((totalLifetimeEarnedInr - totalDeductedInr) * 100) / 100);
+
     return {
       technician: {
         id: tech.id,
@@ -1524,14 +1530,102 @@ export const db = {
         assignedPincode: tech.assignedPincode,
       },
       wallet: {
-        withdrawableBalanceInr: Math.round(totalLifetimeEarnedInr * 100) / 100,
+        withdrawableBalanceInr,
         totalLifetimeEarnedInr: Math.round(totalLifetimeEarnedInr * 100) / 100,
+        totalWithdrawnOrPendingInr: Math.round(totalDeductedInr * 100) / 100,
         settledJobsCount: payouts.length,
         payoutCurrency: 'INR',
         autoPayoutFrequency: 'DAILY_EVENING_UPI',
       },
       recentPayoutLedgers: payouts.slice(0, 10),
+      withdrawals: (dbStore.withdrawals || []).filter((w) => w.technicianId === tech.id || w.technicianBadge === tech.badgeNumber),
     };
+  },
+
+  async createWithdrawalRequest(input: {
+    technicianId: string;
+    amountInr: number;
+    payoutMethod: 'UPI' | 'BANK_ACCOUNT';
+    upiId?: string;
+    accountHolderName?: string;
+    accountNumber?: string;
+    ifscCode?: string;
+    bankName?: string;
+  }) {
+    const tech = dbStore.technicians.find((t) => t.id === input.technicianId || t.badgeNumber === input.technicianId);
+    const techName = tech?.fullName || 'Certified Technician';
+    const techBadge = tech?.badgeNumber || input.technicianId;
+    const techPhone = tech?.phone || '+91 9876543210';
+    const partnerId = tech?.partnerId || 'ptnr_mah_01';
+
+    if (!dbStore.withdrawals) {
+      dbStore.withdrawals = [];
+    }
+
+    const newWithdrawal: WithdrawalRecord = {
+      id: `wth_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      technicianId: tech?.id || input.technicianId,
+      technicianName: techName,
+      technicianBadge: techBadge,
+      technicianPhone: techPhone,
+      partnerId,
+      amountInr: input.amountInr,
+      payoutMethod: input.payoutMethod,
+      upiId: input.upiId,
+      accountHolderName: input.accountHolderName,
+      accountNumber: input.accountNumber,
+      ifscCode: input.ifscCode,
+      bankName: input.bankName,
+      status: 'PENDING',
+      requestedAt: new Date().toISOString(),
+    };
+
+    dbStore.withdrawals.unshift(newWithdrawal);
+    return newWithdrawal;
+  },
+
+  async getWithdrawals(filter?: { technicianId?: string; partnerId?: string; status?: string }) {
+    if (!dbStore.withdrawals) {
+      dbStore.withdrawals = [];
+    }
+    let list = [...dbStore.withdrawals];
+    if (filter?.technicianId) {
+      list = list.filter(w => w.technicianId === filter.technicianId || w.technicianBadge === filter.technicianId);
+    }
+    if (filter?.partnerId) {
+      list = list.filter(w => w.partnerId === filter.partnerId);
+    }
+    if (filter?.status && filter.status !== 'ALL') {
+      list = list.filter(w => w.status === filter.status);
+    }
+    return list;
+  },
+
+  async processWithdrawalAction(
+    withdrawalId: string,
+    action: 'APPROVE' | 'REJECT',
+    payload: { utrNumber?: string; message?: string; rejectionReason?: string }
+  ) {
+    if (!dbStore.withdrawals) {
+      dbStore.withdrawals = [];
+    }
+    const withdrawal = dbStore.withdrawals.find(w => w.id === withdrawalId);
+    if (!withdrawal) {
+      throw new Error(`Withdrawal request '${withdrawalId}' not found`);
+    }
+
+    if (action === 'APPROVE') {
+      withdrawal.status = 'PAID';
+      withdrawal.utrNumber = payload.utrNumber || `UTR${Date.now().toString().slice(-8)}`;
+      withdrawal.partnerMessage = payload.message || `Payout settled to account via NEFT/UPI. UTR: ${withdrawal.utrNumber}`;
+      withdrawal.processedAt = new Date().toISOString();
+    } else {
+      withdrawal.status = 'REJECTED';
+      withdrawal.rejectionReason = payload.rejectionReason || payload.message || 'Declined by franchise partner.';
+      withdrawal.processedAt = new Date().toISOString();
+    }
+
+    return withdrawal;
   },
 
   async getPartnerAccountingSummary(partnerId: string) {

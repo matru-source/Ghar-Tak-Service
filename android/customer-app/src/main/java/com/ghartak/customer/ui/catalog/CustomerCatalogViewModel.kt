@@ -21,6 +21,7 @@ data class CatalogUiState(
     val activeJobId: String = "",
     val activeJobTitle: String = "",
     val activeJobTechnician: String = "",
+    val activeJobStatus: String = "",
     val activeJobEta: String = "15 mins",
     val services: List<ServiceItem> = emptyList(),
     val filteredServices: List<ServiceItem> = emptyList(),
@@ -48,6 +49,13 @@ class CustomerCatalogViewModel(
 
         val allServices = ServiceCatalogRegistry.allServices
         val hasJob = sessionManager.hasActiveJob()
+        val jobStatus = sessionManager.getActiveJobStatus()
+        val rawTechName = sessionManager.getActiveJobTechnicianName().ifEmpty { "Electrician" }
+        val techLabel = if (jobStatus == "ASSIGNED" || jobStatus == "PENDING_DISPATCH") {
+            "$rawTechName (Awaiting Confirmation)"
+        } else {
+            "$rawTechName (En Route)"
+        }
 
         _uiState.value = _uiState.value.copy(
             userName = currentName,
@@ -58,7 +66,8 @@ class CustomerCatalogViewModel(
             hasActiveJob = hasJob,
             activeJobId = if (hasJob) sessionManager.getActiveJobId() else "",
             activeJobTitle = if (hasJob) sessionManager.getActiveJobTitle().ifEmpty { "Doorstep Service" } else "",
-            activeJobTechnician = if (hasJob) "${sessionManager.getActiveJobTechnicianName().ifEmpty { "Electrician" }} (En Route)" else "",
+            activeJobTechnician = if (hasJob) techLabel else "",
+            activeJobStatus = if (hasJob) jobStatus else "",
             services = allServices,
             filteredServices = allServices
         )

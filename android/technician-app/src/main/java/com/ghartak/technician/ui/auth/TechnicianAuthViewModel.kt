@@ -166,19 +166,36 @@ class TechnicianAuthViewModel(
                 return@launch
             }
 
-            val profile = sessionManager.getTechnicianProfile(emailOrPhone) ?: TechnicianProfile(
-                id = "tech_rajesh_01",
-                badgeNumber = "GTS-TECH-4091",
-                fullName = "Rajesh Kumar",
-                phone = "+91 9811223344",
-                partnerId = "partner_mh_01",
-                assignedPincode = "400001",
-                isOnline = true,
-                rating = 4.9,
-                safetyKitSerial = "VDE-1000V-99214",
-                insulatedGlovesVerified = true,
-                totalJobsCompleted = 4
-            )
+            val profile = sessionManager.getTechnicianProfile(emailOrPhone) ?: run {
+                val cleanEmail = if (emailOrPhone.contains("@")) emailOrPhone.trim().lowercase() else ""
+                val cleanPhone = if (emailOrPhone.all { it.isDigit() || it == '+' || it == ' ' || it == '-' }) emailOrPhone.trim() else ""
+                val derivedName = if (cleanEmail.isNotEmpty()) {
+                    cleanEmail.substringBefore("@").replace(".", " ").split(" ")
+                        .joinToString(" ") { part -> part.replaceFirstChar { ch -> ch.uppercase() } }
+                } else if (cleanPhone.isNotEmpty()) {
+                    "Technician ($cleanPhone)"
+                } else {
+                    "Verified Professional"
+                }
+                val randomSuffix = (1000..9999).random()
+                val techId = "tech_$randomSuffix"
+                val badge = "GTS-TECH-$randomSuffix"
+                val defaultPin = sessionManager.getPincode().ifEmpty { "759001" }
+
+                TechnicianProfile(
+                    id = techId,
+                    badgeNumber = badge,
+                    fullName = derivedName,
+                    phone = cleanPhone.ifEmpty { sessionManager.getPhone() },
+                    partnerId = "partner_${defaultPin.take(2)}",
+                    assignedPincode = defaultPin,
+                    isOnline = true,
+                    rating = 4.9,
+                    safetyKitSerial = "VDE-1000V-$randomSuffix",
+                    insulatedGlovesVerified = true,
+                    totalJobsCompleted = 0
+                )
+            }
 
             sessionManager.saveSession("token_${System.currentTimeMillis()}", profile)
             _uiState.value = _uiState.value.copy(
@@ -191,8 +208,8 @@ class TechnicianAuthViewModel(
 
     // ================= GOOGLE SIGN IN =================
     fun loginWithGoogle(
-        selectedEmail: String = "technician@ghartak.com",
-        selectedName: String = "Rajesh Kumar"
+        selectedEmail: String = "itsmatruprasad@gmail.com",
+        selectedName: String = "Matru Prasad"
     ) {
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null, successMessage = null)
         viewModelScope.launch {
@@ -201,17 +218,34 @@ class TechnicianAuthViewModel(
             var profile = sessionManager.getTechnicianProfile(cleanEmail)
 
             if (profile == null) {
-                val cleanName = selectedName.trim().ifEmpty { "GTS Certified Technician" }
+                val cleanName = selectedName.trim().ifEmpty { "Certified Professional" }
                 profile = sessionManager.registerTechnician(
                     fullName = cleanName,
                     email = cleanEmail,
-                    phone = "+91 9811223344",
+                    phone = sessionManager.getPhone(),
                     password = "google_auth_${System.currentTimeMillis()}",
-                    trade = "1000V Certified Senior Electrician",
-                    pincode = "400001"
+                    trade = "Certified Professional Electrician",
+                    pincode = sessionManager.getPincode().ifEmpty { "760001" }
                 )
             } else {
                 sessionManager.saveSession("gts_google_token_${profile.id}", profile)
+            }
+
+            try {
+                val api = ApiClient.getService(sessionManager.context)
+                api.registerTechnician(
+                    RegisterTechnicianRequest(
+                        id = profile.id,
+                        badgeNumber = profile.badgeNumber,
+                        fullName = profile.fullName,
+                        phone = profile.phone,
+                        email = profile.email,
+                        trade = profile.specialization,
+                        pincode = profile.assignedPincode
+                    )
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
 
             _uiState.value = _uiState.value.copy(

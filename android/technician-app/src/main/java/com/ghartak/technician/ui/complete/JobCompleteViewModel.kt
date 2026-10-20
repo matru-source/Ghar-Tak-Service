@@ -103,9 +103,16 @@ class JobCompleteViewModel(
             _uiState.value = _uiState.value.copy(isSubmitting = true, errorMessage = null)
 
             try {
-                val api = ApiClient.getService(context)
-                val targetJobId = state.jobId.ifEmpty { "job_od_live_01" }
+                val targetJobId = state.jobId
+                if (targetJobId.isBlank()) {
+                    _uiState.value = _uiState.value.copy(
+                        isSubmitting = false,
+                        errorMessage = "Invalid Work Order: No Job ID attached."
+                    )
+                    return@launch
+                }
 
+                val api = ApiClient.getService(context)
                 val res = withTimeoutOrNull(15000L) {
                     api.completeJob(
                         jobId = targetJobId,

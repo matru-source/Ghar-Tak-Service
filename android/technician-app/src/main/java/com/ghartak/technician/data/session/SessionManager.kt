@@ -42,6 +42,24 @@ class SessionManager(val context: Context) {
             com.ghartak.technician.data.api.ApiClient.updateBaseUrl(savedBaseUrl)
         }
 
+        val schemaVer = prefs.getInt("key_schema_version", 1)
+        if (schemaVer < 3) {
+            clearSession()
+            prefs.edit()
+                .remove("key_today_earnings")
+                .remove("key_week_earnings")
+                .remove("key_month_earnings")
+                .remove(KEY_TOTAL_JOBS)
+                .remove("key_local_withdrawals_json")
+                .remove(KEY_TECHNICIANS_REGISTRY)
+                .remove("key_saved_upi_id")
+                .remove("key_saved_acc_name")
+                .remove("key_saved_acc_num")
+                .remove("key_saved_ifsc")
+                .putInt("key_schema_version", 3)
+                .apply()
+        }
+
         // Initialize empty registry if not set
         val registryStr = prefs.getString(KEY_TECHNICIANS_REGISTRY, "")
         if (registryStr.isNullOrBlank()) {
@@ -283,9 +301,20 @@ class SessionManager(val context: Context) {
         prefs.edit().putInt(KEY_TOTAL_JOBS, getTotalJobsCompleted() + 1).apply()
     }
 
-    fun getTodayEarnings(): Double = prefs.getFloat("key_today_earnings", 0.0f).toDouble()
-    fun getWeekEarnings(): Double = prefs.getFloat("key_week_earnings", 0.0f).toDouble()
-    fun getMonthEarnings(): Double = prefs.getFloat("key_month_earnings", 0.0f).toDouble()
+    fun getTodayEarnings(): Double {
+        if (getTotalJobsCompleted() == 0) return 0.0
+        return prefs.getFloat("key_today_earnings", 0.0f).toDouble()
+    }
+
+    fun getWeekEarnings(): Double {
+        if (getTotalJobsCompleted() == 0) return 0.0
+        return prefs.getFloat("key_week_earnings", 0.0f).toDouble()
+    }
+
+    fun getMonthEarnings(): Double {
+        if (getTotalJobsCompleted() == 0) return 0.0
+        return prefs.getFloat("key_month_earnings", 0.0f).toDouble()
+    }
 
     fun addEarnings(amount: Double) {
         val today = getTodayEarnings() + amount
@@ -298,6 +327,86 @@ class SessionManager(val context: Context) {
             apply()
         }
         incrementJobsCompleted()
+    }
+
+    fun getSavedUpiId(): String = prefs.getString("key_saved_upi_id", "") ?: ""
+    fun setSavedUpiId(upi: String) { prefs.edit().putString("key_saved_upi_id", upi.trim()).apply() }
+
+    fun getSavedAccountName(): String = prefs.getString("key_saved_acc_name", "") ?: ""
+    fun getSavedAccountNumber(): String = prefs.getString("key_saved_acc_num", "") ?: ""
+    fun getSavedIfsc(): String = prefs.getString("key_saved_ifsc", "") ?: ""
+    fun setSavedBankDetails(name: String, accNum: String, ifsc: String) {
+        prefs.edit().apply {
+            putString("key_saved_acc_name", name.trim())
+            putString("key_saved_acc_num", accNum.trim())
+            putString("key_saved_ifsc", ifsc.trim().uppercase())
+            apply()
+        }
+    }
+
+    fun getLocalWithdrawals(): List<com.ghartak.technician.data.model.WithdrawalItem> {
+        val raw = prefs.getString("key_local_withdrawals_json", "[]") ?: "[]"
+        return try {
+            val arr = org.json.JSONArray(raw)
+            val list = mutableListOf<com.ghartak.technician.data.model.WithdrawalItem>()
+            for (i in 0 until arr.length()) {
+                val obj = arr.getJSONObject(i)
+                list.add(
+                    com.ghartak.technician.data.model.WithdrawalItem(
+                        id = obj.optString("id"),
+                        technicianId = obj.optString("technicianId"),
+                        technicianName = obj.optString("technicianName"),
+                        technicianBadge = obj.optString("technicianBadge"),
+                        technicianPhone = obj.optString("technicianPhone"),
+                        amountInr = obj.optDouble("amountInr"),
+                        payoutMethod = obj.optString("payoutMethod"),
+                        upiId = obj.optString("upiId").takeIf { it.isNotEmpty() },
+                        accountHolderName = obj.optString("accountHolderName").takeIf { it.isNotEmpty() },
+                        accountNumber = obj.optString("accountNumber").takeIf { it.isNotEmpty() },
+                        ifscCode = obj.optString("ifscCode").takeIf { it.isNotEmpty() },
+                        bankName = obj.optString("bankName").takeIf { it.isNotEmpty() },
+                        status = obj.optString("status", "PENDING"),
+                        utrNumber = obj.optString("utrNumber").takeIf { it.isNotEmpty() },
+                        partnerMessage = obj.optString("partnerMessage").takeIf { it.isNotEmpty() },
+                        rejectionReason = obj.optString("rejectionReason").takeIf { it.isNotEmpty() },
+                        requestedAt = obj.optString("requestedAt")
+                    )
+                )
+            }
+            list
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    fun saveLocalWithdrawal(item: com.ghartak.technician.data.model.WithdrawalItem) {
+        val current = getLocalWithdrawals().toMutableList()
+        current.removeAll { it.id == item.id }
+        current.add(0, item)
+        val arr = org.json.JSONArray()
+        current.forEach { w ->
+            val obj = org.json.JSONObject().apply {
+                put("id", w.id)
+                put("technicianId", w.technicianId)
+                put("technicianName", w.technicianName)
+                put("technicianBadge", w.technicianBadge)
+                put("technicianPhone", w.technicianPhone)
+                put("amountInr", w.amountInr)
+                put("payoutMethod", w.payoutMethod)
+                put("upiId", w.upiId ?: "")
+                put("accountHolderName", w.accountHolderName ?: "")
+                put("accountNumber", w.accountNumber ?: "")
+                put("ifscCode", w.ifscCode ?: "")
+                put("bankName", w.bankName ?: "")
+                put("status", w.status)
+                put("utrNumber", w.utrNumber ?: "")
+                put("partnerMessage", w.partnerMessage ?: "")
+                put("rejectionReason", w.rejectionReason ?: "")
+                put("requestedAt", w.requestedAt ?: "")
+            }
+            arr.put(obj)
+        }
+        prefs.edit().putString("key_local_withdrawals_json", arr.toString()).apply()
     }
 
     fun getAuthToken(): String? = prefs.getString(KEY_AUTH_TOKEN, null)

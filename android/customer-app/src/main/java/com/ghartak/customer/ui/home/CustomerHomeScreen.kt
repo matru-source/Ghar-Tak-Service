@@ -347,8 +347,8 @@ fun CustomerHomeScreen(
                         Text(
                             text = when (currentBottomTab) {
                                 1 -> "Book Electrical Services"
-                                3 -> "Order History & Invoices"
-                                4 -> "Customer Profile"
+                                2 -> "Order History & Invoices"
+                                3 -> "Customer Profile"
                                 else -> "Ghar Tak Services"
                             },
                             fontSize = 17.sp,
@@ -368,7 +368,7 @@ fun CustomerHomeScreen(
             }
         },
         bottomBar = {
-            // Fixed 5-Tab Navigation Bar: Home, Book, Track, History, Profile (Phase 5 Token Aligned)
+            // Clean 4-Tab Navigation Bar: Home, Book, History, Profile
             NavigationBar(
                 containerColor = Color.White,
                 tonalElevation = 8.dp,
@@ -400,28 +400,17 @@ fun CustomerHomeScreen(
 
                 NavigationBarItem(
                     selected = currentBottomTab == 2,
-                    onClick = {
-                        currentBottomTab = 2
-                        onTrackSelected(state.activeJobId)
-                    },
-                    icon = { Icon(Icons.Default.LocationOn, contentDescription = "Track") },
-                    label = { Text("Track", fontSize = 11.sp) },
+                    onClick = { currentBottomTab = 2 },
+                    icon = { Icon(Icons.Default.ReceiptLong, contentDescription = "History") },
+                    label = { Text("History", fontSize = 11.sp, fontWeight = if (currentBottomTab == 2) FontWeight.Bold else FontWeight.Normal) },
                     colors = navColors
                 )
 
                 NavigationBarItem(
                     selected = currentBottomTab == 3,
                     onClick = { currentBottomTab = 3 },
-                    icon = { Icon(Icons.Default.ReceiptLong, contentDescription = "History") },
-                    label = { Text("History", fontSize = 11.sp, fontWeight = if (currentBottomTab == 3) FontWeight.Bold else FontWeight.Normal) },
-                    colors = navColors
-                )
-
-                NavigationBarItem(
-                    selected = currentBottomTab == 4,
-                    onClick = { currentBottomTab = 4 },
                     icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-                    label = { Text("Profile", fontSize = 11.sp, fontWeight = if (currentBottomTab == 4) FontWeight.Bold else FontWeight.Normal) },
+                    label = { Text("Profile", fontSize = 11.sp, fontWeight = if (currentBottomTab == 3) FontWeight.Bold else FontWeight.Normal) },
                     colors = navColors
                 )
             }
@@ -437,7 +426,7 @@ fun CustomerHomeScreen(
                     )
                 }
             }
-            3 -> {
+            2 -> {
                 Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
                     CustomerHistoryView(
                         onBookServiceAgain = {
@@ -446,7 +435,7 @@ fun CustomerHomeScreen(
                     )
                 }
             }
-            4 -> {
+            3 -> {
                 Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
                     CustomerProfileView(
                         userName = state.userName,
@@ -454,7 +443,7 @@ fun CustomerHomeScreen(
                         userEmail = state.userEmail,
                         userAddress = state.userAddress,
                         onViewOrders = {
-                            currentBottomTab = 3
+                            currentBottomTab = 2
                         },
                         onUpdateProfile = { name, email, phone, addr ->
                             viewModel.updateProfile(name, email, phone, addr)
@@ -527,7 +516,7 @@ fun CustomerHomeScreen(
                                     title = "History",
                                     subtitle = "View past services",
                                     onClick = {
-                                        currentBottomTab = 3
+                                        currentBottomTab = 2
                                     }
                                 )
                             }
@@ -666,10 +655,11 @@ fun CustomerHomeScreen(
                                                 )
                                             }
 
+                                            val isAwaitingAcceptance = state.activeJobStatus == "ASSIGNED" || state.activeJobStatus == "PENDING_DISPATCH"
                                             Surface(
-                                                color = Color(0xFFFEF3C7),
+                                                color = if (isAwaitingAcceptance) Color(0xFFFEF3C7) else Color(0xFFDCFCE7),
                                                 shape = RoundedCornerShape(20.dp),
-                                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFDE68A))
+                                                border = androidx.compose.foundation.BorderStroke(1.dp, if (isAwaitingAcceptance) Color(0xFFFDE68A) else Color(0xFFBBF7D0))
                                             ) {
                                                 Row(
                                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
@@ -679,12 +669,12 @@ fun CustomerHomeScreen(
                                                         modifier = Modifier
                                                             .size(6.dp)
                                                             .clip(CircleShape)
-                                                            .background(Color(0xFFD97706))
+                                                            .background(if (isAwaitingAcceptance) Color(0xFFD97706) else Color(0xFF16A34A))
                                                     )
                                                     Spacer(modifier = Modifier.width(5.dp))
                                                     Text(
-                                                        text = "Technician En Route",
-                                                        color = Color(0xFFB45309),
+                                                        text = if (isAwaitingAcceptance) "Awaiting Confirmation" else "Technician En Route",
+                                                        color = if (isAwaitingAcceptance) Color(0xFFB45309) else Color(0xFF15803D),
                                                         fontSize = 10.sp,
                                                         fontWeight = FontWeight.Bold
                                                     )
@@ -760,36 +750,16 @@ fun CustomerHomeScreen(
                                                     .trim()
                                                     .ifEmpty { "Electrician" }
                                             }
-                                            val initialChar = activeTechName.firstOrNull()?.uppercase() ?: "T"
-
                                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                                if (activeTechName.contains("Rajesh", ignoreCase = true)) {
-                                                    Image(
-                                                        painter = painterResource(id = R.drawable.img_technician_rajesh),
-                                                        contentDescription = activeTechName,
-                                                        contentScale = ContentScale.Crop,
-                                                        modifier = Modifier
-                                                            .size(38.dp)
-                                                            .clip(CircleShape)
-                                                            .border(1.dp, Color(0xFFCBD5E1), CircleShape)
-                                                    )
-                                                } else {
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .size(38.dp)
-                                                            .clip(CircleShape)
-                                                            .background(SapphireBlue800)
-                                                            .border(1.dp, Color(0xFFCBD5E1), CircleShape),
-                                                        contentAlignment = Alignment.Center
-                                                    ) {
-                                                        Text(
-                                                            text = initialChar,
-                                                            color = Color.White,
-                                                            fontSize = 15.sp,
-                                                            fontWeight = FontWeight.Bold
-                                                        )
-                                                    }
-                                                }
+                                                Image(
+                                                    painter = painterResource(id = R.drawable.img_technician_rajesh),
+                                                    contentDescription = activeTechName,
+                                                    contentScale = ContentScale.Crop,
+                                                    modifier = Modifier
+                                                        .size(38.dp)
+                                                        .clip(CircleShape)
+                                                        .border(1.dp, Color(0xFFCBD5E1), CircleShape)
+                                                )
                                                 Spacer(modifier = Modifier.width(8.dp))
                                                 Column {
                                                     Text(

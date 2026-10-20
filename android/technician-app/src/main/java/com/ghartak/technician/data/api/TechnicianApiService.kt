@@ -58,4 +58,15 @@ interface TechnicianApiService {
     suspend fun sendTelemetry(
         @Body request: TelemetryPingRequest
     ): Response<ApiResponse<TelemetryPingResponse>>
+
+    // Technician Withdrawals & Payouts
+    @POST("finance/withdrawals")
+    suspend fun requestWithdrawal(
+        @Body request: CreateWithdrawalRequest
+    ): Response<ApiResponse<WithdrawalItem>>
+
+    @GET("finance/withdrawals")
+    suspend fun getWithdrawals(
+        @Query("technicianId") technicianId: String
+    ): Response<ApiResponse<WithdrawalListResponse>>
 }

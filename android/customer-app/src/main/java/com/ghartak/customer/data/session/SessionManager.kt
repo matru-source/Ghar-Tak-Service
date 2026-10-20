@@ -39,6 +39,7 @@ class SessionManager(val context: Context) {
         private const val KEY_ACTIVE_JOB_STATE_CODE = "key_active_job_state_code"
         private const val KEY_ACTIVE_JOB_GSTIN = "key_active_job_gstin"
         private const val KEY_ACTIVE_JOB_OTP = "key_active_job_otp"
+        private const val KEY_ACTIVE_JOB_STATUS = "key_active_job_status"
 
         const val DEFAULT_BASE_URL = "https://ghartak-api.onrender.com/api/"
     }
@@ -50,12 +51,15 @@ class SessionManager(val context: Context) {
         }
 
         val schemaVer = prefs.getInt("key_schema_version", 1)
-        if (schemaVer < 2) {
-            // Fresh clean schema: wipe any legacy demo sessions and accounts completely
+        if (schemaVer < 3) {
+            // Fresh clean schema: wipe any legacy sessions, active jobs, past orders, and demo accounts completely
             clearSession()
+            clearActiveJob()
             prefs.edit()
                 .remove(KEY_USERS_REGISTRY)
-                .putInt("key_schema_version", 2)
+                .remove(KEY_PAST_ORDERS)
+                .remove(KEY_USER_PROFILE_IMAGE)
+                .putInt("key_schema_version", 3)
                 .apply()
         }
     }
@@ -226,7 +230,8 @@ class SessionManager(val context: Context) {
     // -------------------------------------------------------------
     fun hasActiveJob(): Boolean {
         val id = prefs.getString(KEY_ACTIVE_JOB_ID, null)
-        return !id.isNullOrBlank()
+        val status = prefs.getString(KEY_ACTIVE_JOB_STATUS, "") ?: ""
+        return !id.isNullOrBlank() && status != "CANCELLED" && status != "COMPLETED"
     }
 
     fun clearActiveJob() {
@@ -243,6 +248,7 @@ class SessionManager(val context: Context) {
             remove(KEY_ACTIVE_JOB_STATE_CODE)
             remove(KEY_ACTIVE_JOB_GSTIN)
             remove(KEY_ACTIVE_JOB_OTP)
+            remove(KEY_ACTIVE_JOB_STATUS)
             apply()
         }
     }
@@ -259,7 +265,8 @@ class SessionManager(val context: Context) {
         ticketNumber: String = "",
         stateCode: String = "OD",
         gstin: String = "21AAACG1234F1Z5 (21-OD)",
-        handoverOtp: String = ""
+        handoverOtp: String = "",
+        status: String = "PENDING_DISPATCH"
     ) {
         prefs.edit().apply {
             putString(KEY_ACTIVE_JOB_ID, id)
@@ -274,9 +281,19 @@ class SessionManager(val context: Context) {
             putString(KEY_ACTIVE_JOB_STATE_CODE, stateCode)
             putString(KEY_ACTIVE_JOB_GSTIN, gstin)
             putString(KEY_ACTIVE_JOB_OTP, handoverOtp)
+            putString(KEY_ACTIVE_JOB_STATUS, status)
             apply()
         }
     }
+
+    fun setActiveJobStatus(status: String) {
+        prefs.edit().putString(KEY_ACTIVE_JOB_STATUS, status).apply()
+        if (status == "CANCELLED" || status == "COMPLETED") {
+            clearActiveJob()
+        }
+    }
+
+    fun getActiveJobStatus(): String = prefs.getString(KEY_ACTIVE_JOB_STATUS, "") ?: ""
 
     fun getActiveJobOtp(): String = prefs.getString(KEY_ACTIVE_JOB_OTP, "") ?: ""
 

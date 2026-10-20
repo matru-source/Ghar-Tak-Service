@@ -1300,29 +1300,29 @@ fun TechnicianGoogleAccountChooserDialog(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 if (!showCustomInput) {
-                    // Account 1: Rajesh Kumar (Default GTS Certified Technician)
+                    // Account 1: Matru Prasad
                     TechnicianGoogleAccountRow(
-                        avatarInitial = "R",
+                        avatarInitial = "M",
                         avatarBg = SapphireBlue800,
-                        name = "Rajesh Kumar",
-                        email = "technician@ghartak.com",
-                        badge = "Badge #GTS-TECH-4091",
+                        name = "Matru Prasad",
+                        email = "itsmatruprasad@gmail.com",
+                        badge = "Certified Fleet Professional",
                         onClick = {
-                            onAccountSelected("technician@ghartak.com", "Rajesh Kumar")
+                            onAccountSelected("itsmatruprasad@gmail.com", "Matru Prasad")
                         }
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Account 2: Matru Prasad
+                    // Account 2: Matru Prasad Panda
                     TechnicianGoogleAccountRow(
                         avatarInitial = "M",
                         avatarBg = Color(0xFF0D9488),
-                        name = "Matru Prasad",
-                        email = "matrumatru2003@gmail.com",
-                        badge = "Certified Fleet Partner",
+                        name = "Matru Prasad Panda",
+                        email = "matruprasadpanda497@gmail.com",
+                        badge = "GTS Partner Technician",
                         onClick = {
-                            onAccountSelected("matrumatru2003@gmail.com", "Matru Prasad")
+                            onAccountSelected("matruprasadpanda497@gmail.com", "Matru Prasad Panda")
                         }
                     )
 

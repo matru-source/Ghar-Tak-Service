@@ -203,7 +203,7 @@ fun TechnicianDashboardScreen(
                         state = state,
                         onBack = { viewModel.selectTab("HOME") },
                         onFilterSelected = { viewModel.setEarningsFilter(it) },
-                        onWithdraw = { viewModel.withdrawEarnings() }
+                        onWithdraw = { viewModel.openWithdrawDialog() }
                     )
                 }
                 "JOBS" -> {
@@ -239,6 +239,23 @@ fun TechnicianDashboardScreen(
                     showSosDialog = false
                     val emergencyIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:112"))
                     context.startActivity(emergencyIntent)
+                }
+            )
+        }
+
+        // Dedicated Technician Withdrawal Request Dialog
+        if (state.showWithdrawDialog) {
+            WithdrawalRequestDialog(
+                availableInr = state.availableWithdrawalInr,
+                isWithdrawing = state.isWithdrawing,
+                initialUpi = viewModel.getSavedUpiId(),
+                initialAccountName = viewModel.getSavedAccountName(),
+                initialAccountNumber = viewModel.getSavedAccountNumber(),
+                initialIfsc = viewModel.getSavedIfsc(),
+                errorMessage = state.errorMessage,
+                onDismiss = { viewModel.closeWithdrawDialog() },
+                onSubmit = { amount, method, upi, holder, acc, ifsc, bankName ->
+                    viewModel.submitWithdrawal(amount, method, upi, holder, acc, ifsc, bankName)
                 }
             )
         }
@@ -975,53 +992,6 @@ fun TechnicianHomeScreenContent(
                 }
             }
         }
-
-        // 6. Test Inbound 60s Dispatch Siren Banner
-        item {
-            Spacer(modifier = Modifier.height(10.dp))
-            Surface(
-                onClick = onSimulateDispatch,
-                color = Color(0xFFFFF8F1),
-                shape = RoundedCornerShape(14.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFCC80)),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(34.dp)
-                                .clip(CircleShape)
-                                .background(TechFlameOrange.copy(alpha = 0.12f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(imageVector = Icons.Default.Emergency, contentDescription = null, tint = TechFlameOrange, modifier = Modifier.size(20.dp))
-                        }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
-                            Text(
-                                text = "Test Inbound 60s Dispatch Siren",
-                                color = TechFlameOrange,
-                                fontSize = 12.5.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "Test the emergency alert sound for new job dispatch notifications",
-                                color = TextDarkSecondary,
-                                fontSize = 10.sp
-                            )
-                        }
-                    }
-                    Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = TechFlameOrange, modifier = Modifier.size(20.dp))
-                }
-            }
-        }
     }
 }
 
@@ -1611,7 +1581,10 @@ fun TechnicianEarningsContent(
                 Button(
                     onClick = onWithdraw,
                     enabled = !state.isWithdrawing,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B873F)),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF1B873F),
+                        disabledContainerColor = Color(0xFF94A3B8)
+                    ),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1653,6 +1626,79 @@ fun TechnicianEarningsContent(
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(10.dp)
                         )
+                    }
+                }
+            }
+
+            // 6b. Withdrawal Requests & Settlement History
+            item {
+                Spacer(modifier = Modifier.height(14.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Withdrawal Requests & Payouts",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = TextDarkPrimary
+                    )
+                    if (state.withdrawalHistory.isNotEmpty()) {
+                        Surface(
+                            color = TechAmberLight,
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(
+                                text = "${state.withdrawalHistory.size} records",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TechFlameOrange,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+
+                if (state.withdrawalHistory.isEmpty()) {
+                    Surface(
+                        color = Color(0xFFF8FAFC),
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.AccountBalanceWallet,
+                                contentDescription = null,
+                                tint = Color(0xFF94A3B8),
+                                modifier = Modifier.size(32.dp)
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "No withdrawal requests yet",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextDarkSecondary
+                            )
+                            Text(
+                                text = "Tap 'Withdraw Earnings' above to request payout to your UPI ID or Bank Account.",
+                                fontSize = 11.sp,
+                                color = TextDarkMuted,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(horizontal = 8.dp)
+                            )
+                        }
+                    }
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        state.withdrawalHistory.forEach { withdrawalItem ->
+                            WithdrawalRecordCard(item = withdrawalItem)
+                        }
                     }
                 }
             }
@@ -3008,6 +3054,729 @@ fun TechnicianBottomNavBar(
                             else -> Color(0xFF64748B)
                         }
                     )
+                }
+            }
+        }
+    }
+}
+
+// =========================================================================
+// Component: Withdrawal Record Card
+// =========================================================================
+
+@Composable
+private fun WithdrawalRecordCard(item: com.ghartak.technician.data.model.WithdrawalItem) {
+    val isPaid = item.status == "PAID"
+    val isRejected = item.status == "REJECTED"
+    val isPending = !isPaid && !isRejected
+
+    val statusBg = when {
+        isPaid -> Color(0xFFECFDF5)
+        isRejected -> Color(0xFFFEF2F2)
+        else -> Color(0xFFFFFBEB)
+    }
+    val statusBorder = when {
+        isPaid -> Color(0xFFA7F3D0)
+        isRejected -> Color(0xFFFECACA)
+        else -> Color(0xFFFDE68A)
+    }
+    val statusText = when {
+        isPaid -> "PAID • SETTLED"
+        isRejected -> "DECLINED / REJECTED"
+        else -> "PENDING REVIEW"
+    }
+    val statusColor = when {
+        isPaid -> Color(0xFF047857)
+        isRejected -> Color(0xFFB91C1C)
+        else -> Color(0xFFB45309)
+    }
+    val statusIcon = when {
+        isPaid -> Icons.Default.CheckCircle
+        isRejected -> Icons.Default.Cancel
+        else -> Icons.Default.Schedule
+    }
+
+    Surface(
+        color = Color.White,
+        shape = RoundedCornerShape(14.dp),
+        shadowElevation = 2.dp,
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF1F5F9)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            // Header Row: Amount + Status Pill
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "₹${"%,.0f".format(item.amountInr)}",
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 17.sp,
+                        color = TextDarkPrimary
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Surface(
+                        color = Color(0xFFF1F5F9),
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Text(
+                            text = if (item.payoutMethod == "UPI") "UPI" else "BANK TRANSFER",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF475569),
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+                Surface(
+                    color = statusBg,
+                    shape = RoundedCornerShape(8.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, statusBorder)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(imageVector = statusIcon, contentDescription = null, tint = statusColor, modifier = Modifier.size(13.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = statusText,
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = statusColor
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Destination details
+            if (item.payoutMethod == "UPI") {
+                Text(
+                    text = "UPI ID: ${item.upiId ?: "Not specified"}",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = TextDarkSecondary
+                )
+            } else {
+                val accDisplay = if (!item.accountNumber.isNullOrBlank()) {
+                    if (item.accountNumber.length > 4) "••••" + item.accountNumber.takeLast(4) else item.accountNumber
+                } else "—"
+                Text(
+                    text = "A/C: $accDisplay (${item.accountHolderName ?: ""}) • IFSC: ${item.ifscCode ?: "—"}",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = TextDarkSecondary
+                )
+            }
+
+            // UTR & Confirmation message if PAID
+            if (isPaid) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Surface(
+                    color = Color(0xFFECFDF5),
+                    shape = RoundedCornerShape(8.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFA7F3D0)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(imageVector = Icons.Default.Check, contentDescription = null, tint = Color(0xFF047857), modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Settlement UTR: ${item.utrNumber ?: "Bank Transfer Verified"}",
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF047857)
+                            )
+                        }
+                        if (!item.partnerMessage.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Partner Note: ${item.partnerMessage}",
+                                fontSize = 11.sp,
+                                color = Color(0xFF065F46)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Rejection reason if REJECTED
+            if (isRejected) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Surface(
+                    color = Color(0xFFFEF2F2),
+                    shape = RoundedCornerShape(8.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFECACA)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(imageVector = Icons.Default.ErrorOutline, contentDescription = null, tint = Color(0xFFB91C1C), modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Declined by Partner",
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFB91C1C)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = item.rejectionReason?.ifBlank { null } ?: item.partnerMessage?.ifBlank { null } ?: "Unable to process payout. Please check your bank/UPI details.",
+                            fontSize = 11.sp,
+                            color = Color(0xFF991B1B)
+                        )
+                    }
+                }
+            }
+
+            // If PENDING
+            if (isPending) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Surface(
+                    color = Color(0xFFFFFBEB),
+                    shape = RoundedCornerShape(8.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFDE68A)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(imageVector = Icons.Default.Info, contentDescription = null, tint = Color(0xFFB45309), modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Sent to franchise partner console. Partner will transfer funds manually and confirm UTR.",
+                            fontSize = 10.5.sp,
+                            color = Color(0xFF92400E)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Ref: ${item.id}",
+                    fontSize = 10.sp,
+                    color = TextDarkMuted
+                )
+                if (!item.requestedAt.isNullOrBlank()) {
+                    Text(
+                        text = item.requestedAt,
+                        fontSize = 10.sp,
+                        color = TextDarkMuted
+                    )
+                }
+            }
+        }
+    }
+}
+
+// =========================================================================
+// Dialog: Interactive Withdrawal Request Dialog
+// =========================================================================
+
+@Composable
+fun WithdrawalRequestDialog(
+    availableInr: Double,
+    isWithdrawing: Boolean,
+    initialUpi: String,
+    initialAccountName: String,
+    initialAccountNumber: String,
+    initialIfsc: String,
+    errorMessage: String?,
+    onDismiss: () -> Unit,
+    onSubmit: (amount: Double, method: String, upi: String?, holder: String?, acc: String?, ifsc: String?, bankName: String?) -> Unit
+) {
+    var amountText by remember { mutableStateOf(if (availableInr > 0) "%.0f".format(minOf(availableInr, 500.0)) else "0") }
+    var selectedMethod by remember { mutableStateOf("UPI") }
+
+    var upiId by remember { mutableStateOf(initialUpi) }
+    var accountHolderName by remember { mutableStateOf(initialAccountName) }
+    var accountNumber by remember { mutableStateOf(initialAccountNumber) }
+    var confirmAccountNumber by remember { mutableStateOf(initialAccountNumber) }
+    var ifscCode by remember { mutableStateOf(initialIfsc) }
+    var bankName by remember { mutableStateOf("") }
+
+    var validationError by remember { mutableStateOf<String?>(null) }
+    val amountDouble = amountText.toDoubleOrNull() ?: 0.0
+
+    Dialog(onDismissRequest = { if (!isWithdrawing) onDismiss() }) {
+        Surface(
+            shape = RoundedCornerShape(20.dp),
+            color = Color.White,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp)
+        ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item {
+                    // Header
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFE8F5E9)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.AccountBalanceWallet,
+                                    contentDescription = null,
+                                    tint = Color(0xFF1B873F),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = "Withdraw Earnings",
+                                    fontSize = 17.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextDarkPrimary
+                                )
+                                Text(
+                                    text = "Available: ₹${"%,.0f".format(availableInr)}",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF1B873F)
+                                )
+                            }
+                        }
+                        IconButton(onClick = onDismiss, enabled = !isWithdrawing) {
+                            Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = TextDarkSecondary)
+                        }
+                    }
+                }
+
+                item {
+                    Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Color(0xFFF1F5F9)))
+                }
+
+                // Amount input
+                item {
+                    Column {
+                        Text(
+                            text = "Enter Amount to Withdraw",
+                            fontSize = 12.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TextDarkPrimary
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        OutlinedTextField(
+                            value = amountText,
+                            onValueChange = { input ->
+                                if (input.all { it.isDigit() }) {
+                                    amountText = input
+                                    validationError = null
+                                }
+                            },
+                            prefix = {
+                                Text("₹ ", fontWeight = FontWeight.Bold, color = TextDarkPrimary)
+                            },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp)
+                        )
+
+                        // Quick amount chips
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            val chipAmounts = listOf(500.0, 1000.0, 2000.0)
+                            chipAmounts.forEach { chipVal ->
+                                if (chipVal <= availableInr) {
+                                    Surface(
+                                        onClick = {
+                                            amountText = "%.0f".format(chipVal)
+                                            validationError = null
+                                        },
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = if (amountText == "%.0f".format(chipVal)) Color(0xFFE8F5E9) else Color(0xFFF1F5F9),
+                                        border = androidx.compose.foundation.BorderStroke(
+                                            1.dp,
+                                            if (amountText == "%.0f".format(chipVal)) Color(0xFF1B873F) else Color(0xFFE2E8F0)
+                                        )
+                                    ) {
+                                        Text(
+                                            text = "₹${"%,.0f".format(chipVal)}",
+                                            fontSize = 11.5.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = if (amountText == "%.0f".format(chipVal)) Color(0xFF1B873F) else TextDarkSecondary,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
+                                        )
+                                    }
+                                }
+                            }
+                            if (availableInr > 0) {
+                                Surface(
+                                    onClick = {
+                                        amountText = "%.0f".format(availableInr)
+                                        validationError = null
+                                    },
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = if (amountText == "%.0f".format(availableInr)) Color(0xFFE8F5E9) else Color(0xFFF1F5F9),
+                                    border = androidx.compose.foundation.BorderStroke(
+                                        1.dp,
+                                        if (amountText == "%.0f".format(availableInr)) Color(0xFF1B873F) else Color(0xFFE2E8F0)
+                                    )
+                                ) {
+                                    Text(
+                                        text = "All (₹${"%,.0f".format(availableInr)})",
+                                        fontSize = 11.5.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = if (amountText == "%.0f".format(availableInr)) Color(0xFF1B873F) else TextDarkSecondary,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Payout Method Selector
+                item {
+                    Text(
+                        text = "Select Payout Destination",
+                        fontSize = 12.5.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = TextDarkPrimary
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Surface(
+                            onClick = { selectedMethod = "UPI" },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (selectedMethod == "UPI") Color(0xFFF0FDF4) else Color(0xFFF8FAFC),
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.5.dp,
+                                if (selectedMethod == "UPI") Color(0xFF16A34A) else Color(0xFFE2E8F0)
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.QrCode,
+                                    contentDescription = null,
+                                    tint = if (selectedMethod == "UPI") Color(0xFF16A34A) else Color(0xFF64748B),
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "UPI ID / VPA",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp,
+                                    color = if (selectedMethod == "UPI") Color(0xFF16A34A) else TextDarkPrimary
+                                )
+                                Text(
+                                    text = "GPay, PhonePe, Paytm",
+                                    fontSize = 9.5.sp,
+                                    color = TextDarkMuted
+                                )
+                            }
+                        }
+
+                        Surface(
+                            onClick = { selectedMethod = "BANK_ACCOUNT" },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (selectedMethod == "BANK_ACCOUNT") Color(0xFFF0FDF4) else Color(0xFFF8FAFC),
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.5.dp,
+                                if (selectedMethod == "BANK_ACCOUNT") Color(0xFF16A34A) else Color(0xFFE2E8F0)
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.AccountBalance,
+                                    contentDescription = null,
+                                    tint = if (selectedMethod == "BANK_ACCOUNT") Color(0xFF16A34A) else Color(0xFF64748B),
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Bank Account",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp,
+                                    color = if (selectedMethod == "BANK_ACCOUNT") Color(0xFF16A34A) else TextDarkPrimary
+                                )
+                                Text(
+                                    text = "IMPS / NEFT Transfer",
+                                    fontSize = 9.5.sp,
+                                    color = TextDarkMuted
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Dynamic Method Input Fields
+                if (selectedMethod == "UPI") {
+                    item {
+                        Column {
+                            Text(
+                                text = "UPI ID (VPA)",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextDarkPrimary
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            OutlinedTextField(
+                                value = upiId,
+                                onValueChange = { upiId = it.trim(); validationError = null },
+                                placeholder = { Text("e.g. mobile@paytm or user@okaxis", fontSize = 12.sp) },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(10.dp)
+                            )
+                        }
+                    }
+                } else {
+                    item {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Column {
+                                Text(
+                                    text = "Account Holder Name",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = TextDarkPrimary
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                OutlinedTextField(
+                                    value = accountHolderName,
+                                    onValueChange = { accountHolderName = it; validationError = null },
+                                    placeholder = { Text("As per bank passbook", fontSize = 12.sp) },
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(10.dp)
+                                )
+                            }
+
+                            Column {
+                                Text(
+                                    text = "Bank Account Number",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = TextDarkPrimary
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                OutlinedTextField(
+                                    value = accountNumber,
+                                    onValueChange = { if (it.all { ch -> ch.isDigit() }) accountNumber = it; validationError = null },
+                                    placeholder = { Text("Enter 9-18 digit account number", fontSize = 12.sp) },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(10.dp)
+                                )
+                            }
+
+                            Column {
+                                Text(
+                                    text = "Confirm Account Number",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = TextDarkPrimary
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                OutlinedTextField(
+                                    value = confirmAccountNumber,
+                                    onValueChange = { if (it.all { ch -> ch.isDigit() }) confirmAccountNumber = it; validationError = null },
+                                    placeholder = { Text("Re-enter bank account number", fontSize = 12.sp) },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(10.dp)
+                                )
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "IFSC Code",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = TextDarkPrimary
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    OutlinedTextField(
+                                        value = ifscCode,
+                                        onValueChange = { ifscCode = it.uppercase().trim(); validationError = null },
+                                        placeholder = { Text("SBIN0001234", fontSize = 12.sp) },
+                                        singleLine = true,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(10.dp)
+                                    )
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Bank Name (Optional)",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = TextDarkPrimary
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    OutlinedTextField(
+                                        value = bankName,
+                                        onValueChange = { bankName = it },
+                                        placeholder = { Text("SBI, HDFC...", fontSize = 12.sp) },
+                                        singleLine = true,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(10.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Error alert
+                val displayErr = validationError ?: errorMessage
+                if (displayErr != null) {
+                    item {
+                        Surface(
+                            color = Color(0xFFFEF2F2),
+                            shape = RoundedCornerShape(8.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFECACA)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = displayErr,
+                                color = Color(0xFFDC2626),
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        }
+                    }
+                }
+
+                // Partner settlement disclaimer note
+                item {
+                    Surface(
+                        color = Color(0xFFF8FAFC),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(imageVector = Icons.Default.Info, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Payout requests are routed directly to your franchise partner console. The partner verifies details, sends payment, and supplies UTR proof.",
+                                fontSize = 10.5.sp,
+                                color = Color(0xFF475569),
+                                lineHeight = 14.sp
+                            )
+                        }
+                    }
+                }
+
+                // Buttons
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = onDismiss,
+                            enabled = !isWithdrawing,
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f).height(46.dp)
+                        ) {
+                            Text("Cancel", color = TextDarkSecondary)
+                        }
+
+                        Button(
+                            onClick = {
+                                if (amountDouble <= 0.0) {
+                                    validationError = "Please enter an amount greater than ₹0."
+                                    return@Button
+                                }
+                                if (amountDouble > availableInr) {
+                                    validationError = "Amount exceeds available balance of ₹${"%,.0f".format(availableInr)}."
+                                    return@Button
+                                }
+                                if (selectedMethod == "UPI") {
+                                    if (upiId.isBlank() || !upiId.contains("@")) {
+                                        validationError = "Please enter a valid UPI ID (e.g. mobile@paytm)."
+                                        return@Button
+                                    }
+                                    onSubmit(amountDouble, "UPI", upiId, null, null, null, null)
+                                } else {
+                                    if (accountHolderName.isBlank()) {
+                                        validationError = "Please enter Account Holder Name."
+                                        return@Button
+                                    }
+                                    if (accountNumber.isBlank() || accountNumber.length < 8) {
+                                        validationError = "Please enter a valid Account Number (min 8 digits)."
+                                        return@Button
+                                    }
+                                    if (accountNumber != confirmAccountNumber) {
+                                        validationError = "Account numbers do not match."
+                                        return@Button
+                                    }
+                                    if (ifscCode.isBlank() || ifscCode.length < 4) {
+                                        validationError = "Please enter a valid IFSC code."
+                                        return@Button
+                                    }
+                                    onSubmit(
+                                        amountDouble,
+                                        "BANK_ACCOUNT",
+                                        null,
+                                        accountHolderName,
+                                        accountNumber,
+                                        ifscCode,
+                                        bankName.ifBlank { null }
+                                    )
+                                }
+                            },
+                            enabled = !isWithdrawing && availableInr > 0,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B873F)),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f).height(46.dp)
+                        ) {
+                            if (isWithdrawing) {
+                                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                            } else {
+                                Text("Submit Request", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -1025,27 +1025,27 @@ fun GoogleAccountChooserDialog(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 if (!showCustomInput) {
-                    // Account 1: Matru Prasad
+                    // Account 1: Matru Prasad Panda
                     GoogleAccountRow(
                         avatarInitial = "M",
                         avatarBg = SapphireBlue800,
-                        name = "Matru Prasad",
-                        email = "matrumatru2003@gmail.com",
+                        name = "Matru Prasad Panda",
+                        email = "matruprasadpanda497@gmail.com",
                         onClick = {
-                            onAccountSelected("matrumatru2003@gmail.com", "Matru Prasad")
+                            onAccountSelected("matruprasadpanda497@gmail.com", "Matru Prasad Panda")
                         }
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Account 2: Matru Ji (Work)
+                    // Account 2: Matru Prasad
                     GoogleAccountRow(
                         avatarInitial = "M",
                         avatarBg = Color(0xFF0D9488),
-                        name = "Matru Ji (Work)",
-                        email = "matru.work@gmail.com",
+                        name = "Matru Prasad",
+                        email = "itsmatruprasad@gmail.com",
                         onClick = {
-                            onAccountSelected("matru.work@gmail.com", "Matru Ji (Work)")
+                            onAccountSelected("itsmatruprasad@gmail.com", "Matru Prasad")
                         }
                     )
 

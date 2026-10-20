@@ -129,6 +129,12 @@ class CustomerTrackingViewModel(
                         val resolvedTechArea = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(tLat, tLng)
                         val resolvedDestArea = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(dLat, dLng)
 
+                        if (resolvedStatus == "CANCELLED" || resolvedStatus == "COMPLETED") {
+                            sessionManager.clearActiveJob()
+                        } else if (resolvedStatus == "EN_ROUTE" || resolvedStatus == "ARRIVED" || resolvedStatus == "IN_PROGRESS") {
+                            sessionManager.setActiveJobStatus(resolvedStatus)
+                        }
+
                         _uiState.value = _uiState.value.copy(
                             status = resolvedStatus,
                             distanceKm = roundedDist,
@@ -189,12 +195,14 @@ class CustomerTrackingViewModel(
 
         when (eventType) {
             "TECH_ACCEPTED" -> {
+                sessionManager.setActiveJobStatus("EN_ROUTE")
                 _uiState.value = _uiState.value.copy(
                     status = "EN_ROUTE"
                 )
             }
 
             "TECH_REJECTED" -> {
+                sessionManager.clearActiveJob()
                 _uiState.value = _uiState.value.copy(
                     status = "CANCELLED"
                 )
@@ -235,6 +243,7 @@ class CustomerTrackingViewModel(
             }
 
             "TECH_ARRIVED" -> {
+                sessionManager.setActiveJobStatus("ARRIVED")
                 _uiState.value = _uiState.value.copy(
                     status = "ARRIVED",
                     distanceKm = 0.03,
@@ -244,6 +253,7 @@ class CustomerTrackingViewModel(
             }
 
             "SAFETY_INTERLOCK_VERIFIED" -> {
+                sessionManager.setActiveJobStatus("IN_PROGRESS")
                 _uiState.value = _uiState.value.copy(
                     status = "IN_PROGRESS",
                     isSafetyInterlockVerified = true
@@ -251,12 +261,18 @@ class CustomerTrackingViewModel(
             }
 
             "JOB_COMPLETED" -> {
+                sessionManager.clearActiveJob()
                 _uiState.value = _uiState.value.copy(
                     status = "COMPLETED",
                     isJobCompleted = true
                 )
             }
         }
+    }
+
+    fun dismissCancelledBooking() {
+        sessionManager.clearActiveJob()
+        _uiState.value = _uiState.value.copy(status = "CANCELLED")
     }
 
     fun cancelBooking(context: Context, onCompleted: () -> Unit = {}) {
@@ -267,6 +283,7 @@ class CustomerTrackingViewModel(
             } catch (e: Exception) {
                 Log.w("GTS_CUST_TRACK", "Cancel error: ${e.message}")
             } finally {
+                sessionManager.clearActiveJob()
                 _uiState.value = _uiState.value.copy(status = "CANCELLED")
                 onCompleted()
             }

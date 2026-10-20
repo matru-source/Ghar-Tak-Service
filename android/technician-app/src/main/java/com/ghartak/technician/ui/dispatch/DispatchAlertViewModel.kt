@@ -147,7 +147,7 @@ class DispatchAlertViewModel(
             val techId = sessionManager.getTechnicianId()
 
             try {
-                withTimeoutOrNull(1500L) {
+                withTimeoutOrNull(15000L) {
                     val api = ApiClient.getService(context)
                     api.respondToDispatch(
                         jobId = jobId,

@@ -169,7 +169,17 @@ fun CustomerTrackingScreen(
                 "CANCELLED" -> {
                     TechnicianCancelledView(
                         state = state,
-                        onChooseAnother = onBack
+                        onChooseAnother = {
+                            viewModel.dismissCancelledBooking()
+                            onBack()
+                        }
+                    )
+                }
+                "COMPLETED" -> {
+                    JobCompletedCelebrationView(
+                        state = state,
+                        onProceedToSignoff = { onProceedToSignoff(state.jobId) },
+                        onBack = onBack
                     )
                 }
                 else -> {
@@ -327,38 +337,15 @@ fun CustomerTrackingScreen(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box {
-                                if (state.technicianName.contains("Rajesh", ignoreCase = true)) {
-                                    Image(
-                                        painter = painterResource(id = R.drawable.img_technician_rajesh),
-                                        contentDescription = state.technicianName,
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier
-                                            .size(54.dp)
-                                            .clip(CircleShape)
-                                            .border(1.5.dp, SapphireBlue800.copy(alpha = 0.25f), CircleShape)
-                                    )
-                                } else {
-                                    val initial = state.technicianName.trim().firstOrNull()?.toString()?.uppercase() ?: "T"
-                                    Box(
-                                        modifier = Modifier
-                                            .size(54.dp)
-                                            .clip(CircleShape)
-                                            .background(
-                                                androidx.compose.ui.graphics.Brush.linearGradient(
-                                                    listOf(SapphireBlue800, Color(0xFF1D4ED8))
-                                                )
-                                            )
-                                            .border(1.5.dp, Color.White, CircleShape),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = initial,
-                                            color = Color.White,
-                                            fontSize = 22.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
+                                Image(
+                                    painter = painterResource(id = R.drawable.img_technician_rajesh),
+                                    contentDescription = state.technicianName,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(54.dp)
+                                        .clip(CircleShape)
+                                        .border(1.5.dp, SapphireBlue800.copy(alpha = 0.25f), CircleShape)
+                                )
                                 Box(
                                     modifier = Modifier
                                         .size(15.dp)
@@ -936,6 +923,247 @@ fun TechnicianCancelledView(
                 fontWeight = FontWeight.Bold,
                 fontSize = 13.sp,
                 color = Color.White
+            )
+        }
+    }
+}
+
+// -------------------------------------------------------------
+// Component: Job Completed Celebration & Direct Sign-off View
+// -------------------------------------------------------------
+@Composable
+fun JobCompletedCelebrationView(
+    state: CustomerTrackingUiState,
+    onProceedToSignoff: () -> Unit,
+    onBack: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // 1. Celebration / Completion Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFF10B981).copy(alpha = 0.5f))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Surface(
+                    modifier = Modifier.size(76.dp),
+                    shape = CircleShape,
+                    color = Color(0xFFECFDF5),
+                    border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF10B981))
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = "Completed",
+                            tint = Color(0xFF10B981),
+                            modifier = Modifier.size(46.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = Color(0xFFECFDF5)
+                ) {
+                    Text(
+                        text = "WORK ORDER COMPLETED",
+                        color = Color(0xFF047857),
+                        fontWeight = FontWeight.Black,
+                        fontSize = 11.sp,
+                        letterSpacing = 1.sp,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    text = "Service Successfully Done!",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Black,
+                    color = TextDarkPrimary,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = "${state.technicianName} has completed your service, verified safety interlocks, and finalized work order #${state.ticketNumber}.",
+                    fontSize = 13.sp,
+                    color = TextDarkMuted,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 18.sp
+                )
+            }
+        }
+
+        // 2. Summary Details Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "SERVICE DETAILS",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextDarkMuted,
+                        letterSpacing = 0.5.sp
+                    )
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = Color(0xFFF1F5F9)
+                    ) {
+                        Text(
+                            text = "Ticket: ${state.ticketNumber}",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = SapphireBlue800,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                }
+
+                Divider(color = SurfaceBorder, thickness = 1.dp)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = state.serviceTitle,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextDarkPrimary
+                        )
+                        Text(
+                            text = "Provided by ${state.technicianName}",
+                            fontSize = 12.sp,
+                            color = TextDarkMuted
+                        )
+                    }
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFFF0FDF4)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.VerifiedUser,
+                                contentDescription = null,
+                                tint = Color(0xFF16A34A),
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Verified",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF16A34A)
+                            )
+                        }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFF8FAFC), RoundedCornerShape(10.dp))
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.ReceiptLong,
+                            contentDescription = null,
+                            tint = SapphireBlue800,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "GST Compliant Tax Invoice",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = TextDarkPrimary
+                        )
+                    }
+                    Text(
+                        text = "Ready",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF10B981)
+                    )
+                }
+            }
+        }
+
+        // 3. Primary CTA: Proceed to Sign-off & Tax Invoice
+        Button(
+            onClick = onProceedToSignoff,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
+        ) {
+            Icon(
+                imageVector = Icons.Default.AssignmentTurnedIn,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "SIGN-OFF & VIEW TAX INVOICE",
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp,
+                color = Color.White
+            )
+        }
+
+        // 4. Secondary Return Home button
+        OutlinedButton(
+            onClick = onBack,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = RoundedCornerShape(12.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
+        ) {
+            Text(
+                text = "RETURN TO HOME",
+                color = TextDarkMuted,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 12.sp
             )
         }
     }
