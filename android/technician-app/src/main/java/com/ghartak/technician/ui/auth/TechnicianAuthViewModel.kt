@@ -437,14 +437,30 @@ class TechnicianAuthViewModel(
             return
         }
 
-        if (!sessionManager.isEmailRegistered(email)) {
-            _uiState.value = state.copy(errorMessage = "No technician account found with this email.")
-            return
-        }
-
         _uiState.value = state.copy(isLoading = true, errorMessage = null)
 
         viewModelScope.launch {
+            // Check if registered locally or in backend database
+            if (!sessionManager.isEmailRegistered(email)) {
+                try {
+                    val api = ApiClient.getService(sessionManager.context)
+                    val checkResp = api.checkAccountExists(email)
+                    if (!checkResp.isSuccessful || checkResp.body()?.success != true) {
+                        _uiState.value = state.copy(
+                            isLoading = false,
+                            errorMessage = "No technician account found with this email."
+                        )
+                        return@launch
+                    }
+                } catch (netErr: Exception) {
+                    _uiState.value = state.copy(
+                        isLoading = false,
+                        errorMessage = "No technician account found with this email."
+                    )
+                    return@launch
+                }
+            }
+
             val randomOtp = (100000..999999).random().toString()
             val result = BrevoEmailService.sendOtpEmail(email, "GTS Field Partner", randomOtp)
 
@@ -487,22 +503,56 @@ class TechnicianAuthViewModel(
         _uiState.value = state.copy(isLoading = true, errorMessage = null)
 
         viewModelScope.launch {
-            delay(500)
-            val updated = sessionManager.updatePassword(state.email, newPassword)
-            if (updated) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    mode = "LOGIN",
-                    password = "",
-                    confirmPassword = "",
-                    otpCode = "",
-                    successMessage = "Password reset successfully! Please sign in with your new password."
+            val api = ApiClient.getService(sessionManager.context)
+            try {
+                // Call backend API to update password hash in PostgreSQL/Prisma
+                val response = api.resetPassword(
+                    mapOf(
+                        "identifier" to state.email,
+                        "otp" to enteredOtp,
+                        "newPassword" to newPassword
+                    )
                 )
-            } else {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    errorMessage = "Failed to update password. Please try again."
-                )
+
+                if (response.isSuccessful && response.body()?.success == true) {
+                    // Update password in local SessionManager cache as well
+                    sessionManager.updatePassword(state.email, newPassword)
+
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        mode = "LOGIN",
+                        password = "",
+                        confirmPassword = "",
+                        otpCode = "",
+                        successMessage = "Password reset successfully! Please sign in with your new password."
+                    )
+                    return@launch
+                } else {
+                    val errMsg = response.body()?.message ?: "Failed to reset password on server. Please try again."
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = errMsg
+                    )
+                    return@launch
+                }
+            } catch (netEx: Exception) {
+                // Offline fallback if local user cache is present
+                val updated = sessionManager.updatePassword(state.email, newPassword)
+                if (updated) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        mode = "LOGIN",
+                        password = "",
+                        confirmPassword = "",
+                        otpCode = "",
+                        successMessage = "Password reset locally! Please sign in with your new password."
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "Unable to connect to server. Please check your internet connection."
+                    )
+                }
             }
         }
     }

@@ -13,6 +13,12 @@ interface CustomerApiService {
     @POST("auth/register")
     suspend fun register(@Body body: Map<String, Any>): Response<ApiResponse<Map<String, Any>>>
 
+    @GET("auth/reset-password")
+    suspend fun checkAccountExists(@Query("identifier") identifier: String): Response<ApiResponse<Map<String, Any>>>
+
+    @POST("auth/reset-password")
+    suspend fun resetPassword(@Body body: Map<String, String>): Response<ApiResponse<Map<String, Any>>>
+
     @POST("auth/otp/send")
     suspend fun sendOtp(@Body request: OtpSendRequest): Response<ApiResponse<Map<String, Any>>>
 

@@ -447,17 +447,6 @@ class CustomerAuthViewModel(
             return
         }
 
-        if (!sessionManager.isEmailRegistered(email)) {
-            _uiState.value = _uiState.value.copy(
-                errorMessage = "No registered account found with email '$email'. Please check or create an account."
-            )
-            return
-        }
-
-        val code = (100000..999999).random().toString()
-        val userJson = sessionManager.getUserByEmail(email)
-        val recipientName = userJson?.optString("name", "GTS Customer") ?: "GTS Customer"
-
         _uiState.value = _uiState.value.copy(
             isLoading = true,
             errorMessage = null,
@@ -465,6 +454,41 @@ class CustomerAuthViewModel(
         )
 
         viewModelScope.launch {
+            var recipientName = "GTS Customer"
+            val localUser = sessionManager.getUserByEmail(email)
+            if (localUser != null && localUser.optString("name", "").isNotBlank()) {
+                recipientName = localUser.optString("name")
+            } else {
+                // Check if account exists on backend database
+                try {
+                    val api = ApiClient.getService(sessionManager.context)
+                    val checkResp = api.checkAccountExists(email)
+                    if (checkResp.isSuccessful && checkResp.body()?.success == true) {
+                        val data = checkResp.body()?.data
+                        val remoteName = data?.get("fullName")?.toString()
+                        if (!remoteName.isNullOrBlank()) {
+                            recipientName = remoteName
+                        }
+                    } else if (!sessionManager.isEmailRegistered(email)) {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = "No registered account found with email '$email'. Please check or create an account."
+                        )
+                        return@launch
+                    }
+                } catch (netErr: Exception) {
+                    if (!sessionManager.isEmailRegistered(email)) {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = "No registered account found with email '$email'. Please check or create an account."
+                        )
+                        return@launch
+                    }
+                }
+            }
+
+            val code = (100000..999999).random().toString()
+
             val result = BrevoEmailService.sendOtpEmail(
                 toEmail = email,
                 toName = recipientName,
@@ -525,43 +549,100 @@ class CustomerAuthViewModel(
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
         viewModelScope.launch {
-            delay(300)
-            val updated = sessionManager.updatePassword(email, newPassword)
-            if (!updated) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    errorMessage = "Failed to update password. Please try again."
+            val api = ApiClient.getService(sessionManager.context)
+            try {
+                // Call backend API to update password hash in PostgreSQL/Prisma
+                val response = api.resetPassword(
+                    mapOf(
+                        "identifier" to email,
+                        "otp" to inputOtp,
+                        "newPassword" to newPassword
+                    )
                 )
-                return@launch
+
+                if (response.isSuccessful && response.body()?.success == true && response.body()?.data != null) {
+                    val data = response.body()!!.data!!
+                    val token = data["token"]?.toString() ?: "jwt_cust_${System.currentTimeMillis()}"
+                    val userMap = data["user"] as? Map<*, *>
+
+                    val userId = userMap?.get("id")?.toString() ?: "cust_${System.currentTimeMillis()}"
+                    val resolvedName = userMap?.get("fullName")?.toString() ?: "Customer"
+                    val resolvedPhone = userMap?.get("phone")?.toString() ?: ""
+                    val resolvedEmail = userMap?.get("email")?.toString() ?: email
+                    val resolvedAddress = userMap?.get("address")?.toString() ?: sessionManager.getUserAddress()
+                    val resolvedPincode = userMap?.get("pincode")?.toString() ?: sessionManager.getUserPincode().ifEmpty { "400001" }
+
+                    val profile = UserProfile(
+                        id = userId,
+                        phone = resolvedPhone,
+                        fullName = resolvedName,
+                        email = resolvedEmail,
+                        role = "CUSTOMER"
+                    )
+
+                    // Persist session with verified JWT token and PostgreSQL user profile
+                    sessionManager.saveSession(
+                        token = token,
+                        user = profile,
+                        address = resolvedAddress,
+                        pincode = resolvedPincode
+                    )
+
+                    // Update password in local SessionManager cache for offline authentication
+                    sessionManager.updatePassword(email, newPassword)
+
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        isLoggedIn = true,
+                        successMessage = "Password reset successfully! Welcome back, $resolvedName!"
+                    )
+                    return@launch
+                } else {
+                    val errMsg = response.body()?.message ?: "Failed to reset password on server. Please try again."
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = errMsg
+                    )
+                    return@launch
+                }
+            } catch (netEx: Exception) {
+                // Offline fallback if local user cache is present
+                val localUpdated = sessionManager.updatePassword(email, newPassword)
+                if (localUpdated) {
+                    val userJson = sessionManager.getUserByEmail(email)
+                    val name = userJson?.optString("name", "Customer") ?: "Customer"
+                    val phone = userJson?.optString("phone", "") ?: ""
+                    val address = userJson?.optString("address", "") ?: ""
+                    val pincode = userJson?.optString("pincode", "400001") ?: "400001"
+
+                    val uid = "cust_${System.currentTimeMillis() % 10000}"
+                    val profile = UserProfile(
+                        id = uid,
+                        phone = phone,
+                        fullName = name,
+                        email = email,
+                        role = "CUSTOMER"
+                    )
+
+                    sessionManager.saveSession(
+                        token = "gts_token_${uid}_${System.currentTimeMillis()}",
+                        user = profile,
+                        address = address,
+                        pincode = pincode
+                    )
+
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        isLoggedIn = true,
+                        successMessage = "Password reset successfully! Welcome back, $name!"
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "Unable to connect to server. Please check your internet connection."
+                    )
+                }
             }
-
-            val userJson = sessionManager.getUserByEmail(email)
-            val name = userJson?.optString("name", "Customer") ?: "Customer"
-            val phone = userJson?.optString("phone", "") ?: ""
-            val address = userJson?.optString("address", "") ?: ""
-            val pincode = userJson?.optString("pincode", "400001") ?: "400001"
-
-            val uid = "cust_${System.currentTimeMillis() % 10000}"
-            val profile = UserProfile(
-                id = uid,
-                phone = phone,
-                fullName = name,
-                email = email,
-                role = "CUSTOMER"
-            )
-
-            sessionManager.saveSession(
-                token = "gts_token_${uid}_${System.currentTimeMillis()}",
-                user = profile,
-                address = address,
-                pincode = pincode
-            )
-
-            _uiState.value = _uiState.value.copy(
-                isLoading = false,
-                isLoggedIn = true,
-                successMessage = "Password reset successfully! Welcome back, $name!"
-            )
         }
     }
 

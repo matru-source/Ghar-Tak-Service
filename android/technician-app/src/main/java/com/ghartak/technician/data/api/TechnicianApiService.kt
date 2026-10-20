@@ -10,6 +10,12 @@ interface TechnicianApiService {
     @POST("auth/login")
     suspend fun login(@Body body: Map<String, String>): Response<ApiResponse<Map<String, Any>>>
 
+    @GET("auth/reset-password")
+    suspend fun checkAccountExists(@Query("identifier") identifier: String): Response<ApiResponse<Map<String, Any>>>
+
+    @POST("auth/reset-password")
+    suspend fun resetPassword(@Body body: Map<String, String>): Response<ApiResponse<Map<String, Any>>>
+
     // Registration & Onboarding
     @POST("technicians")
     suspend fun registerTechnician(
