@@ -68,7 +68,17 @@ class MainActivity : ComponentActivity() {
                             CustomerHomeScreen(
                                 viewModel = catalogViewModel,
                                 onServiceSelected = { serviceId ->
-                                    navController.navigate("booking/$serviceId")
+                                    if (sessionManager.hasActiveJob()) {
+                                        val rawTicket = sessionManager.getActiveJobTicketNumber().ifBlank { sessionManager.getActiveJobId().takeLast(6).uppercase() }.ifBlank { "J-1001" }
+                                        val formattedTicket = if (rawTicket.startsWith("#")) rawTicket else "#$rawTicket"
+                                        android.widget.Toast.makeText(
+                                            applicationContext,
+                                            "You have an active job in progress ($formattedTicket). Please wait for completion.",
+                                            android.widget.Toast.LENGTH_LONG
+                                        ).show()
+                                    } else {
+                                        navController.navigate("booking/$serviceId")
+                                    }
                                 },
                                 onTrackSelected = { jobId ->
                                     navController.navigate("track/$jobId")

@@ -91,11 +91,25 @@ class PaymentViewModel(
         _uiState.value = _uiState.value.copy(selectedPaymentMethod = method)
     }
 
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(errorMessage = null)
+    }
+
     fun confirmAndCreateJob(
         context: Context,
         onSuccess: (jobId: String) -> Unit
     ) {
         viewModelScope.launch {
+            if (sessionManager.hasActiveJob()) {
+                val rawTicket = sessionManager.getActiveJobTicketNumber().ifBlank { sessionManager.getActiveJobId().takeLast(6).uppercase() }.ifBlank { "J-1001" }
+                val formattedTicket = if (rawTicket.startsWith("#")) rawTicket else "#$rawTicket"
+                _uiState.value = _uiState.value.copy(
+                    isProcessing = false,
+                    errorMessage = "You have an active job in progress ($formattedTicket). Please wait for completion before placing a new booking."
+                )
+                return@launch
+            }
+
             _uiState.value = _uiState.value.copy(isProcessing = true, errorMessage = null)
 
             // If UPI Intent chosen, simulate/trigger NPCI deep link

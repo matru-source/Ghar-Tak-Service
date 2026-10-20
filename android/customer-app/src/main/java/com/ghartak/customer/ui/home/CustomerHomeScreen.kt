@@ -61,6 +61,15 @@ fun CustomerHomeScreen(
     var lastClickTime by remember { mutableStateOf(0L) }
     var showEnvSwitcher by remember { mutableStateOf(false) }
     var showNotificationCenter by remember { mutableStateOf(false) }
+    var showActiveJobOverwritePrompt by remember { mutableStateOf(false) }
+
+    val handleServiceClick: (String) -> Unit = { serviceId ->
+        if (sessionManager.hasActiveJob()) {
+            showActiveJobOverwritePrompt = true
+        } else {
+            onServiceSelected(serviceId)
+        }
+    }
 
     val hasActiveJob = sessionManager.hasActiveJob()
     val activeJobOtp = sessionManager.getActiveJobOtp()
@@ -79,6 +88,68 @@ fun CustomerHomeScreen(
             onDismiss = { showEnvSwitcher = false },
             onApply = { newUrl ->
                 sessionManager.setCustomBaseUrl(newUrl)
+            }
+        )
+    }
+
+    if (showActiveJobOverwritePrompt) {
+        val rawTicket = sessionManager.getActiveJobTicketNumber().ifBlank { sessionManager.getActiveJobId().takeLast(6).uppercase() }.ifBlank { "J-1001" }
+        val formattedTicket = if (rawTicket.startsWith("#")) rawTicket else "#$rawTicket"
+        AlertDialog(
+            onDismissRequest = { showActiveJobOverwritePrompt = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = null,
+                    tint = SapphireBlue800,
+                    modifier = Modifier.size(36.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = "Active Job in Progress",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = TextDarkPrimary
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "You have an active job in progress ($formattedTicket).",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = TextDarkPrimary
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Please wait for completion before placing a new booking. Your active technician dispatch and live tracking screen are preserved.",
+                        fontSize = 13.sp,
+                        color = TextDarkMuted,
+                        lineHeight = 18.sp
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showActiveJobOverwritePrompt = false
+                        val activeJobId = sessionManager.getActiveJobId().ifBlank { "job_active_01" }
+                        onTrackSelected(activeJobId)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("TRACK ACTIVE JOB", fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { showActiveJobOverwritePrompt = false },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("WAIT FOR COMPLETION", fontWeight = FontWeight.SemiBold, color = TextDarkSecondary)
+                }
             }
         )
     }
@@ -439,7 +510,7 @@ fun CustomerHomeScreen(
                 Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
                     CustomerBookServicesView(
                         viewModel = viewModel,
-                        onServiceSelected = onServiceSelected
+                        onServiceSelected = handleServiceClick
                     )
                 }
             }
@@ -447,7 +518,11 @@ fun CustomerHomeScreen(
                 Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
                     CustomerHistoryView(
                         onBookServiceAgain = {
-                            currentBottomTab = 1
+                            if (sessionManager.hasActiveJob()) {
+                                showActiveJobOverwritePrompt = true
+                            } else {
+                                currentBottomTab = 1
+                            }
                         }
                     )
                 }
@@ -949,7 +1024,7 @@ fun CustomerHomeScreen(
                     items(state.filteredServices) { service ->
                         ServiceItemRow(
                             service = service,
-                            onBook = { onServiceSelected(service.id) }
+                            onBook = { handleServiceClick(service.id) }
                         )
                     }
 

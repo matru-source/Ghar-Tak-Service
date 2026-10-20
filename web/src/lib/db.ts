@@ -864,11 +864,34 @@ export const db = {
     const customerPhone = params.customerPhone || (customerUser ? customerUser.phone : '+919876543213');
 
     // Direct or Algorithmic Dispatch
+    // 1. Concurrency Lock: Identify all busy technicians currently engaged on active jobs
+    const busyTechnicianIds = new Set<string>();
+    for (const j of dbStore.jobs) {
+      if (['ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'SAFETY_CHECKED'].includes(j.status)) {
+        if (j.technicianId) busyTechnicianIds.add(j.technicianId);
+      }
+    }
+
+    if (await isDatabaseConnected()) {
+      try {
+        const { prisma } = await import('@/lib/prisma');
+        const activePrismaJobs = await prisma.job.findMany({
+          where: {
+            status: { in: ['ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'SAFETY_CHECKED'] as any },
+          },
+          select: { technicianId: true },
+        });
+        for (const pj of activePrismaJobs) {
+          if (pj.technicianId) busyTechnicianIds.add(pj.technicianId);
+        }
+      } catch (_) {}
+    }
+
     let assignedTech: any = null;
     const reqTechId = params.technicianId?.trim();
     if (reqTechId) {
       const cleanReq = reqTechId.toLowerCase().replace(/[^a-z0-9]/g, '');
-      assignedTech = dbStore.technicians.find((t) => {
+      const candidate = dbStore.technicians.find((t) => {
         const tId = t.id.toLowerCase().replace(/[^a-z0-9]/g, '');
         const bId = (t.badgeNumber || '').toLowerCase().replace(/[^a-z0-9]/g, '');
         const fName = t.fullName.toLowerCase();
@@ -882,12 +905,16 @@ export const db = {
           reqTechId.toLowerCase().includes(fName)
         );
       });
+      // Only assign if the requested technician is currently FREE
+      if (candidate && !busyTechnicianIds.has(candidate.id)) {
+        assignedTech = candidate;
+      }
     }
 
     if (!assignedTech) {
-      // 1. Prioritize active online technician in the exact pincode
+      // 1. Prioritize active online technician in the exact pincode who is NOT busy
       const onlineInPincode = dbStore.technicians.filter(
-        (t) => t.isOnline && t.assignedPincode === params.pincode && t.kycStatus !== 'REJECTED'
+        (t) => t.isOnline && t.assignedPincode === params.pincode && t.kycStatus !== 'REJECTED' && !busyTechnicianIds.has(t.id)
       );
       if (onlineInPincode.length > 0) {
         assignedTech = onlineInPincode[0];
@@ -895,10 +922,10 @@ export const db = {
     }
 
     if (!assignedTech) {
-      // 2. Prioritize regional online mobile technician
+      // 2. Prioritize regional online mobile technician who is NOT busy
       const statePrefix = params.pincode.substring(0, 2);
       const regionalOnline = dbStore.technicians.filter(
-        (t) => t.isOnline && t.kycStatus !== 'REJECTED' && t.assignedPincode?.startsWith(statePrefix)
+        (t) => t.isOnline && t.kycStatus !== 'REJECTED' && t.assignedPincode?.startsWith(statePrefix) && !busyTechnicianIds.has(t.id)
       );
       if (regionalOnline.length > 0) {
         // Prioritize dynamic app-registered technicians in this region

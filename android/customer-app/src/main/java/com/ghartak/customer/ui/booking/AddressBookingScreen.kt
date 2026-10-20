@@ -50,6 +50,11 @@ fun AddressBookingScreen(
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val sessionManager = remember { com.ghartak.customer.data.session.SessionManager(context) }
+    val hasActiveJob = remember { sessionManager.hasActiveJob() }
+    var showActiveJobPrompt by remember { mutableStateOf(false) }
+    val activeJobTicket = remember { sessionManager.getActiveJobTicketNumber().ifBlank { sessionManager.getActiveJobId().takeLast(6).uppercase() }.ifBlank { "J-1001" } }
+    val formattedTicket = if (activeJobTicket.startsWith("#")) activeJobTicket else "#$activeJobTicket"
 
     var isUserLocationEnabled by remember {
         val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
@@ -155,23 +160,92 @@ fun AddressBookingScreen(
                     }
 
                     Button(
-                        onClick = { onProceedToPayment(state.serviceId) },
-                        enabled = state.canProceed,
+                        onClick = {
+                            if (hasActiveJob) {
+                                showActiveJobPrompt = true
+                            } else {
+                                onProceedToPayment(state.serviceId)
+                            }
+                        },
+                        enabled = state.canProceed && !hasActiveJob,
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = SapphireBlue800,
                             disabledContainerColor = SurfaceBorder
                         )
                     ) {
-                        Text(text = "CONTINUE TO PAYMENT", fontWeight = FontWeight.Bold, color = Color.White)
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Icon(imageVector = Icons.Default.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
+                        if (hasActiveJob) {
+                            Text(text = "ACTIVE JOB IN PROGRESS ($formattedTicket)", fontWeight = FontWeight.Bold, color = TextDarkMuted, fontSize = 12.sp)
+                        } else {
+                            Text(text = "CONTINUE TO PAYMENT", fontWeight = FontWeight.Bold, color = Color.White)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Icon(imageVector = Icons.Default.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
+                        }
                     }
                 }
             }
         },
         containerColor = SurfaceLight
     ) { innerPadding ->
+        if (showActiveJobPrompt) {
+            AlertDialog(
+                onDismissRequest = { showActiveJobPrompt = false },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = SapphireBlue800,
+                        modifier = Modifier.size(36.dp)
+                    )
+                },
+                title = {
+                    Text(
+                        text = "Active Job in Progress",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = TextDarkPrimary
+                    )
+                },
+                text = {
+                    Column {
+                        Text(
+                            text = "You have an active job in progress ($formattedTicket).",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = TextDarkPrimary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Please wait for your current service to complete before booking a new one so your active live tracking and OTP are preserved.",
+                            fontSize = 13.sp,
+                            color = TextDarkMuted,
+                            lineHeight = 18.sp
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showActiveJobPrompt = false
+                            onBack()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("WAIT FOR COMPLETION", fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                },
+                dismissButton = {
+                    OutlinedButton(
+                        onClick = { showActiveJobPrompt = false },
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("CLOSE", fontWeight = FontWeight.SemiBold, color = TextDarkSecondary)
+                    }
+                }
+            )
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -180,6 +254,42 @@ fun AddressBookingScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            if (hasActiveJob) {
+                Surface(
+                    color = Color(0xFFFEF3C7),
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFDE68A)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                            tint = Color(0xFFD97706),
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Active Job in Progress ($formattedTicket)",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.5.sp,
+                                color = Color(0xFF92400E)
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "You have an active job in progress ($formattedTicket). Please wait for completion before placing another booking.",
+                                fontSize = 12.sp,
+                                color = Color(0xFFB45309),
+                                lineHeight = 16.sp
+                            )
+                        }
+                    }
+                }
+            }
             // Service Summary Card
             Card(
                 modifier = Modifier.fillMaxWidth(),

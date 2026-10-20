@@ -70,6 +70,51 @@ fun PaymentScreen(
         )
     }
 
+    if (state.errorMessage != null) {
+        AlertDialog(
+            onDismissRequest = { viewModel.clearError() },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = null,
+                    tint = SapphireBlue800,
+                    modifier = Modifier.size(36.dp)
+                )
+            },
+            title = {
+                Text("Active Job in Progress", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextDarkPrimary)
+            },
+            text = {
+                Text(
+                    text = state.errorMessage ?: "",
+                    fontSize = 14.sp,
+                    color = TextDarkMuted,
+                    lineHeight = 18.sp
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.clearError()
+                        onBack()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("WAIT FOR COMPLETION", fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { viewModel.clearError() },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("CLOSE", fontWeight = FontWeight.SemiBold, color = TextDarkSecondary)
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(

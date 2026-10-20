@@ -267,7 +267,7 @@ class SessionManager(val context: Context) {
     fun hasActiveJob(): Boolean {
         val id = prefs.getString(KEY_ACTIVE_JOB_ID, null)
         val status = prefs.getString(KEY_ACTIVE_JOB_STATUS, "") ?: ""
-        return !id.isNullOrBlank() && status != "CANCELLED" && status != "COMPLETED"
+        return !id.isNullOrBlank() && status != "CANCELLED" && status != "COMPLETED" && status != "WORK_COMPLETED" && status != "SETTLED"
     }
 
     fun clearActiveJob() {

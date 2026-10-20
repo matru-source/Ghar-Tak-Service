@@ -1,5 +1,7 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
+import { dbStore } from '@/lib/mock-data';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
 import {
   getCoordinatesForPincode,
@@ -44,6 +46,27 @@ export async function GET(request: NextRequest) {
       ? { latitude: parseFloat(latParam), longitude: parseFloat(lngParam) }
       : (pincode ? getCoordinatesForPincode(pincode) : null);
 
+    const busyTechnicianIds = new Set<string>();
+    for (const j of dbStore.jobs) {
+      if (['ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'SAFETY_CHECKED'].includes(j.status)) {
+        if (j.technicianId) busyTechnicianIds.add(j.technicianId);
+      }
+    }
+    try {
+      const activePrismaJobs = await prisma.job.findMany({
+        where: {
+          status: { in: ['ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'SAFETY_CHECKED'] as any },
+          technicianId: { not: null },
+        },
+        select: { technicianId: true },
+      });
+      for (const pj of activePrismaJobs) {
+        if (pj.technicianId) busyTechnicianIds.add(pj.technicianId);
+      }
+    } catch {
+      // Prisma offline or schema mismatch
+    }
+
     const enhancedTechnicians = technicians.map((t: any, index: number) => {
       let dist: number;
       let eta: number;
@@ -73,11 +96,14 @@ export async function GET(request: NextRequest) {
 
       const area = resolveAreaFromCoordinates(techLat || customerGeo?.latitude || 20.6678, techLng || customerGeo?.longitude || 85.5959);
 
+      const isBusy = busyTechnicianIds.has(t.id);
       const distanceDisplay = dist <= 0.0 ? '0.0 km away (Same Location)' : `${dist} km away`;
       const etaDisplay = eta <= 1 ? '1 min (Immediate)' : `${eta} mins`;
 
       return {
         ...t,
+        isBusy,
+        availabilityStatus: isBusy ? 'BUSY_ON_JOB' : 'AVAILABLE',
         area,
         distanceKm: dist,
         etaMinutes: eta,
@@ -88,11 +114,11 @@ export async function GET(request: NextRequest) {
 
     const sortBy = searchParams.get('sortBy') || searchParams.get('orderBy');
     if (sortBy === 'rating') {
-      enhancedTechnicians.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      enhancedTechnicians.sort((a, b) => (a.isBusy ? 1 : 0) - (b.isBusy ? 1 : 0) || (b.rating || 0) - (a.rating || 0));
     } else if (sortBy === 'jobs') {
-      enhancedTechnicians.sort((a, b) => (b.totalJobsCompleted || 0) - (a.totalJobsCompleted || 0));
+      enhancedTechnicians.sort((a, b) => (a.isBusy ? 1 : 0) - (b.isBusy ? 1 : 0) || (b.totalJobsCompleted || 0) - (a.totalJobsCompleted || 0));
     } else {
-      enhancedTechnicians.sort((a, b) => a.distanceKm - b.distanceKm);
+      enhancedTechnicians.sort((a, b) => (a.isBusy ? 1 : 0) - (b.isBusy ? 1 : 0) || a.distanceKm - b.distanceKm);
     }
 
     const summary = {
