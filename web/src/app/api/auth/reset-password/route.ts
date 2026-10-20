@@ -5,6 +5,7 @@ import { signAccessToken } from '@/lib/jwt';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
 import { prisma } from '@/lib/prisma';
 import { dbStore } from '@/lib/mock-data';
+import { verifyOtp } from '@/lib/otp';
 
 export async function OPTIONS() {
   return corsOptionsResponse();
@@ -69,29 +70,23 @@ export async function POST(request: NextRequest) {
       return apiError('New password must be at least 4 characters long', 400);
     }
 
+    if (!otp) {
+      return apiError('6-digit security verification code is required', 400);
+    }
+
+    // Strictly verify dynamic cryptographic OTP with replay protection
+    const otpVerification = verifyOtp(identifier, otp, 'RESET_PASSWORD');
+    if (!otpVerification.valid) {
+      return apiError(otpVerification.reason || 'Invalid or expired verification code. Please request a new code.', 400);
+    }
+
     // Generate PBKDF2 hashed password with unique salt
     const passwordHash = hashPassword(newPassword);
 
     // Lookup user by email, phone, or badge
     let user: any = await db.getUserByIdentifier(identifier);
     if (!user) {
-      // Auto-provision user account with this password
-      const cleanEmail = identifier.includes('@') ? identifier.trim().toLowerCase() : `${identifier.trim().toLowerCase()}@ghartak.in`;
-      const namePart = identifier.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
-      const cleanPhone = identifier.startsWith('+') ? identifier : `+91${identifier.replace(/\D/g, '').slice(-10) || '9876543210'}`;
-
-      user = await db.createCustomerUser({
-        fullName: namePart.trim() || 'Valued User',
-        email: cleanEmail,
-        passwordHash,
-        phone: cleanPhone,
-        address: 'Doorstep Service Hub',
-        pincode: '760001',
-      });
-    }
-
-    if (!user) {
-      return apiError('Unable to identify or create user profile', 500);
+      return apiError(`No registered account found with '${identifier}'. Please create an account or verify your details.`, 404);
     }
 
     // Persist new password hash to PostgreSQL via Prisma

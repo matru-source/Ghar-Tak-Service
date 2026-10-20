@@ -91,9 +91,10 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
-    // Google Play Services & Maps
+    // Google Play Services & Maps & Auth
     implementation("com.google.android.gms:play-services-location:21.1.0")
     implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
 
     // Image Loading
     implementation("io.coil-kt:coil-compose:2.5.0")

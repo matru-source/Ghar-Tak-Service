@@ -16,6 +16,15 @@ interface TechnicianApiService {
     @POST("auth/reset-password")
     suspend fun resetPassword(@Body body: Map<String, String>): Response<ApiResponse<Map<String, Any>>>
 
+    @POST("auth/otp/send")
+    suspend fun sendOtp(@Body body: Map<String, String>): Response<ApiResponse<Map<String, Any>>>
+
+    @POST("auth/otp/verify")
+    suspend fun verifyOtp(@Body body: Map<String, String>): Response<ApiResponse<Map<String, Any>>>
+
+    @POST("auth/google")
+    suspend fun googleSignIn(@Body body: Map<String, String>): Response<ApiResponse<Map<String, Any>>>
+
     // Registration & Onboarding
     @POST("technicians")
     suspend fun registerTechnician(

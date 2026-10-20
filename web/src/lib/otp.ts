@@ -1,79 +1,34 @@
 // ==============================================================================
-// ElectriCare Secure OTP Engine (Auth & Handover Verification)
-// Default development OTP is '1234' for rapid testing on Flutter and Web.
-// In production, generates cryptographically secure 6-digit codes with 5-minute TTL.
+// Ghar Tak Services (GTS) - Enterprise Cryptographic OTP Verification Engine
+// Zero client-side bypasses. Cryptographically secure random tokens.
+// Single-use token burning to prevent replay attacks.
 // ==============================================================================
 
+import crypto from 'crypto';
+
 interface OtpRecord {
-  phone: string;
+  identifier: string; // Normalized phone or lowercase email
   code: string;
+  purpose: 'RESET_PASSWORD' | 'REGISTER' | 'LOGIN' | 'GENERAL';
   expiresAt: number;
   attempts: number;
 }
 
-// In-memory OTP registry for development & staging
+// In-memory OTP registry (TTL enforced)
 const otpStore = new Map<string, OtpRecord>();
 
-const DEFAULT_DEV_OTP = process.env.MOCK_OTP_DEFAULT || '1234';
 const OTP_TTL_MS = 5 * 60 * 1000; // 5 minutes validity
 const MAX_ATTEMPTS = 5;
 
-export function generateAndStoreOtp(phone: string): { code: string; expiresAt: Date } {
-  // Normalize phone number (strip whitespace and ensure leading +91 if 10-digit)
-  const cleanPhone = normalizePhoneNumber(phone);
-
-  // In development, default to '1234' for easy testing; otherwise generate random 6-digit code
-  const code = process.env.NODE_ENV === 'production' 
-    ? Math.floor(100000 + Math.random() * 900000).toString() 
-    : DEFAULT_DEV_OTP;
-
-  const expiresAtMs = Date.now() + OTP_TTL_MS;
-
-  otpStore.set(cleanPhone, {
-    phone: cleanPhone,
-    code,
-    expiresAt: expiresAtMs,
-    attempts: 0,
-  });
-
-  return {
-    code,
-    expiresAt: new Date(expiresAtMs),
-  };
-}
-
-export function verifyOtp(phone: string, submittedCode: string): { valid: boolean; reason?: string } {
-  const cleanPhone = normalizePhoneNumber(phone);
-  const record = otpStore.get(cleanPhone);
-
-  // Accept default development OTP in non-production environments
-  if (process.env.NODE_ENV !== 'production' && submittedCode === DEFAULT_DEV_OTP) {
-    otpStore.delete(cleanPhone);
-    return { valid: true };
+/**
+ * Normalizes an identifier (email to trimmed lowercase, phone to E.164 +91 format).
+ */
+export function normalizeIdentifier(raw: string): string {
+  const trimmed = raw.trim();
+  if (trimmed.includes('@')) {
+    return trimmed.toLowerCase();
   }
-
-  if (!record) {
-    return { valid: false, reason: 'OTP not requested or already expired. Please request a new code.' };
-  }
-
-  if (Date.now() > record.expiresAt) {
-    otpStore.delete(cleanPhone);
-    return { valid: false, reason: 'OTP has expired. Please request a new code.' };
-  }
-
-  record.attempts += 1;
-  if (record.attempts > MAX_ATTEMPTS) {
-    otpStore.delete(cleanPhone);
-    return { valid: false, reason: 'Maximum OTP verification attempts exceeded.' };
-  }
-
-  if (record.code !== submittedCode) {
-    return { valid: false, reason: 'Invalid OTP code. Please check and try again.' };
-  }
-
-  // OTP successfully verified: burn the token to prevent replay attacks
-  otpStore.delete(cleanPhone);
-  return { valid: true };
+  return normalizePhoneNumber(trimmed);
 }
 
 export function normalizePhoneNumber(rawPhone: string): string {
@@ -86,4 +41,89 @@ export function normalizePhoneNumber(rawPhone: string): string {
     }
   }
   return cleaned;
+}
+
+/**
+ * Generates a cryptographically secure 6-digit dynamic OTP.
+ */
+export function generateAndStoreOtp(
+  identifier: string,
+  purpose: 'RESET_PASSWORD' | 'REGISTER' | 'LOGIN' | 'GENERAL' = 'GENERAL'
+): { code: string; expiresAt: Date } {
+  const cleanId = normalizeIdentifier(identifier);
+
+  // Cryptographically secure 6-digit number [100000, 999999]
+  const code = crypto.randomInt(100000, 1000000).toString();
+  const expiresAtMs = Date.now() + OTP_TTL_MS;
+
+  const key = `${cleanId}:${purpose}`;
+  otpStore.set(key, {
+    identifier: cleanId,
+    code,
+    purpose,
+    expiresAt: expiresAtMs,
+    attempts: 0,
+  });
+
+  return {
+    code,
+    expiresAt: new Date(expiresAtMs),
+  };
+}
+
+/**
+ * Validates a submitted OTP against the cryptographically stored challenge.
+ * Enforces TTL, attempt limits, and burns the OTP immediately on success.
+ */
+export function verifyOtp(
+  identifier: string,
+  submittedCode: string,
+  purpose: 'RESET_PASSWORD' | 'REGISTER' | 'LOGIN' | 'GENERAL' = 'GENERAL'
+): { valid: boolean; reason?: string } {
+  const cleanId = normalizeIdentifier(identifier);
+  const key = `${cleanId}:${purpose}`;
+
+  // Also check without purpose for backwards compatibility
+  const record = otpStore.get(key) || otpStore.get(`${cleanId}:GENERAL`);
+
+  if (!record) {
+    return {
+      valid: false,
+      reason: 'No active verification code found for this address. Please request a new code.',
+    };
+  }
+
+  // Check TTL expiration
+  if (Date.now() > record.expiresAt) {
+    otpStore.delete(key);
+    return {
+      valid: false,
+      reason: 'Verification code has expired (valid for 5 minutes). Please request a new code.',
+    };
+  }
+
+  // Check rate-limiting / brute force protection
+  record.attempts += 1;
+  if (record.attempts > MAX_ATTEMPTS) {
+    otpStore.delete(key);
+    return {
+      valid: false,
+      reason: 'Too many incorrect attempts. For security, this code has been invalidated. Please request a new code.',
+    };
+  }
+
+  // Constant-time comparison to prevent timing attacks
+  const expectedBuffer = Buffer.from(record.code);
+  const submittedBuffer = Buffer.from(submittedCode.trim());
+
+  if (expectedBuffer.length !== submittedBuffer.length || !crypto.timingSafeEqual(expectedBuffer, submittedBuffer)) {
+    return {
+      valid: false,
+      reason: `Incorrect verification code. ${MAX_ATTEMPTS - record.attempts} attempts remaining.`,
+    };
+  }
+
+  // Token verified: burn immediately (Single-use token to prevent replay attacks)
+  otpStore.delete(key);
+  return { valid: true };
 }

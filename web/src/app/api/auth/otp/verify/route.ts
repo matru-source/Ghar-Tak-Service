@@ -14,21 +14,30 @@ export async function OPTIONS() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { phone, otp, role: requestedRole, fullName } = body;
+    const rawIdentifier = (body.identifier || body.email || body.phone || '').trim();
+    const otp = (body.otp || body.code || '').trim();
+    const purpose = (body.purpose || 'GENERAL') as 'RESET_PASSWORD' | 'REGISTER' | 'LOGIN' | 'GENERAL';
+    const { role: requestedRole, fullName, verifyOnly } = body;
 
-    if (!phone || !otp) {
-      return apiError('Phone number and OTP code are required', 400);
+    if (!rawIdentifier || !otp) {
+      return apiError('Identifier (email or phone) and verification code are required', 400);
     }
 
-    const cleanPhone = normalizePhoneNumber(phone);
-    const verification = verifyOtp(cleanPhone, otp);
+    const verification = verifyOtp(rawIdentifier, otp, purpose);
 
     if (!verification.valid) {
-      return apiError(verification.reason || 'Invalid OTP code', 401);
+      return apiError(verification.reason || 'Invalid verification code', 401);
     }
 
+    if (verifyOnly) {
+      return apiSuccess({ verified: true, identifier: rawIdentifier }, 'Verification code verified successfully', 200);
+    }
+
+    const cleanPhone = rawIdentifier.includes('@') ? '' : normalizePhoneNumber(rawIdentifier);
     // Lookup user in database / mock store
-    let user = await db.getUserByPhone(cleanPhone);
+    let user = rawIdentifier.includes('@')
+      ? await db.getUserByIdentifier(rawIdentifier)
+      : await db.getUserByPhone(cleanPhone);
 
     // If user does not exist yet, auto-register as Customer (or requested role)
     if (!user) {

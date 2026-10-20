@@ -20,6 +20,15 @@ interface CustomerApiService {
     suspend fun resetPassword(@Body body: Map<String, String>): Response<ApiResponse<Map<String, Any>>>
 
     @POST("auth/otp/send")
+    suspend fun sendOtpGeneric(@Body body: Map<String, String>): Response<ApiResponse<Map<String, Any>>>
+
+    @POST("auth/google")
+    suspend fun googleSignIn(@Body body: Map<String, String>): Response<ApiResponse<Map<String, Any>>>
+
+    @POST("auth/otp/verify")
+    suspend fun verifyOtpGeneric(@Body body: Map<String, String>): Response<ApiResponse<Map<String, Any>>>
+
+    @POST("auth/otp/send")
     suspend fun sendOtp(@Body request: OtpSendRequest): Response<ApiResponse<Map<String, Any>>>
 
     @POST("auth/otp/verify")

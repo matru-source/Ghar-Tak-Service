@@ -4,7 +4,6 @@ import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ghartak.customer.data.api.ApiClient
-import com.ghartak.customer.data.api.BrevoEmailService
 import com.ghartak.customer.data.model.UserProfile
 import com.ghartak.customer.data.session.SessionManager
 import kotlinx.coroutines.delay
@@ -268,8 +267,6 @@ class CustomerAuthViewModel(
             return
         }
 
-        val code = (100000..999999).random().toString()
-
         _uiState.value = _uiState.value.copy(
             isLoading = true,
             errorMessage = null,
@@ -277,26 +274,40 @@ class CustomerAuthViewModel(
         )
 
         viewModelScope.launch {
-            val result = BrevoEmailService.sendOtpEmail(
-                toEmail = email,
-                toName = name,
-                otpCode = code
-            )
-
-            if (result.isSuccess) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    isOtpSent = true,
-                    generatedOtp = code,
-                    successMessage = "Verification code sent to $email. Check your inbox!"
+            try {
+                val api = ApiClient.getService(sessionManager.context)
+                val response = api.sendOtpGeneric(
+                    mapOf(
+                        "identifier" to email,
+                        "type" to "EMAIL",
+                        "purpose" to "REGISTER",
+                        "name" to name
+                    )
                 )
-            } else {
+
+                if (response.isSuccessful && response.body()?.success == true) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        isOtpSent = true,
+                        successMessage = "Verification code sent to $email. Please check your inbox."
+                    )
+                } else {
+                    val errMsg = try {
+                        val errStr = response.errorBody()?.string()
+                        val errJson = org.json.JSONObject(errStr ?: "{}")
+                        errJson.optString("message", "Failed to send verification code. Please try again.")
+                    } catch (_: Exception) {
+                        response.body()?.message ?: "Failed to send verification code. Please try again."
+                    }
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = errMsg
+                    )
+                }
+            } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    isOtpSent = true,
-                    generatedOtp = code,
-                    otpCode = code, // test fallback
-                    successMessage = "Code generated ($code). Test code filled automatically."
+                    errorMessage = "Network error: Unable to contact authentication server. Please check your connection."
                 )
             }
         }
@@ -304,6 +315,7 @@ class CustomerAuthViewModel(
 
     fun verifySignUpOtp() {
         val state = _uiState.value
+        val email = state.email.trim().lowercase()
         val inputOtp = state.otpCode.trim()
 
         if (inputOtp.length != 6) {
@@ -311,21 +323,48 @@ class CustomerAuthViewModel(
             return
         }
 
-        val expectedOtp = state.generatedOtp
-        val isCodeValid = (inputOtp == expectedOtp) || (inputOtp == "123456")
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
-        if (!isCodeValid) {
-            _uiState.value = _uiState.value.copy(errorMessage = "Invalid verification code. Please check your email or click Resend OTP.")
-            return
+        viewModelScope.launch {
+            try {
+                val api = ApiClient.getService(sessionManager.context)
+                val response = api.verifyOtpGeneric(
+                    mapOf(
+                        "identifier" to email,
+                        "otp" to inputOtp,
+                        "purpose" to "REGISTER",
+                        "verifyOnly" to "true"
+                    )
+                )
+
+                if (response.isSuccessful && response.body()?.success == true) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        signUpStep = 2,
+                        isEmailVerified = true,
+                        errorMessage = null,
+                        successMessage = "Email verified successfully! Please set your password and pincode."
+                    )
+                } else {
+                    val errMsg = try {
+                        val errStr = response.errorBody()?.string()
+                        val errJson = org.json.JSONObject(errStr ?: "{}")
+                        errJson.optString("message", "Invalid or expired verification code.")
+                    } catch (_: Exception) {
+                        response.body()?.message ?: "Invalid or expired verification code."
+                    }
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = errMsg
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Network error: Unable to verify code with server."
+                )
+            }
         }
-
-        // OTP verified successfully -> advance to Step 2
-        _uiState.value = _uiState.value.copy(
-            signUpStep = 2,
-            isEmailVerified = true,
-            errorMessage = null,
-            successMessage = "Email verified successfully! Please set your password and pincode."
-        )
     }
 
     // ================= 3. SIGN UP: STEP 2 (PASSWORD, PINCODE, OPTIONAL PHONE & ADDRESS) =================
@@ -458,59 +497,43 @@ class CustomerAuthViewModel(
             val localUser = sessionManager.getUserByEmail(email)
             if (localUser != null && localUser.optString("name", "").isNotBlank()) {
                 recipientName = localUser.optString("name")
-            } else {
-                // Check if account exists on backend database
-                try {
-                    val api = ApiClient.getService(sessionManager.context)
-                    val checkResp = api.checkAccountExists(email)
-                    if (checkResp.isSuccessful && checkResp.body()?.success == true) {
-                        val data = checkResp.body()?.data
-                        val remoteName = data?.get("fullName")?.toString()
-                        if (!remoteName.isNullOrBlank()) {
-                            recipientName = remoteName
-                        }
-                    } else if (!sessionManager.isEmailRegistered(email)) {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            errorMessage = "No registered account found with email '$email'. Please check or create an account."
-                        )
-                        return@launch
-                    }
-                } catch (netErr: Exception) {
-                    if (!sessionManager.isEmailRegistered(email)) {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            errorMessage = "No registered account found with email '$email'. Please check or create an account."
-                        )
-                        return@launch
-                    }
-                }
             }
 
-            val code = (100000..999999).random().toString()
-
-            val result = BrevoEmailService.sendOtpEmail(
-                toEmail = email,
-                toName = recipientName,
-                otpCode = code
-            )
-
-            if (result.isSuccess) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    isOtpSent = true,
-                    forgotStep = 2,
-                    generatedOtp = code,
-                    successMessage = "Password reset code sent to $email. (Test Code: 123456)"
+            // Check if account exists on backend database and dispatch OTP
+            try {
+                val api = ApiClient.getService(sessionManager.context)
+                val response = api.sendOtpGeneric(
+                    mapOf(
+                        "identifier" to email,
+                        "type" to "EMAIL",
+                        "purpose" to "RESET_PASSWORD"
+                    )
                 )
-            } else {
+
+                if (response.isSuccessful && response.body()?.success == true) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        isOtpSent = true,
+                        forgotStep = 2,
+                        successMessage = "Security verification code sent to $email. Please check your inbox."
+                    )
+                } else {
+                    val errMsg = try {
+                        val errStr = response.errorBody()?.string()
+                        val errJson = org.json.JSONObject(errStr ?: "{}")
+                        errJson.optString("message", "No account found with this email or server error.")
+                    } catch (_: Exception) {
+                        response.body()?.message ?: "No registered account found with email '$email'."
+                    }
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = errMsg
+                    )
+                }
+            } catch (netErr: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    isOtpSent = true,
-                    forgotStep = 2,
-                    generatedOtp = code,
-                    otpCode = code,
-                    successMessage = "Reset code generated ($code). Test code filled automatically."
+                    errorMessage = "Network error: Unable to contact authentication server. Please check your connection."
                 )
             }
         }
@@ -525,14 +548,6 @@ class CustomerAuthViewModel(
 
         if (inputOtp.length != 6) {
             _uiState.value = _uiState.value.copy(errorMessage = "Please enter the 6-digit reset code sent to your email")
-            return
-        }
-
-        val expectedOtp = state.generatedOtp
-        val isCodeValid = (inputOtp == expectedOtp) || (inputOtp == "123456")
-
-        if (!isCodeValid) {
-            _uiState.value = _uiState.value.copy(errorMessage = "Invalid verification code. Please check your email or click Resend.")
             return
         }
 
@@ -551,7 +566,7 @@ class CustomerAuthViewModel(
         viewModelScope.launch {
             val api = ApiClient.getService(sessionManager.context)
             try {
-                // Call backend API to update password hash in PostgreSQL/Prisma
+                // Call backend API to verify OTP and update password hash in PostgreSQL/Prisma
                 val response = api.resetPassword(
                     mapOf(
                         "identifier" to email,
@@ -570,7 +585,7 @@ class CustomerAuthViewModel(
                     val resolvedPhone = userMap?.get("phone")?.toString() ?: ""
                     val resolvedEmail = userMap?.get("email")?.toString() ?: email
                     val resolvedAddress = userMap?.get("address")?.toString() ?: sessionManager.getUserAddress()
-                    val resolvedPincode = userMap?.get("pincode")?.toString() ?: sessionManager.getUserPincode().ifEmpty { "400001" }
+                    val resolvedPincode = userMap?.get("pincode")?.toString() ?: sessionManager.getUserPincode().ifEmpty { "760001" }
 
                     val profile = UserProfile(
                         id = userId,
@@ -603,83 +618,23 @@ class CustomerAuthViewModel(
                         isLoggedIn = true,
                         successMessage = "Password reset successfully! Welcome back, $resolvedName!"
                     )
-                    return@launch
                 } else {
-                    // Server returned non-200 (e.g. account not yet in cloud DB).
-                    // Seamlessly auto-register user locally in SessionManager so login never fails.
-                    val namePart = email.substringBefore("@").replace(".", " ").replace("_", " ")
-                        .split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
-                        .ifEmpty { "Customer" }
-                    val userPhone = sessionManager.getUserPhone().ifEmpty { "+91 9876543210" }
-                    val userAddr = sessionManager.getUserAddress().ifEmpty { "Doorstep Service Hub" }
-                    val userPin = sessionManager.getUserPincode().ifEmpty { "760001" }
-
-                    sessionManager.registerUser(
-                        fullName = namePart,
-                        email = email,
-                        phone = userPhone,
-                        password = newPassword,
-                        address = userAddr,
-                        pincode = userPin
-                    )
-                    val uid = "cust_${System.currentTimeMillis() % 10000}"
-                    val profile = UserProfile(
-                        id = uid,
-                        phone = userPhone,
-                        fullName = namePart,
-                        email = email,
-                        role = "CUSTOMER"
-                    )
-                    sessionManager.saveSession(
-                        token = "gts_token_${uid}_${System.currentTimeMillis()}",
-                        user = profile,
-                        address = userAddr,
-                        pincode = userPin
-                    )
-
+                    val errMsg = try {
+                        val errStr = response.errorBody()?.string()
+                        val errJson = org.json.JSONObject(errStr ?: "{}")
+                        errJson.optString("message", "Failed to reset password. Please check your verification code.")
+                    } catch (_: Exception) {
+                        response.body()?.message ?: "Failed to reset password. Please verify your code."
+                    }
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        isLoggedIn = true,
-                        successMessage = "Password set successfully! Welcome back, $namePart!"
+                        errorMessage = errMsg
                     )
-                    return@launch
                 }
             } catch (netEx: Exception) {
-                // Offline fallback if network error occurs
-                val namePart = email.substringBefore("@").replace(".", " ").replace("_", " ")
-                    .split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
-                    .ifEmpty { "Customer" }
-                val userPhone = sessionManager.getUserPhone().ifEmpty { "+91 9876543210" }
-                val userAddr = sessionManager.getUserAddress().ifEmpty { "Doorstep Service Hub" }
-                val userPin = sessionManager.getUserPincode().ifEmpty { "760001" }
-
-                sessionManager.registerUser(
-                    fullName = namePart,
-                    email = email,
-                    phone = userPhone,
-                    password = newPassword,
-                    address = userAddr,
-                    pincode = userPin
-                )
-                val uid = "cust_${System.currentTimeMillis() % 10000}"
-                val profile = UserProfile(
-                    id = uid,
-                    phone = userPhone,
-                    fullName = namePart,
-                    email = email,
-                    role = "CUSTOMER"
-                )
-                sessionManager.saveSession(
-                    token = "gts_token_${uid}_${System.currentTimeMillis()}",
-                    user = profile,
-                    address = userAddr,
-                    pincode = userPin
-                )
-
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    isLoggedIn = true,
-                    successMessage = "Password set successfully! Welcome back, $namePart!"
+                    errorMessage = "Network error: Unable to connect to authentication server. Please check your internet connection."
                 )
             }
         }
@@ -770,6 +725,81 @@ class CustomerAuthViewModel(
                     "Welcome to Ghar Tak, $name! Google account linked."
                 }
             )
+        }
+    }
+
+    fun loginWithGoogleIdToken(idToken: String) {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+        viewModelScope.launch {
+            try {
+                val api = ApiClient.getService(sessionManager.context)
+                val response = api.googleSignIn(
+                    mapOf(
+                        "idToken" to idToken,
+                        "role" to "CUSTOMER"
+                    )
+                )
+
+                if (response.isSuccessful && response.body()?.success == true && response.body()?.data != null) {
+                    val data = response.body()!!.data!!
+                    val token = data["token"]?.toString() ?: "jwt_google_${System.currentTimeMillis()}"
+                    val userMap = data["user"] as? Map<*, *>
+
+                    val userId = userMap?.get("id")?.toString() ?: "cust_${System.currentTimeMillis()}"
+                    val resolvedName = userMap?.get("fullName")?.toString() ?: "Google User"
+                    val resolvedPhone = userMap?.get("phone")?.toString() ?: ""
+                    val resolvedEmail = userMap?.get("email")?.toString() ?: ""
+                    val resolvedAddress = userMap?.get("address")?.toString() ?: sessionManager.getUserAddress()
+                    val resolvedPincode = userMap?.get("pincode")?.toString() ?: sessionManager.getUserPincode().ifEmpty { "760001" }
+
+                    val profile = UserProfile(
+                        id = userId,
+                        phone = resolvedPhone,
+                        fullName = resolvedName,
+                        email = resolvedEmail,
+                        role = "CUSTOMER"
+                    )
+
+                    sessionManager.saveSession(
+                        token = token,
+                        user = profile,
+                        address = resolvedAddress,
+                        pincode = resolvedPincode
+                    )
+
+                    sessionManager.registerUser(
+                        fullName = resolvedName,
+                        email = resolvedEmail,
+                        phone = resolvedPhone,
+                        password = "GOOGLE_OAUTH_AUTHENTICATED",
+                        address = resolvedAddress,
+                        pincode = resolvedPincode
+                    )
+
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        isLoggedIn = true,
+                        successMessage = "Signed in successfully with Google! Welcome, $resolvedName!"
+                    )
+                } else {
+                    val errMsg = try {
+                        val errStr = response.errorBody()?.string()
+                        val errJson = org.json.JSONObject(errStr ?: "{}")
+                        errJson.optString("message", "Google authentication failed on server.")
+                    } catch (_: Exception) {
+                        response.body()?.message ?: "Google authentication failed."
+                    }
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = errMsg
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Network error during Google authentication. Please try again."
+                )
+            }
         }
     }
 

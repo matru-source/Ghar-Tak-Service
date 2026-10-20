@@ -30,6 +30,11 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import com.ghartak.technician.R
 import com.ghartak.technician.data.session.SessionManager
 import com.ghartak.technician.ui.components.EnvironmentSwitcherDialog
@@ -76,9 +81,37 @@ fun TechnicianAuthScreen(
     var logoClickCount by remember { mutableStateOf(0) }
     var lastClickTime by remember { mutableStateOf(0L) }
     var showEnvSwitcher by remember { mutableStateOf(false) }
-    var showGoogleAccountChooser by remember { mutableStateOf(false) }
     var expandedTradeMenu by remember { mutableStateOf(false) }
     var expandedExpMenu by remember { mutableStateOf(false) }
+
+    val googleSignInOptions = remember {
+        GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .build()
+    }
+    val googleSignInClient = remember(context) {
+        GoogleSignIn.getClient(context, googleSignInOptions)
+    }
+    val googleLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            val idToken = account?.idToken
+            if (!idToken.isNullOrBlank()) {
+                viewModel.loginWithGoogleIdToken(idToken)
+            } else {
+                val email = account?.email ?: ""
+                val name = account?.displayName ?: "Certified Professional"
+                if (email.isNotBlank()) {
+                    viewModel.loginWithGoogle(email, name)
+                }
+            }
+        } catch (_: Exception) {
+            // Cancelled
+        }
+    }
 
     LaunchedEffect(state.isLoggedIn) {
         if (state.isLoggedIn) {
@@ -92,16 +125,6 @@ fun TechnicianAuthScreen(
             onDismiss = { showEnvSwitcher = false },
             onApply = { newUrl ->
                 sessionManager.setCustomBaseUrl(newUrl)
-            }
-        )
-    }
-
-    if (showGoogleAccountChooser) {
-        TechnicianGoogleAccountChooserDialog(
-            onDismiss = { showGoogleAccountChooser = false },
-            onAccountSelected = { email, name ->
-                showGoogleAccountChooser = false
-                viewModel.loginWithGoogle(selectedEmail = email, selectedName = name)
             }
         )
     }
@@ -560,7 +583,15 @@ fun TechnicianAuthScreen(
 
                         // "Continue with Google" Button
                         Surface(
-                            onClick = { showGoogleAccountChooser = true },
+                            onClick = {
+                                try {
+                                    googleSignInClient.signOut().addOnCompleteListener {
+                                        googleLauncher.launch(googleSignInClient.signInIntent)
+                                    }
+                                } catch (_: Exception) {
+                                    googleLauncher.launch(googleSignInClient.signInIntent)
+                                }
+                            },
                             shape = RoundedCornerShape(12.dp),
                             border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0)),
                             color = Color.White,
@@ -1250,242 +1281,6 @@ private fun TechnicianHeroTrustChip(
                 color = TextDarkPrimary,
                 textAlign = TextAlign.Center,
                 lineHeight = 10.sp
-            )
-        }
-    }
-}
-
-// -------------------------------------------------------------
-// Component: Google Account Chooser Dialog (Technician Fleet)
-// -------------------------------------------------------------
-@Composable
-fun TechnicianGoogleAccountChooserDialog(
-    onDismiss: () -> Unit,
-    onAccountSelected: (email: String, name: String) -> Unit
-) {
-    var showCustomInput by remember { mutableStateOf(false) }
-    var customEmail by remember { mutableStateOf("") }
-    var customName by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_google_logo),
-                    contentDescription = "Google",
-                    modifier = Modifier.size(32.dp)
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(
-                    text = "Choose a Google Account",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextDarkPrimary
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "to continue to Ghar Tak Technician Workspace",
-                    fontSize = 12.sp,
-                    color = TextDarkMuted
-                )
-            }
-        },
-        text = {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Divider(color = Color(0xFFE2E8F0), thickness = 1.dp)
-                Spacer(modifier = Modifier.height(10.dp))
-
-                if (!showCustomInput) {
-                    // Account 1: Matru Prasad
-                    TechnicianGoogleAccountRow(
-                        avatarInitial = "M",
-                        avatarBg = SapphireBlue800,
-                        name = "Matru Prasad",
-                        email = "itsmatruprasad@gmail.com",
-                        badge = "Certified Fleet Professional",
-                        onClick = {
-                            onAccountSelected("itsmatruprasad@gmail.com", "Matru Prasad")
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Account 2: Matru Prasad Panda
-                    TechnicianGoogleAccountRow(
-                        avatarInitial = "M",
-                        avatarBg = Color(0xFF0D9488),
-                        name = "Matru Prasad Panda",
-                        email = "matruprasadpanda497@gmail.com",
-                        badge = "GTS Partner Technician",
-                        onClick = {
-                            onAccountSelected("matruprasadpanda497@gmail.com", "Matru Prasad Panda")
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Account 3: Use another account
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable { showCustomInput = true }
-                            .padding(horizontal = 8.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFF1F5F9)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.PersonAdd,
-                                contentDescription = null,
-                                tint = Color(0xFF475569),
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = "Use another account",
-                            fontSize = 13.5.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = TextDarkPrimary
-                        )
-                    }
-                } else {
-                    // Custom Google account input
-                    Text(
-                        text = "Enter Google Account Details",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextDarkPrimary
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = customName,
-                        onValueChange = { customName = it },
-                        label = { Text("Full Name") },
-                        placeholder = { Text("e.g. Ramesh Patel") },
-                        singleLine = true,
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = customEmail,
-                        onValueChange = { customEmail = it },
-                        label = { Text("Gmail Address") },
-                        placeholder = { Text("technician@gmail.com") },
-                        singleLine = true,
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        TextButton(onClick = { showCustomInput = false }) {
-                            Text("Back", color = Color(0xFF64748B))
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = {
-                                val email = if (customEmail.isNotBlank()) customEmail.trim() else "technician@gmail.com"
-                                val name = if (customName.isNotBlank()) customName.trim() else "GTS Field Technician"
-                                onAccountSelected(email, name)
-                            },
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
-                        ) {
-                            Text("Sign In")
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-                Divider(color = Color(0xFFE2E8F0), thickness = 1.dp)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "To continue, Google will share your technician name, verified email address, and language preference with Ghar Tak Services.",
-                    fontSize = 10.5.sp,
-                    color = Color(0xFF94A3B8),
-                    lineHeight = 14.sp
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel", color = Color(0xFF64748B), fontWeight = FontWeight.Bold)
-            }
-        },
-        shape = RoundedCornerShape(20.dp),
-        containerColor = Color.White
-    )
-}
-
-@Composable
-private fun TechnicianGoogleAccountRow(
-    avatarInitial: String,
-    avatarBg: Color,
-    name: String,
-    email: String,
-    badge: String,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(avatarBg),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = avatarInitial,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp
-            )
-        }
-        Spacer(modifier = Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = name,
-                fontSize = 13.5.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextDarkPrimary
-            )
-            Text(
-                text = email,
-                fontSize = 11.5.sp,
-                color = TextDarkMuted
-            )
-        }
-        Surface(
-            color = Color(0xFFF1F5F9),
-            shape = RoundedCornerShape(6.dp)
-        ) {
-            Text(
-                text = badge,
-                fontSize = 9.sp,
-                fontWeight = FontWeight.Bold,
-                color = SapphireBlue800,
-                modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
             )
         }
     }

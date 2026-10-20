@@ -4,7 +4,6 @@ import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ghartak.technician.data.api.ApiClient
-import com.ghartak.technician.data.api.BrevoEmailService
 import com.ghartak.technician.data.model.RegisterTechnicianRequest
 import com.ghartak.technician.data.model.TechnicianProfile
 import com.ghartak.technician.data.session.SessionManager
@@ -314,6 +313,68 @@ class TechnicianAuthViewModel(
         }
     }
 
+    fun loginWithGoogleIdToken(idToken: String) {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null, successMessage = null)
+        viewModelScope.launch {
+            try {
+                val api = ApiClient.getService(sessionManager.context)
+                val response = api.googleSignIn(
+                    mapOf(
+                        "idToken" to idToken,
+                        "role" to "TECHNICIAN"
+                    )
+                )
+
+                if (response.isSuccessful && response.body()?.success == true && response.body()?.data != null) {
+                    val data = response.body()!!.data!!
+                    val token = data["token"]?.toString() ?: "jwt_google_tech_${System.currentTimeMillis()}"
+                    val userMap = data["user"] as? Map<*, *>
+
+                    val techId = userMap?.get("technicianId")?.toString() ?: userMap?.get("id")?.toString() ?: "tech_${System.currentTimeMillis()}"
+                    val badgeNumber = userMap?.get("badgeNumber")?.toString() ?: "GTS-TECH-${(1000..9999).random()}"
+                    val fullName = userMap?.get("fullName")?.toString() ?: "Certified Professional"
+                    val email = userMap?.get("email")?.toString() ?: ""
+                    val phone = userMap?.get("phone")?.toString() ?: sessionManager.getPhone().ifEmpty { "+91 9876543210" }
+                    val pincode = userMap?.get("pincode")?.toString() ?: sessionManager.getPincode().ifEmpty { "760001" }
+
+                    val profile = sessionManager.registerTechnician(
+                        fullName = fullName,
+                        email = email,
+                        phone = phone,
+                        password = "GOOGLE_OAUTH_AUTHENTICATED",
+                        trade = "Certified Professional",
+                        pincode = pincode
+                    )
+
+                    sessionManager.saveSession(token, profile)
+
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        isLoggedIn = true,
+                        successMessage = "Signed in successfully with Google! Welcome back, $fullName."
+                    )
+                } else {
+                    val errMsg = try {
+                        val errStr = response.errorBody()?.string()
+                        val errJson = org.json.JSONObject(errStr ?: "{}")
+                        errJson.optString("message", "Google authentication failed on server.")
+                    } catch (_: Exception) {
+                        response.body()?.message ?: "Google authentication failed."
+                    }
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = errMsg
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Network error during Google authentication. Please try again."
+                )
+            }
+        }
+    }
+
     // ================= SIGN UP STEP 1: SEND & VERIFY OTP VIA BREVO =================
     fun sendSignUpOtp() {
         val state = _uiState.value
@@ -338,22 +399,40 @@ class TechnicianAuthViewModel(
         _uiState.value = state.copy(isLoading = true, errorMessage = null)
 
         viewModelScope.launch {
-            val randomOtp = (100000..999999).random().toString()
-            val result = BrevoEmailService.sendOtpEmail(email, name, randomOtp)
-
-            if (result.isSuccess) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    isOtpSent = true,
-                    generatedOtp = randomOtp,
-                    successMessage = "Verification OTP sent to $email. Please check your inbox or spam."
+            try {
+                val api = ApiClient.getService(sessionManager.context)
+                val response = api.sendOtp(
+                    mapOf(
+                        "identifier" to email,
+                        "type" to "EMAIL",
+                        "purpose" to "REGISTER",
+                        "name" to name
+                    )
                 )
-            } else {
+
+                if (response.isSuccessful && response.body()?.success == true) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        isOtpSent = true,
+                        successMessage = "Verification OTP sent to $email. Please check your inbox."
+                    )
+                } else {
+                    val errMsg = try {
+                        val errStr = response.errorBody()?.string()
+                        val errJson = org.json.JSONObject(errStr ?: "{}")
+                        errJson.optString("message", "Failed to dispatch verification code.")
+                    } catch (_: Exception) {
+                        response.body()?.message ?: "Failed to dispatch verification code."
+                    }
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = errMsg
+                    )
+                }
+            } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    isOtpSent = true,
-                    generatedOtp = randomOtp,
-                    errorMessage = "Email dispatch warning: Using offline verification code $randomOtp"
+                    errorMessage = "Network error: Unable to contact authentication server. Please check your connection."
                 )
             }
         }
@@ -368,18 +447,48 @@ class TechnicianAuthViewModel(
             return
         }
 
-        if (entered != state.generatedOtp && entered != "123456") {
-            _uiState.value = state.copy(errorMessage = "Incorrect verification code. Please check your email or request a new code.")
-            return
-        }
+        _uiState.value = state.copy(isLoading = true, errorMessage = null)
 
-        // OTP Verified -> Advance to Step 2
-        _uiState.value = state.copy(
-            signUpStep = 2,
-            isEmailVerified = true,
-            errorMessage = null,
-            successMessage = "Email verified successfully! Now complete your technician credentials."
-        )
+        viewModelScope.launch {
+            try {
+                val api = ApiClient.getService(sessionManager.context)
+                val response = api.verifyOtp(
+                    mapOf(
+                        "identifier" to state.email,
+                        "otp" to entered,
+                        "purpose" to "REGISTER",
+                        "verifyOnly" to "true"
+                    )
+                )
+
+                if (response.isSuccessful && response.body()?.success == true) {
+                    _uiState.value = state.copy(
+                        isLoading = false,
+                        signUpStep = 2,
+                        isEmailVerified = true,
+                        errorMessage = null,
+                        successMessage = "Email verified successfully! Now complete your technician credentials."
+                    )
+                } else {
+                    val errMsg = try {
+                        val errStr = response.errorBody()?.string()
+                        val errJson = org.json.JSONObject(errStr ?: "{}")
+                        errJson.optString("message", "Incorrect or expired verification code.")
+                    } catch (_: Exception) {
+                        response.body()?.message ?: "Incorrect or expired verification code."
+                    }
+                    _uiState.value = state.copy(
+                        isLoading = false,
+                        errorMessage = errMsg
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = state.copy(
+                    isLoading = false,
+                    errorMessage = "Network error: Unable to verify code with server."
+                )
+            }
+        }
     }
 
     fun resendSignUpOtp() {
@@ -472,37 +581,42 @@ class TechnicianAuthViewModel(
         _uiState.value = state.copy(isLoading = true, errorMessage = null)
 
         viewModelScope.launch {
-            // Check if registered locally or in backend database
-            if (!sessionManager.isEmailRegistered(email)) {
-                try {
-                    val api = ApiClient.getService(sessionManager.context)
-                    val checkResp = api.checkAccountExists(email)
-                    if (!checkResp.isSuccessful || checkResp.body()?.success != true) {
-                        _uiState.value = state.copy(
-                            isLoading = false,
-                            errorMessage = "No technician account found with this email."
-                        )
-                        return@launch
+            try {
+                val api = ApiClient.getService(sessionManager.context)
+                val response = api.sendOtp(
+                    mapOf(
+                        "identifier" to email,
+                        "type" to "EMAIL",
+                        "purpose" to "RESET_PASSWORD"
+                    )
+                )
+
+                if (response.isSuccessful && response.body()?.success == true) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        isOtpSent = true,
+                        forgotStep = 2,
+                        successMessage = "Password reset code sent to $email. Please check your inbox."
+                    )
+                } else {
+                    val errMsg = try {
+                        val errStr = response.errorBody()?.string()
+                        val errJson = org.json.JSONObject(errStr ?: "{}")
+                        errJson.optString("message", "No technician account found with this email.")
+                    } catch (_: Exception) {
+                        response.body()?.message ?: "No technician account found with this email."
                     }
-                } catch (netErr: Exception) {
                     _uiState.value = state.copy(
                         isLoading = false,
-                        errorMessage = "No technician account found with this email."
+                        errorMessage = errMsg
                     )
-                    return@launch
                 }
+            } catch (netErr: Exception) {
+                _uiState.value = state.copy(
+                    isLoading = false,
+                    errorMessage = "Network error: Unable to contact server. Please check your internet connection."
+                )
             }
-
-            val randomOtp = (100000..999999).random().toString()
-            val result = BrevoEmailService.sendOtpEmail(email, "GTS Field Partner", randomOtp)
-
-            _uiState.value = _uiState.value.copy(
-                isLoading = false,
-                isOtpSent = true,
-                generatedOtp = randomOtp,
-                forgotStep = 2,
-                successMessage = "Reset code sent to $email. (Test Code: 123456)"
-            )
         }
     }
 
@@ -513,12 +627,7 @@ class TechnicianAuthViewModel(
         val confirmPass = state.confirmPassword.trim()
 
         if (enteredOtp.length != 6) {
-            _uiState.value = state.copy(errorMessage = "Please enter the 6-digit code.")
-            return
-        }
-
-        if (enteredOtp != state.generatedOtp && enteredOtp != "123456") {
-            _uiState.value = state.copy(errorMessage = "Incorrect verification code.")
+            _uiState.value = state.copy(errorMessage = "Please enter the complete 6-digit verification code.")
             return
         }
 
@@ -537,7 +646,7 @@ class TechnicianAuthViewModel(
         viewModelScope.launch {
             val api = ApiClient.getService(sessionManager.context)
             try {
-                // Call backend API to update password hash in PostgreSQL/Prisma
+                // Call backend API to verify OTP and update password hash in PostgreSQL/Prisma
                 val response = api.resetPassword(
                     mapOf(
                         "identifier" to state.email,
@@ -547,7 +656,6 @@ class TechnicianAuthViewModel(
                 )
 
                 if (response.isSuccessful && response.body()?.success == true) {
-                    // Update password in local SessionManager cache as well
                     sessionManager.updatePassword(state.email, newPassword)
 
                     _uiState.value = _uiState.value.copy(
@@ -558,48 +666,23 @@ class TechnicianAuthViewModel(
                         otpCode = "",
                         successMessage = "Password reset successfully! Please sign in with your new password."
                     )
-                    return@launch
                 } else {
-                    // Fallback: register locally in sessionManager so technician is never locked out
-                    val namePart = state.email.substringBefore("@").replace(".", " ").replace("_", " ")
-                        .split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
-                        .ifEmpty { "Technician" }
-                    sessionManager.registerTechnician(
-                        fullName = namePart,
-                        email = state.email,
-                        phone = sessionManager.getPhone().ifEmpty { "+91 9876543210" },
-                        password = newPassword,
-                        pincode = sessionManager.getPincode().ifEmpty { "760001" }
-                    )
+                    val errMsg = try {
+                        val errStr = response.errorBody()?.string()
+                        val errJson = org.json.JSONObject(errStr ?: "{}")
+                        errJson.optString("message", "Failed to reset password. Please check your verification code.")
+                    } catch (_: Exception) {
+                        response.body()?.message ?: "Failed to reset password. Please check your verification code."
+                    }
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        mode = "LOGIN",
-                        password = "",
-                        confirmPassword = "",
-                        otpCode = "",
-                        successMessage = "Password saved successfully! Please sign in with your new password."
+                        errorMessage = errMsg
                     )
-                    return@launch
                 }
             } catch (netEx: Exception) {
-                // Offline fallback if local user cache is present
-                val namePart = state.email.substringBefore("@").replace(".", " ").replace("_", " ")
-                    .split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
-                    .ifEmpty { "Technician" }
-                sessionManager.registerTechnician(
-                    fullName = namePart,
-                    email = state.email,
-                    phone = sessionManager.getPhone().ifEmpty { "+91 9876543210" },
-                    password = newPassword,
-                    pincode = sessionManager.getPincode().ifEmpty { "760001" }
-                )
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    mode = "LOGIN",
-                    password = "",
-                    confirmPassword = "",
-                    otpCode = "",
-                    successMessage = "Password saved successfully! Please sign in with your new password."
+                    errorMessage = "Network error: Unable to connect to authentication server. Please check your connection."
                 )
             }
         }
