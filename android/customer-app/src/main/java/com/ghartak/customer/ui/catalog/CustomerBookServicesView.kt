@@ -3,6 +3,7 @@ package com.ghartak.customer.ui.catalog
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -33,11 +34,17 @@ fun CustomerBookServicesView(
     onServiceSelected: (serviceId: String) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
     var selectedFilter by remember(state.selectedCategory) { mutableStateOf(state.selectedCategory.ifEmpty { "All" }) }
     var searchQuery by remember { mutableStateOf("") }
 
+    LaunchedEffect(Unit) {
+        viewModel.syncCatalogFromServer(context)
+    }
+
     val filteredServices = remember(state.services, selectedFilter, searchQuery) {
         state.services.filter { item ->
+            if (item.isPaused) return@filter false
             val matchesFilter = if (selectedFilter.equals("All", ignoreCase = true)) {
                 true
             } else {
@@ -82,17 +89,39 @@ fun CustomerBookServicesView(
                             fontWeight = FontWeight.Black,
                             letterSpacing = 0.5.sp
                         )
-                        Surface(
-                            color = ElectricCyan.copy(alpha = 0.2f),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text(
-                                text = "18 Categories",
-                                color = Color.White,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                            )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (state.isLoadingServices) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(14.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                            }
+                            Surface(
+                                color = ElectricCyan.copy(alpha = 0.2f),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.clickable { viewModel.syncCatalogFromServer(context) }
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Refresh,
+                                        contentDescription = "Sync Live Catalog",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "${state.categories.filterNot { it.equals("All", ignoreCase = true) }.size} Categories",
+                                        color = Color.White,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
                         }
                     }
 
@@ -108,9 +137,9 @@ fun CustomerBookServicesView(
             }
         }
 
-        // Horizontal Category Filter Carousel (All + 18 Categories)
+        // Horizontal Category Filter Carousel (Dynamic Categories from Server)
         item {
-            val allFilterOptions = remember { listOf("All") + ServiceCatalogRegistry.CATEGORIES }
+            val allFilterOptions = state.categories
             LazyRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),

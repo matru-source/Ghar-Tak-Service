@@ -555,10 +555,13 @@ fun CustomerHomeScreen(
                                     )
                                 }
 
-                                Spacer(modifier = Modifier.height(14.dp))
-
-                                val topRowCategories = remember { DOORSTEP_CATEGORIES.take(9) }
-                                val bottomRowCategories = remember { DOORSTEP_CATEGORIES.drop(9) }
+                                val allCategoryBadges = remember(state.categories) {
+                                    val names = state.categories.filterNot { it.equals("All", ignoreCase = true) }
+                                    names.map { resolveCategoryBadge(it) }
+                                }
+                                val half = (allCategoryBadges.size + 1) / 2
+                                val topRowCategories = remember(allCategoryBadges) { allCategoryBadges.take(half) }
+                                val bottomRowCategories = remember(allCategoryBadges) { allCategoryBadges.drop(half) }
 
                                 Column(
                                     modifier = Modifier
@@ -1112,6 +1115,17 @@ val DOORSTEP_CATEGORIES = listOf(
     DoorstepCategory("Digital Marketer", Icons.Default.Campaign, Color(0xFF9333EA), Color(0xFFF3E8FF)),
     DoorstepCategory("CCTV Service", Icons.Default.Videocam, Color(0xFF4F46E5), Color(0xFFEEF2FF))
 )
+
+fun resolveCategoryBadge(name: String): DoorstepCategory {
+    val existing = DOORSTEP_CATEGORIES.find { it.name.equals(name, ignoreCase = true) }
+    if (existing != null) return existing
+    return DoorstepCategory(
+        name = name,
+        icon = Icons.Default.Handyman,
+        iconTint = Color(0xFF0284C7),
+        bgColor = Color(0xFFE0F2FE)
+    )
+}
 
 @Composable
 fun DoorstepCategoryBadge(

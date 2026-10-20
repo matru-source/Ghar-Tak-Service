@@ -139,5 +139,6 @@ data class ServiceItem(
     @SerializedName("durationMinutes") val durationMinutes: Int,
     @SerializedName("rating") val rating: Double = 4.9,
     @SerializedName("isHighVoltageProtocol") val isHighVoltageProtocol: Boolean = false,
-    @SerializedName("warrantyMonths") val warrantyMonths: Int = 12
+    @SerializedName("warrantyMonths") val warrantyMonths: Int = 12,
+    @SerializedName("isPaused") val isPaused: Boolean = false
 )

@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
 
         val sessionManager = (application as CustomerApplication).sessionManager
         val authViewModel = CustomerAuthViewModel(sessionManager)
-        val catalogViewModel = CustomerCatalogViewModel(sessionManager)
+        val catalogViewModel = CustomerCatalogViewModel(sessionManager, applicationContext)
         val bookingViewModel = AddressBookingViewModel(sessionManager)
         val paymentViewModel = PaymentViewModel(sessionManager)
         val trackingViewModel = CustomerTrackingViewModel(sessionManager)

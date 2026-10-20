@@ -15,7 +15,10 @@ interface CustomerApiService {
 
     // Services Catalog
     @GET("services")
-    suspend fun getServices(): Response<ApiResponse<List<Map<String, Any>>>>
+    suspend fun getServices(): Response<ApiResponse<com.google.gson.JsonElement>>
+
+    @GET("services/categories")
+    suspend fun getCategories(): Response<ApiResponse<com.google.gson.JsonElement>>
 
     // Bookings & Work Orders
     @GET("jobs")
