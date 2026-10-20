@@ -1286,10 +1286,12 @@ fun LiveServiceTrackingMap(state: CustomerTrackingUiState) {
     val density = LocalDensity.current
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
 
-    val isArrived = state.status == "ARRIVED" || state.status == "COMPLETED" || state.status == "WORK_COMPLETED" || state.status == "IN_PROGRESS" || state.distanceKm <= 0.05
+    val isZeroDistance = state.distanceKm <= 0.05 || (state.techLatitude > 0.0 && state.destLatitude > 0.0 && Math.abs(state.techLatitude - state.destLatitude) < 0.0002 && Math.abs(state.techLongitude - state.destLongitude) < 0.0002)
+    val isArrived = state.status == "ARRIVED" || state.status == "COMPLETED" || state.status == "WORK_COMPLETED" || state.status == "IN_PROGRESS" || isZeroDistance
+    val isAtDoorstep = isArrived || isZeroDistance
 
     val dynamicTargetProgress = when {
-        isArrived -> 1.0f
+        isAtDoorstep -> 1.0f
         state.distanceKm > 4.0 -> 0.20f
         state.distanceKm > 2.5 -> 0.38f
         state.distanceKm > 1.2 -> 0.58f
@@ -1515,79 +1517,84 @@ fun LiveServiceTrackingMap(state: CustomerTrackingUiState) {
                     lineTo(pDest.x, pDest.y)
                 }
 
-                // Outer Glowing Cyan Bloom
-                drawPath(
-                    path = fullRoutePath,
-                    color = Color(0xFF00E5FF).copy(alpha = 0.22f),
-                    style = Stroke(width = 12f, cap = StrokeCap.Round, join = StrokeJoin.Round)
-                )
-
-                // Mid Cyan Glow
-                drawPath(
-                    path = fullRoutePath,
-                    color = Color(0xFF00E5FF).copy(alpha = 0.60f),
-                    style = Stroke(width = 6f, cap = StrokeCap.Round, join = StrokeJoin.Round)
-                )
-
-                // Sharp Core Line with Animated Flowing Dashes
-                drawPath(
-                    path = fullRoutePath,
-                    color = if (isArrived) SuccessGreen else Color(0xFFE0F7FA),
-                    style = Stroke(
-                        width = 3.5f,
-                        cap = StrokeCap.Round,
-                        join = StrokeJoin.Round,
-                        pathEffect = if (!isArrived) PathEffect.dashPathEffect(floatArrayOf(14f, 8f), dashPhase) else null
+                if (!isAtDoorstep) {
+                    // Outer Glowing Cyan Bloom
+                    drawPath(
+                        path = fullRoutePath,
+                        color = Color(0xFF00E5FF).copy(alpha = 0.22f),
+                        style = Stroke(width = 12f, cap = StrokeCap.Round, join = StrokeJoin.Round)
                     )
-                )
 
-                // 7. Dynamic Technician Position based on real-time telemetry coordinates
-                val progressFrac = animatedProgress
+                    // Mid Cyan Glow
+                    drawPath(
+                        path = fullRoutePath,
+                        color = Color(0xFF00E5FF).copy(alpha = 0.60f),
+                        style = Stroke(width = 6f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+                    )
 
-                val currentTechPos = when {
-                    progressFrac <= 0.40f -> {
-                        val t = (progressFrac / 0.40f).coerceIn(0f, 1f)
-                        Offset(p0.x + (p1.x - p0.x) * t, p0.y + (p1.y - p0.y) * t)
+                    // Sharp Core Line with Animated Flowing Dashes
+                    drawPath(
+                        path = fullRoutePath,
+                        color = Color(0xFFE0F7FA),
+                        style = Stroke(
+                            width = 3.5f,
+                            cap = StrokeCap.Round,
+                            join = StrokeJoin.Round,
+                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 8f), dashPhase)
+                        )
+                    )
+                }
+
+                // 7. Dynamic Technician Position: Co-located at pDest when at doorstep / 0 distance
+                val currentTechPos = if (isAtDoorstep) {
+                    pDest
+                } else {
+                    val progressFrac = animatedProgress
+                    when {
+                        progressFrac <= 0.40f -> {
+                            val t = (progressFrac / 0.40f).coerceIn(0f, 1f)
+                            Offset(p0.x + (p1.x - p0.x) * t, p0.y + (p1.y - p0.y) * t)
+                        }
+                        progressFrac <= 0.70f -> {
+                            val t = ((progressFrac - 0.40f) / 0.30f).coerceIn(0f, 1f)
+                            Offset(p1.x + (p3.x - p1.x) * t, p1.y + (p3.y - p1.y) * t)
+                        }
+                        progressFrac < 1.0f -> {
+                            val t = ((progressFrac - 0.70f) / 0.30f).coerceIn(0f, 1f)
+                            Offset(p3.x + (pDest.x - p3.x) * t, p3.y + (pDest.y - p3.y) * t)
+                        }
+                        else -> pDest
                     }
-                    progressFrac <= 0.70f -> {
-                        val t = ((progressFrac - 0.40f) / 0.30f).coerceIn(0f, 1f)
-                        Offset(p1.x + (p3.x - p1.x) * t, p1.y + (p3.y - p1.y) * t)
-                    }
-                    progressFrac < 1.0f -> {
-                        val t = ((progressFrac - 0.70f) / 0.30f).coerceIn(0f, 1f)
-                        Offset(p3.x + (pDest.x - p3.x) * t, p3.y + (pDest.y - p3.y) * t)
-                    }
-                    else -> pDest
                 }
 
                 techScreenPos = currentTechPos
 
                 // Concentric Animated Radar Wave
                 drawCircle(
-                    color = Color(0xFF00E5FF).copy(alpha = pulseAlpha),
+                    color = (if (isAtDoorstep) SuccessGreen else Color(0xFF00E5FF)).copy(alpha = pulseAlpha),
                     radius = pulseRadius,
                     center = currentTechPos
                 )
                 drawCircle(
-                    color = Color(0xFF00E5FF).copy(alpha = 0.35f),
+                    color = (if (isAtDoorstep) SuccessGreen else Color(0xFF00E5FF)).copy(alpha = 0.35f),
                     radius = 24f,
                     center = currentTechPos
                 )
-                // Dark vehicle circular marker with cyan border
+                // Dark vehicle circular marker with cyan/green border
                 drawCircle(
                     color = Color(0xFF0A192F),
                     radius = 14f,
                     center = currentTechPos
                 )
                 drawCircle(
-                    color = if (isArrived) SuccessGreen else Color(0xFF00E5FF),
+                    color = if (isAtDoorstep) SuccessGreen else Color(0xFF00E5FF),
                     radius = 14f,
                     center = currentTechPos,
                     style = Stroke(width = 2.5f)
                 )
-                // Inner blue/white core dot
+                // Inner blue/white/green core dot
                 drawCircle(
-                    color = if (isArrived) SuccessGreen else Color(0xFF00E5FF),
+                    color = if (isAtDoorstep) SuccessGreen else Color(0xFF00E5FF),
                     radius = 5f,
                     center = currentTechPos
                 )
@@ -1601,7 +1608,7 @@ fun LiveServiceTrackingMap(state: CustomerTrackingUiState) {
                 Surface(
                     color = Color(0xFF0A192F).copy(alpha = 0.94f),
                     shape = RoundedCornerShape(8.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF00E5FF).copy(alpha = 0.8f)),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, if (isAtDoorstep) SuccessGreen else Color(0xFF00E5FF).copy(alpha = 0.8f)),
                     shadowElevation = 6.dp,
                     modifier = Modifier.offset(x = calloutX, y = calloutY)
                 ) {
@@ -1610,7 +1617,7 @@ fun LiveServiceTrackingMap(state: CustomerTrackingUiState) {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = state.technicianName,
+                            text = if (isAtDoorstep) "${state.technicianName} (At Doorstep)" else state.technicianName,
                             color = Color.White,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold
@@ -1625,8 +1632,8 @@ fun LiveServiceTrackingMap(state: CustomerTrackingUiState) {
                             )
                         }
                         Text(
-                            text = if (isArrived) "At Doorstep" else "${state.etaMinutes} mins away • ${state.distanceKm} km",
-                            color = if (isArrived) SuccessGreen else Color(0xFF00E5FF),
+                            text = if (isAtDoorstep) "✓ At Doorstep (0 km)" else "${state.etaMinutes} mins away • ${state.distanceKm} km",
+                            color = if (isAtDoorstep) SuccessGreen else Color(0xFF00E5FF),
                             fontSize = 9.5.sp,
                             fontWeight = FontWeight.Bold
                         )

@@ -10,6 +10,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.*
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -79,12 +81,43 @@ fun NavigationScreen(
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
+    // Infinite transitions for dynamic radar waves and flowing route line
+    val infiniteTransition = rememberInfiniteTransition(label = "techNavRadar")
+    val pulseRadius by infiniteTransition.animateFloat(
+        initialValue = 14f,
+        targetValue = 52f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1600, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "pulseRadius"
+    )
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.70f,
+        targetValue = 0.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1600, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "pulseAlpha"
+    )
+    val dashPhase by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = -40f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1400, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "dashPhase"
+    )
+
     // Safe permission launcher to prevent Android 14 SecurityException crash
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
             viewModel.startForegroundService(context)
+            viewModel.startLocationUpdates(context)
         }
     }
 
@@ -95,6 +128,7 @@ fun NavigationScreen(
         ) == PackageManager.PERMISSION_GRANTED
         if (hasFine) {
             viewModel.startForegroundService(context)
+            viewModel.startLocationUpdates(context)
         } else {
             locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
@@ -103,6 +137,7 @@ fun NavigationScreen(
     DisposableEffect(Unit) {
         onDispose {
             viewModel.stopForegroundService(context)
+            viewModel.stopLocationUpdates(context)
         }
     }
 
@@ -267,10 +302,13 @@ fun NavigationScreen(
             }
 
             // High-Tech Transit Radar Canvas
+            val isZeroDistance = state.distanceRemainingKm <= 0.05 || (Math.abs(state.currentLat - state.customerLat) < 0.0002 && Math.abs(state.currentLng - state.customerLng) < 0.0002)
+            val isAtDoorstep = state.hasArrivedDoorstep || isZeroDistance
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp),
+                    .height(210.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = SlateDark950),
                 border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
@@ -296,41 +334,85 @@ fun NavigationScreen(
                             )
                         }
 
-                        // Transit Route Curve
-                        val startX = canvasWidth * 0.18f + (canvasWidth * 0.60f * (state.transitStep / 3f))
-                        val startY = canvasHeight * 0.78f - (canvasHeight * 0.55f * (state.transitStep / 3f))
+                        if (isAtDoorstep) {
+                            // --- 0 DISTANCE / ARRIVED STATE: NO LINE ACROSS MAP! ---
+                            val center = Offset(canvasWidth * 0.5f, canvasHeight * 0.5f)
 
-                        val endX = canvasWidth * 0.82f
-                        val endY = canvasHeight * 0.22f
+                            // Pulsating Green 50m Arrival Radar Ring
+                            drawCircle(
+                                color = SafetyGreen.copy(alpha = pulseAlpha),
+                                radius = pulseRadius * 1.6f,
+                                center = center
+                            )
+                            drawCircle(
+                                color = SafetyGreen.copy(alpha = 0.22f),
+                                radius = 52f,
+                                center = center
+                            )
+                            drawCircle(
+                                color = SafetyGreen,
+                                radius = 52f,
+                                center = center,
+                                style = Stroke(width = 2f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f), 0f))
+                            )
 
-                        // Route Vector Line
-                        drawLine(
-                            color = FlameOrange,
-                            start = Offset(startX, startY),
-                            end = Offset(endX, endY),
-                            strokeWidth = 4f,
-                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 10f), 0f)
-                        )
+                            // Co-located Customer & Technician Marker Pin
+                            drawCircle(color = SafetyGreen, radius = 16f, center = center)
+                            drawCircle(color = Color.White, radius = 6f, center = center)
+                        } else {
+                            // --- EN ROUTE: DYNAMIC VECTOR LINE TOWARDS CUSTOMER DOORSTEP ---
+                            val endX = canvasWidth * 0.82f
+                            val endY = canvasHeight * 0.22f
 
-                        // Customer Geofence Circle (50m pulse)
-                        drawCircle(
-                            color = SafetyGreen.copy(alpha = 0.18f),
-                            radius = 45f,
-                            center = Offset(endX, endY)
-                        )
-                        drawCircle(
-                            color = SafetyGreen,
-                            radius = 45f,
-                            center = Offset(endX, endY),
-                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f), 0f))
-                        )
+                            val routeProgress = when {
+                                state.distanceRemainingKm > 5.0 -> 0.15f
+                                state.distanceRemainingKm > 2.0 -> 0.35f
+                                state.distanceRemainingKm > 1.0 -> 0.55f
+                                state.distanceRemainingKm > 0.3 -> 0.75f
+                                state.distanceRemainingKm > 0.1 -> 0.90f
+                                else -> 0.96f
+                            }
 
-                        // Customer Marker Pin
-                        drawCircle(color = SafetyGreen, radius = 12f, center = Offset(endX, endY))
+                            val startX0 = canvasWidth * 0.18f
+                            val startY0 = canvasHeight * 0.78f
 
-                        // Moving Technician Marker Pin
-                        drawCircle(color = FlameOrange, radius = 14f, center = Offset(startX, startY))
-                        drawCircle(color = Color.White, radius = 6f, center = Offset(startX, startY))
+                            val techX = startX0 + (endX - startX0) * routeProgress
+                            val techY = startY0 + (endY - startY0) * routeProgress
+
+                            // Route Vector Line with Animated Dash Effect
+                            drawLine(
+                                color = FlameOrange,
+                                start = Offset(techX, techY),
+                                end = Offset(endX, endY),
+                                strokeWidth = 4f,
+                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 10f), dashPhase)
+                            )
+
+                            // Customer Geofence Circle (50m pulse)
+                            drawCircle(
+                                color = SafetyGreen.copy(alpha = 0.18f),
+                                radius = 45f,
+                                center = Offset(endX, endY)
+                            )
+                            drawCircle(
+                                color = SafetyGreen,
+                                radius = 45f,
+                                center = Offset(endX, endY),
+                                style = Stroke(width = 2f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f), 0f))
+                            )
+
+                            // Customer Marker Pin
+                            drawCircle(color = SafetyGreen, radius = 12f, center = Offset(endX, endY))
+
+                            // Moving Technician Marker Pin with pulse
+                            drawCircle(
+                                color = FlameOrange.copy(alpha = pulseAlpha),
+                                radius = pulseRadius,
+                                center = Offset(techX, techY)
+                            )
+                            drawCircle(color = FlameOrange, radius = 14f, center = Offset(techX, techY))
+                            drawCircle(color = Color.White, radius = 6f, center = Offset(techX, techY))
+                        }
                     }
 
                     // Canvas Legend Overlays
@@ -340,23 +422,34 @@ fun NavigationScreen(
                             .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(10.dp)
-                                .clip(CircleShape)
-                                .background(FlameOrange)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = "Technician", color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Box(
-                            modifier = Modifier
-                                .size(10.dp)
-                                .clip(CircleShape)
-                                .background(SafetyGreen)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = "Customer Doorstep (50m)", color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        if (isAtDoorstep) {
+                            Box(
+                                modifier = Modifier
+                                    .size(10.dp)
+                                    .clip(CircleShape)
+                                    .background(SafetyGreen)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(text = "✓ At Customer Doorstep (0 km • 50m Geofence Active)", color = SafetyGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .size(10.dp)
+                                    .clip(CircleShape)
+                                    .background(FlameOrange)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(text = "Technician", color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(10.dp)
+                                    .clip(CircleShape)
+                                    .background(SafetyGreen)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(text = "Customer Doorstep (50m)", color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }
@@ -496,7 +589,7 @@ fun NavigationScreen(
                 }
             }
 
-            // Transit Movement Simulator (Safe step progression)
+            // Dynamic Live Telemetry Dispatch Card
             Surface(
                 color = SlateDark800,
                 shape = RoundedCornerShape(12.dp),
@@ -509,18 +602,27 @@ fun NavigationScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
-                            Text(
-                                text = "DOORSTEP GPS TRANSIT SIMULATOR",
-                                color = FlameOrange,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(10.dp)
+                                    .clip(CircleShape)
+                                    .background(if (state.hasArrivedDoorstep) SafetyGreen else FlameOrange)
                             )
-                            Text(
-                                text = "Updates GPS coordinates & broadcasts telemetry to customer",
-                                color = TextMuted,
-                                fontSize = 10.sp
-                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = if (state.hasArrivedDoorstep) "GEOFENCE VERIFIED • AT DOORSTEP" else "LIVE GPS TELEMETRY ACTIVE",
+                                    color = if (state.hasArrivedDoorstep) SafetyGreen else FlameOrange,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = if (state.hasArrivedDoorstep) "Doorstep geofence confirmed (0 km)" else "Auto-broadcasting coordinates every 2s • 50m auto-detect",
+                                    color = TextMuted,
+                                    fontSize = 10.sp
+                                )
+                            }
                         }
 
                         if (state.isPinging) {
@@ -528,34 +630,18 @@ fun NavigationScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = { viewModel.advanceTransitStep(context) },
-                            enabled = !state.hasArrivedDoorstep,
-                            modifier = Modifier.weight(1.5f),
-                            shape = RoundedCornerShape(8.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, FlameOrange),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = FlameOrange)
-                        ) {
-                            Icon(imageVector = Icons.Default.DirectionsRun, contentDescription = null, modifier = Modifier.size(14.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("ADVANCE STEP (${state.transitStep}/3)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                        }
-
+                    if (!state.hasArrivedDoorstep) {
+                        Spacer(modifier = Modifier.height(12.dp))
                         OutlinedButton(
                             onClick = { viewModel.manualConfirmDoorstep(context) },
-                            enabled = !state.hasArrivedDoorstep,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(8.dp),
                             border = androidx.compose.foundation.BorderStroke(1.dp, SafetyGreen),
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = SafetyGreen)
                         ) {
-                            Text("1-TAP ARRIVED", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("I HAVE ARRIVED AT DOORSTEP", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }

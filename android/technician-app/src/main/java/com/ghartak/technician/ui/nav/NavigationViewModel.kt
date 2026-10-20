@@ -1,9 +1,12 @@
 package com.ghartak.technician.ui.nav
 
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
+import android.os.Bundle
+import android.os.Looper
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
@@ -13,6 +16,7 @@ import com.ghartak.technician.data.model.TechnicianJob
 import com.ghartak.technician.data.model.TelemetryPingRequest
 import com.ghartak.technician.data.session.SessionManager
 import com.ghartak.technician.service.TechnicianLocationService
+import com.ghartak.technician.util.IndianPincodeResolver
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,13 +34,12 @@ data class NavigationUiState(
     val customerLng: Double = 85.5900,
     val currentLat: Double = 20.6680,
     val currentLng: Double = 85.5980,
-    val distanceRemainingKm: Double = 1.2,
-    val etaMinutes: Int = 5,
-    val speedKmh: Double = 24.0,
-    val heading: Double = 195.0,
+    val distanceRemainingKm: Double = 0.0,
+    val etaMinutes: Int = 0,
+    val speedKmh: Double = 0.0,
+    val heading: Double = 0.0,
     val currentManeuver: String = "Head towards customer doorstep",
     val nextManeuver: String = "Follow navigation route to destination",
-    val transitStep: Int = 0,
     val hasArrivedDoorstep: Boolean = false,
     val isPinging: Boolean = false,
     val currentAreaName: String = "",
@@ -50,36 +53,57 @@ class NavigationViewModel(
     private val _uiState = MutableStateFlow(NavigationUiState())
     val uiState: StateFlow<NavigationUiState> = _uiState.asStateFlow()
 
+    private var activeLocationListener: LocationListener? = null
+    private var lastLocationTimeMs: Long = 0L
+    private var lastLocationLat: Double = 0.0
+    private var lastLocationLng: Double = 0.0
+
     fun initJob(job: TechnicianJob) {
-        val (resolvedLat, resolvedLng) = com.ghartak.technician.util.IndianPincodeResolver.getCoordinatesForPincode(job.pincode)
+        val (resolvedLat, resolvedLng) = IndianPincodeResolver.getCoordinatesForPincode(job.pincode)
         val targetLat = if (job.customerLatitude != null && job.customerLatitude > 0.0) job.customerLatitude else resolvedLat
         val targetLng = if (job.customerLongitude != null && job.customerLongitude > 0.0) job.customerLongitude else resolvedLng
 
         val context = sessionManager.context
         val hasFine = ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        val lm = context.getSystemService(Context.LOCATION_SERVICE) as? android.location.LocationManager
-        var currentLat = targetLat + 0.010
-        var currentLng = targetLng + 0.010
+        val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+        var currentLat = targetLat
+        var currentLng = targetLng
+        var initialSpeed = 0.0
 
         if (hasFine && lm != null) {
             try {
-                val loc = lm.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
-                    ?: lm.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER)
+                val loc = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                    ?: lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
                 if (loc != null && loc.latitude != 0.0 && loc.longitude != 0.0) {
                     currentLat = loc.latitude
                     currentLng = loc.longitude
+                    if (loc.hasSpeed() && loc.speed > 0.3f) {
+                        initialSpeed = Math.round(loc.speed * 3.6 * 10.0) / 10.0
+                    }
                 }
             } catch (e: Exception) {
-                // Keep coordinate fallback
+                // Keep target coordinate fallback
             }
         }
 
-        val realDist = com.ghartak.technician.util.IndianPincodeResolver.calculateHaversineDistanceKm(currentLat, currentLng, targetLat, targetLng)
-        val roundedDist = Math.max(0.05, (Math.round(realDist * 100.0) / 100.0))
-        val calcEta = com.ghartak.technician.util.IndianPincodeResolver.calculateEtaMinutes(roundedDist)
+        val realDist = IndianPincodeResolver.calculateHaversineDistanceKm(currentLat, currentLng, targetLat, targetLng)
+        val roundedDist = Math.max(0.0, Math.round(realDist * 100.0) / 100.0)
+        val isCoLocated = roundedDist <= 0.05 || (Math.abs(currentLat - targetLat) < 0.0002 && Math.abs(currentLng - targetLng) < 0.0002)
+        val calcEta = if (isCoLocated) 0 else IndianPincodeResolver.calculateEtaMinutes(roundedDist)
 
-        val customerArea = com.ghartak.technician.util.IndianPincodeResolver.resolveAreaFromCoordinates(targetLat, targetLng)
-        val techArea = com.ghartak.technician.util.IndianPincodeResolver.resolveAreaFromCoordinates(currentLat, currentLng)
+        val customerArea = IndianPincodeResolver.resolveAreaFromCoordinates(targetLat, targetLng)
+        val techArea = IndianPincodeResolver.resolveAreaFromCoordinates(currentLat, currentLng)
+
+        val initManeuver = if (isCoLocated) {
+            "Arrived at $customerArea (Doorstep Geofence)"
+        } else {
+            "Head towards $customerArea"
+        }
+        val initNext = if (isCoLocated) {
+            "50m Geofence Verified • Customer Doorstep Reached"
+        } else {
+            "Follow live arterial route to doorstep ($roundedDist km)"
+        }
 
         _uiState.value = _uiState.value.copy(
             jobId = job.id,
@@ -92,62 +116,147 @@ class NavigationViewModel(
             customerLng = targetLng,
             currentLat = currentLat,
             currentLng = currentLng,
-            distanceRemainingKm = roundedDist,
+            distanceRemainingKm = if (isCoLocated) 0.0 else roundedDist,
             etaMinutes = calcEta,
-            transitStep = 0,
-            hasArrivedDoorstep = false,
+            speedKmh = if (isCoLocated) 0.0 else initialSpeed,
+            hasArrivedDoorstep = isCoLocated,
             currentAreaName = techArea,
             customerAreaName = customerArea,
-            currentManeuver = "Head towards $customerArea",
-            nextManeuver = "Follow live arterial route to doorstep ($roundedDist km)"
+            currentManeuver = initManeuver,
+            nextManeuver = initNext
         )
+
+        lastLocationLat = currentLat
+        lastLocationLng = currentLng
+        lastLocationTimeMs = System.currentTimeMillis()
     }
 
     /**
-     * Advance transit simulation step (Realistic interpolated approach -> Doorstep Arrival)
-     * Pings the live backend API each step to broadcast real-time GPS coordinates!
+     * Start continuous live GPS location listener for dynamic coordinates, speed & arrival
      */
-    fun advanceTransitStep(context: Context) {
-        val nextStep = (_uiState.value.transitStep + 1).coerceAtMost(3)
-        val targetLat = _uiState.value.customerLat
-        val targetLng = _uiState.value.customerLng
-        val customerArea = _uiState.value.customerAreaName.ifEmpty {
-            com.ghartak.technician.util.IndianPincodeResolver.resolveAreaFromCoordinates(targetLat, targetLng)
+    fun startLocationUpdates(context: Context) {
+        val hasFine = ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val hasCoarse = ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        if (!hasFine && !hasCoarse) return
+
+        val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return
+
+        stopLocationUpdates(context)
+
+        val listener = object : LocationListener {
+            override fun onLocationChanged(loc: Location) {
+                handleNewLocation(context, loc)
+            }
+            @Deprecated("Deprecated in Java")
+            override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
+            override fun onProviderEnabled(provider: String) {}
+            override fun onProviderDisabled(provider: String) {}
+        }
+        activeLocationListener = listener
+
+        try {
+            if (lm.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                lm.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER,
+                    2000L,
+                    1.0f,
+                    listener,
+                    Looper.getMainLooper()
+                )
+            }
+            if (lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                lm.requestLocationUpdates(
+                    LocationManager.NETWORK_PROVIDER,
+                    3000L,
+                    2.0f,
+                    listener,
+                    Looper.getMainLooper()
+                )
+            }
+        } catch (e: SecurityException) {
+            Log.w("GTS_NAV", "SecurityException requesting location updates: ${e.message}")
+        }
+    }
+
+    fun stopLocationUpdates(context: Context? = null) {
+        val ctx = context ?: sessionManager.context
+        val lm = ctx.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+        activeLocationListener?.let {
+            try {
+                lm?.removeUpdates(it)
+            } catch (e: Exception) {
+                // Ignore removal exception
+            }
+            activeLocationListener = null
+        }
+    }
+
+    private fun handleNewLocation(context: Context, loc: Location) {
+        val now = System.currentTimeMillis()
+        val lat = loc.latitude
+        val lng = loc.longitude
+
+        // 1. Calculate dynamic speed in km/h
+        var calculatedSpeedKmh = 0.0
+        if (loc.hasSpeed() && loc.speed > 0.3f) {
+            calculatedSpeedKmh = Math.round(loc.speed * 3.6 * 10.0) / 10.0
+        } else if (lastLocationTimeMs > 0L) {
+            val dtSec = (now - lastLocationTimeMs) / 1000.0
+            if (dtSec in 1.0..10.0) {
+                val dKm = IndianPincodeResolver.calculateHaversineDistanceKm(lastLocationLat, lastLocationLng, lat, lng)
+                val speed = dKm / (dtSec / 3600.0)
+                if (speed in 1.5..120.0) {
+                    calculatedSpeedKmh = Math.round(speed * 10.0) / 10.0
+                }
+            }
         }
 
-        val fraction = nextStep.toDouble() / 3.0
-        val startLat = targetLat + 0.012
-        val startLng = targetLng + 0.012
-        val newLat = startLat + (targetLat - startLat) * fraction
-        val newLng = startLng + (targetLng - startLng) * fraction
+        // 2. Calculate remaining distance to customer doorstep
+        val targetLat = _uiState.value.customerLat
+        val targetLng = _uiState.value.customerLng
+        val realDist = IndianPincodeResolver.calculateHaversineDistanceKm(lat, lng, targetLat, targetLng)
+        val roundedDist = Math.max(0.0, Math.round(realDist * 100.0) / 100.0)
 
-        val remainingDist = if (nextStep == 3) 0.03 else com.ghartak.technician.util.IndianPincodeResolver.calculateHaversineDistanceKm(newLat, newLng, targetLat, targetLng)
-        val roundedDist = Math.max(0.03, (Math.round(remainingDist * 100.0) / 100.0))
-        val eta = com.ghartak.technician.util.IndianPincodeResolver.calculateEtaMinutes(roundedDist)
-        val newTechArea = com.ghartak.technician.util.IndianPincodeResolver.resolveAreaFromCoordinates(newLat, newLng)
+        val isArrived = roundedDist <= 0.05 || (Math.abs(lat - targetLat) < 0.0002 && Math.abs(lng - targetLng) < 0.0002) || _uiState.value.hasArrivedDoorstep
+        val finalDist = if (isArrived) 0.0 else roundedDist
+        val finalSpeed = if (isArrived || roundedDist <= 0.05) 0.0 else calculatedSpeedKmh
+        val eta = if (isArrived) 0 else IndianPincodeResolver.calculateEtaMinutes(roundedDist)
 
-        val (dist, calcEta, speed, maneuver, arrived) = when (nextStep) {
-            1 -> Tuple5(roundedDist, eta, 28.0, "Continue towards $customerArea for ${(roundedDist * 1000).toInt()}m", false)
-            2 -> Tuple5(roundedDist, eta, 16.0, "Approaching doorstep in $customerArea (${(roundedDist * 1000).toInt()}m away)", false)
-            3 -> Tuple5(0.03, 0, 0.0, "Arrived at $customerArea (Doorstep Geofence)", true)
-            else -> Tuple5(roundedDist, eta, 24.0, "Head towards $customerArea", false)
+        val customerArea = _uiState.value.customerAreaName.ifEmpty {
+            IndianPincodeResolver.resolveAreaFromCoordinates(targetLat, targetLng)
+        }
+        val techArea = IndianPincodeResolver.resolveAreaFromCoordinates(lat, lng)
+
+        val maneuver = when {
+            isArrived -> "Arrived at $customerArea (Doorstep Geofence)"
+            roundedDist < 0.25 -> "Approaching doorstep in $customerArea (${(roundedDist * 1000).toInt()}m away)"
+            else -> "Head towards $customerArea"
+        }
+        val nextMan = when {
+            isArrived -> "50m Geofence Verified • Customer Doorstep Reached"
+            else -> "Follow live route to destination (${(roundedDist * 1000).toInt()}m away)"
         }
 
         _uiState.value = _uiState.value.copy(
-            transitStep = nextStep,
-            distanceRemainingKm = dist,
-            etaMinutes = calcEta,
-            speedKmh = speed,
+            currentLat = lat,
+            currentLng = lng,
+            distanceRemainingKm = finalDist,
+            etaMinutes = eta,
+            speedKmh = finalSpeed,
+            heading = if (loc.hasBearing()) loc.bearing.toDouble() else _uiState.value.heading,
             currentManeuver = maneuver,
-            hasArrivedDoorstep = arrived,
-            currentLat = newLat,
-            currentLng = newLng,
-            currentAreaName = newTechArea,
+            nextManeuver = nextMan,
+            hasArrivedDoorstep = isArrived,
+            currentAreaName = techArea,
             customerAreaName = customerArea
         )
 
-        // Ping backend telemetry endpoint with fast timeout
-        pingBackendTelemetry(context, newLat, newLng, speed)
+        lastLocationLat = lat
+        lastLocationLng = lng
+        lastLocationTimeMs = now
+
+        // Broadcast telemetry ping to backend
+        pingBackendTelemetry(context, lat, lng, finalSpeed)
     }
 
     private fun pingBackendTelemetry(context: Context, lat: Double, lng: Double, speed: Double) {
@@ -170,7 +279,14 @@ class NavigationViewModel(
                     )
 
                     if (response.isSuccessful && response.body()?.data?.isDoorstepNearby == true) {
-                        _uiState.value = _uiState.value.copy(hasArrivedDoorstep = true)
+                        _uiState.value = _uiState.value.copy(
+                            hasArrivedDoorstep = true,
+                            distanceRemainingKm = 0.0,
+                            etaMinutes = 0,
+                            speedKmh = 0.0,
+                            currentManeuver = "Arrived at Destination (50m Geofence Confirmed)",
+                            nextManeuver = "Doorstep reached • Customer Notified"
+                        )
                     }
                 }
             } catch (e: Throwable) {
@@ -183,10 +299,12 @@ class NavigationViewModel(
 
     fun manualConfirmDoorstep(context: Context) {
         _uiState.value = _uiState.value.copy(
-            distanceRemainingKm = 0.02,
+            distanceRemainingKm = 0.0,
             etaMinutes = 0,
+            speedKmh = 0.0,
             hasArrivedDoorstep = true,
-            currentManeuver = "Arrived at Destination (Manual Doorstep Check-in)"
+            currentManeuver = "Arrived at Destination (Doorstep Verified)",
+            nextManeuver = "50m Geofence Active • Ready for Safety Interlock"
         )
         pingBackendTelemetry(context, _uiState.value.customerLat, _uiState.value.customerLng, 0.0)
     }
@@ -198,8 +316,9 @@ class NavigationViewModel(
     fun stopForegroundService(context: Context) {
         TechnicianLocationService.stopService(context)
     }
-}
 
-private data class Tuple5<A, B, C, D, E>(
-    val a: A, val b: B, val c: C, val d: D, val e: E
-)
+    override fun onCleared() {
+        super.onCleared()
+        stopLocationUpdates()
+    }
+}

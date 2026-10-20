@@ -128,9 +128,10 @@ class CustomerTrackingViewModel(
                         } else {
                             tech.distanceKm
                         }
-                        val roundedDist = Math.max(0.03, (Math.round(calcDist * 100.0) / 100.0))
-                        val calcEta = com.ghartak.customer.util.IndianPincodeResolver.calculateEtaMinutes(roundedDist)
-                        val isArrived = status == "ARRIVED" || (status == "EN_ROUTE" && roundedDist <= 0.05)
+                        val rawDist = Math.max(0.0, Math.round(calcDist * 100.0) / 100.0)
+                        val isArrived = status == "ARRIVED" || (status == "EN_ROUTE" && rawDist <= 0.05) || status == "SAFETY_CHECKED" || status == "IN_PROGRESS" || status == "COMPLETED" || status == "WORK_COMPLETED"
+                        val roundedDist = if (isArrived) 0.0 else rawDist
+                        val calcEta = if (isArrived) 0 else com.ghartak.customer.util.IndianPincodeResolver.calculateEtaMinutes(roundedDist)
                         val resolvedStatus = when {
                             status == "COMPLETED" || status == "WORK_COMPLETED" || status == "SETTLED" -> "COMPLETED"
                             status == "CANCELLED" -> "CANCELLED"
@@ -250,9 +251,10 @@ class CustomerTrackingViewModel(
                 } else {
                     details?.optDouble("distanceRemainingKm", _uiState.value.distanceKm) ?: _uiState.value.distanceKm
                 }
-                val roundedDist = Math.max(0.03, (Math.round(realDist * 100.0) / 100.0))
-                val calcEta = com.ghartak.customer.util.IndianPincodeResolver.calculateEtaMinutes(roundedDist)
-                val arrived = (details?.optBoolean("isDoorstepNearby", false) ?: false) || roundedDist <= 0.05
+                val rawDist = Math.max(0.0, Math.round(realDist * 100.0) / 100.0)
+                val arrived = (details?.optBoolean("isDoorstepNearby", false) ?: false) || rawDist <= 0.05
+                val roundedDist = if (arrived) 0.0 else rawDist
+                val calcEta = if (arrived) 0 else com.ghartak.customer.util.IndianPincodeResolver.calculateEtaMinutes(roundedDist)
 
                 val techArea = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(lat, lng)
                 val destArea = _uiState.value.destAreaName.ifEmpty {
