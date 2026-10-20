@@ -55,20 +55,22 @@ class ServiceSignoffViewModel(
         total: Double? = null,
         ticketNumber: String? = null
     ) {
-        val resolvedTitle = if (!serviceTitle.isNullOrBlank()) serviceTitle else sessionManager.getActiveJobTitle()
-        val resolvedBase = if (basePrice != null && basePrice > 0.0) basePrice else sessionManager.getActiveJobBasePrice()
+        val resolvedTitle = if (!serviceTitle.isNullOrBlank()) serviceTitle else sessionManager.getActiveJobTitle().ifBlank { "Doorstep Service" }
+        val rawBase = if (basePrice != null && basePrice > 0.0) basePrice else sessionManager.getActiveJobBasePrice()
+        val resolvedBase = if (rawBase > 0.0) rawBase else 299.0
         val resolvedCgst = cgst ?: (resolvedBase * 0.09)
         val resolvedSgst = sgst ?: (resolvedBase * 0.09)
-        val resolvedTotal = total ?: (resolvedBase + resolvedCgst + resolvedSgst)
-        val resolvedTech = if (!technicianName.isNullOrBlank()) technicianName else sessionManager.getActiveJobTechnicianName()
-        val resolvedBadge = if (!technicianBadge.isNullOrBlank()) technicianBadge else sessionManager.getActiveJobTechnicianBadge()
+        val resolvedTotal = total?.takeIf { it > 0.0 } ?: (resolvedBase + resolvedCgst + resolvedSgst)
+        val resolvedTech = if (!technicianName.isNullOrBlank()) technicianName else sessionManager.getActiveJobTechnicianName().ifBlank { "Certified Professional" }
+        val resolvedBadge = if (!technicianBadge.isNullOrBlank()) technicianBadge else sessionManager.getActiveJobTechnicianBadge().ifBlank { "GTS-TECH-101" }
         val resolvedState = if (!stateCode.isNullOrBlank()) stateCode else sessionManager.getActiveJobStateCode()
         val resolvedGstin = if (!gstin.isNullOrBlank()) gstin else sessionManager.getActiveJobGstin()
-        val resolvedTicket = if (!ticketNumber.isNullOrBlank()) ticketNumber else sessionManager.getActiveJobTicketNumber()
+        val rawTicket = if (!ticketNumber.isNullOrBlank()) ticketNumber else sessionManager.getActiveJobTicketNumber()
+        val resolvedTicket = if (rawTicket.isNotBlank()) rawTicket else "GTS-${System.currentTimeMillis().toString().takeLast(6)}"
 
-        val techFirstName = resolvedTech.trim().split(" ").firstOrNull() ?: "Technician"
-        val invoiceNum = resolvedTicket.replace("GTS", "INV-2026")
-        val defaultReview = "$techFirstName arrived on time, used insulated gloves, and completed the $resolvedTitle cleanly. Safety inspection passed at 100%."
+        val techFirstName = resolvedTech.trim().split(" ").firstOrNull() ?: "Specialist"
+        val invoiceNum = if (resolvedTicket.startsWith("GTS")) resolvedTicket.replace("GTS", "INV-2026") else "INV-2026-${resolvedTicket}"
+        val defaultReview = "$techFirstName arrived on time, used professional safety gear, and completed the $resolvedTitle cleanly. Service quality verified at 100%."
 
         _uiState.value = _uiState.value.copy(
             jobId = jobId,

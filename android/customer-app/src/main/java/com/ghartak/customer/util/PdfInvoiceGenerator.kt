@@ -135,11 +135,11 @@ object PdfInvoiceGenerator {
 
             paint.color = Color.parseColor("#0F172A")
             paint.textSize = 10f
-            canvas.drawText("Electrician: ${data.technicianName}", 315f, 212f, paint)
+            canvas.drawText("Technician: ${data.technicianName}", 315f, 212f, paint)
             paint.color = Color.parseColor("#64748B")
             paint.textSize = 9f
             paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-            canvas.drawText("Certification: VDE 1000V Insulated Safety Standard", 315f, 227f, paint)
+            canvas.drawText("Certification: Ghar Tak Verified Multi-Trade Standard", 315f, 227f, paint)
             paint.color = Color.parseColor("#059669")
             paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             canvas.drawText("Warranty: ${data.warrantyDetails}", 315f, 242f, paint)

@@ -92,9 +92,13 @@ data class PastOrderItem(
  * Live GPS Tracking Telemetry for Customer Map
  */
 data class LiveTrackingResponse(
+    @SerializedName("jobId") val jobId: String? = null,
     @SerializedName("jobTicketNumber") val jobTicketNumber: String,
     @SerializedName("status") val status: String,
     @SerializedName("handoverOtp") val handoverOtp: String? = null,
+    @SerializedName("serviceTitle") val serviceTitle: String? = null,
+    @SerializedName("basePriceInr") val basePriceInr: Double? = null,
+    @SerializedName("totalAmountInr") val totalAmountInr: Double? = null,
     @SerializedName("destination") val destination: DestinationCoordinates? = null,
     @SerializedName("technician") val technician: TechnicianTrackingInfo
 )
@@ -107,6 +111,7 @@ data class DestinationCoordinates(
 
 data class TechnicianTrackingInfo(
     @SerializedName("id") val id: String,
+    @SerializedName("badgeNumber") val badgeNumber: String? = null,
     @SerializedName("name") val name: String,
     @SerializedName("phone") val phone: String,
     @SerializedName("rating") val rating: Double,

@@ -69,7 +69,7 @@ fun CustomerTrackingScreen(
                             text = when (state.status) {
                                 "ASSIGNED", "PENDING_DISPATCH" -> "AWAITING ACCEPTANCE"
                                 "CANCELLED" -> "BOOKING DECLINED"
-                                else -> "LIVE ELECTRICIAN TRACKING"
+                                else -> "LIVE ${state.serviceTitle.ifBlank { "SERVICE" }.uppercase()} TRACKING"
                             },
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
@@ -186,8 +186,8 @@ fun CustomerTrackingScreen(
                     // 1. Lifecycle Progress Stepper (4-Stage with Timestamps)
             TrackingLifecycleStepper(state = state)
 
-            // 2. Tactical Midnight Live Map Visualizer with City Grid & SSE Beacon
-            LiveElectricianTrackingMap(state = state)
+            // 2. Tactical Midnight Live Map Visualizer with City Grid & Real-Time GPS Tracking
+            LiveServiceTrackingMap(state = state)
 
             // 2.5 Real-Time GPS Telemetry & Area Localization Card
             Card(
@@ -468,7 +468,7 @@ fun CustomerTrackingScreen(
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
-                        text = "Show this 4-digit code to your electrician only upon arrival and safety check.",
+                        text = "Show this 4-digit code to your service specialist only upon arrival and safety check.",
                         color = Color(0xFF92400E),
                         fontSize = 11.sp,
                         textAlign = TextAlign.Center
@@ -534,13 +534,13 @@ fun CustomerTrackingScreen(
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "1000V VDE SAFETY INTERLOCK VERIFIED",
+                                text = "PROFESSIONAL SAFETY PROTOCOL VERIFIED",
                                 color = SuccessGreen,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Electrician has donned Class 0 insulated gloves and verified 0.0V busbar isolation before opening your circuit.",
+                                text = "Technician has inspected site conditions and donned verified safety gear before starting work.",
                                 color = TextDarkSecondary,
                                 fontSize = 11.sp
                             )
@@ -549,36 +549,7 @@ fun CustomerTrackingScreen(
                 }
             }
 
-            // 6. Staging Demo Action Buttons
-            Surface(
-                color = SurfaceLight,
-                shape = RoundedCornerShape(12.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Text(text = "STAGING DEMO CONTROLS", color = TextDarkMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(
-                            onClick = { viewModel.simulateStepCloser() },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text("SIMULATE TRANSIT (${state.transitStep}/3)", fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                        }
-                        OutlinedButton(
-                            onClick = { viewModel.simulateSafetyVerified() },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text("SIMULATE SAFETY PASS", fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-            }
-
-            // 7. Bottom Sign-off CTA Button
+            // 6. Bottom Sign-off CTA Button
             Button(
                 onClick = { onProceedToSignoff(state.jobId) },
                 shape = RoundedCornerShape(12.dp),
@@ -1289,13 +1260,31 @@ fun StepDivider(isDone: Boolean) {
 }
 
 // -------------------------------------------------------------
-// Component: Tactical Midnight Live Map Visualizer with Glowing Cyan Route (Image 2 Match)
+// Component: Tactical Midnight Live Map Visualizer with Dynamic 5s Real-Time GPS Tracking
 // -------------------------------------------------------------
 @Composable
-fun LiveElectricianTrackingMap(state: CustomerTrackingUiState) {
+fun LiveServiceTrackingMap(state: CustomerTrackingUiState) {
     val context = LocalContext.current
     val density = LocalDensity.current
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+
+    val isArrived = state.status == "ARRIVED" || state.status == "COMPLETED" || state.status == "WORK_COMPLETED" || state.status == "IN_PROGRESS" || state.distanceKm <= 0.05
+
+    val dynamicTargetProgress = when {
+        isArrived -> 1.0f
+        state.distanceKm > 4.0 -> 0.20f
+        state.distanceKm > 2.5 -> 0.38f
+        state.distanceKm > 1.2 -> 0.58f
+        state.distanceKm > 0.5 -> 0.78f
+        state.distanceKm > 0.15 -> 0.88f
+        else -> 0.96f
+    }
+
+    val animatedProgress by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = dynamicTargetProgress,
+        animationSpec = tween(durationMillis = 1500, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+        label = "bikeGlide"
+    )
 
     val pulseRadius by infiniteTransition.animateFloat(
         initialValue = 12f,
@@ -1522,8 +1511,6 @@ fun LiveElectricianTrackingMap(state: CustomerTrackingUiState) {
                     style = Stroke(width = 6f, cap = StrokeCap.Round, join = StrokeJoin.Round)
                 )
 
-                val isArrived = state.transitStep >= 3 || state.status == "ARRIVED" || state.status == "COMPLETED" || state.status == "WORK_COMPLETED"
-
                 // Sharp Core Line with Animated Flowing Dashes
                 drawPath(
                     path = fullRoutePath,
@@ -1536,25 +1523,20 @@ fun LiveElectricianTrackingMap(state: CustomerTrackingUiState) {
                     )
                 )
 
-                // 7. Dynamic Technician Position
-                val progressFrac = when (state.transitStep) {
-                    0 -> 0.35f
-                    1 -> 0.60f
-                    2 -> 0.85f
-                    else -> 1.0f
-                }
+                // 7. Dynamic Technician Position based on real-time telemetry coordinates
+                val progressFrac = animatedProgress
 
                 val currentTechPos = when {
                     progressFrac <= 0.40f -> {
-                        val t = progressFrac / 0.40f
+                        val t = (progressFrac / 0.40f).coerceIn(0f, 1f)
                         Offset(p0.x + (p1.x - p0.x) * t, p0.y + (p1.y - p0.y) * t)
                     }
                     progressFrac <= 0.70f -> {
-                        val t = (progressFrac - 0.40f) / 0.30f
+                        val t = ((progressFrac - 0.40f) / 0.30f).coerceIn(0f, 1f)
                         Offset(p1.x + (p3.x - p1.x) * t, p1.y + (p3.y - p1.y) * t)
                     }
                     progressFrac < 1.0f -> {
-                        val t = (progressFrac - 0.70f) / 0.30f
+                        val t = ((progressFrac - 0.70f) / 0.30f).coerceIn(0f, 1f)
                         Offset(p3.x + (pDest.x - p3.x) * t, p3.y + (pDest.y - p3.y) * t)
                     }
                     else -> pDest
@@ -1576,24 +1558,24 @@ fun LiveElectricianTrackingMap(state: CustomerTrackingUiState) {
                 // Dark vehicle circular marker with cyan border
                 drawCircle(
                     color = Color(0xFF0A192F),
-                    radius = 12f,
+                    radius = 14f,
                     center = currentTechPos
                 )
                 drawCircle(
-                    color = Color(0xFF00E5FF),
-                    radius = 12f,
+                    color = if (isArrived) SuccessGreen else Color(0xFF00E5FF),
+                    radius = 14f,
                     center = currentTechPos,
                     style = Stroke(width = 2.5f)
                 )
                 // Inner blue/white core dot
                 drawCircle(
-                    color = Color(0xFF00E5FF),
-                    radius = 4.5f,
+                    color = if (isArrived) SuccessGreen else Color(0xFF00E5FF),
+                    radius = 5f,
                     center = currentTechPos
                 )
             }
 
-            // Floating Tooltip above Technician: Rajesh Kumar / 8 mins away
+            // Floating Tooltip above Technician: Rajesh Kumar / 8 mins away • 0.8 km
             if (techScreenPos.x > 0f) {
                 val calloutX = with(density) { (techScreenPos.x.toDp() - 48.dp).coerceIn(12.dp, 200.dp) }
                 val calloutY = with(density) { (techScreenPos.y.toDp() - 52.dp).coerceAtLeast(10.dp) }
@@ -1625,8 +1607,8 @@ fun LiveElectricianTrackingMap(state: CustomerTrackingUiState) {
                             )
                         }
                         Text(
-                            text = if (state.transitStep >= 3 || state.status == "ARRIVED") "At Doorstep" else "${state.etaMinutes} mins away",
-                            color = Color(0xFF00E5FF),
+                            text = if (isArrived) "At Doorstep" else "${state.etaMinutes} mins away • ${state.distanceKm} km",
+                            color = if (isArrived) SuccessGreen else Color(0xFF00E5FF),
                             fontSize = 9.5.sp,
                             fontWeight = FontWeight.Bold
                         )

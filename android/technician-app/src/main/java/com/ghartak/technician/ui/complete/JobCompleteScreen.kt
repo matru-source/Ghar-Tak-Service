@@ -572,7 +572,7 @@ fun JobCompleteScreen(
                             color = TextPrimary
                         )
                         Text(
-                            text = "CREDITED TO GTS ELECTRICIAN WALLET",
+                            text = "CREDITED TO GTS PARTNER WALLET",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             color = SafetyGreen

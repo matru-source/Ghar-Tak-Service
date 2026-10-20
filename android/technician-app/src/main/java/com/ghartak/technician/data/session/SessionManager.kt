@@ -373,18 +373,44 @@ class SessionManager(val context: Context) {
                     )
                 )
             }
-            list
+            // Deduplicate by ID and eliminate redundant temporary items
+            val distinct = list.distinctBy { it.id }
+            val serverSyncedIds = distinct.filter { it.id.contains("_") && it.id.length > 18 }.map { it.amountInr to it.payoutMethod }.toSet()
+            distinct.filterNot { item ->
+                item.requestedAt == "Just now" && serverSyncedIds.contains(item.amountInr to item.payoutMethod) && !item.id.contains("_")
+            }
         } catch (_: Exception) {
             emptyList()
         }
     }
 
+    fun replaceOrAddWithdrawal(tempId: String, item: com.ghartak.technician.data.model.WithdrawalItem) {
+        val current = getLocalWithdrawals().toMutableList()
+        current.removeAll { it.id == tempId || it.id == item.id }
+        current.add(0, item)
+        saveAllWithdrawals(current)
+    }
+
     fun saveLocalWithdrawal(item: com.ghartak.technician.data.model.WithdrawalItem) {
         val current = getLocalWithdrawals().toMutableList()
         current.removeAll { it.id == item.id }
+        // If adding server confirmed withdrawal, remove any optimistic duplicate
+        if (item.id.contains("_") && item.id.length > 18) {
+            current.removeAll {
+                it.status == "PENDING" &&
+                it.amountInr == item.amountInr &&
+                it.payoutMethod == item.payoutMethod &&
+                (it.requestedAt == "Just now" || it.id.startsWith("wth_"))
+            }
+        }
         current.add(0, item)
+        saveAllWithdrawals(current)
+    }
+
+    private fun saveAllWithdrawals(items: List<com.ghartak.technician.data.model.WithdrawalItem>) {
+        val distinct = items.distinctBy { it.id }
         val arr = org.json.JSONArray()
-        current.forEach { w ->
+        distinct.forEach { w ->
             val obj = org.json.JSONObject().apply {
                 put("id", w.id)
                 put("technicianId", w.technicianId)

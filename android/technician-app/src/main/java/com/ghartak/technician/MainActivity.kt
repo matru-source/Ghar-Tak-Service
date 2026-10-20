@@ -224,7 +224,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 },
                                 onDeclined = {
-                                    Toast.makeText(this@MainActivity, "Dispatch Passed to Next Electrician", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(this@MainActivity, "Dispatch Passed to Next Available Partner", Toast.LENGTH_SHORT).show()
                                     navController.popBackStack()
                                 }
                             )

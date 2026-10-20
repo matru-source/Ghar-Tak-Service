@@ -41,7 +41,7 @@ fun PaymentScreen(
         AlertDialog(
             onDismissRequest = { showBackWarningDialog = false },
             title = {
-                Text("Cancel Electrician Dispatch?", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text("Cancel Service Booking?", fontWeight = FontWeight.Bold, fontSize = 16.sp)
             },
             text = {
                 Text(

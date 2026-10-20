@@ -1,0 +1,43 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Rounded Background Pill -->
+    <path
+        android:fillColor="#ECFDF5"
+        android:pathData="M16,0 L80,0 A16,16 0 0,1 96,16 L96,80 A16,16 0 0,1 80,96 L16,96 A16,16 0 0,1 0,80 L0,16 A16,16 0 0,1 16,0 Z" />
+    <!-- Spray Bottle Body -->
+    <path
+        android:fillColor="#10B981"
+        android:pathData="M38,44 L58,44 C62,44 65,48 65,52 L61,78 C60.5,82 57,84 53,84 L43,84 C39,84 35.5,82 35,78 L31,52 C31,48 34,44 38,44 Z" />
+    <!-- Spray Bottle Neck -->
+    <path
+        android:fillColor="#059669"
+        android:pathData="M44,32 L52,32 L52,44 L44,44 Z" />
+    <!-- Spray Trigger Head -->
+    <path
+        android:fillColor="#047857"
+        android:pathData="M38,24 L56,24 C59,24 61,26 61,29 L61,32 L40,32 Z" />
+    <!-- Trigger Lever -->
+    <path
+        android:fillColor="#065F46"
+        android:pathData="M38,26 L29,32 L34,36 L41,32 Z" />
+    <!-- Spray Nozzle -->
+    <path
+        android:fillColor="#064E3B"
+        android:pathData="M56,26 L64,28 L64,30 L56,30 Z" />
+    <!-- Sparkles -->
+    <!-- Big Sparkle Top Right -->
+    <path
+        android:fillColor="#FBBF24"
+        android:pathData="M74,18 L76,24 L82,26 L76,28 L74,34 L72,28 L66,26 L72,24 Z" />
+    <!-- Small Sparkle Left -->
+    <path
+        android:fillColor="#34D399"
+        android:pathData="M24,28 L25,32 L29,33 L25,34 L24,38 L23,34 L19,33 L23,32 Z" />
+    <!-- Bubble -->
+    <path
+        android:fillColor="#6EE7B7"
+        android:pathData="M70,48 C72.2,48 74,49.8 74,52 C74,54.2 72.2,56 70,56 C67.8,56 66,54.2 66,52 C66,49.8 67.8,48 70,48 Z" />
+</vector>

@@ -360,7 +360,7 @@ fun DispatchAlertScreen(
                 border = androidx.compose.foundation.BorderStroke(1.dp, SafetyRed.copy(alpha = 0.6f))
             ) {
                 Text(
-                    text = "DECLINE (PASS TO NEXT ELECTRICIAN)",
+                    text = "DECLINE (PASS TO NEXT SPECIALIST)",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -371,7 +371,7 @@ fun DispatchAlertScreen(
         if (showDeclineDialog) {
             val declineReasons = listOf(
                 "Excessive distance / Heavy traffic",
-                "High-voltage kit missing or recharging",
+                "Specialized tool kit missing or occupied",
                 "Shift ending soon",
                 "Personal emergency"
             )
@@ -391,7 +391,7 @@ fun DispatchAlertScreen(
                 text = {
                     Column {
                         Text(
-                            text = "This will immediately route the work order to the next available electrician in Pincode ${job.pincode}.",
+                            text = "This will immediately route the work order to the next available specialist in Pincode ${job.pincode}.",
                             color = TextSecondary,
                             fontSize = 12.sp
                         )

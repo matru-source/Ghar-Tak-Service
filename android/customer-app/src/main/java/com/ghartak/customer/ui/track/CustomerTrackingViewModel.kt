@@ -129,11 +129,23 @@ class CustomerTrackingViewModel(
                         val resolvedTechArea = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(tLat, tLng)
                         val resolvedDestArea = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(dLat, dLng)
 
-                        if (resolvedStatus == "CANCELLED" || resolvedStatus == "COMPLETED") {
+                        if (resolvedStatus == "CANCELLED") {
                             sessionManager.clearActiveJob()
-                        } else if (resolvedStatus == "EN_ROUTE" || resolvedStatus == "ARRIVED" || resolvedStatus == "IN_PROGRESS") {
+                        } else if (resolvedStatus == "COMPLETED" || resolvedStatus == "EN_ROUTE" || resolvedStatus == "ARRIVED" || resolvedStatus == "IN_PROGRESS") {
                             sessionManager.setActiveJobStatus(resolvedStatus)
                         }
+
+                        // Ensure session manager has valid job details for signoff & invoice history
+                        sessionManager.updateActiveJobIfMissing(
+                            ticketNumber = data.jobTicketNumber,
+                            title = data.serviceTitle,
+                            basePrice = data.basePriceInr,
+                            total = data.totalAmountInr,
+                            techName = tech.name,
+                            techBadge = tech.badgeNumber,
+                            techPhone = tech.phone,
+                            otp = data.handoverOtp
+                        )
 
                         _uiState.value = _uiState.value.copy(
                             status = resolvedStatus,
@@ -145,7 +157,10 @@ class CustomerTrackingViewModel(
                             destLongitude = dLng,
                             techAreaName = resolvedTechArea,
                             destAreaName = resolvedDestArea,
+                            ticketNumber = if (data.jobTicketNumber.isNotBlank()) data.jobTicketNumber else _uiState.value.ticketNumber,
+                            serviceTitle = if (!data.serviceTitle.isNullOrBlank()) data.serviceTitle else _uiState.value.serviceTitle,
                             technicianName = tech.name ?: _uiState.value.technicianName,
+                            technicianBadge = tech.badgeNumber ?: _uiState.value.technicianBadge,
                             technicianPhone = tech.phone ?: _uiState.value.technicianPhone,
                             technicianRating = tech.rating,
                             handoverOtp = if (!data.handoverOtp.isNullOrBlank()) data.handoverOtp else _uiState.value.handoverOtp,
@@ -156,7 +171,7 @@ class CustomerTrackingViewModel(
                 } catch (e: Exception) {
                     // Resilient polling continues on next tick
                 }
-                delay(3000L)
+                delay(5000L)
             }
         }
     }
@@ -261,7 +276,7 @@ class CustomerTrackingViewModel(
             }
 
             "JOB_COMPLETED" -> {
-                sessionManager.clearActiveJob()
+                sessionManager.setActiveJobStatus("COMPLETED")
                 _uiState.value = _uiState.value.copy(
                     status = "COMPLETED",
                     isJobCompleted = true

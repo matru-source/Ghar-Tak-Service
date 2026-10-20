@@ -23,6 +23,7 @@ const PARTNER_NAVIGATION: NavSection[] = [
     title: 'OPERATIONS CORE',
     items: [
       { name: 'Dashboard', href: '/partner', icon: '📊' },
+      { name: 'Service Catalog', href: '/partner/services', icon: '🛠️', badge: 'Live', badgeColor: 'bg-blue-600' },
       { name: 'Manage Technicians', href: '/partner/fleet', icon: '👷', badge: '18 Active', badgeColor: 'bg-emerald-600' },
       { name: 'Job Management', href: '/partner/jobs', icon: '⚡', badge: '3 Escalated', badgeColor: 'bg-amber-600' },
     ],

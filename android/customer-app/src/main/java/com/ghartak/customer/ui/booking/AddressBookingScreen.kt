@@ -35,6 +35,8 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import com.ghartak.customer.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -89,6 +91,16 @@ fun AddressBookingScreen(
 
     LaunchedEffect(serviceId) {
         viewModel.initService(serviceId)
+    }
+
+    // Auto-poll live technicians every 5s so when a technician toggles online, they appear automatically
+    LaunchedEffect(state.pincode) {
+        while (isActive) {
+            delay(5000L)
+            if (state.pincode.length == 6 && state.nearbyTechnicians.isEmpty()) {
+                viewModel.loadLiveTechnicians(context, state.pincode)
+            }
+        }
     }
 
     Scaffold(
@@ -579,7 +591,7 @@ fun AddressBookingScreen(
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "Please turn on device location to see certified electricians available near you in real time.",
+                                    text = "Please turn on device location to see certified service professionals available near you in real time.",
                                     fontSize = 11.5.sp,
                                     color = Color(0xFF7F1D1D),
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -632,8 +644,9 @@ fun AddressBookingScreen(
                                     modifier = Modifier.size(36.dp)
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
+                                val tradeLabel = state.serviceTitle.ifBlank { "Service" }
                                 Text(
-                                    text = "No Electricians Currently Online in Pincode ${state.pincode}",
+                                    text = "No $tradeLabel Professionals Currently Online in Pincode ${state.pincode}",
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = TextDarkPrimary,
@@ -646,6 +659,27 @@ fun AddressBookingScreen(
                                     color = TextDarkMuted,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
+                                Spacer(modifier = Modifier.height(14.dp))
+                                Button(
+                                    onClick = { viewModel.loadLiveTechnicians(context, state.pincode) },
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800),
+                                    modifier = Modifier.height(40.dp)
+                                ) {
+                                    if (state.isLoadingTechnicians) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(16.dp),
+                                            color = Color.White,
+                                            strokeWidth = 2.dp
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("Checking Online Status...", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                    } else {
+                                        Icon(Icons.Default.Refresh, contentDescription = "Refresh", modifier = Modifier.size(16.dp), tint = Color.White)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("Refresh Available Technicians", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                    }
+                                }
                             }
                         }
                     } else {

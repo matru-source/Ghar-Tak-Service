@@ -57,7 +57,8 @@ data class AddressBookingUiState(
     val errorMessage: String? = null,
     val sortOption: TechnicianSortOption = TechnicianSortOption.MIN_DISTANCE,
     val nearbyTechnicians: List<NearbyTechnician> = emptyList(),
-    val selectedTechnicianId: String = ""
+    val selectedTechnicianId: String = "",
+    val isLoadingTechnicians: Boolean = false
 ) {
     val sortedTechnicians: List<NearbyTechnician>
         get() = when (sortOption) {
@@ -113,6 +114,7 @@ class AddressBookingViewModel(
 
     fun loadLiveTechnicians(context: Context, pin: String) {
         viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoadingTechnicians = true)
             try {
                 val api = ApiClient.getService(context)
                 val response = kotlinx.coroutines.withTimeoutOrNull(8000L) {
@@ -130,7 +132,7 @@ class AddressBookingViewModel(
                             val ratingVal = (item["rating"] as? Number)?.toDouble() ?: 5.0
                             val completedCount = (item["totalJobsCompleted"] as? Number)?.toInt() ?: 0
                             val phone = item["phone"]?.toString() ?: "+91 98201 44091"
-                            val trade = item["trade"]?.toString() ?: item["specialization"]?.toString() ?: "Certified Electrician"
+                            val trade = item["trade"]?.toString() ?: item["specialization"]?.toString() ?: "Certified Professional"
                             val distKm = (item["distanceKm"] as? Number)?.toDouble() ?: 1.4
                             val etaMin = (item["etaMinutes"] as? Number)?.toInt() ?: maxOf(8, (distKm * 6).toInt())
 
@@ -189,6 +191,8 @@ class AddressBookingViewModel(
                     nearbyTechnicians = emptyList(),
                     selectedTechnicianId = ""
                 )
+            } finally {
+                _uiState.value = _uiState.value.copy(isLoadingTechnicians = false)
             }
         }
     }

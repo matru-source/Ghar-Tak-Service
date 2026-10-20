@@ -149,7 +149,7 @@ fun CustomerHomeScreen(
                                     color = Color.White
                                 )
                                 Text(
-                                    text = "24/7 Verified Electricians",
+                                    text = "24/7 Multi-Trade Specialists",
                                     fontSize = 11.sp,
                                     color = Color(0xFFBBDEFB),
                                     fontWeight = FontWeight.Normal
@@ -346,7 +346,7 @@ fun CustomerHomeScreen(
                     title = {
                         Text(
                             text = when (currentBottomTab) {
-                                1 -> "Book Electrical Services"
+                                1 -> "Book Doorstep Services"
                                 2 -> "Order History & Invoices"
                                 3 -> "Customer Profile"
                                 else -> "Ghar Tak Services"
@@ -748,7 +748,7 @@ fun CustomerHomeScreen(
                                                     .replace(" (En Route)", "")
                                                     .replace(" (Assigned)", "")
                                                     .trim()
-                                                    .ifEmpty { "Electrician" }
+                                                    .ifEmpty { "Service Specialist" }
                                             }
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Image(

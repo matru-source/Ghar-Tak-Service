@@ -175,10 +175,17 @@ export async function GET(request: NextRequest) {
       const techArea = resolveAreaFromCoordinates(techLat, techLng);
       const destArea = resolveAreaFromCoordinates(destLat, destLng);
 
+      const rawBasePrice = (job as any).basePriceInr || (job as any).priceInr || 299.0;
+      const rawTotalAmount = (job as any).totalAmountInr || (job as any).totalPriceInr || Number((rawBasePrice * 1.18).toFixed(2));
+
       return apiSuccess({
+        jobId: job.id,
         jobTicketNumber: job.jobTicketNumber,
         status: job.status,
         handoverOtp: job.handoverOtp,
+        serviceTitle: job.serviceTitle || 'Doorstep Service',
+        basePriceInr: rawBasePrice,
+        totalAmountInr: rawTotalAmount,
         destination: {
           latitude: destLat,
           longitude: destLng,
@@ -187,8 +194,9 @@ export async function GET(request: NextRequest) {
         },
         technician: {
           id: tech?.id || job.technicianId,
+          badgeNumber: tech?.badgeNumber || 'GTS-TECH-101',
           name: tech?.fullName || job.technicianName,
-          phone: tech?.phone,
+          phone: tech?.phone || '9876543210',
           rating: tech?.rating || 4.9,
           coordinates: { latitude: techLat, longitude: techLng },
           area: techArea,

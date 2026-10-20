@@ -133,7 +133,7 @@ class MainActivity : ComponentActivity() {
                                     val cleanState = currentState.stateCode.ifEmpty { sessionManager.getActiveJobStateCode() }
                                     val ticketNo = sessionManager.getActiveJobTicketNumber()
 
-                                    val techName = currentSelectedTech?.name ?: "Certified Electrician"
+                                    val techName = currentSelectedTech?.name ?: "Certified Professional"
                                     val techBadge = currentSelectedTech?.badge ?: "GTS-TECH-VERIFIED"
                                     val techPhone = currentSelectedTech?.phone ?: "+91 98765 43210"
 
@@ -218,20 +218,43 @@ class MainActivity : ComponentActivity() {
                             val trackState = trackingViewModel.uiState.collectAsState().value
                             val bookingState = bookingViewModel.uiState.collectAsState().value
 
-                            val resolvedTitle = if (bookingState.basePriceInr > 0) bookingState.serviceTitle else sessionManager.getActiveJobTitle()
-                            val resolvedBase = if (bookingState.basePriceInr > 0) bookingState.basePriceInr else sessionManager.getActiveJobBasePrice()
+                            val resolvedTitle = when {
+                                trackState.serviceTitle.isNotBlank() && trackState.serviceTitle != "Doorstep Service" -> trackState.serviceTitle
+                                bookingState.basePriceInr > 0 -> bookingState.serviceTitle
+                                sessionManager.getActiveJobTitle().isNotBlank() -> sessionManager.getActiveJobTitle()
+                                else -> "Doorstep Service"
+                            }
+                            val resolvedBase = when {
+                                bookingState.basePriceInr > 0 -> bookingState.basePriceInr
+                                sessionManager.getActiveJobBasePrice() > 0 -> sessionManager.getActiveJobBasePrice()
+                                else -> 299.0
+                            }
                             val resolvedCgst = resolvedBase * 0.09
                             val resolvedSgst = resolvedBase * 0.09
                             val resolvedTotal = resolvedBase + resolvedCgst + resolvedSgst
                             val resolvedState = if (bookingState.stateCode.isNotBlank()) bookingState.stateCode else sessionManager.getActiveJobStateCode()
                             val resolvedGstin = if (bookingState.gstinStateCode.isNotBlank()) bookingState.gstinStateCode else sessionManager.getActiveJobGstin()
-                            val resolvedTicket = if (trackState.ticketNumber.isNotBlank()) trackState.ticketNumber else sessionManager.getActiveJobTicketNumber()
+                            val resolvedTicket = when {
+                                trackState.ticketNumber.isNotBlank() -> trackState.ticketNumber
+                                sessionManager.getActiveJobTicketNumber().isNotBlank() -> sessionManager.getActiveJobTicketNumber()
+                                else -> "GTS-${System.currentTimeMillis().toString().takeLast(6)}"
+                            }
+                            val resolvedTech = when {
+                                trackState.technicianName.isNotBlank() -> trackState.technicianName
+                                sessionManager.getActiveJobTechnicianName().isNotBlank() -> sessionManager.getActiveJobTechnicianName()
+                                else -> "Certified Professional"
+                            }
+                            val resolvedBadge = when {
+                                trackState.technicianBadge.isNotBlank() -> trackState.technicianBadge
+                                sessionManager.getActiveJobTechnicianBadge().isNotBlank() -> sessionManager.getActiveJobTechnicianBadge()
+                                else -> "GTS-TECH-101"
+                            }
 
-                            LaunchedEffect(jobId, trackState.technicianName) {
+                            LaunchedEffect(jobId, resolvedTech, resolvedTicket) {
                                 signoffViewModel.initSignoff(
                                     jobId = jobId,
-                                    technicianName = trackState.technicianName,
-                                    technicianBadge = trackState.technicianBadge,
+                                    technicianName = resolvedTech,
+                                    technicianBadge = resolvedBadge,
                                     stateCode = resolvedState,
                                     gstin = resolvedGstin,
                                     serviceTitle = resolvedTitle,

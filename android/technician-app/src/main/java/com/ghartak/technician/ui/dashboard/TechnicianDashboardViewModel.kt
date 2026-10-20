@@ -219,6 +219,7 @@ class TechnicianDashboardViewModel(
         ifscCode: String? = null,
         bankName: String? = null
     ) {
+        if (_uiState.value.isWithdrawing) return
         if (amount <= 0.0 || amount > _uiState.value.availableWithdrawalInr) {
             _uiState.value = _uiState.value.copy(
                 errorMessage = "Amount must be between ₹1 and ₹${"%,.0f".format(_uiState.value.availableWithdrawalInr)}"
@@ -244,8 +245,9 @@ class TechnicianDashboardViewModel(
                 )
             }
 
+            val tempId = "wth_${System.currentTimeMillis()}"
             val localItem = com.ghartak.technician.data.model.WithdrawalItem(
-                id = "wth_${System.currentTimeMillis()}",
+                id = tempId,
                 technicianId = techId,
                 technicianName = techName,
                 technicianBadge = techBadge,
@@ -261,8 +263,7 @@ class TechnicianDashboardViewModel(
                 requestedAt = "Just now"
             )
 
-            sessionManager.saveLocalWithdrawal(localItem)
-
+            var savedWithServer = false
             try {
                 val api = ApiClient.getService(sessionManager.context)
                 val res = api.requestWithdrawal(
@@ -279,10 +280,16 @@ class TechnicianDashboardViewModel(
                 )
                 if (res.isSuccessful && res.body()?.data != null) {
                     val serverItem = res.body()!!.data!!
-                    sessionManager.saveLocalWithdrawal(serverItem)
+                    sessionManager.replaceOrAddWithdrawal(tempId, serverItem)
+                    savedWithServer = true
                 }
             } catch (e: Exception) {
                 Log.w("GTS_TECH", "Withdrawal remote sync info: ${e.message}")
+            }
+
+            if (!savedWithServer) {
+                // If offline or network issue, persist the optimistic item once
+                sessionManager.saveLocalWithdrawal(localItem)
             }
 
             val updatedHistory = sessionManager.getLocalWithdrawals()

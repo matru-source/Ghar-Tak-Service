@@ -347,7 +347,7 @@ fun NavigationScreen(
                                 .background(FlameOrange)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = "Electrician", color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text(text = "Technician", color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.width(16.dp))
                         Box(
                             modifier = Modifier

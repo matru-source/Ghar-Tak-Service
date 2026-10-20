@@ -288,9 +288,48 @@ class SessionManager(val context: Context) {
 
     fun setActiveJobStatus(status: String) {
         prefs.edit().putString(KEY_ACTIVE_JOB_STATUS, status).apply()
-        if (status == "CANCELLED" || status == "COMPLETED") {
+        if (status == "CANCELLED") {
             clearActiveJob()
         }
+    }
+
+    fun updateActiveJobIfMissing(
+        ticketNumber: String? = null,
+        title: String? = null,
+        basePrice: Double? = null,
+        total: Double? = null,
+        techName: String? = null,
+        techBadge: String? = null,
+        techPhone: String? = null,
+        otp: String? = null
+    ) {
+        val editor = prefs.edit()
+        if (!ticketNumber.isNullOrBlank() && getActiveJobTicketNumber().isBlank()) {
+            editor.putString(KEY_ACTIVE_JOB_TICKET_NO, ticketNumber)
+        }
+        if (!title.isNullOrBlank() && getActiveJobTitle().isBlank()) {
+            editor.putString(KEY_ACTIVE_JOB_TITLE, title)
+        }
+        if (basePrice != null && basePrice > 0.0 && getActiveJobBasePrice() <= 0.0) {
+            editor.putFloat(KEY_ACTIVE_JOB_BASE_PRICE, basePrice.toFloat())
+            editor.putFloat(KEY_ACTIVE_JOB_GST, (basePrice * 0.18).toFloat())
+        }
+        if (total != null && total > 0.0 && getActiveJobTotal() <= 0.0) {
+            editor.putFloat(KEY_ACTIVE_JOB_TOTAL, total.toFloat())
+        }
+        if (!techName.isNullOrBlank() && getActiveJobTechnicianName().isBlank()) {
+            editor.putString(KEY_ACTIVE_JOB_TECH_NAME, techName)
+        }
+        if (!techBadge.isNullOrBlank() && getActiveJobTechnicianBadge().isBlank()) {
+            editor.putString(KEY_ACTIVE_JOB_TECH_BADGE, techBadge)
+        }
+        if (!techPhone.isNullOrBlank() && getActiveJobTechnicianPhone().isBlank()) {
+            editor.putString(KEY_ACTIVE_JOB_TECH_PHONE, techPhone)
+        }
+        if (!otp.isNullOrBlank() && getActiveJobOtp().isBlank()) {
+            editor.putString(KEY_ACTIVE_JOB_OTP, otp)
+        }
+        editor.apply()
     }
 
     fun getActiveJobStatus(): String = prefs.getString(KEY_ACTIVE_JOB_STATUS, "") ?: ""

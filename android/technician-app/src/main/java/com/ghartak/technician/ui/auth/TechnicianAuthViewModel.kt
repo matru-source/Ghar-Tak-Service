@@ -224,7 +224,7 @@ class TechnicianAuthViewModel(
                     email = cleanEmail,
                     phone = sessionManager.getPhone(),
                     password = "google_auth_${System.currentTimeMillis()}",
-                    trade = "Certified Professional Electrician",
+                    trade = "Certified Service Specialist",
                     pincode = sessionManager.getPincode().ifEmpty { "760001" }
                 )
             } else {
@@ -416,7 +416,7 @@ class TechnicianAuthViewModel(
 
         viewModelScope.launch {
             val randomOtp = (100000..999999).random().toString()
-            val result = BrevoEmailService.sendOtpEmail(email, "GTS Field Electrician", randomOtp)
+            val result = BrevoEmailService.sendOtpEmail(email, "GTS Field Partner", randomOtp)
 
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
