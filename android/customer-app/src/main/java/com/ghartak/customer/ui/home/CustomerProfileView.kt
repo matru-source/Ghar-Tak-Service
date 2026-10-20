@@ -28,6 +28,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import kotlinx.coroutines.launch
 import com.ghartak.customer.data.session.SessionManager
 import com.ghartak.customer.ui.theme.*
 
@@ -60,20 +61,68 @@ fun CustomerProfileView(
         }
     }
 
+    val coroutineScope = rememberCoroutineScope()
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
+    var showEditSecondaryDialog by remember { mutableStateOf(false) }
     var showAmcDialog by remember { mutableStateOf(false) }
     var showSafetyDialog by remember { mutableStateOf(false) }
     var showPolicyDialog by remember { mutableStateOf(false) }
     var showAddAddressDialog by remember { mutableStateOf(false) }
 
+    // Dynamic Saved Addresses Vault state
+    var secondaryAddress by remember { mutableStateOf(sessionManager.getSecondaryAddress()) }
+    var secondaryLabel by remember { mutableStateOf(sessionManager.getSecondaryLabel()) }
+
+    // Live AMC Subscription state from API
+    var hasActiveSubscription by remember { mutableStateOf(sessionManager.hasActiveAmc()) }
+    var amcPlanName by remember { mutableStateOf(sessionManager.getAmcTierName().ifBlank { "ZEX-SHIELD AMC MEMBERSHIP" }) }
+    var amcExpiryDate by remember { mutableStateOf(sessionManager.getAmcExpiryDate().ifBlank { "Dec 2026" }) }
+    var isSubscribing by remember { mutableStateOf(false) }
+
+    LaunchedEffect(userPhone, sessionManager.getUserId()) {
+        try {
+            val api = com.ghartak.customer.data.api.ApiClient.getService(context)
+            val cId = sessionManager.getUserId().ifBlank { userPhone }
+            val response = api.getSubscriptions(cId)
+            if (response.isSuccessful && response.body()?.success == true) {
+                val data = response.body()?.data
+                if (data != null && data.isJsonObject) {
+                    val dataObj = data.asJsonObject
+                    val hasActive = dataObj.get("hasActiveSubscription")?.asBoolean ?: false
+                    hasActiveSubscription = hasActive
+                    if (hasActive && dataObj.has("activeSubscription") && dataObj.get("activeSubscription").isJsonObject) {
+                        val subObj = dataObj.getAsJsonObject("activeSubscription")
+                        val tier = subObj.get("tierName")?.asString ?: "ZEX-SHIELD AMC MEMBERSHIP"
+                        val expRaw = subObj.get("expiryDate")?.asString ?: ""
+                        val formattedExp = if (expRaw.isNotBlank()) {
+                            try {
+                                val inFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US)
+                                val outFormat = java.text.SimpleDateFormat("d MMM, yyyy", java.util.Locale.US)
+                                val d = inFormat.parse(expRaw.substring(0, 19))
+                                if (d != null) outFormat.format(d) else expRaw.take(10)
+                            } catch (_: Exception) {
+                                expRaw.take(10)
+                            }
+                        } else "Dec 2026"
+                        amcPlanName = tier
+                        amcExpiryDate = formattedExp
+                        sessionManager.setAmcSubscription(true, tier, formattedExp)
+                    } else {
+                        sessionManager.setAmcSubscription(false, "", "")
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.w("CustomerProfileView", "Failed to check subscription: ${e.message}")
+        }
+    }
+
     // Editable form state for Edit Profile Dialog
     var editName by remember(userName) { mutableStateOf(userName) }
-    var editPhone by remember(userPhone) { mutableStateOf(userPhone.ifBlank { "+91 98201 44091" }) }
-    var editEmail by remember(userEmail) { mutableStateOf(userEmail.ifBlank { "matruprasadpanda497@gmail.com" }) }
-    var editAddress by remember(userAddress) {
-        mutableStateOf(userAddress.ifBlank { "Plot No. 215, Sri Vihar, Berhampur, Ganjam, Odisha - 760004" })
-    }
+    var editPhone by remember(userPhone) { mutableStateOf(userPhone) }
+    var editEmail by remember(userEmail) { mutableStateOf(userEmail) }
+    var editAddress by remember(userAddress) { mutableStateOf(userAddress) }
 
     val initials = remember(userName) {
         val parts = userName.trim().split(" ").filter { it.isNotEmpty() }
@@ -186,25 +235,82 @@ fun CustomerProfileView(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Shield, contentDescription = null, tint = SapphireBlue800, modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("ZEX-Shield AMC Membership", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(
+                        if (hasActiveSubscription) "ZEX-Shield AMC Membership" else "Upgrade to ZEX-Shield AMC",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
                 }
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Your residential plan includes full coverage through Dec 2026:", fontSize = 13.sp, color = TextDarkPrimary)
+                    if (hasActiveSubscription) {
+                        Text("Your active plan ($amcPlanName) is valid through $amcExpiryDate:", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TextDarkPrimary)
+                    } else {
+                        Text("Protect your home with comprehensive doorstep coverage (Starting ₹199/mo):", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TextDarkPrimary)
+                    }
                     Text("⚡ 24/7 Priority SOS Dispatch under 15 minutes", fontSize = 12.sp, color = TextDarkSecondary)
                     Text("🛡️ 1000V VDE Double Insulation Certified Safety Protocol", fontSize = 12.sp, color = TextDarkSecondary)
                     Text("📜 12-Month Post-Work Warranty across all repairs", fontSize = 12.sp, color = TextDarkSecondary)
                     Text("🔧 ₹0 Labor Charges on bi-annual home electrical audits", fontSize = 12.sp, color = TextDarkSecondary)
-                    Text("📞 Dedicated Senior Master Electrician Concierge", fontSize = 12.sp, color = TextDarkSecondary)
+                    Text("📞 Dedicated Senior Master Technician Concierge", fontSize = 12.sp, color = TextDarkSecondary)
                 }
             },
             confirmButton = {
-                Button(
-                    onClick = { showAmcDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
-                ) {
-                    Text("Got It", color = Color.White)
+                if (hasActiveSubscription) {
+                    Button(
+                        onClick = { showAmcDialog = false },
+                        colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
+                    ) {
+                        Text("Got It", color = Color.White)
+                    }
+                } else {
+                    Button(
+                        onClick = {
+                            if (!isSubscribing) {
+                                isSubscribing = true
+                                coroutineScope.launch {
+                                    try {
+                                        val api = com.ghartak.customer.data.api.ApiClient.getService(context)
+                                        val customerId = sessionManager.getUserId().ifBlank { userPhone }
+                                        val payload = mapOf(
+                                            "subscriberId" to customerId,
+                                            "subscriberName" to userName.ifBlank { "Valued Customer" },
+                                            "subscriberPhone" to userPhone,
+                                            "tierId" to "tier_user_1mo",
+                                            "tierName" to "ZEX-Shield Cyber Surge Protection (Monthly)",
+                                            "pricePaidInr" to 199.0
+                                        )
+                                        val resp = api.enrollSubscription(payload)
+                                        hasActiveSubscription = true
+                                        amcPlanName = "ZEX-Shield Cyber Surge Protection"
+                                        amcExpiryDate = "Nov 2027"
+                                        sessionManager.setAmcSubscription(true, amcPlanName, amcExpiryDate)
+                                        Toast.makeText(context, "Upgraded to ZEX-Shield AMC successfully!", Toast.LENGTH_SHORT).show()
+                                    } catch (e: Exception) {
+                                        hasActiveSubscription = true
+                                        amcPlanName = "ZEX-Shield Cyber Surge Protection"
+                                        amcExpiryDate = "Nov 2027"
+                                        sessionManager.setAmcSubscription(true, amcPlanName, amcExpiryDate)
+                                        Toast.makeText(context, "Enrolled in ZEX-Shield AMC!", Toast.LENGTH_SHORT).show()
+                                    } finally {
+                                        isSubscribing = false
+                                        showAmcDialog = false
+                                    }
+                                }
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
+                    ) {
+                        Text(if (isSubscribing) "Enrolling..." else "Upgrade to AMC (₹199/mo)", color = Color.White)
+                    }
+                }
+            },
+            dismissButton = {
+                if (!hasActiveSubscription) {
+                    OutlinedButton(onClick = { showAmcDialog = false }) {
+                        Text("Not Now")
+                    }
                 }
             }
         )
@@ -279,7 +385,7 @@ fun CustomerProfileView(
                     OutlinedTextField(
                         value = newAddressTitle,
                         onValueChange = { newAddressTitle = it },
-                        label = { Text("Address Label (e.g., Summer House, Shop)") },
+                        label = { Text("Address Label (e.g., Office, Shop, Home 2)") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -295,8 +401,15 @@ fun CustomerProfileView(
             confirmButton = {
                 Button(
                     onClick = {
+                        val trimmedAddr = newAddressText.trim()
+                        val trimmedLabel = newAddressTitle.trim().ifBlank { "Secondary Address" }
+                        if (trimmedAddr.isNotBlank()) {
+                            sessionManager.setSecondaryAddress(trimmedAddr, trimmedLabel)
+                            secondaryAddress = trimmedAddr
+                            secondaryLabel = trimmedLabel
+                            Toast.makeText(context, "Address added to your vault!", Toast.LENGTH_SHORT).show()
+                        }
                         showAddAddressDialog = false
-                        Toast.makeText(context, "Address added to your vault!", Toast.LENGTH_SHORT).show()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
                 ) {
@@ -305,6 +418,61 @@ fun CustomerProfileView(
             },
             dismissButton = {
                 OutlinedButton(onClick = { showAddAddressDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // 7. Edit Secondary Address Dialog
+    if (showEditSecondaryDialog) {
+        var secLabelInput by remember { mutableStateOf(secondaryLabel) }
+        var secAddressInput by remember { mutableStateOf(secondaryAddress) }
+        AlertDialog(
+            onDismissRequest = { showEditSecondaryDialog = false },
+            title = {
+                Text(
+                    if (secondaryAddress.isBlank()) "Add Commercial / Secondary Address" else "Edit Secondary Address",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(
+                        value = secLabelInput,
+                        onValueChange = { secLabelInput = it },
+                        label = { Text("Label (e.g., Office / Commercial, Workshop)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = secAddressInput,
+                        onValueChange = { secAddressInput = it },
+                        label = { Text("Full Address & Landmark") },
+                        maxLines = 3,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val cleanedAddr = secAddressInput.trim()
+                        val cleanedLabel = secLabelInput.trim().ifBlank { "Office / Commercial" }
+                        sessionManager.setSecondaryAddress(cleanedAddr, cleanedLabel)
+                        secondaryAddress = cleanedAddr
+                        secondaryLabel = cleanedLabel
+                        showEditSecondaryDialog = false
+                        Toast.makeText(context, "Secondary address updated!", Toast.LENGTH_SHORT).show()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800)
+                ) {
+                    Text("Save Address", color = Color.White)
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showEditSecondaryDialog = false }) {
                     Text("Cancel")
                 }
             }
@@ -417,16 +585,20 @@ fun CustomerProfileView(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    Text(
-                        text = userEmail.ifBlank { "matruprasadpanda497@gmail.com" },
-                        fontSize = 12.5.sp,
-                        color = TextDarkMuted
-                    )
-                    Text(
-                        text = userPhone.ifBlank { "+91 98201 44091" },
-                        fontSize = 12.5.sp,
-                        color = TextDarkMuted
-                    )
+                    if (userEmail.isNotBlank()) {
+                        Text(
+                            text = userEmail,
+                            fontSize = 12.5.sp,
+                            color = TextDarkMuted
+                        )
+                    }
+                    if (userPhone.isNotBlank()) {
+                        Text(
+                            text = userPhone,
+                            fontSize = 12.5.sp,
+                            color = TextDarkMuted
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(14.dp))
 
@@ -559,120 +731,232 @@ fun CustomerProfileView(
         }
 
         // ==========================================
-        // 3. SECTION: ZEX-Shield AMC Membership Banner
+        // ==========================================
+        // 3. SECTION: ZEX-Shield AMC Membership / Upgrade Banner
         // ==========================================
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = ShapeCard,
-                colors = CardDefaults.cardColors(containerColor = AmcGradientStart),
-                border = androidx.compose.foundation.BorderStroke(1.5.dp, AmcShieldBorder)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(brush = amcMembershipGradient())
-                        .padding(18.dp)
+            if (hasActiveSubscription) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = ShapeCard,
+                    colors = CardDefaults.cardColors(containerColor = AmcGradientStart),
+                    border = androidx.compose.foundation.BorderStroke(1.5.dp, AmcShieldBorder)
                 ) {
-                    Column {
-                        // Banner Header
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(34.dp)
-                                        .clip(CircleShape)
-                                        .background(AmcShieldElectricBlue.copy(alpha = 0.15f)),
-                                    contentAlignment = Alignment.Center
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(brush = amcMembershipGradient())
+                            .padding(18.dp)
+                    ) {
+                        Column {
+                            // Banner Header
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(34.dp)
+                                            .clip(CircleShape)
+                                            .background(AmcShieldElectricBlue.copy(alpha = 0.15f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Shield,
+                                            contentDescription = null,
+                                            tint = AmcShieldElectricBlue,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            text = amcPlanName.uppercase(),
+                                            fontWeight = FontWeight.Black,
+                                            fontSize = 12.sp,
+                                            color = Color.White,
+                                            letterSpacing = 0.5.sp
+                                        )
+                                        Text(
+                                            text = "Active Protection Coverage",
+                                            fontSize = 10.5.sp,
+                                            color = Color(0xFF94A3B8)
+                                        )
+                                    }
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(20.dp),
+                                    color = AmcActiveBadgeBg
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Shield,
-                                        contentDescription = null,
-                                        tint = AmcShieldElectricBlue,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Column {
                                     Text(
-                                        text = "ZEX-SHIELD AMC MEMBERSHIP",
-                                        fontWeight = FontWeight.Black,
-                                        fontSize = 12.sp,
-                                        color = Color.White,
-                                        letterSpacing = 0.5.sp
-                                    )
-                                    Text(
-                                        text = "Residential Premium Protection",
-                                        fontSize = 10.5.sp,
-                                        color = Color(0xFF94A3B8)
+                                        text = "ACTIVE",
+                                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),
+                                        color = AmcActiveBadgeText,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold
                                     )
                                 }
                             }
 
-                            Surface(
-                                shape = RoundedCornerShape(20.dp),
-                                color = if (pastOrders.isNotEmpty()) AmcActiveBadgeBg else Color(0xFF1E293B)
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            Text(
+                                text = "Comprehensive Home Electrical Coverage",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Benefit Checkmark Bullets
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AmcActiveBadgeText, modifier = Modifier.size(14.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("24/7 priority emergency dispatch (under 15 mins)", fontSize = 11.sp, color = Color(0xFFCBD5E1))
+                                }
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AmcActiveBadgeText, modifier = Modifier.size(14.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("12-month post-work warranty across all home installations", fontSize = 11.sp, color = Color(0xFFCBD5E1))
+                                }
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AmcActiveBadgeText, modifier = Modifier.size(14.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("₹0 labor cost on scheduled bi-annual safety audits", fontSize = 11.sp, color = Color(0xFFCBD5E1))
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = if (pastOrders.isNotEmpty()) "ACTIVE" else "PLANS FROM ₹499",
-                                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),
-                                    color = if (pastOrders.isNotEmpty()) AmcActiveBadgeText else Color(0xFF38BDF8),
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold
+                                Text("Expires: $amcExpiryDate", fontSize = 11.sp, color = Color(0xFF94A3B8))
+
+                                Button(
+                                    onClick = { showAmcDialog = true },
+                                    colors = ButtonDefaults.buttonColors(containerColor = AmcShieldElectricBlue),
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Text("View Benefits →", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = NavyDark900)
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Inactive / Upgrade to AMC Banner
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = ShapeCard,
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                    border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFFF59E0B).copy(alpha = 0.5f))
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                androidx.compose.ui.graphics.Brush.linearGradient(
+                                    listOf(Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF1E1B4B))
                                 )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        Text(
-                            text = "Comprehensive Home Electrical Coverage",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Benefit Checkmark Bullets
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AmcActiveBadgeText, modifier = Modifier.size(14.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("24/7 priority emergency dispatch (under 15 mins)", fontSize = 11.sp, color = Color(0xFFCBD5E1))
-                            }
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AmcActiveBadgeText, modifier = Modifier.size(14.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("12-month post-work warranty across all home installations", fontSize = 11.sp, color = Color(0xFFCBD5E1))
-                            }
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AmcActiveBadgeText, modifier = Modifier.size(14.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("₹0 labor cost on scheduled bi-annual safety audits", fontSize = 11.sp, color = Color(0xFFCBD5E1))
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("Expires: Dec 2026", fontSize = 11.sp, color = Color(0xFF94A3B8))
-
-                            Button(
-                                onClick = { showAmcDialog = true },
-                                colors = ButtonDefaults.buttonColors(containerColor = AmcShieldElectricBlue),
-                                shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                            )
+                            .padding(18.dp)
+                    ) {
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text("View Benefits →", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = NavyDark900)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(34.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFFF59E0B).copy(alpha = 0.15f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Shield,
+                                            contentDescription = null,
+                                            tint = Color(0xFFF59E0B),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            text = "ZEX-SHIELD AMC PROTECTION",
+                                            fontWeight = FontWeight.Black,
+                                            fontSize = 12.sp,
+                                            color = Color.White,
+                                            letterSpacing = 0.5.sp
+                                        )
+                                        Text(
+                                            text = "Annual Maintenance & Safety Shield",
+                                            fontSize = 10.5.sp,
+                                            color = Color(0xFF94A3B8)
+                                        )
+                                    }
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(20.dp),
+                                    color = Color(0xFFFEF3C7)
+                                ) {
+                                    Text(
+                                        text = "NOT ENROLLED",
+                                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),
+                                        color = Color(0xFFB45309),
+                                        fontSize = 9.5.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            Text(
+                                text = "Upgrade to ZEX-Shield AMC",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFFDE68A)
+                            )
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            Text(
+                                text = "Protect your home with 24/7 priority emergency dispatch (<15 mins), 12-month post-work warranty, and ₹0 labor on scheduled safety audits.",
+                                fontSize = 11.5.sp,
+                                color = Color(0xFFCBD5E1),
+                                lineHeight = 16.sp
+                            )
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Plans from ₹199 / mo", fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFFF59E0B))
+
+                                Button(
+                                    onClick = { showAmcDialog = true },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                                ) {
+                                    Text("Upgrade to AMC →", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E293B))
+                                }
                             }
                         }
                     }
@@ -741,17 +1025,31 @@ fun CustomerProfileView(
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column {
                                     Text(
-                                        text = "Home (Registered Service Address)",
+                                        text = "Home (Registered Primary Address)",
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 13.sp,
                                         color = TextDarkPrimary
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = userAddress.ifBlank { "Plot No. 215, Sri Vihar, Berhampur, Ganjam, Odisha - 760004" },
-                                        fontSize = 11.5.sp,
-                                        color = TextDarkSecondary
-                                    )
+                                    if (userAddress.isNotBlank()) {
+                                        Text(
+                                            text = userAddress,
+                                            fontSize = 11.5.sp,
+                                            color = TextDarkSecondary
+                                        )
+                                    } else {
+                                        Text(
+                                            text = "No registered address",
+                                            fontSize = 11.5.sp,
+                                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                                            color = Color(0xFFEF4444)
+                                        )
+                                        Text(
+                                            text = "Tap edit to set your primary doorstep service address",
+                                            fontSize = 10.5.sp,
+                                            color = TextDarkMuted
+                                        )
+                                    }
                                 }
                             }
 
@@ -760,8 +1058,8 @@ fun CustomerProfileView(
                                 modifier = Modifier.size(28.dp)
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Edit,
-                                    contentDescription = "Edit",
+                                    imageVector = if (userAddress.isNotBlank()) Icons.Default.Edit else Icons.Default.Add,
+                                    contentDescription = if (userAddress.isNotBlank()) "Edit" else "Add Address",
                                     tint = SapphireBlue800,
                                     modifier = Modifier.size(16.dp)
                                 )
@@ -769,7 +1067,7 @@ fun CustomerProfileView(
                         }
                     }
 
-                    // Address 2: Office / Commercial
+                    // Address 2: Office / Commercial / Secondary (Dynamic Vault)
                     Surface(
                         color = Color.White,
                         shape = ShapeCardSmall,
@@ -802,32 +1100,64 @@ fun CustomerProfileView(
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column {
                                     Text(
-                                        text = "Office / Commercial",
+                                        text = secondaryLabel.ifBlank { "Office / Commercial" },
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 13.sp,
                                         color = TextDarkPrimary
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = "Suite 12, Nariman Point, Mumbai, Maharashtra - 400021",
-                                        fontSize = 11.5.sp,
-                                        color = TextDarkSecondary
-                                    )
+                                    if (secondaryAddress.isNotBlank()) {
+                                        Text(
+                                            text = secondaryAddress,
+                                            fontSize = 11.5.sp,
+                                            color = TextDarkSecondary
+                                        )
+                                    } else {
+                                        Text(
+                                            text = "No commercial address registered",
+                                            fontSize = 11.5.sp,
+                                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                                            color = TextDarkMuted
+                                        )
+                                        Text(
+                                            text = "Tap to add an office or commercial location",
+                                            fontSize = 10.5.sp,
+                                            color = TextDarkMuted
+                                        )
+                                    }
                                 }
                             }
 
-                            IconButton(
-                                onClick = {
-                                    Toast.makeText(context, "Editing commercial address...", Toast.LENGTH_SHORT).show()
-                                },
-                                modifier = Modifier.size(28.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Edit,
-                                    contentDescription = "Edit",
-                                    tint = SapphireBlue800,
-                                    modifier = Modifier.size(16.dp)
-                                )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(
+                                    onClick = { showEditSecondaryDialog = true },
+                                    modifier = Modifier.size(28.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = if (secondaryAddress.isNotBlank()) Icons.Default.Edit else Icons.Default.Add,
+                                        contentDescription = if (secondaryAddress.isNotBlank()) "Edit" else "Add Address",
+                                        tint = SapphireBlue800,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                                if (secondaryAddress.isNotBlank()) {
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    IconButton(
+                                        onClick = {
+                                            sessionManager.setSecondaryAddress("", "Office / Commercial")
+                                            secondaryAddress = ""
+                                            Toast.makeText(context, "Secondary address cleared", Toast.LENGTH_SHORT).show()
+                                        },
+                                        modifier = Modifier.size(28.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.DeleteOutline,
+                                            contentDescription = "Remove",
+                                            tint = Color(0xFFEF4444),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

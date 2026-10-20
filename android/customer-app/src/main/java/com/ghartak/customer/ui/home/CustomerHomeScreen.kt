@@ -61,7 +61,17 @@ fun CustomerHomeScreen(
     var lastClickTime by remember { mutableStateOf(0L) }
     var showEnvSwitcher by remember { mutableStateOf(false) }
     var showNotificationCenter by remember { mutableStateOf(false) }
-    var unreadNotificationCount by remember { mutableStateOf(3) }
+
+    val hasActiveJob = sessionManager.hasActiveJob()
+    val activeJobOtp = sessionManager.getActiveJobOtp()
+    val hasActiveAmc = sessionManager.hasActiveAmc()
+    val liveNotificationCount = (if (hasActiveJob) 1 else 0) +
+            (if (hasActiveJob && activeJobOtp.isNotBlank()) 1 else 0) +
+            (if (hasActiveAmc) 1 else 0)
+
+    var unreadNotificationCount by remember(hasActiveJob, activeJobOtp, hasActiveAmc) {
+        mutableStateOf(liveNotificationCount)
+    }
 
     if (showEnvSwitcher) {
         EnvironmentSwitcherDialog(
@@ -78,6 +88,13 @@ fun CustomerHomeScreen(
         NotificationCenterDialog(
             unreadCount = unreadNotificationCount,
             technicianName = activeTechName,
+            hasActiveJob = hasActiveJob,
+            activeJobTitle = sessionManager.getActiveJobTitle(),
+            activeJobStatus = sessionManager.getActiveJobStatus(),
+            activeJobTicket = sessionManager.getActiveJobTicketNumber(),
+            activeJobOtp = activeJobOtp,
+            hasActiveAmc = hasActiveAmc,
+            amcPlanName = sessionManager.getAmcTierName(),
             onDismiss = { showNotificationCenter = false },
             onClearAll = {
                 unreadNotificationCount = 0
@@ -1284,10 +1301,19 @@ fun ServiceItemRow(
 fun NotificationCenterDialog(
     unreadCount: Int,
     technicianName: String = "Certified Professional",
+    hasActiveJob: Boolean = false,
+    activeJobTitle: String = "",
+    activeJobStatus: String = "",
+    activeJobTicket: String = "",
+    activeJobOtp: String = "",
+    hasActiveAmc: Boolean = false,
+    amcPlanName: String = "",
     onDismiss: () -> Unit,
     onClearAll: () -> Unit,
     onTrackLive: () -> Unit
 ) {
+    val showEmpty = unreadCount == 0 || (!hasActiveJob && !hasActiveAmc)
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -1320,7 +1346,7 @@ fun NotificationCenterDialog(
                     )
                 }
 
-                if (unreadCount > 0) {
+                if (!showEmpty) {
                     TextButton(onClick = onClearAll) {
                         Text("Clear All", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = SapphireBlue800)
                     }
@@ -1334,7 +1360,7 @@ fun NotificationCenterDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                if (unreadCount == 0) {
+                if (showEmpty) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -1363,37 +1389,56 @@ fun NotificationCenterDialog(
                         }
                     }
                 } else {
-                    // Notification Item 1: Dispatch Alert
-                    NotificationCard(
-                        icon = Icons.Default.Bolt,
-                        iconTint = SapphireBlue800,
-                        iconBg = Color(0xFFEFF6FF),
-                        title = "Technician En Route",
-                        subtitle = "${technicianName.ifBlank { "Certified Professional" }} is on the way to your doorstep. ETA ~15 mins.",
-                        time = "10 mins ago",
-                        actionLabel = "Track Live >",
-                        onAction = onTrackLive
-                    )
+                    // Notification Item 1: Active Work Order Dispatch Alert
+                    if (hasActiveJob) {
+                        val dispatchTitle = when (activeJobStatus.uppercase()) {
+                            "DISPATCHED", "EN_ROUTE" -> "Technician En Route"
+                            "IN_PROGRESS" -> "Service In Progress"
+                            "ARRIVED" -> "Technician Arrived at Doorstep"
+                            else -> "Booking Confirmed • #${activeJobTicket.ifBlank { "TKT" }}"
+                        }
+                        val dispatchSubtitle = when (activeJobStatus.uppercase()) {
+                            "DISPATCHED", "EN_ROUTE" -> "${technicianName.ifBlank { "Certified Professional" }} is on the way to your doorstep for ${activeJobTitle.ifBlank { "your service" }}."
+                            "IN_PROGRESS" -> "${technicianName.ifBlank { "Certified Professional" }} is actively performing ${activeJobTitle.ifBlank { "service" }}."
+                            "ARRIVED" -> "${technicianName.ifBlank { "Technician" }} is waiting at your doorstep for verification."
+                            else -> "${activeJobTitle.ifBlank { "Service" }} is scheduled with ${technicianName.ifBlank { "a verified specialist" }}."
+                        }
 
-                    // Notification Item 2: Security Interlock OTP
-                    NotificationCard(
-                        icon = Icons.Default.Shield,
-                        iconTint = SuccessGreen,
-                        iconBg = Color(0xFFDCFCE7),
-                        title = "Safety Handover OTP: #8492",
-                        subtitle = "Share this 4-digit security code with technician only upon arrival and equipment inspection.",
-                        time = "22 mins ago"
-                    )
+                        NotificationCard(
+                            icon = Icons.Default.Bolt,
+                            iconTint = SapphireBlue800,
+                            iconBg = Color(0xFFEFF6FF),
+                            title = dispatchTitle,
+                            subtitle = dispatchSubtitle,
+                            time = "Live now",
+                            actionLabel = "Track Live >",
+                            onAction = onTrackLive
+                        )
 
-                    // Notification Item 3: AMC Benefit
-                    NotificationCard(
-                        icon = Icons.Default.Star,
-                        iconTint = Color(0xFFD97706),
-                        iconBg = Color(0xFFFEF3C7),
-                        title = "ZEX-Shield AMC Active",
-                        subtitle = "Your comprehensive doorstep service protection is active. You have 2 free scheduled audits remaining.",
-                        time = "2 hours ago"
-                    )
+                        // Notification Item 2: Security Interlock OTP (Only if OTP is issued and job is active)
+                        if (activeJobOtp.isNotBlank()) {
+                            NotificationCard(
+                                icon = Icons.Default.Shield,
+                                iconTint = SuccessGreen,
+                                iconBg = Color(0xFFDCFCE7),
+                                title = "Safety Handover OTP: #$activeJobOtp",
+                                subtitle = "Share this 4-digit security code with ${technicianName.ifBlank { "technician" }} only upon physical arrival and equipment inspection.",
+                                time = "Active security code"
+                            )
+                        }
+                    }
+
+                    // Notification Item 3: Live AMC Membership Alert (Only if user has an active AMC)
+                    if (hasActiveAmc) {
+                        NotificationCard(
+                            icon = Icons.Default.Star,
+                            iconTint = Color(0xFFD97706),
+                            iconBg = Color(0xFFFEF3C7),
+                            title = "ZEX-Shield AMC Active",
+                            subtitle = "Your comprehensive protection (${amcPlanName.ifBlank { "Active Plan" }}) is active. Priority dispatch and zero labor warranty enabled.",
+                            time = "Active plan"
+                        )
+                    }
                 }
             }
         },

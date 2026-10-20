@@ -25,6 +25,11 @@ class SessionManager(val context: Context) {
         private const val KEY_CUSTOM_BASE_URL = "key_custom_base_url"
         private const val KEY_USER_PROFILE_IMAGE = "key_user_profile_image"
         private const val KEY_PAST_ORDERS = "key_past_orders"
+        private const val KEY_SECONDARY_ADDRESS = "key_secondary_address"
+        private const val KEY_SECONDARY_LABEL = "key_secondary_label"
+        private const val KEY_HAS_ACTIVE_AMC = "key_has_active_amc"
+        private const val KEY_AMC_TIER_NAME = "key_amc_tier_name"
+        private const val KEY_AMC_EXPIRY_DATE = "key_amc_expiry_date"
 
         // Active Job & Invoice Persistence Keys
         private const val KEY_ACTIVE_JOB_ID = "key_active_job_id"
@@ -226,6 +231,37 @@ class SessionManager(val context: Context) {
     }
 
     // -------------------------------------------------------------
+    // Secondary & Vault Address Management
+    // -------------------------------------------------------------
+    fun getSecondaryAddress(): String = prefs.getString(KEY_SECONDARY_ADDRESS, "") ?: ""
+
+    fun getSecondaryLabel(): String = prefs.getString(KEY_SECONDARY_LABEL, "Office / Commercial") ?: "Office / Commercial"
+
+    fun setSecondaryAddress(address: String, label: String = "Office / Commercial") {
+        prefs.edit()
+            .putString(KEY_SECONDARY_ADDRESS, address.trim())
+            .putString(KEY_SECONDARY_LABEL, label.trim())
+            .apply()
+    }
+
+    // -------------------------------------------------------------
+    // AMC Subscription Management
+    // -------------------------------------------------------------
+    fun hasActiveAmc(): Boolean = prefs.getBoolean(KEY_HAS_ACTIVE_AMC, false)
+
+    fun getAmcTierName(): String = prefs.getString(KEY_AMC_TIER_NAME, "") ?: ""
+
+    fun getAmcExpiryDate(): String = prefs.getString(KEY_AMC_EXPIRY_DATE, "") ?: ""
+
+    fun setAmcSubscription(hasActive: Boolean, tierName: String = "", expiryDate: String = "") {
+        prefs.edit()
+            .putBoolean(KEY_HAS_ACTIVE_AMC, hasActive)
+            .putString(KEY_AMC_TIER_NAME, tierName)
+            .putString(KEY_AMC_EXPIRY_DATE, expiryDate)
+            .apply()
+    }
+
+    // -------------------------------------------------------------
     // Active Job / Order Persistence (Fix for amount/service mismatch)
     // -------------------------------------------------------------
     fun hasActiveJob(): Boolean {
@@ -417,6 +453,11 @@ class SessionManager(val context: Context) {
             remove(KEY_ACTIVE_JOB_TICKET_NO)
             remove(KEY_ACTIVE_JOB_STATE_CODE)
             remove(KEY_ACTIVE_JOB_GSTIN)
+            remove(KEY_SECONDARY_ADDRESS)
+            remove(KEY_SECONDARY_LABEL)
+            remove(KEY_HAS_ACTIVE_AMC)
+            remove(KEY_AMC_TIER_NAME)
+            remove(KEY_AMC_EXPIRY_DATE)
             putBoolean(KEY_IS_LOGGED_IN, false)
             apply()
         }

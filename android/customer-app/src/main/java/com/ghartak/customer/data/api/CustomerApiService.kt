@@ -52,4 +52,15 @@ interface CustomerApiService {
     // Cancel Job
     @POST("jobs/{id}/cancel")
     suspend fun cancelJob(@Path("id") jobId: String): Response<ApiResponse<Map<String, Any>>>
+
+    // Subscriptions & AMC
+    @GET("subscriptions")
+    suspend fun getSubscriptions(
+        @Query("customerId") customerId: String
+    ): Response<ApiResponse<com.google.gson.JsonElement>>
+
+    @POST("subscriptions")
+    suspend fun enrollSubscription(
+        @Body body: Map<String, Any>
+    ): Response<ApiResponse<com.google.gson.JsonElement>>
 }
