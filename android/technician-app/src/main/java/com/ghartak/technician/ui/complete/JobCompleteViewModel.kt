@@ -27,7 +27,7 @@ data class JobCompleteUiState(
     val afterPhotoUri: String? = null,
     val afterPhotoBitmap: Bitmap? = null,
     val rating: Int = 5,
-    val feedback: String = "Excellent high-voltage isolation, neat wiring layout, and spotless cleanup.",
+    val feedback: String = "Service completed cleanly with professional workmanship and verified safety inspection.",
     val isSubmitting: Boolean = false,
     val isCompleted: Boolean = false,
     val invoiceNumber: String = "INV-2026-MH-4091",
@@ -46,6 +46,7 @@ class JobCompleteViewModel(
 
     fun initJob(job: TechnicianJob) {
         val payout = job.totalAmountInr * 0.70
+        val defaultFeedback = "Completed ${job.serviceTitle.ifBlank { "doorstep service" }} cleanly with verified quality and safety inspection."
         _uiState.value = _uiState.value.copy(
             jobId = job.id,
             ticketNumber = job.jobTicketNumber,
@@ -56,6 +57,7 @@ class JobCompleteViewModel(
             enteredOtp = "",
             afterPhotoUri = null,
             afterPhotoBitmap = null,
+            feedback = defaultFeedback,
             isCompleted = false,
             errorMessage = null
         )
@@ -118,7 +120,7 @@ class JobCompleteViewModel(
                         jobId = targetJobId,
                         request = JobCompleteRequest(
                             handoverOtp = state.enteredOtp,
-                            afterPhotoUrl = state.afterPhotoUri ?: "local_restored_panel.jpg",
+                            afterPhotoUrl = state.afterPhotoUri ?: "local_completed_evidence.jpg",
                             customerRating = state.rating,
                             customerFeedback = state.feedback
                         )

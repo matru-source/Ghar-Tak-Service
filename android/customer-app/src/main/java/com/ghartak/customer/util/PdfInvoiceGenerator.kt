@@ -21,6 +21,19 @@ import java.util.Locale
 
 object PdfInvoiceGenerator {
 
+    fun resolveSacCode(serviceTitle: String): String {
+        val titleLower = serviceTitle.lowercase()
+        return when {
+            titleLower.contains("plumb") || titleLower.contains("water") || titleLower.contains("leak") || titleLower.contains("pipe") -> "998712"
+            titleLower.contains("clean") || titleLower.contains("wash") || titleLower.contains("deep") -> "998533"
+            titleLower.contains("carpent") || titleLower.contains("wood") || titleLower.contains("door") || titleLower.contains("furnitur") -> "998714"
+            titleLower.contains("paint") || titleLower.contains("wall") || titleLower.contains("color") -> "995473"
+            titleLower.contains("rajmistri") || titleLower.contains("mason") || titleLower.contains("brick") || titleLower.contains("tile") -> "995419"
+            titleLower.contains("appliance") || titleLower.contains("ac") || titleLower.contains("ro ") || titleLower.contains("refrig") || titleLower.contains("washing") -> "998715"
+            else -> "998713" // Electrical & Maintenance
+        }
+    }
+
     data class InvoiceData(
         val invoiceNumber: String = "INV-2026-OD-5638",
         val ticketNumber: String = "GTS-OD-5638",
@@ -31,7 +44,7 @@ object PdfInvoiceGenerator {
         val technicianName: String = "Certified Professional",
         val dateOfSupply: String = "Oct 15, 2026",
         val gstin: String = "21AAACG1234F1Z5 (21-OD)",
-        val hsnSac: String = "998713 (Electrical installation and maintenance)",
+        val hsnSac: String = "998713 (Multi-trade installation and maintenance)",
         val taxableCharges: Double = 299.00,
         val cgstAmount: Double = 26.91,
         val sgstAmount: Double = 26.91,
@@ -48,6 +61,12 @@ object PdfInvoiceGenerator {
         val document = PdfDocument()
 
         try {
+            val resolvedSac = if (data.hsnSac.isNotBlank() && !data.hsnSac.contains("998713 (Multi-trade")) {
+                data.hsnSac.take(6).trim()
+            } else {
+                resolveSacCode(data.serviceTitle)
+            }
+
             // Standard A4 Size: 595 x 842 points
             val pageInfo = PdfDocument.PageInfo.Builder(595, 842, 1).create()
             val page = document.startPage(pageInfo)
@@ -68,8 +87,8 @@ object PdfInvoiceGenerator {
             paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
             paint.textSize = 10f
             paint.color = Color.parseColor("#BBDEFB")
-            canvas.drawText("Ghar Tak Services (GTS) • Mission-Critical Electrical Engineering", 36f, 62f, paint)
-            canvas.drawText("GSTIN: ${data.gstin} | SAC Code: 998713 | 100% Tax Compliant", 36f, 78f, paint)
+            canvas.drawText("Ghar Tak Services (GTS) • Professional Doorstep Multi-Trade Services", 36f, 62f, paint)
+            canvas.drawText("GSTIN: ${data.gstin} | SAC Code: $resolvedSac | 100% Tax Compliant", 36f, 78f, paint)
 
             // Header Right - TAX INVOICE Badge
             paint.color = Color.parseColor("#FFD54F")
@@ -161,7 +180,7 @@ object PdfInvoiceGenerator {
             paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
             paint.textSize = 9.5f
             canvas.drawText(data.serviceTitle, 46f, 325f, paint)
-            canvas.drawText("998713", 300f, 325f, paint)
+            canvas.drawText(resolvedSac, 300f, 325f, paint)
             canvas.drawText("₹%,.2f".format(data.taxableCharges), 380f, 325f, paint)
             canvas.drawText("₹%,.2f".format(data.taxableCharges), 465f, 325f, paint)
 
@@ -173,7 +192,7 @@ object PdfInvoiceGenerator {
             val startY = 365f
             paint.color = Color.parseColor("#475569")
             paint.textSize = 10f
-            canvas.drawText("Taxable Electrical Charges:", 320f, startY, paint)
+            canvas.drawText("Taxable Service Charges:", 320f, startY, paint)
             canvas.drawText("₹%,.2f".format(data.taxableCharges), 485f, startY, paint)
 
             canvas.drawText("Central GST (CGST @ 9.0%):", 320f, startY + 20f, paint)

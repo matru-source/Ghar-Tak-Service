@@ -101,7 +101,8 @@ class PaymentViewModel(
             // If UPI Intent chosen, simulate/trigger NPCI deep link
             if (_uiState.value.selectedPaymentMethod.startsWith("UPI")) {
                 try {
-                    val upiUri = "upi://pay?pa=ghartak@icici&pn=GharTak%20Services&am=${_uiState.value.totalAmountInr}&cu=INR&tn=GTS-ELECTRICAL-BOOKING"
+                    val serviceTag = _uiState.value.serviceId.ifBlank { "SERVICE" }.uppercase().replace(" ", "-")
+                    val upiUri = "upi://pay?pa=ghartak@icici&pn=GharTak%20Services&am=${_uiState.value.totalAmountInr}&cu=INR&tn=GTS-$serviceTag-BOOKING"
                     val upiIntent = Intent(Intent.ACTION_VIEW, Uri.parse(upiUri))
                     // Try launching if installed, or proceed smoothly
                     if (upiIntent.resolveActivity(context.packageManager) != null) {

@@ -234,6 +234,7 @@ fun TechnicianDashboardScreen(
         // Dedicated High-Impact Emergency Safety SOS Popup Dialog
         if (showSosDialog) {
             EmergencySafetySosDialog(
+                trade = state.profile?.specialization ?: "Multi-Trade Specialist",
                 onDismiss = { showSosDialog = false },
                 onCallEmergency = {
                     showSosDialog = false
@@ -2381,9 +2382,64 @@ private fun ProfileInfoRow(
 
 @Composable
 fun EmergencySafetySosDialog(
+    trade: String = "Multi-Trade Specialist",
     onDismiss: () -> Unit,
     onCallEmergency: () -> Unit
 ) {
+    val tradeLower = trade.lowercase()
+    val (hazardTitle, hazardDesc, credPill) = when {
+        tradeLower.contains("electr") -> {
+            Triple(
+                "High-voltage flash, live arc hazard, or site accident detected?",
+                "Triggering SOS alerts Ghar Tak 24×7 Safety Command Center with your exact GPS telemetry and VDE 1000V crew credentials.",
+                "Your VDE 1000V\nCrew Credentials"
+            )
+        }
+        tradeLower.contains("plumb") || tradeLower.contains("water") || tradeLower.contains("pipe") -> {
+            Triple(
+                "High-pressure burst, severe flooding, toxic drain fumes, or site injury?",
+                "Triggering SOS alerts Ghar Tak 24×7 Safety Command Center with your exact GPS telemetry and Certified Plumbing Specialist credentials.",
+                "Certified Plumber\nCrew Credentials"
+            )
+        }
+        tradeLower.contains("carpent") || tradeLower.contains("wood") -> {
+            Triple(
+                "Power tool kickback, structural timber collapse, or sharp laceration hazard?",
+                "Triggering SOS alerts Ghar Tak 24×7 Safety Command Center with your exact GPS telemetry and Certified Carpentry Specialist credentials.",
+                "Certified Carpenter\nCrew Credentials"
+            )
+        }
+        tradeLower.contains("clean") -> {
+            Triple(
+                "Chemical splash, toxic fume inhalation, slip & fall, or workplace accident?",
+                "Triggering SOS alerts Ghar Tak 24×7 Safety Command Center with your exact GPS telemetry and Certified Hygiene Specialist credentials.",
+                "Certified Hygiene\nCrew Credentials"
+            )
+        }
+        tradeLower.contains("paint") -> {
+            Triple(
+                "Scaffolding/ladder fall, chemical toxicity, eye injury, or site accident?",
+                "Triggering SOS alerts Ghar Tak 24×7 Safety Command Center with your exact GPS telemetry and Certified Painting Specialist credentials.",
+                "Certified Painting\nCrew Credentials"
+            )
+        }
+        tradeLower.contains("mason") || tradeLower.contains("rajmistri") -> {
+            Triple(
+                "Wall collapse, falling heavy masonry debris, or severe site accident?",
+                "Triggering SOS alerts Ghar Tak 24×7 Safety Command Center with your exact GPS telemetry and Certified Masonry Specialist credentials.",
+                "Certified Masonry\nCrew Credentials"
+            )
+        }
+        else -> {
+            val tradeLabel = trade.ifBlank { "Multi-Trade" }
+            Triple(
+                "Severe workplace hazard, physical trauma, or acute site accident detected?",
+                "Triggering SOS alerts Ghar Tak 24×7 Safety Command Center with your exact GPS telemetry and Certified $tradeLabel credentials.",
+                "Certified $tradeLabel\nCrew Credentials"
+            )
+        }
+    }
+
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(24.dp),
@@ -2535,14 +2591,14 @@ fun EmergencySafetySosDialog(
 
                             Column {
                                 Text(
-                                    text = "High-voltage flash, live arc hazard, or site accident detected?",
+                                    text = hazardTitle,
                                     fontWeight = FontWeight.Black,
                                     fontSize = 12.5.sp,
                                     color = Color(0xFF881337)
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "Triggering SOS alerts Ghar Tak 24×7 Safety Command Center with your exact GPS telemetry and VDE 1000V crew credentials.",
+                                    text = hazardDesc,
                                     fontSize = 11.sp,
                                     color = Color(0xFF9F1239),
                                     lineHeight = 15.sp
@@ -2553,14 +2609,14 @@ fun EmergencySafetySosDialog(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // 3 Telemetry Columns (GPS, 24x7 Center, VDE Crew)
+                    // 3 Telemetry Columns (GPS, 24x7 Center, Dynamic Crew Credentials)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceAround
                     ) {
                         SosTelemetryPill(icon = Icons.Default.Place, iconTint = TechEmergencyRed, label = "Your Live\nGPS Location")
                         SosTelemetryPill(icon = Icons.Default.HeadsetMic, iconTint = Color(0xFFF57C00), label = "24×7 Safety\nCommand Center")
-                        SosTelemetryPill(icon = Icons.Default.Shield, iconTint = TechBlue, label = "Your VDE 1000V\nCrew Credentials")
+                        SosTelemetryPill(icon = Icons.Default.Shield, iconTint = TechBlue, label = credPill)
                     }
 
                     Spacer(modifier = Modifier.height(18.dp))

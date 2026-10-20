@@ -236,7 +236,7 @@ fun CustomerHomeScreen(
                             }
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "Professional Electrical Services at Your Doorstep",
+                                text = "Professional Multi-Trade Services at Your Doorstep",
                                 style = SubGreetingStyle
                             )
                         }
@@ -288,7 +288,7 @@ fun CustomerHomeScreen(
                                 onValueChange = { viewModel.setSearchQuery(it) },
                                 placeholder = {
                                     Text(
-                                        text = "Search for electrical services...",
+                                        text = "Search for home services, plumbing, repairs...",
                                         fontSize = 13.sp,
                                         color = Color(0xFF9E9E9E)
                                     )
@@ -327,7 +327,7 @@ fun CustomerHomeScreen(
                             // Voice Search Mic Icon
                             IconButton(
                                 onClick = {
-                                    Toast.makeText(context, "🎤 Voice Search: Listening for electrical query...", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "🎤 Voice Search: Listening for service query...", Toast.LENGTH_SHORT).show()
                                 },
                                 modifier = Modifier.size(28.dp)
                             ) {
@@ -1377,7 +1377,7 @@ fun NotificationCenterDialog(
                         iconTint = Color(0xFFD97706),
                         iconBg = Color(0xFFFEF3C7),
                         title = "ZEX-Shield AMC Active",
-                        subtitle = "Your comprehensive home electrical protection is active. You have 2 free scheduled audits remaining.",
+                        subtitle = "Your comprehensive doorstep service protection is active. You have 2 free scheduled audits remaining.",
                         time = "2 hours ago"
                     )
                 }

@@ -26,8 +26,8 @@ data class ServiceSignoffUiState(
     val sgstInr: Double = 26.91,
     val totalAmountInr: Double = 352.82,
     val rating: Int = 5,
-    val reviewText: String = "Technician arrived on time, used insulated safety gear, and completed the service cleanly. Safety inspection passed at 100%.",
-    val selectedTags: Set<String> = setOf("1000V Safe", "Punctual", "Spotless Cleanup"),
+    val reviewText: String = "Specialist arrived on time, used professional safety gear, and completed the service cleanly. Inspection verified at 100%.",
+    val selectedTags: Set<String> = setOf("Punctual", "Spotless Cleanup", "Expert Service"),
     val isWorkRestoredConfirmed: Boolean = true,
     val isSafetyChecklistConfirmed: Boolean = true,
     val isDownloadingInvoice: Boolean = false,
@@ -71,6 +71,7 @@ class ServiceSignoffViewModel(
         val techFirstName = resolvedTech.trim().split(" ").firstOrNull() ?: "Specialist"
         val invoiceNum = if (resolvedTicket.startsWith("GTS")) resolvedTicket.replace("GTS", "INV-2026") else "INV-2026-${resolvedTicket}"
         val defaultReview = "$techFirstName arrived on time, used professional safety gear, and completed the $resolvedTitle cleanly. Service quality verified at 100%."
+        val resolvedSac = com.ghartak.customer.util.PdfInvoiceGenerator.resolveSacCode(resolvedTitle)
 
         _uiState.value = _uiState.value.copy(
             jobId = jobId,
@@ -85,6 +86,7 @@ class ServiceSignoffViewModel(
             totalAmountInr = resolvedTotal,
             ticketNumber = resolvedTicket,
             invoiceNumber = invoiceNum,
+            hsnSacCode = resolvedSac,
             reviewText = defaultReview
         )
     }

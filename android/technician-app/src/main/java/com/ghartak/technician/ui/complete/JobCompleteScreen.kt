@@ -57,14 +57,14 @@ fun JobCompleteScreen(
     ) { bitmap: Bitmap? ->
         if (bitmap != null) {
             try {
-                val file = File(context.cacheDir, "postwork_panel_${System.currentTimeMillis()}.jpg")
+                val file = File(context.cacheDir, "postwork_evidence_${System.currentTimeMillis()}.jpg")
                 file.outputStream().use { out ->
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 85, out)
                 }
                 viewModel.setAfterPhoto(file.absolutePath, bitmap)
                 Toast.makeText(context, "Post-work evidence photo saved!", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
-                viewModel.setAfterPhoto("local_captured_panel.jpg", bitmap)
+                viewModel.setAfterPhoto("local_captured_evidence.jpg", bitmap)
             }
         }
     }
@@ -228,13 +228,13 @@ fun JobCompleteScreen(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = "Capture Restored Panel Evidence",
+                                    text = "Capture Post-Service Evidence",
                                     color = TextPrimary,
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Text(
-                                    text = "Clear photo of restored wiring, closed covers, and neat installation",
+                                    text = "Clear photo of completed work, cleaned surroundings, and verified installation",
                                     color = TextMuted,
                                     fontSize = 11.sp,
                                     textAlign = TextAlign.Center
@@ -284,7 +284,7 @@ fun JobCompleteScreen(
                                     if (state.afterPhotoBitmap != null) {
                                         Image(
                                             bitmap = state.afterPhotoBitmap!!.asImageBitmap(),
-                                            contentDescription = "Captured Panel Photo",
+                                            contentDescription = "Captured Service Photo",
                                             modifier = Modifier
                                                 .size(52.dp)
                                                 .clip(RoundedCornerShape(8.dp))
@@ -304,7 +304,7 @@ fun JobCompleteScreen(
 
                                     Column {
                                         Text(
-                                            text = "RESTORED PANEL EVIDENCE LOGGED",
+                                            text = "POST-SERVICE EVIDENCE LOGGED",
                                             color = SafetyGreen,
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 12.sp

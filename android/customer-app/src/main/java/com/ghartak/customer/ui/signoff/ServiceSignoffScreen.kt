@@ -35,14 +35,73 @@ fun ServiceSignoffScreen(
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    val feedbackTags = listOf(
-        "1000V Safe",
-        "Punctual",
-        "Neat Wiring",
-        "Spotless Cleanup",
-        "Calibrated Tester",
-        "Polite"
-    )
+    val feedbackTags = remember(state.serviceTitle) {
+        val titleLower = state.serviceTitle.lowercase()
+        when {
+            titleLower.contains("plumb") || titleLower.contains("water") || titleLower.contains("leak") || titleLower.contains("pipe") -> {
+                listOf("Zero Leakage", "Punctual", "Quality Piping", "Spotless Cleanup", "Pressure Tested", "Polite")
+            }
+            titleLower.contains("clean") || titleLower.contains("wash") || titleLower.contains("deep") -> {
+                listOf("Deep Cleaned", "Punctual", "Germ-Free", "Spotless Shine", "Eco-Friendly", "Polite")
+            }
+            titleLower.contains("carpent") || titleLower.contains("wood") || titleLower.contains("door") || titleLower.contains("furnitur") -> {
+                listOf("Smooth Finish", "Punctual", "Sturdy Alignment", "Clean Scraping", "Precision Cut", "Polite")
+            }
+            titleLower.contains("paint") || titleLower.contains("wall") || titleLower.contains("color") -> {
+                listOf("Uniform Coat", "Punctual", "Edge Masking", "Zero Stains", "Smooth Finish", "Polite")
+            }
+            titleLower.contains("rajmistri") || titleLower.contains("mason") || titleLower.contains("brick") || titleLower.contains("tile") -> {
+                listOf("Level Alignment", "Punctual", "Strong Binding", "Neat Plastering", "Debris Cleared", "Polite")
+            }
+            titleLower.contains("appliance") || titleLower.contains("ac") || titleLower.contains("ro ") || titleLower.contains("refrig") || titleLower.contains("washing") -> {
+                listOf("Genuine Spares", "Punctual", "Cooling Tested", "Spotless Cleanup", "Quiet Run", "Polite")
+            }
+            titleLower.contains("electr") || titleLower.contains("wire") || titleLower.contains("power") || titleLower.contains("light") || titleLower.contains("fan") -> {
+                listOf("1000V Safe", "Punctual", "Neat Wiring", "Spotless Cleanup", "Calibrated Tester", "Polite")
+            }
+            else -> {
+                listOf("Expert Service", "Punctual", "Quality Spares", "Spotless Cleanup", "Verified Safe", "Polite")
+            }
+        }
+    }
+
+    val (checkItem1, checkItem2) = remember(state.serviceTitle) {
+        val titleLower = state.serviceTitle.lowercase()
+        when {
+            titleLower.contains("plumb") || titleLower.contains("water") || titleLower.contains("leak") || titleLower.contains("pipe") -> {
+                "Water lines, valves & fittings inspected with zero active leaks." to
+                "Work area wiped clean and dry; water main / shut-off valves secured."
+            }
+            titleLower.contains("clean") || titleLower.contains("wash") || titleLower.contains("deep") -> {
+                "All assigned surfaces deep-cleaned, sanitized, and inspected." to
+                "Cleaning solutions cleared and waste disposed of responsibly."
+            }
+            titleLower.contains("carpent") || titleLower.contains("wood") || titleLower.contains("door") || titleLower.contains("furnitur") -> {
+                "Wood fittings, hinges, and joints inspected for level and sturdy alignment." to
+                "Wood shavings, sawdust, and hardware scrap completely cleared."
+            }
+            titleLower.contains("paint") || titleLower.contains("wall") || titleLower.contains("color") -> {
+                "Wall coats inspected for uniform finish and even surface coverage." to
+                "Floor masking sheets, paint splatters, and taping removed cleanly."
+            }
+            titleLower.contains("rajmistri") || titleLower.contains("mason") || titleLower.contains("brick") || titleLower.contains("tile") -> {
+                "Masonry/tiling structure verified level, sturdy, and securely aligned." to
+                "Cement debris, mortar mix, and rubble cleared from work perimeter."
+            }
+            titleLower.contains("appliance") || titleLower.contains("ac") || titleLower.contains("ro ") || titleLower.contains("refrig") || titleLower.contains("washing") -> {
+                "Appliance operations, cooling/heating, and safety controls tested." to
+                "Old components packaged and workspace wiped clean."
+            }
+            titleLower.contains("electr") || titleLower.contains("wire") || titleLower.contains("power") || titleLower.contains("light") || titleLower.contains("fan") -> {
+                "Power & all circuit breakers inspected and functioning normally." to
+                "Insulation debris cleared and distribution box panel lid securely fastened."
+            }
+            else -> {
+                "Service completed according to specifications and fully functioning." to
+                "Workspace tidied, tools packed, and handover verified cleanly."
+            }
+        }
+    }
 
     LaunchedEffect(jobId) {
         viewModel.initSignoff(jobId)
@@ -247,7 +306,7 @@ fun ServiceSignoffScreen(
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(text = "Taxable Electrical Charges:", color = TextDarkSecondary, fontSize = 12.sp)
+                        Text(text = "Taxable Service Charges:", color = TextDarkSecondary, fontSize = 12.sp)
                         Text(text = "₹${"%,.2f".format(state.basePriceInr)}", color = TextDarkPrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     }
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -395,7 +454,7 @@ fun ServiceSignoffScreen(
                             colors = CheckboxDefaults.colors(checkedColor = SapphireBlue800)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = "Power & all circuit breakers inspected and functioning normally.", fontSize = 12.sp, color = TextDarkSecondary)
+                        Text(text = checkItem1, fontSize = 12.sp, color = TextDarkSecondary)
                     }
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -405,7 +464,7 @@ fun ServiceSignoffScreen(
                             colors = CheckboxDefaults.colors(checkedColor = SapphireBlue800)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = "Insulation debris cleared and distribution box panel lid securely fastened.", fontSize = 12.sp, color = TextDarkSecondary)
+                        Text(text = checkItem2, fontSize = 12.sp, color = TextDarkSecondary)
                     }
                 }
             }

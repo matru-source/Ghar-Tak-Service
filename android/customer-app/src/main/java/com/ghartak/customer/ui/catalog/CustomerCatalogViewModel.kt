@@ -50,7 +50,7 @@ class CustomerCatalogViewModel(
         val allServices = ServiceCatalogRegistry.allServices
         val hasJob = sessionManager.hasActiveJob()
         val jobStatus = sessionManager.getActiveJobStatus()
-        val rawTechName = sessionManager.getActiveJobTechnicianName().ifEmpty { "Electrician" }
+        val rawTechName = sessionManager.getActiveJobTechnicianName().ifEmpty { "Service Specialist" }
         val techLabel = if (jobStatus == "ASSIGNED" || jobStatus == "PENDING_DISPATCH") {
             "$rawTechName (Awaiting Confirmation)"
         } else {

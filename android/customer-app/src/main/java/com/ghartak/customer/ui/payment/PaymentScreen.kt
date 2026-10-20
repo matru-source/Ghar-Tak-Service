@@ -251,7 +251,7 @@ fun PaymentScreen(
 
                     PaymentOptionRow(
                         title = "Pay on Service Completion",
-                        subtitle = "Inspect restored power first, then pay via QR or cash",
+                        subtitle = "Inspect completed service first, then pay via QR or cash",
                         badge = "ZERO ADVANCE",
                         badgeColor = SapphireBlue800,
                         icon = Icons.Default.Handshake,

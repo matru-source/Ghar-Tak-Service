@@ -500,13 +500,31 @@ fun CustomerTrackingScreen(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
+                    val otpVerifyAdvice = remember(state.serviceTitle) {
+                        val titleLower = state.serviceTitle.lowercase()
+                        when {
+                            titleLower.contains("electr") || titleLower.contains("wire") || titleLower.contains("mcb") || titleLower.contains("panel") || titleLower.contains("switch") || titleLower.contains("fan") ->
+                                "Share with ${state.technicianName} ONLY after inspecting your panel and verifying restored power."
+                            titleLower.contains("plumb") || titleLower.contains("water") || titleLower.contains("tap") || titleLower.contains("pipe") || titleLower.contains("tank") ->
+                                "Share with ${state.technicianName} ONLY after inspecting pipe joints and verifying zero water leakage."
+                            titleLower.contains("clean") || titleLower.contains("sanit") ->
+                                "Share with ${state.technicianName} ONLY after inspecting the cleaned area and verifying sanitization standards."
+                            titleLower.contains("paint") || titleLower.contains("wall") ->
+                                "Share with ${state.technicianName} ONLY after inspecting surface finish and uniform paint coat."
+                            titleLower.contains("carpenter") || titleLower.contains("wood") || titleLower.contains("door") || titleLower.contains("furniture") ->
+                                "Share with ${state.technicianName} ONLY after inspecting fittings and smooth movement of woodwork."
+                            else ->
+                                "Share with ${state.technicianName} ONLY after inspecting the completed service and verifying quality handover."
+                        }
+                    }
+
                     Surface(
                         color = Color(0xFFFEF3C7),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "🔒 DO NOT SHARE THIS OTP NOW.\nShare with ${state.technicianName} ONLY after inspecting your panel and verifying restored power.",
+                            text = "🔒 DO NOT SHARE THIS OTP NOW.\n$otpVerifyAdvice",
                             color = Color(0xFF92400E),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Medium,
