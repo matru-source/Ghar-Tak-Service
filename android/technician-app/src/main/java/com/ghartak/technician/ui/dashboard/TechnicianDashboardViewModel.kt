@@ -419,8 +419,32 @@ class TechnicianDashboardViewModel(
         viewModelScope.launch {
             try {
                 val pin = sessionManager.getPincode().ifEmpty {
-                    Regex("\\b\\d{6}\\b").find(sessionManager.getServiceArea())?.value ?: "760001"
+                    Regex("\\b\\d{6}\\b").find(sessionManager.getServiceArea())?.value ?: "759001"
                 }
+                val (hubLat, hubLng) = com.ghartak.technician.util.IndianPincodeResolver.getCoordinatesForPincode(pin)
+                var liveLat = hubLat
+                var liveLng = hubLng
+                try {
+                    val lm = sessionManager.context.getSystemService(android.content.Context.LOCATION_SERVICE) as? android.location.LocationManager
+                    if (lm != null) {
+                        val providers = listOf(
+                            android.location.LocationManager.GPS_PROVIDER,
+                            android.location.LocationManager.NETWORK_PROVIDER,
+                            android.location.LocationManager.PASSIVE_PROVIDER
+                        )
+                        for (p in providers) {
+                            try {
+                                val loc = lm.getLastKnownLocation(p)
+                                if (loc != null) {
+                                    liveLat = loc.latitude
+                                    liveLng = loc.longitude
+                                    break
+                                }
+                            } catch (_: SecurityException) {}
+                        }
+                    }
+                } catch (_: Throwable) {}
+
                 val techId = sessionManager.getTechnicianId()
                 val api = ApiClient.getService(sessionManager.context)
                 val req = RegisterTechnicianRequest(
@@ -430,13 +454,15 @@ class TechnicianDashboardViewModel(
                     phone = sessionManager.getPhone().ifEmpty { "+91 9876543210" },
                     email = sessionManager.getEmail().ifEmpty { null },
                     trade = sessionManager.getSpecialization(),
-                    pincode = pin
+                    pincode = pin,
+                    latitude = liveLat,
+                    longitude = liveLng
                 )
                 val res = api.registerTechnician(req)
                 if (res.isSuccessful && techId.isNotEmpty()) {
                     api.updateAvailability(techId, mapOf("isOnline" to sessionManager.isOnline()))
                 }
-                Log.d("TechnicianSync", "Synced profile for $techId ($pin - ${sessionManager.getSpecialization()}) to server: ${res.isSuccessful}")
+                Log.d("TechnicianSync", "Synced profile for $techId ($pin - ${sessionManager.getSpecialization()} at $liveLat,$liveLng) to server: ${res.isSuccessful}")
             } catch (e: Exception) {
                 Log.w("TechnicianSync", "Failed to sync technician profile to server: ${e.message}")
             }

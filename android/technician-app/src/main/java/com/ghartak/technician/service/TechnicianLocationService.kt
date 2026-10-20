@@ -158,12 +158,51 @@ class TechnicianLocationService : Service() {
         serviceScope.launch {
             val sessionManager = SessionManager(applicationContext)
             val techId = sessionManager.getTechnicianId()
-            val pin = sessionManager.getPincode().ifEmpty { "760001" }
-            val isOdisha = pin.startsWith("75") || pin.startsWith("76") || pin.startsWith("77")
+            val pin = sessionManager.getPincode().ifEmpty { "759001" }
+            val (hubLat, hubLng) = com.ghartak.technician.util.IndianPincodeResolver.getCoordinatesForPincode(pin)
 
             val lm = applicationContext.getSystemService(Context.LOCATION_SERVICE) as? android.location.LocationManager
-            var currentLat = if (isOdisha) 19.3150 else 18.9220
-            var currentLng = if (isOdisha) 84.7941 else 72.8347
+            var currentLat = hubLat
+            var currentLng = hubLng
+            var dynamicSpeedKmh = 0.0
+            var dynamicHeadingDeg = lastCompassHeadingDeg
+
+            // LocationListener for continuous live updates from Android LocationManager
+            val locationListener = object : android.location.LocationListener {
+                override fun onLocationChanged(loc: android.location.Location) {
+                    currentLat = loc.latitude
+                    currentLng = loc.longitude
+                    if (loc.hasSpeed()) {
+                        dynamicSpeedKmh = Math.round(loc.speed * 3.6 * 10.0) / 10.0
+                    }
+                    if (loc.hasBearing() && loc.speed > 0.5f) {
+                        dynamicHeadingDeg = Math.round(loc.bearing * 10.0) / 10.0
+                    }
+                }
+                override fun onStatusChanged(provider: String?, status: Int, extras: android.os.Bundle?) {}
+                override fun onProviderEnabled(provider: String) {}
+                override fun onProviderDisabled(provider: String) {}
+            }
+
+            try {
+                if (lm != null && (hasFine || hasCoarse)) {
+                    val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+                    mainHandler.post {
+                        try {
+                            if (hasFine && lm.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER)) {
+                                lm.requestLocationUpdates(android.location.LocationManager.GPS_PROVIDER, 3000L, 0f, locationListener)
+                            }
+                            if (lm.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER)) {
+                                lm.requestLocationUpdates(android.location.LocationManager.NETWORK_PROVIDER, 3000L, 0f, locationListener)
+                            }
+                        } catch (se: SecurityException) {
+                            Log.w("GTS_LOC_SVC", "Location update registration security exception: ${se.message}")
+                        }
+                    }
+                }
+            } catch (e: Throwable) {
+                Log.w("GTS_LOC_SVC", "Location listener setup error: ${e.message}")
+            }
 
             while (isRunning && isActive) {
                 try {
@@ -174,18 +213,26 @@ class TechnicianLocationService : Service() {
                         break
                     }
 
-                    var dynamicSpeedKmh = 0.0
-                    var dynamicHeadingDeg = lastCompassHeadingDeg
-
+                    // Best effort check across all location providers
                     if (lm != null && (hasFine || hasCoarse)) {
                         try {
-                            val lastGps = if (hasFine) lm.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER) else null
-                            val lastNet = if (hasCoarse) lm.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER) else null
-                            val best = lastGps ?: lastNet
+                            var best: android.location.Location? = null
+                            val providers = listOf(
+                                android.location.LocationManager.GPS_PROVIDER,
+                                android.location.LocationManager.NETWORK_PROVIDER,
+                                android.location.LocationManager.PASSIVE_PROVIDER
+                            )
+                            for (p in providers) {
+                                try {
+                                    val loc = lm.getLastKnownLocation(p)
+                                    if (loc != null && (best == null || loc.time > best.time)) {
+                                        best = loc
+                                    }
+                                } catch (_: SecurityException) {}
+                            }
                             if (best != null) {
                                 currentLat = best.latitude
                                 currentLng = best.longitude
-
                                 if (best.hasSpeed()) {
                                     dynamicSpeedKmh = Math.round(best.speed * 3.6 * 10.0) / 10.0
                                 }

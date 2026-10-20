@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { db } from '@/lib/db';
+import { db, isDatabaseConnected } from '@/lib/db';
 import { dbStore } from '@/lib/mock-data';
 import { realtimeBus } from '@/lib/realtime-bus';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
@@ -42,13 +42,51 @@ export async function POST(request: NextRequest) {
     }
 
     // 1. Update in-memory technician record
-    const tech = dbStore.technicians.find((t) => t.id === technicianId || t.badgeNumber === technicianId);
+    let tech = dbStore.technicians.find((t) => t.id === technicianId || t.badgeNumber === technicianId);
     if (tech) {
       tech.currentLatitude = latitude;
       tech.currentLongitude = longitude;
       if (typeof isOnline === 'boolean') {
         tech.isOnline = isOnline;
       }
+    } else {
+      // Auto-insert if new technician pinging telemetry
+      const newTech: (typeof dbStore.technicians)[number] = {
+        id: technicianId,
+        userId: `usr_${technicianId}`,
+        partnerId: 'part_odisha_01',
+        badgeNumber: `GTS-TECH-${technicianId.slice(-4)}`,
+        fullName: 'Certified Professional',
+        phone: '+91 98201 44091',
+        rating: 5.0,
+        totalJobsCompleted: 0,
+        isOnline: isOnline ?? true,
+        currentLatitude: latitude,
+        currentLongitude: longitude,
+        assignedPincode: '759001',
+        kycStatus: 'VERIFIED' as const,
+        electricalLicenseNumber: `LIC-759001-${Math.floor(1000 + Math.random() * 9000)}`,
+        insulatedGlovesVerified: true,
+        safetyKitSerial: `KIT-${Math.floor(10000 + Math.random() * 90000)}`,
+        trade: 'Certified Professional',
+      };
+      dbStore.technicians.unshift(newTech);
+      tech = newTech;
+    }
+
+    // Persist live telemetry coordinates to PostgreSQL if connected
+    if (await isDatabaseConnected()) {
+      try {
+        const { prisma } = await import('@/lib/prisma');
+        await prisma.technician.updateMany({
+          where: { OR: [{ id: technicianId }, { badgeNumber: technicianId }] },
+          data: {
+            currentLatitude: latitude,
+            currentLongitude: longitude,
+            ...(typeof isOnline === 'boolean' ? { isOnline } : {}),
+          },
+        });
+      } catch (err) {}
     }
 
     // 2. Compute job distance & ETA if active work order is attached

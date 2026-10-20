@@ -54,7 +54,9 @@ interface CustomerApiService {
     suspend fun getAvailableTechnicians(
         @Query("pincode") pincode: String? = null,
         @Query("isOnline") isOnline: Boolean? = true,
-        @Query("sortBy") sortBy: String? = null
+        @Query("sortBy") sortBy: String? = null,
+        @Query("lat") lat: Double? = null,
+        @Query("lng") lng: Double? = null
     ): Response<ApiResponse<Map<String, Any>>>
 
     // Pincode Serviceability Check

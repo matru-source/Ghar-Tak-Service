@@ -11,6 +11,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 enum class TechnicianSortOption(val displayName: String, val shortLabel: String) {
@@ -112,13 +113,58 @@ class AddressBookingViewModel(
         }
     }
 
+    private var telemetryPollingJob: kotlinx.coroutines.Job? = null
+
+    fun startLiveTelemetryPolling(context: Context) {
+        telemetryPollingJob?.cancel()
+        telemetryPollingJob = viewModelScope.launch {
+            while (isActive) {
+                loadLiveTechnicians(context, _uiState.value.pincode)
+                delay(5000L)
+            }
+        }
+    }
+
+    fun stopLiveTelemetryPolling() {
+        telemetryPollingJob?.cancel()
+        telemetryPollingJob = null
+    }
+
     fun loadLiveTechnicians(context: Context, pin: String) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoadingTechnicians = true)
+            // Do not flicker full-screen loader on 5-second background refresh
+            if (_uiState.value.nearbyTechnicians.isEmpty()) {
+                _uiState.value = _uiState.value.copy(isLoadingTechnicians = true)
+            }
+
+            // Extract real GPS coordinates from device
+            var userLat: Double? = null
+            var userLng: Double? = null
+            val lm = context.getSystemService(Context.LOCATION_SERVICE) as? android.location.LocationManager
+            if (lm != null) {
+                try {
+                    val fineLoc = lm.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
+                    val netLoc = lm.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER)
+                    val passiveLoc = lm.getLastKnownLocation(android.location.LocationManager.PASSIVE_PROVIDER)
+                    val bestLoc = fineLoc ?: netLoc ?: passiveLoc
+                    if (bestLoc != null) {
+                        userLat = bestLoc.latitude
+                        userLng = bestLoc.longitude
+                    }
+                } catch (e: SecurityException) {
+                    // Location permission not granted
+                }
+            }
+
             try {
                 val api = ApiClient.getService(context)
-                val response = kotlinx.coroutines.withTimeoutOrNull(8000L) {
-                    api.getAvailableTechnicians(pincode = pin.ifEmpty { "400001" }, isOnline = true)
+                val response = kotlinx.coroutines.withTimeoutOrNull(6000L) {
+                    api.getAvailableTechnicians(
+                        pincode = pin.ifEmpty { "759001" },
+                        isOnline = true,
+                        lat = userLat,
+                        lng = userLng
+                    )
                 }
                 if (response != null && response.isSuccessful && response.body()?.data != null) {
                     val dataMap = response.body()!!.data!!
@@ -133,8 +179,11 @@ class AddressBookingViewModel(
                             val completedCount = (item["totalJobsCompleted"] as? Number)?.toInt() ?: 0
                             val phone = item["phone"]?.toString() ?: "+91 98201 44091"
                             val trade = item["trade"]?.toString() ?: item["specialization"]?.toString() ?: "Certified Professional"
-                            val distKm = (item["distanceKm"] as? Number)?.toDouble() ?: 1.4
-                            val etaMin = (item["etaMinutes"] as? Number)?.toInt() ?: maxOf(8, (distKm * 6).toInt())
+                            val distKm = (item["distanceKm"] as? Number)?.toDouble() ?: 0.5
+                            val etaMin = (item["etaMinutes"] as? Number)?.toInt() ?: maxOf(1, (distKm * 3).toInt())
+
+                            val distDisplay = if (distKm <= 0.05) "0.0 km away" else "%.1f km away".format(distKm)
+                            val etaDisplay = if (distKm <= 0.05 || etaMin <= 1) "1 min" else "$etaMin mins"
 
                             NearbyTechnician(
                                 id = id,
@@ -142,9 +191,9 @@ class AddressBookingViewModel(
                                 badge = badge,
                                 rating = "%.1f ★".format(ratingVal),
                                 ratingValue = ratingVal,
-                                distance = "%.1f km away".format(distKm),
+                                distance = distDisplay,
                                 distanceKm = distKm,
-                                eta = "$etaMin mins",
+                                eta = etaDisplay,
                                 etaMinutes = etaMin,
                                 specialty = trade,
                                 phone = phone,
@@ -162,11 +211,13 @@ class AddressBookingViewModel(
                                 )
                                 TechnicianSortOption.NUMBER_OF_JOBS -> parsed.sortedByDescending { it.completedJobsCount }
                             }
+                            val currentSelected = _uiState.value.selectedTechnicianId
+                            val resolvedSelected = if (sorted.any { it.id == currentSelected }) currentSelected else sorted.first().id
                             _uiState.value = _uiState.value.copy(
                                 nearbyTechnicians = sorted,
-                                selectedTechnicianId = sorted.first().id
+                                selectedTechnicianId = resolvedSelected
                             )
-                            Log.d("GTS_TECH_FETCH", "Successfully loaded ${sorted.size} live technicians for pin $pin. Selected: ${sorted.first().name}")
+                            Log.d("GTS_TECH_FETCH", "Successfully loaded ${sorted.size} live technicians for pin $pin. Closest: ${sorted.first().name} (${sorted.first().distance})")
                         } else {
                             _uiState.value = _uiState.value.copy(
                                 nearbyTechnicians = emptyList(),

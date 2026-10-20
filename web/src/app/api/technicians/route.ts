@@ -45,33 +45,44 @@ export async function GET(request: NextRequest) {
       : (pincode ? getCoordinatesForPincode(pincode) : null);
 
     const enhancedTechnicians = technicians.map((t: any, index: number) => {
-      let dist = t.distanceKm;
-      let eta = t.etaMinutes;
+      let dist: number;
+      let eta: number;
 
-      if (dist === undefined && customerGeo && t.currentLatitude && t.currentLongitude) {
+      const techLat = t.currentLatitude || (t.assignedPincode ? getCoordinatesForPincode(t.assignedPincode).latitude : null);
+      const techLng = t.currentLongitude || (t.assignedPincode ? getCoordinatesForPincode(t.assignedPincode).longitude : null);
+
+      if (customerGeo && techLat && techLng) {
         const rawDist = calculateHaversineDistanceKm(
-          t.currentLatitude,
-          t.currentLongitude,
+          techLat,
+          techLng,
           customerGeo.latitude,
           customerGeo.longitude
         );
-        // If in same postal center, assign realistic hyperlocal street offset
-        dist = rawDist < 0.1 ? Number((0.5 + (index * 0.4)).toFixed(1)) : Number(rawDist.toFixed(1));
-        eta = calculateEtaMinutes(dist, 25.0);
-      } else if (dist === undefined) {
-        dist = Number((0.8 + (index * 0.5)).toFixed(1));
-        eta = calculateEtaMinutes(dist, 25.0);
+        // If in same building or same device (< 50 meters), show exact 0.0 km
+        if (rawDist < 0.05) {
+          dist = 0.0;
+          eta = 1;
+        } else {
+          dist = Number(rawDist.toFixed(1));
+          eta = calculateEtaMinutes(dist, 25.0);
+        }
+      } else {
+        dist = t.distanceKm ?? 0.5;
+        eta = t.etaMinutes ?? 2;
       }
 
-      const area = resolveAreaFromCoordinates(t.currentLatitude || 20.6678, t.currentLongitude || 85.5959);
+      const area = resolveAreaFromCoordinates(techLat || customerGeo?.latitude || 20.6678, techLng || customerGeo?.longitude || 85.5959);
+
+      const distanceDisplay = dist <= 0.0 ? '0.0 km away (Same Location)' : `${dist} km away`;
+      const etaDisplay = eta <= 1 ? '1 min (Immediate)' : `${eta} mins`;
 
       return {
         ...t,
         area,
         distanceKm: dist,
         etaMinutes: eta,
-        distance: `${dist} km away`,
-        eta: `${eta} mins`,
+        distance: distanceDisplay,
+        eta: etaDisplay,
       };
     });
 
@@ -115,6 +126,8 @@ export async function POST(request: NextRequest) {
       trade,
       badgeNumber,
       id,
+      latitude,
+      longitude,
     } = body;
 
     if (!fullName || fullName.trim().length < 2) {
@@ -131,7 +144,9 @@ export async function POST(request: NextRequest) {
       phone,
       email,
       trade,
-      pincode: pincode || '400001',
+      pincode: pincode || '759001',
+      latitude: typeof latitude === 'number' ? latitude : undefined,
+      longitude: typeof longitude === 'number' ? longitude : undefined,
     });
 
     return apiSuccess(

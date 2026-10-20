@@ -348,19 +348,32 @@ class SessionManager(val context: Context) {
     }
 
     fun getLocalWithdrawals(): List<com.ghartak.technician.data.model.WithdrawalItem> {
-        val raw = prefs.getString("key_local_withdrawals_json", "[]") ?: "[]"
+        val currentTechId = getTechnicianId()
+        val currentBadge = getBadgeNumber()
+        if (currentTechId.isBlank() && currentBadge.isBlank()) return emptyList()
+
+        val key = "key_local_withdrawals_json_${currentTechId.ifEmpty { currentBadge }}"
+        val raw = prefs.getString(key, "[]") ?: "[]"
         return try {
             val arr = org.json.JSONArray(raw)
             val list = mutableListOf<com.ghartak.technician.data.model.WithdrawalItem>()
             for (i in 0 until arr.length()) {
                 val obj = arr.getJSONObject(i)
+                val itemTechId = obj.optString("technicianId")
+                val itemBadge = obj.optString("technicianBadge")
+
+                // Strict technician isolation: Only include records belonging to THIS technician
+                if (itemTechId.isNotBlank() && itemTechId != currentTechId && (currentBadge.isBlank() || itemBadge != currentBadge)) {
+                    continue
+                }
+
                 list.add(
                     com.ghartak.technician.data.model.WithdrawalItem(
                         id = obj.optString("id"),
-                        technicianId = obj.optString("technicianId"),
-                        technicianName = obj.optString("technicianName"),
-                        technicianBadge = obj.optString("technicianBadge"),
-                        technicianPhone = obj.optString("technicianPhone"),
+                        technicianId = obj.optString("technicianId", currentTechId),
+                        technicianName = obj.optString("technicianName", getFullName()),
+                        technicianBadge = obj.optString("technicianBadge", currentBadge),
+                        technicianPhone = obj.optString("technicianPhone", getPhone()),
                         amountInr = obj.optDouble("amountInr"),
                         payoutMethod = obj.optString("payoutMethod"),
                         upiId = obj.optString("upiId").takeIf { it.isNotEmpty() },
@@ -395,6 +408,11 @@ class SessionManager(val context: Context) {
     }
 
     fun saveLocalWithdrawal(item: com.ghartak.technician.data.model.WithdrawalItem) {
+        val currentTechId = getTechnicianId()
+        // Only save if item belongs to current technician
+        if (currentTechId.isNotBlank() && item.technicianId.isNotBlank() && item.technicianId != currentTechId && item.technicianBadge != getBadgeNumber()) {
+            return
+        }
         val current = getLocalWithdrawals().toMutableList()
         current.removeAll { it.id == item.id }
         // If adding server confirmed withdrawal, remove any optimistic duplicate
@@ -411,6 +429,10 @@ class SessionManager(val context: Context) {
     }
 
     private fun saveAllWithdrawals(items: List<com.ghartak.technician.data.model.WithdrawalItem>) {
+        val currentTechId = getTechnicianId()
+        val currentBadge = getBadgeNumber()
+        val key = "key_local_withdrawals_json_${currentTechId.ifEmpty { currentBadge }}"
+
         val distinct = items.distinctBy { it.id }
         val arr = org.json.JSONArray()
         distinct.forEach { w ->
@@ -435,7 +457,7 @@ class SessionManager(val context: Context) {
             }
             arr.put(obj)
         }
-        prefs.edit().putString("key_local_withdrawals_json", arr.toString()).apply()
+        prefs.edit().putString(key, arr.toString()).remove("key_local_withdrawals_json").apply()
     }
 
     fun getAuthToken(): String? = prefs.getString(KEY_AUTH_TOKEN, null)

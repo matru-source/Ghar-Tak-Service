@@ -98,7 +98,9 @@ data class RegisterTechnicianRequest(
     @SerializedName("phone") val phone: String,
     @SerializedName("email") val email: String? = null,
     @SerializedName("trade") val trade: String? = null,
-    @SerializedName("pincode") val pincode: String
+    @SerializedName("pincode") val pincode: String,
+    @SerializedName("latitude") val latitude: Double? = null,
+    @SerializedName("longitude") val longitude: Double? = null
 )
 
 data class CreateWithdrawalRequest(

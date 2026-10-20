@@ -197,6 +197,7 @@ class TechnicianAuthViewModel(
 
                     // Cache locally in SessionManager for persistence across app restarts
                     sessionManager.saveSession(token, profile)
+                    com.ghartak.technician.service.TechnicianLocationService.startService(sessionManager.context, null)
 
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
@@ -219,6 +220,7 @@ class TechnicianAuthViewModel(
                     val localProfile = sessionManager.getTechnicianProfile(emailOrPhone)
                     if (localProfile != null) {
                         sessionManager.saveSession("offline_token_${localProfile.id}", localProfile)
+                        com.ghartak.technician.service.TechnicianLocationService.startService(sessionManager.context, null)
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             isLoggedIn = true,
@@ -234,6 +236,28 @@ class TechnicianAuthViewModel(
                 )
             }
         }
+    }
+
+    private fun getBestKnownLocation(pincode: String): Pair<Double, Double> {
+        val (fallbackLat, fallbackLng) = com.ghartak.technician.util.IndianPincodeResolver.getCoordinatesForPincode(pincode)
+        try {
+            val lm = sessionManager.context.getSystemService(android.content.Context.LOCATION_SERVICE) as? android.location.LocationManager
+                ?: return Pair(fallbackLat, fallbackLng)
+            val providers = listOf(
+                android.location.LocationManager.GPS_PROVIDER,
+                android.location.LocationManager.NETWORK_PROVIDER,
+                android.location.LocationManager.PASSIVE_PROVIDER
+            )
+            for (p in providers) {
+                try {
+                    val loc = lm.getLastKnownLocation(p)
+                    if (loc != null) {
+                        return Pair(loc.latitude, loc.longitude)
+                    }
+                } catch (_: SecurityException) {}
+            }
+        } catch (_: Throwable) {}
+        return Pair(fallbackLat, fallbackLng)
     }
 
     // ================= GOOGLE SIGN IN =================
@@ -255,13 +279,14 @@ class TechnicianAuthViewModel(
                     phone = sessionManager.getPhone(),
                     password = "google_auth_${System.currentTimeMillis()}",
                     trade = "Certified Service Specialist",
-                    pincode = sessionManager.getPincode().ifEmpty { "760001" }
+                    pincode = sessionManager.getPincode().ifEmpty { "759001" }
                 )
             } else {
                 sessionManager.saveSession("gts_google_token_${profile.id}", profile)
             }
 
             try {
+                val (liveLat, liveLng) = getBestKnownLocation(profile.assignedPincode)
                 val api = ApiClient.getService(sessionManager.context)
                 api.registerTechnician(
                     RegisterTechnicianRequest(
@@ -271,9 +296,12 @@ class TechnicianAuthViewModel(
                         phone = profile.phone,
                         email = profile.email,
                         trade = profile.specialization,
-                        pincode = profile.assignedPincode
+                        pincode = profile.assignedPincode,
+                        latitude = liveLat,
+                        longitude = liveLng
                     )
                 )
+                com.ghartak.technician.service.TechnicianLocationService.startService(sessionManager.context, null)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -403,6 +431,7 @@ class TechnicianAuthViewModel(
 
             // Register with backend database so customer app and dispatch board can assign work
             try {
+                val (liveLat, liveLng) = getBestKnownLocation(profile.assignedPincode)
                 val api = ApiClient.getService(sessionManager.context)
                 api.registerTechnician(
                     RegisterTechnicianRequest(
@@ -412,9 +441,12 @@ class TechnicianAuthViewModel(
                         phone = profile.phone,
                         email = profile.email,
                         trade = profile.specialization,
-                        pincode = profile.assignedPincode
+                        pincode = profile.assignedPincode,
+                        latitude = liveLat,
+                        longitude = liveLng
                     )
                 )
+                com.ghartak.technician.service.TechnicianLocationService.startService(sessionManager.context, null)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
