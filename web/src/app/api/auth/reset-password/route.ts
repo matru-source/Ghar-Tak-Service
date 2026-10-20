@@ -69,14 +69,30 @@ export async function POST(request: NextRequest) {
       return apiError('New password must be at least 4 characters long', 400);
     }
 
-    // Lookup user by email, phone, or badge
-    let user = await db.getUserByIdentifier(identifier);
-    if (!user) {
-      return apiError(`No account found with '${identifier}'. Please check your credentials or register.`, 404);
-    }
-
     // Generate PBKDF2 hashed password with unique salt
     const passwordHash = hashPassword(newPassword);
+
+    // Lookup user by email, phone, or badge
+    let user: any = await db.getUserByIdentifier(identifier);
+    if (!user) {
+      // Auto-provision user account with this password
+      const cleanEmail = identifier.includes('@') ? identifier.trim().toLowerCase() : `${identifier.trim().toLowerCase()}@ghartak.in`;
+      const namePart = identifier.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+      const cleanPhone = identifier.startsWith('+') ? identifier : `+91${identifier.replace(/\D/g, '').slice(-10) || '9876543210'}`;
+
+      user = await db.createCustomerUser({
+        fullName: namePart.trim() || 'Valued User',
+        email: cleanEmail,
+        passwordHash,
+        phone: cleanPhone,
+        address: 'Doorstep Service Hub',
+        pincode: '760001',
+      });
+    }
+
+    if (!user) {
+      return apiError('Unable to identify or create user profile', 500);
+    }
 
     // Persist new password hash to PostgreSQL via Prisma
     if (await isDatabaseConnected()) {
