@@ -22,7 +22,10 @@ interface CustomerApiService {
 
     // Bookings & Work Orders
     @GET("jobs")
-    suspend fun getMyJobs(@Query("customerId") customerId: String): Response<ApiResponse<Map<String, Any>>>
+    suspend fun getMyJobs(@Query("customerId") customerId: String): Response<ApiResponse<JobsListResponse>>
+
+    @PATCH("customer/profile")
+    suspend fun updateCustomerProfile(@Body body: Map<String, Any>): Response<ApiResponse<Map<String, Any>>>
 
     @POST("jobs")
     suspend fun createJob(@Body request: CreateJobRequest): Response<ApiResponse<Job>>

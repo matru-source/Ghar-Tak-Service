@@ -1145,12 +1145,19 @@ fun TechnicianEarningsContent(
         else -> "This Month's Transactions"
     }
 
+    val todayDateFormatted = remember {
+        java.text.SimpleDateFormat("d MMM", java.util.Locale.ENGLISH).format(java.util.Date())
+    }
+    val thisMonthFormatted = remember {
+        java.text.SimpleDateFormat("MMMM yyyy", java.util.Locale.ENGLISH).format(java.util.Date())
+    }
+
     val dropdownPillLabel = when (currentFilter) {
-        "TODAY" -> "Today, 14 Oct"
+        "TODAY" -> "Today, $todayDateFormatted"
         "THIS_WEEK" -> "This Week"
-        "THIS_MONTH" -> "October 2026"
+        "THIS_MONTH" -> thisMonthFormatted
         "ALL_TIME" -> "All Time"
-        else -> "October 2026"
+        else -> thisMonthFormatted
     }
 
     // Dynamic Filter of Transactions

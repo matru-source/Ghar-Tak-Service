@@ -42,7 +42,7 @@ object PdfInvoiceGenerator {
         val customerPhone: String = "",
         val customerAddress: String = "",
         val technicianName: String = "Certified Professional",
-        val dateOfSupply: String = "Oct 15, 2026",
+        val dateOfSupply: String = java.text.SimpleDateFormat("d MMM, yyyy", java.util.Locale.ENGLISH).format(java.util.Date()),
         val gstin: String = "21AAACG1234F1Z5 (21-OD)",
         val hsnSac: String = "998713 (Multi-trade installation and maintenance)",
         val taxableCharges: Double = 299.00,

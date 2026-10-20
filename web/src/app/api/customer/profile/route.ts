@@ -106,24 +106,41 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
+export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { customerId, defaultAddressLine, defaultPincode, defaultLatitude, defaultLongitude } = body;
+    const {
+      customerId,
+      fullName,
+      email,
+      phone,
+      address,
+      defaultAddressLine,
+      pincode,
+      defaultPincode,
+      defaultLatitude,
+      defaultLongitude,
+    } = body;
 
     const id = customerId || 'cust_amit_01';
-    const customer = dbStore.customers.find((c) => c.id === id || c.userId === id);
+    const addressToUse = defaultAddressLine || address;
+    const pinToUse = defaultPincode || pincode;
 
-    if (!customer) {
+    const updated = await db.updateCustomer(id, {
+      fullName,
+      email,
+      phone,
+      defaultAddressLine: addressToUse,
+      defaultPincode: pinToUse,
+      defaultLatitude,
+      defaultLongitude,
+    });
+
+    if (!updated) {
       return apiError(`Customer '${id}' not found`, 404);
     }
 
-    if (defaultAddressLine) customer.defaultAddressLine = defaultAddressLine;
-    if (defaultPincode) customer.defaultPincode = defaultPincode;
-    if (defaultLatitude !== undefined) customer.defaultLatitude = defaultLatitude;
-    if (defaultLongitude !== undefined) customer.defaultLongitude = defaultLongitude;
-
-    return apiSuccess(customer, 'Customer profile updated successfully');
+    return apiSuccess(updated, 'Customer profile updated successfully');
   } catch (error) {
     return apiError(
       'Failed to update customer profile',
@@ -131,4 +148,8 @@ export async function PUT(request: NextRequest) {
       error instanceof Error ? error.message : String(error)
     );
   }
+}
+
+export async function PUT(request: NextRequest) {
+  return PATCH(request);
 }

@@ -18,7 +18,7 @@ data class ServiceSignoffUiState(
     val technicianBadge: String = "",
     val stateCode: String = "OD",
     val invoiceNumber: String = "",
-    val invoiceDate: String = "Oct 15, 2026",
+    val invoiceDate: String = java.text.SimpleDateFormat("d MMM, yyyy", java.util.Locale.ENGLISH).format(java.util.Date()),
     val hsnSacCode: String = "998713",
     val gstin: String = "21AAACG1234F1Z5 (21-OD)",
     val basePriceInr: Double = 299.0,
@@ -64,12 +64,27 @@ class ServiceSignoffViewModel(
         val resolvedTech = if (!technicianName.isNullOrBlank()) technicianName else sessionManager.getActiveJobTechnicianName().ifBlank { "Certified Professional" }
         val resolvedBadge = if (!technicianBadge.isNullOrBlank()) technicianBadge else sessionManager.getActiveJobTechnicianBadge().ifBlank { "GTS-TECH-101" }
         val resolvedState = if (!stateCode.isNullOrBlank()) stateCode else sessionManager.getActiveJobStateCode()
-        val resolvedGstin = if (!gstin.isNullOrBlank()) gstin else sessionManager.getActiveJobGstin()
+        val resolvedGstin = if (!gstin.isNullOrBlank()) gstin else sessionManager.getActiveJobGstin().ifBlank {
+            when (resolvedState) {
+                "MH" -> "27AAACG1234F1Z5 (27-MH)"
+                "DL" -> "07AAACG1234F1Z5 (07-DL)"
+                "KA" -> "29AAACG1234F1Z5 (29-KA)"
+                "WB" -> "19AAACG1234F1Z5 (19-WB)"
+                "TS" -> "36AAACG1234F1Z5 (36-TS)"
+                else -> "21AAACG1234F1Z5 (21-OD)"
+            }
+        }
         val rawTicket = if (!ticketNumber.isNullOrBlank()) ticketNumber else sessionManager.getActiveJobTicketNumber()
         val resolvedTicket = if (rawTicket.isNotBlank()) rawTicket else "GTS-${System.currentTimeMillis().toString().takeLast(6)}"
 
         val techFirstName = resolvedTech.trim().split(" ").firstOrNull() ?: "Specialist"
-        val invoiceNum = if (resolvedTicket.startsWith("GTS")) resolvedTicket.replace("GTS", "INV-2026") else "INV-2026-${resolvedTicket}"
+        val currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+        val invoiceNum = if (resolvedTicket.startsWith("GTS")) {
+            resolvedTicket.replace("GTS", "INV-$currentYear")
+        } else {
+            "INV-$currentYear-${resolvedTicket.removePrefix("#")}"
+        }
+        val liveInvoiceDate = java.text.SimpleDateFormat("d MMM, yyyy", java.util.Locale.ENGLISH).format(java.util.Date())
         val defaultReview = "$techFirstName arrived on time, used professional safety gear, and completed the $resolvedTitle cleanly. Service quality verified at 100%."
         val resolvedSac = com.ghartak.customer.util.PdfInvoiceGenerator.resolveSacCode(resolvedTitle)
 
@@ -86,6 +101,7 @@ class ServiceSignoffViewModel(
             totalAmountInr = resolvedTotal,
             ticketNumber = resolvedTicket,
             invoiceNumber = invoiceNum,
+            invoiceDate = liveInvoiceDate,
             hsnSacCode = resolvedSac,
             reviewText = defaultReview
         )

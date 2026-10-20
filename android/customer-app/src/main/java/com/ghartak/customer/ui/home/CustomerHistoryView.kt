@@ -18,21 +18,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ghartak.customer.data.model.PastOrderItem
 import com.ghartak.customer.ui.theme.*
 import com.ghartak.customer.util.PdfInvoiceGenerator
-
-data class PastOrderItem(
-    val ticketNumber: String,
-    val invoiceNumber: String,
-    val serviceTitle: String,
-    val dateText: String,
-    val technicianName: String,
-    val amountInr: Double,
-    val taxableAmount: Double,
-    val cgstAmount: Double,
-    val sgstAmount: Double,
-    val status: String = "COMPLETED"
-)
 
 @Composable
 fun CustomerHistoryView(
@@ -41,8 +29,72 @@ fun CustomerHistoryView(
     val context = LocalContext.current
     val sessionManager = remember { com.ghartak.customer.data.session.SessionManager(context) }
     var pastOrders by remember { mutableStateOf(sessionManager.getPastOrders()) }
+    var isLoading by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         pastOrders = sessionManager.getPastOrders()
+        val customerId = sessionManager.getUserId().ifEmpty { sessionManager.getUserPhone() }
+        if (customerId.isNotBlank()) {
+            isLoading = true
+            try {
+                val api = com.ghartak.customer.data.api.ApiClient.getService(context)
+                val response = api.getMyJobs(customerId)
+                if (response.isSuccessful && response.body()?.data != null) {
+                    val serverJobs = response.body()!!.data!!.jobs
+                    val mappedOrders = serverJobs.map { job ->
+                        val total = if (job.totalAmountInr > 0.0) job.totalAmountInr else 299.0
+                        val taxable = Math.round((total / 1.18) * 100.0) / 100.0
+                        val gst = Math.round((total - taxable) * 100.0) / 100.0
+                        val cgst = Math.round((gst / 2.0) * 100.0) / 100.0
+                        val sgst = Math.round((gst - cgst) * 100.0) / 100.0
+
+                        val dateFormatted = try {
+                            val raw = job.createdAt ?: job.scheduledAt ?: ""
+                            if (raw.length >= 10) {
+                                val sdfIn = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.ENGLISH)
+                                val parsed = sdfIn.parse(raw.take(10))
+                                val sdfOut = java.text.SimpleDateFormat("d MMM, yyyy", java.util.Locale.ENGLISH)
+                                parsed?.let { sdfOut.format(it) } ?: raw.take(10)
+                            } else {
+                                java.text.SimpleDateFormat("d MMM, yyyy", java.util.Locale.ENGLISH).format(java.util.Date())
+                            }
+                        } catch (e: Exception) {
+                            java.text.SimpleDateFormat("d MMM, yyyy", java.util.Locale.ENGLISH).format(java.util.Date())
+                        }
+
+                        val invNum = if (job.jobTicketNumber.startsWith("GTS")) {
+                            job.jobTicketNumber.replace("GTS", "INV-2026")
+                        } else {
+                            "INV-2026-${job.jobTicketNumber.removePrefix("#")}"
+                        }
+
+                        PastOrderItem(
+                            ticketNumber = job.jobTicketNumber,
+                            invoiceNumber = invNum,
+                            serviceTitle = job.serviceTitle,
+                            dateText = dateFormatted,
+                            technicianName = job.technicianName ?: "Certified Field Specialist",
+                            amountInr = total,
+                            taxableAmount = taxable,
+                            cgstAmount = cgst,
+                            sgstAmount = sgst,
+                            status = job.status
+                        )
+                    }
+
+                    if (mappedOrders.isNotEmpty()) {
+                        val merged = (mappedOrders + sessionManager.getPastOrders())
+                            .distinctBy { it.ticketNumber.ifEmpty { it.invoiceNumber } }
+                        pastOrders = merged
+                        merged.forEach { sessionManager.addCompletedOrder(it) }
+                    }
+                }
+            } catch (e: Exception) {
+                // Keep local cache on network error
+            } finally {
+                isLoading = false
+            }
+        }
     }
 
     LazyColumn(
@@ -53,7 +105,18 @@ fun CustomerHistoryView(
     ) {
         item { Spacer(modifier = Modifier.height(4.dp)) }
 
-        if (pastOrders.isEmpty()) {
+        if (isLoading && pastOrders.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 40.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = SapphireBlue600)
+                }
+            }
+        } else if (pastOrders.isEmpty()) {
             item {
                 Card(
                     modifier = Modifier

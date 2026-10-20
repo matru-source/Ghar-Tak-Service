@@ -335,6 +335,30 @@ class CustomerCatalogViewModel(
             userPhone = phone,
             userAddress = address
         )
+
+        viewModelScope.launch {
+            try {
+                val api = com.ghartak.customer.data.api.ApiClient.getService(sessionManager.context)
+                val customerId = sessionManager.getUserId().ifEmpty { phone }
+                val payload = mapOf(
+                    "customerId" to customerId,
+                    "fullName" to name,
+                    "email" to email,
+                    "phone" to phone,
+                    "address" to address,
+                    "defaultAddressLine" to address,
+                    "defaultPincode" to sessionManager.getUserPincode()
+                )
+                val response = api.updateCustomerProfile(payload)
+                if (response.isSuccessful) {
+                    android.util.Log.d("CustomerCatalogVM", "Customer profile synced to server successfully")
+                } else {
+                    android.util.Log.w("CustomerCatalogVM", "Customer profile sync returned code ${response.code()}")
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("CustomerCatalogVM", "Failed to sync customer profile to server: ${e.message}")
+            }
+        }
     }
 
     fun logout() {

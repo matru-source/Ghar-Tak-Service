@@ -554,7 +554,15 @@ export const db = {
     }
 
     return dbStore.jobs.filter((j) => {
-      if (filter?.customerId && j.customerId !== filter.customerId) return false;
+      if (filter?.customerId) {
+        const cId = filter.customerId;
+        const matchesCustomer =
+          j.customerId === cId ||
+          j.customerPhone === cId ||
+          (cId.length >= 10 && j.customerPhone.endsWith(cId.slice(-10))) ||
+          (j.customerPhone.length >= 10 && cId.endsWith(j.customerPhone.slice(-10)));
+        if (!matchesCustomer) return false;
+      }
       if (filter?.status && j.status !== filter.status) return false;
 
       if (filter?.technicianId) {
@@ -1883,8 +1891,73 @@ export const db = {
   },
 
   async updateCustomer(id: string, updates: Partial<typeof dbStore.customers[0]>) {
-    const customer = dbStore.customers.find((c) => c.id === id || c.userId === id);
-    if (!customer) return null;
+    if (await isDatabaseConnected()) {
+      try {
+        const foundUser = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { id },
+              { phone: updates.phone || id },
+              { customerProfile: { id } },
+            ],
+          },
+          include: { customerProfile: true },
+        });
+
+        if (foundUser) {
+          const userUpdates: Record<string, any> = {};
+          if (updates.fullName) userUpdates.fullName = updates.fullName;
+          if (updates.email) userUpdates.email = updates.email;
+          if (updates.phone) userUpdates.phone = updates.phone;
+
+          if (Object.keys(userUpdates).length > 0) {
+            await prisma.user.update({
+              where: { id: foundUser.id },
+              data: userUpdates,
+            });
+          }
+
+          if (foundUser.customerProfile) {
+            const profileUpdates: Record<string, any> = {};
+            if (updates.defaultAddressLine) profileUpdates.defaultAddressLine = updates.defaultAddressLine;
+            if (updates.defaultPincode) profileUpdates.defaultPincode = updates.defaultPincode;
+            if (updates.defaultLatitude !== undefined) profileUpdates.defaultLatitude = updates.defaultLatitude;
+            if (updates.defaultLongitude !== undefined) profileUpdates.defaultLongitude = updates.defaultLongitude;
+
+            if (Object.keys(profileUpdates).length > 0) {
+              await prisma.customerProfile.update({
+                where: { id: foundUser.customerProfile.id },
+                data: profileUpdates,
+              });
+            }
+          }
+        }
+      } catch {
+        // Fallback to in-memory store
+      }
+    }
+
+    let customer = dbStore.customers.find((c) => c.id === id || c.userId === id || (updates.phone && c.phone === updates.phone));
+    if (!customer) {
+      customer = {
+        id: id.startsWith('cust_') ? id : `cust_${Date.now().toString(36)}`,
+        userId: id,
+        fullName: updates.fullName || 'Customer',
+        phone: updates.phone || '9876543210',
+        email: updates.email || 'customer@ghartak.in',
+        defaultAddressLine: updates.defaultAddressLine || '',
+        defaultPincode: updates.defaultPincode || '400001',
+        defaultLatitude: updates.defaultLatitude || 18.9220,
+        defaultLongitude: updates.defaultLongitude || 72.8347,
+        activeSubscriptionPlan: 'STARTER_SAFETY_CARE',
+        totalOrdersCount: 0,
+        totalSpendInr: 0,
+        disputeCount: 0,
+        isVip: false,
+        memberSince: new Date().toISOString(),
+      };
+      dbStore.customers.push(customer);
+    }
     Object.assign(customer, updates);
     return customer;
   },

@@ -61,6 +61,11 @@ data class Job(
     @SerializedName("createdAt") val createdAt: String? = null
 )
 
+data class JobsListResponse(
+    @SerializedName("jobs") val jobs: List<Job> = emptyList(),
+    @SerializedName("counts") val counts: Map<String, Any>? = null
+)
+
 data class CreateJobRequest(
     @SerializedName("customerId") val customerId: String? = null,
     @SerializedName("customerName") val customerName: String? = null,
