@@ -151,58 +151,88 @@ class TechnicianAuthViewModel(
         _uiState.value = state.copy(isLoading = true, errorMessage = null, successMessage = null)
 
         viewModelScope.launch {
-            delay(400)
+            val api = ApiClient.getService(sessionManager.context)
+            try {
+                val response = api.login(
+                    mapOf(
+                        "identifier" to emailOrPhone,
+                        "password" to password
+                    )
+                )
 
-            val isValid = sessionManager.validatePassword(emailOrPhone, password) ||
-                    (password == "admin123") ||
-                    (emailOrPhone.equals("technician@ghartak.com", ignoreCase = true) && password == "admin123") ||
-                    (emailOrPhone.equals("GTS-TECH-4091", ignoreCase = true) && password == "admin123")
+                if (response.isSuccessful && response.body()?.success == true && response.body()?.data != null) {
+                    val data = response.body()!!.data!!
+                    val token = data["token"]?.toString() ?: "jwt_tech_${System.currentTimeMillis()}"
+                    val userMap = data["user"] as? Map<*, *>
 
-            if (!isValid) {
+                    val userId = userMap?.get("id")?.toString() ?: ""
+                    val techId = userMap?.get("technicianId")?.toString() ?: (if (userId.isNotBlank()) "tech_$userId" else "tech_${System.currentTimeMillis()}")
+                    val badgeNumber = userMap?.get("badgeNumber")?.toString() ?: "GTS-TECH-${techId.takeLast(4)}"
+                    val fullName = userMap?.get("fullName")?.toString() ?: "Verified Professional"
+                    val phone = userMap?.get("phone")?.toString() ?: sessionManager.getPhone()
+                    val email = userMap?.get("email")?.toString() ?: if (emailOrPhone.contains("@")) emailOrPhone else ""
+                    val partnerId = userMap?.get("partnerId")?.toString() ?: "partner_default"
+                    val pincode = userMap?.get("pincode")?.toString() ?: sessionManager.getPincode().ifEmpty { "760001" }
+
+                    val profile = sessionManager.getTechnicianProfile(emailOrPhone)?.copy(
+                        id = techId,
+                        badgeNumber = badgeNumber,
+                        fullName = fullName,
+                        phone = phone,
+                        email = email
+                    ) ?: TechnicianProfile(
+                        id = techId,
+                        badgeNumber = badgeNumber,
+                        fullName = fullName,
+                        phone = phone,
+                        partnerId = partnerId,
+                        assignedPincode = pincode,
+                        isOnline = true,
+                        rating = 4.9,
+                        safetyKitSerial = "VDE-1000V-${techId.takeLast(4)}",
+                        insulatedGlovesVerified = true,
+                        totalJobsCompleted = 0,
+                        email = email
+                    )
+
+                    // Cache locally in SessionManager for persistence across app restarts
+                    sessionManager.saveSession(token, profile)
+
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        isLoggedIn = true,
+                        successMessage = "Shift Activated. Welcome back, ${profile.fullName}!"
+                    )
+                    return@launch
+                } else {
+                    val errMsg = response.body()?.message ?: "Invalid credentials. Please verify your email / badge ID and password."
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = errMsg
+                    )
+                    return@launch
+                }
+            } catch (netEx: Exception) {
+                // If network connection failed, check strictly registered local credentials without bypass backdoors
+                val isLocalValid = sessionManager.validatePassword(emailOrPhone, password)
+                if (isLocalValid) {
+                    val localProfile = sessionManager.getTechnicianProfile(emailOrPhone)
+                    if (localProfile != null) {
+                        sessionManager.saveSession("offline_token_${localProfile.id}", localProfile)
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            isLoggedIn = true,
+                            successMessage = "Offline Shift Activated. Welcome back, ${localProfile.fullName}!"
+                        )
+                        return@launch
+                    }
+                }
+
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = "Invalid credentials. Please verify your email / badge ID and password."
-                )
-                return@launch
-            }
-
-            val profile = sessionManager.getTechnicianProfile(emailOrPhone) ?: run {
-                val cleanEmail = if (emailOrPhone.contains("@")) emailOrPhone.trim().lowercase() else ""
-                val cleanPhone = if (emailOrPhone.all { it.isDigit() || it == '+' || it == ' ' || it == '-' }) emailOrPhone.trim() else ""
-                val derivedName = if (cleanEmail.isNotEmpty()) {
-                    cleanEmail.substringBefore("@").replace(".", " ").split(" ")
-                        .joinToString(" ") { part -> part.replaceFirstChar { ch -> ch.uppercase() } }
-                } else if (cleanPhone.isNotEmpty()) {
-                    "Technician ($cleanPhone)"
-                } else {
-                    "Verified Professional"
-                }
-                val randomSuffix = (1000..9999).random()
-                val techId = "tech_$randomSuffix"
-                val badge = "GTS-TECH-$randomSuffix"
-                val defaultPin = sessionManager.getPincode().ifEmpty { "759001" }
-
-                TechnicianProfile(
-                    id = techId,
-                    badgeNumber = badge,
-                    fullName = derivedName,
-                    phone = cleanPhone.ifEmpty { sessionManager.getPhone() },
-                    partnerId = "partner_${defaultPin.take(2)}",
-                    assignedPincode = defaultPin,
-                    isOnline = true,
-                    rating = 4.9,
-                    safetyKitSerial = "VDE-1000V-$randomSuffix",
-                    insulatedGlovesVerified = true,
-                    totalJobsCompleted = 0
+                    errorMessage = "Unable to connect to Ghar Tak auth server. Please check your internet connection."
                 )
             }
-
-            sessionManager.saveSession("token_${System.currentTimeMillis()}", profile)
-            _uiState.value = _uiState.value.copy(
-                isLoading = false,
-                isLoggedIn = true,
-                successMessage = "Shift Activated. Welcome back, ${profile.fullName}!"
-            )
         }
     }
 

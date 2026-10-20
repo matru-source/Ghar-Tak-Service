@@ -102,6 +102,167 @@ export const db = {
     return dbStore.users.find((u) => u.phone === phone) || null;
   },
 
+  async getUserByEmail(email: string) {
+    const cleanEmail = email.trim().toLowerCase();
+    if (await isDatabaseConnected()) {
+      try {
+        const liveUser = await prisma.user.findFirst({
+          where: { email: { equals: cleanEmail, mode: 'insensitive' } },
+          include: { partnerProfile: true, technicianProfile: true, customerProfile: true },
+        });
+        if (liveUser) return liveUser;
+      } catch {
+        // Fallback
+      }
+    }
+    return dbStore.users.find((u) => u.email?.toLowerCase() === cleanEmail) || null;
+  },
+
+  async getUserByIdentifier(identifier: string) {
+    const clean = identifier.trim();
+    if (!clean) return null;
+
+    if (await isDatabaseConnected()) {
+      try {
+        // 1. Check email
+        if (clean.includes('@')) {
+          const user = await prisma.user.findFirst({
+            where: { email: { equals: clean, mode: 'insensitive' } },
+            include: { partnerProfile: true, technicianProfile: true, customerProfile: true },
+          });
+          if (user) return user;
+        }
+
+        // 2. Check technician badge number
+        const tech = await prisma.technician.findFirst({
+          where: { badgeNumber: { equals: clean, mode: 'insensitive' } },
+          include: { user: { include: { partnerProfile: true, technicianProfile: true, customerProfile: true } } },
+        });
+        if (tech?.user) return tech.user;
+
+        // 3. Check phone (handle with or without +91)
+        const digits = clean.replace(/\D/g, '');
+        const phoneVariants = [clean];
+        if (digits.length >= 10) {
+          const last10 = digits.slice(-10);
+          phoneVariants.push(`+91${last10}`, last10);
+        }
+        const userByPhone = await prisma.user.findFirst({
+          where: { phone: { in: phoneVariants } },
+          include: { partnerProfile: true, technicianProfile: true, customerProfile: true },
+        });
+        if (userByPhone) return userByPhone;
+      } catch {
+        // Fallback to in-memory store
+      }
+    }
+
+    // Memory store fallback
+    const lower = clean.toLowerCase();
+    // Email check
+    const userByEmail = dbStore.users.find((u) => u.email?.toLowerCase() === lower);
+    if (userByEmail) return userByEmail;
+
+    // Phone check
+    const digits = clean.replace(/\D/g, '');
+    const userByPhone = dbStore.users.find((u) => {
+      const uDigits = u.phone.replace(/\D/g, '');
+      return u.phone === clean || (digits.length >= 10 && uDigits.endsWith(digits.slice(-10)));
+    });
+    if (userByPhone) return userByPhone;
+
+    // Technician badge check
+    const tech = dbStore.technicians.find(
+      (t) => t.badgeNumber.toLowerCase() === lower || t.id.toLowerCase() === lower
+    );
+    if (tech) {
+      const techUser = dbStore.users.find((u) => u.id === tech.userId) || {
+        id: tech.userId || `usr_${tech.id}`,
+        phone: tech.phone,
+        email: (tech as any).email || `${tech.badgeNumber.toLowerCase()}@ghartak.com`,
+        fullName: tech.fullName,
+        role: 'TECHNICIAN' as const,
+        isVerified: true,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+      };
+      return techUser;
+    }
+
+    return null;
+  },
+
+  async createCustomerUser(data: {
+    fullName: string;
+    email: string;
+    passwordHash: string;
+    phone?: string;
+    address?: string;
+    pincode?: string;
+  }) {
+    const cleanEmail = data.email.trim().toLowerCase();
+    const cleanPhone = data.phone ? (data.phone.startsWith('+') ? data.phone.trim() : `+91${data.phone.replace(/\D/g, '').slice(-10)}`) : `+91${Math.floor(6000000000 + Math.random() * 3999999999)}`;
+    const cleanPincode = data.pincode?.trim() || '400001';
+    const cleanAddress = data.address?.trim() || '';
+
+    if (await isDatabaseConnected()) {
+      try {
+        const newUser = await prisma.user.create({
+          data: {
+            fullName: data.fullName.trim(),
+            email: cleanEmail,
+            phone: cleanPhone,
+            passwordHash: data.passwordHash,
+            role: 'CUSTOMER',
+            isVerified: true,
+            isActive: true,
+            customerProfile: {
+              create: {
+                defaultAddressLine: cleanAddress,
+                defaultPincode: cleanPincode,
+              },
+            },
+          },
+          include: { customerProfile: true },
+        });
+
+        // Also add to memory store for hybrid sync
+        dbStore.users.unshift({
+          id: newUser.id,
+          phone: newUser.phone,
+          email: newUser.email || cleanEmail,
+          fullName: newUser.fullName,
+          role: 'CUSTOMER',
+          isVerified: true,
+          isActive: true,
+          createdAt: newUser.createdAt.toISOString(),
+        });
+
+        return newUser;
+      } catch (err) {
+        console.warn('Prisma createCustomerUser failed, using memory store fallback:', err);
+      }
+    }
+
+    // Memory store fallback
+    const id = `usr_cust_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    const memoryUser = {
+      id,
+      phone: cleanPhone,
+      email: cleanEmail,
+      fullName: data.fullName.trim(),
+      role: 'CUSTOMER' as const,
+      isVerified: true,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      passwordHash: data.passwordHash,
+      address: cleanAddress,
+      pincode: cleanPincode,
+    };
+    dbStore.users.unshift(memoryUser as any);
+    return memoryUser;
+  },
+
   async getUserById(id: string) {
     if (await isDatabaseConnected()) {
       try {

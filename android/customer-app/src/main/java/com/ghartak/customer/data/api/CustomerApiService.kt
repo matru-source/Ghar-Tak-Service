@@ -7,6 +7,12 @@ import retrofit2.http.*
 interface CustomerApiService {
 
     // Auth & OTP
+    @POST("auth/login")
+    suspend fun login(@Body body: Map<String, String>): Response<ApiResponse<Map<String, Any>>>
+
+    @POST("auth/register")
+    suspend fun register(@Body body: Map<String, Any>): Response<ApiResponse<Map<String, Any>>>
+
     @POST("auth/otp/send")
     suspend fun sendOtp(@Body request: OtpSendRequest): Response<ApiResponse<Map<String, Any>>>
 

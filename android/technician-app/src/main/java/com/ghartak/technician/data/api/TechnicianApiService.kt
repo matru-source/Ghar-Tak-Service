@@ -6,6 +6,10 @@ import retrofit2.http.*
 
 interface TechnicianApiService {
 
+    // Auth & Login
+    @POST("auth/login")
+    suspend fun login(@Body body: Map<String, String>): Response<ApiResponse<Map<String, Any>>>
+
     // Registration & Onboarding
     @POST("technicians")
     suspend fun registerTechnician(
