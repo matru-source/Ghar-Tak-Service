@@ -154,6 +154,7 @@ export async function POST(request: NextRequest) {
       id,
       latitude,
       longitude,
+      password,
     } = body;
 
     if (!fullName || fullName.trim().length < 2) {
@@ -174,6 +175,7 @@ export async function POST(request: NextRequest) {
       fullName,
       phone,
       email,
+      password,
       trade,
       pincode: cleanPin,
       latitude: typeof latitude === 'number' ? latitude : undefined,

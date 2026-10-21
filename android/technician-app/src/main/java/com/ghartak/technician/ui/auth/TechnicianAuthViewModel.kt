@@ -496,7 +496,8 @@ class TechnicianAuthViewModel(
                         trade = profile.specialization,
                         pincode = profile.assignedPincode,
                         latitude = liveLat,
-                        longitude = liveLng
+                        longitude = liveLng,
+                        password = password
                     )
                 )
                 com.ghartak.technician.service.TechnicianLocationService.startService(sessionManager.context, null)

@@ -9,6 +9,7 @@ import { prisma } from './prisma';
 import { dbStore, SubscriptionTierRecord, SubscriptionRecord, WormAuditLogRecord, WithdrawalRecord } from './mock-data';
 import { calculateIndianGst18 } from './tax-engine';
 import { getCoordinatesForPincode } from './pincode-resolver';
+import { hashPassword } from './password';
 
 let lastDbCheck = 0;
 let cachedDbConnected = false;
@@ -390,6 +391,7 @@ export const db = {
     fullName: string;
     phone: string;
     email?: string;
+    password?: string;
     trade?: string;
     pincode: string;
     partnerId?: string;
@@ -399,6 +401,72 @@ export const db = {
     const cleanPin = (params.pincode || '759001').trim();
     const techId = params.id || `tech_${Math.floor(1000 + Math.random() * 9000)}`;
     const badgeNumber = params.badgeNumber || `GTS-TECH-${Math.floor(3000 + Math.random() * 7000)}`;
+    const cleanEmail = params.email?.trim().toLowerCase() || `${techId}@ghartak.in`;
+    const cleanPhone = params.phone.startsWith('+') ? params.phone.trim() : `+91${params.phone.replace(/\D/g, '').slice(-10)}`;
+    const passwordHash = params.password ? hashPassword(params.password) : hashPassword('ghartak_tech_2026');
+
+    // 1. Persist to PostgreSQL via Prisma if connected
+    if (await isDatabaseConnected()) {
+      try {
+        const defaultPartner = await prisma.partner.findFirst();
+        const partnerId = params.partnerId || defaultPartner?.id || 'bb2c2fae-936f-4b56-a1da-078844915983';
+
+        let user = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { email: { equals: cleanEmail, mode: 'insensitive' } },
+              { phone: cleanPhone },
+            ],
+          },
+        });
+
+        if (!user) {
+          user = await prisma.user.create({
+            data: {
+              fullName: params.fullName.trim(),
+              email: cleanEmail,
+              phone: cleanPhone,
+              passwordHash,
+              role: 'TECHNICIAN',
+              isVerified: true,
+              isActive: true,
+            },
+          });
+        } else {
+          user = await prisma.user.update({
+            where: { id: user.id },
+            data: { passwordHash, role: 'TECHNICIAN' },
+          });
+        }
+
+        const existingTech = await prisma.technician.findFirst({
+          where: { OR: [{ userId: user.id }, { badgeNumber }] },
+        });
+
+        if (!existingTech) {
+          await prisma.technician.create({
+            data: {
+              id: techId,
+              userId: user.id,
+              partnerId,
+              badgeNumber,
+              rating: 5.0,
+              totalJobsCompleted: 0,
+              isOnline: true,
+              assignedPincode: cleanPin,
+              kycStatus: 'PENDING_REVIEW',
+              insulatedGlovesVerified: true,
+              safetyKitSerial: `KIT-${Math.floor(10000 + Math.random() * 90000)}`,
+              electricalLicenseNumber: `LIC-${cleanPin}-${Math.floor(1000 + Math.random() * 9000)}`,
+            },
+          });
+        }
+      } catch (prismaErr) {
+        console.warn('[REGISTER_TECHNICIAN_PRISMA_FALLBACK]', prismaErr);
+      }
+    }
+
+    // 2. Also register in memory store with passwordHash and user record
     const isOdisha = cleanPin.startsWith('75') || cleanPin.startsWith('76') || cleanPin.startsWith('77');
     const partnerId = params.partnerId || (isOdisha ? 'part_odisha_01' : 'part_mumbai_01');
     const geo = getCoordinatesForPincode(cleanPin);
@@ -411,7 +479,7 @@ export const db = {
       partnerId,
       badgeNumber,
       fullName: params.fullName.trim(),
-      phone: params.phone.trim(),
+      phone: cleanPhone,
       rating: 5.0,
       totalJobsCompleted: 0,
       isOnline: true,
@@ -422,12 +490,31 @@ export const db = {
       electricalLicenseNumber: `LIC-${cleanPin}-${Math.floor(1000 + Math.random() * 9000)}`,
       insulatedGlovesVerified: false,
       safetyKitSerial: `KIT-${Math.floor(10000 + Math.random() * 90000)}`,
-      email: params.email?.trim() || `${techId}@ghartak.in`,
+      email: cleanEmail,
       trade: params.trade || 'Certified Professional',
+      passwordHash,
     };
 
+    const userIndex = dbStore.users.findIndex((u) => u.email?.toLowerCase() === cleanEmail || u.phone === cleanPhone);
+    const userObj = {
+      id: `usr_${techId}`,
+      fullName: params.fullName.trim(),
+      email: cleanEmail,
+      phone: cleanPhone,
+      role: 'TECHNICIAN' as const,
+      isVerified: true,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      passwordHash,
+    };
+    if (userIndex >= 0) {
+      dbStore.users[userIndex] = { ...dbStore.users[userIndex], ...userObj };
+    } else {
+      dbStore.users.unshift(userObj);
+    }
+
     const existingIndex = dbStore.technicians.findIndex(
-      (t) => t.id === techId || t.phone === newRecord.phone || (params.email && (t as any).email === params.email)
+      (t) => t.id === techId || t.phone === newRecord.phone || (cleanEmail && (t as any).email === cleanEmail)
     );
     if (existingIndex >= 0) {
       dbStore.technicians[existingIndex] = {
