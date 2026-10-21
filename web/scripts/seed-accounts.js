@@ -173,6 +173,47 @@ async function main() {
     console.log('Updated Matru Prasad password');
   }
 
+  // 6. Seed itsmatruprasad@gmail.com
+  let itsUser = await prisma.user.findFirst({ where: { email: 'itsmatruprasad@gmail.com' } });
+  if (!itsUser) {
+    itsUser = await prisma.user.create({
+      data: {
+        fullName: 'Matru Prasad',
+        email: 'itsmatruprasad@gmail.com',
+        phone: '+919999000005',
+        passwordHash: passHash,
+        role: 'CUSTOMER',
+        isVerified: true,
+        isActive: true,
+        customerProfile: {
+          create: {
+            defaultAddressLine: 'Doorstep Hub, Berhampur',
+            defaultPincode: '760001'
+          }
+        }
+      }
+    });
+    if (defaultPartner) {
+      await prisma.technician.create({
+        data: {
+          id: 'tech_itsmatru_01',
+          userId: itsUser.id,
+          partnerId: defaultPartner.id,
+          badgeNumber: 'GTS-TECH-4004',
+          rating: 5.0,
+          isOnline: true,
+          assignedPincode: '760001',
+          kycStatus: 'VERIFIED',
+          insulatedGlovesVerified: true
+        }
+      });
+    }
+    console.log('Created itsmatruprasad@gmail.com customer and technician profile');
+  } else {
+    await prisma.user.update({ where: { id: itsUser.id }, data: { passwordHash: passHash } });
+    console.log('Updated itsmatruprasad@gmail.com password');
+  }
+
   console.log('All demo accounts seeded and synchronized successfully!');
 }
 
