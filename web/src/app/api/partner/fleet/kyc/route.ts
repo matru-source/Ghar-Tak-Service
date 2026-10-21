@@ -1,15 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
 
 export async function POST(request: NextRequest) {
   try {
+    const token = extractBearerToken(request);
+    if (!token) {
+      return NextResponse.json({ success: false, error: 'Authorization Bearer token required' }, { status: 401 });
+    }
+    const payload = await verifyAccessToken(token);
+    if (!payload || (payload.role !== 'PARTNER' && payload.role !== 'SUPER_ADMIN')) {
+      return NextResponse.json({ success: false, error: 'Access denied: PARTNER or SUPER_ADMIN role required' }, { status: 403 });
+    }
+
     const body = await request.json();
     const {
       technicianId,
       status, // 'VERIFIED' | 'REJECTED'
       reason,
       insulatedGlovesVerified,
-      actorId,
     } = body;
 
     if (!technicianId || !status) {
@@ -28,8 +37,8 @@ export async function POST(request: NextRequest) {
 
     const updatedTech = await db.updateTechnicianKycStatus(technicianId, status, {
       reason,
-      verifierId: actorId || 'usr_partner_01',
-      insulatedGlovesVerified: insulatedGlovesVerified !== undefined ? insulatedGlovesVerified : (status === 'VERIFIED'),
+      verifierId: payload.sub,
+      insulatedGlovesVerified: status === 'VERIFIED' ? Boolean(insulatedGlovesVerified) : false,
     });
 
     if (!updatedTech) {
@@ -45,8 +54,8 @@ export async function POST(request: NextRequest) {
     const auditSummary = `Partner Regulatory Audit Decision: ${techName} (${(updatedTech as any).badgeNumber}) marked ${status}. License=${(updatedTech as any).electricalLicenseNumber}, Gloves=${(updatedTech as any).insulatedGlovesVerified ? 'Verified' : 'Unverified'}. Reason/Notes: ${reason || 'N/A'}`;
     
     const auditLog = await db.recordWormAuditLog({
-      actorId: actorId || 'usr_partner_01',
-      actorRole: 'PARTNER',
+      actorId: payload.sub,
+      actorRole: payload.role,
       action: actionDesc,
       resourceType: 'TECHNICIAN_KYC',
       resourceId: technicianId,

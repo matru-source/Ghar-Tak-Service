@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
 
 export async function GET(req: NextRequest) {
   try {
@@ -29,6 +30,15 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const token = extractBearerToken(req);
+    if (!token) {
+      return NextResponse.json({ success: false, error: 'Authorization Bearer token required' }, { status: 401 });
+    }
+    const payload = await verifyAccessToken(token);
+    if (!payload || payload.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ success: false, error: 'Access denied: SUPER_ADMIN role required' }, { status: 403 });
+    }
+
     const body = await req.json().catch(() => ({}));
     const action = body.action || 'VERIFY_CHAIN';
 
@@ -44,10 +54,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === 'RECORD_LOG') {
-      const { actorId, actorRole, logAction, resourceType, resourceId, payloadSummary } = body;
+      const { logAction, resourceType, resourceId, payloadSummary } = body;
       const created = await db.recordWormAuditLog({
-        actorId: actorId || 'usr_admin_01',
-        actorRole: actorRole || 'SUPER_ADMIN',
+        actorId: payload.sub,
+        actorRole: payload.role,
         action: logAction || 'MANUAL_AUDIT_CHECKPOINT',
         resourceType: resourceType || 'MANUAL',
         resourceId: resourceId || 'AUDIT_01',

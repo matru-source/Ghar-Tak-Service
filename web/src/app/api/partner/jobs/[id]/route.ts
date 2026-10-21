@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { dbStore } from '@/lib/mock-data';
+import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
 
 export async function GET(
   _req: NextRequest,
@@ -61,6 +62,15 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const token = extractBearerToken(req);
+    if (!token) {
+      return NextResponse.json({ success: false, error: 'Authorization Bearer token required' }, { status: 401 });
+    }
+    const payload = await verifyAccessToken(token);
+    if (!payload) {
+      return NextResponse.json({ success: false, error: 'Invalid or expired token' }, { status: 401 });
+    }
+
     const { id } = await params;
     const body = await req.json();
     const { status, safetyGlovesConfirmed, safetyMcbSwitchConfirmed, handoverOtpInput } = body;
@@ -92,8 +102,8 @@ export async function PATCH(
     }
 
     await db.recordWormAuditLog({
-      actorId: 'usr_partner_01',
-      actorRole: 'PARTNER',
+      actorId: payload.sub,
+      actorRole: payload.role,
       action: 'WORK_ORDER_LIFECYCLE_UPDATED',
       resourceType: 'JOB_ORDER',
       resourceId: job.jobTicketNumber,

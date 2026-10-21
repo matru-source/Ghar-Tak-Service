@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db, { calculateHaversineDistanceKm } from '@/lib/db';
 import { dbStore } from '@/lib/mock-data';
+import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
 
 export async function GET(req: NextRequest) {
   try {
@@ -55,6 +56,15 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const token = extractBearerToken(req);
+    if (!token) {
+      return NextResponse.json({ success: false, error: 'Authorization Bearer token required' }, { status: 401 });
+    }
+    const payload = await verifyAccessToken(token);
+    if (!payload || (payload.role !== 'PARTNER' && payload.role !== 'SUPER_ADMIN')) {
+      return NextResponse.json({ success: false, error: 'Access denied: PARTNER or SUPER_ADMIN role required' }, { status: 403 });
+    }
+
     const body = await req.json();
     const { jobId, reassignTechnicianId, reason, slaExtensionMinutes } = body;
 
@@ -67,13 +77,13 @@ export async function POST(req: NextRequest) {
 
     const result = await db.reassignJobProximity(jobId, {
       targetTechnicianId: reassignTechnicianId,
-      reason: reason || 'Urgent 30-min SLA breach proximity reassignment by Maharashtra Dispatcher',
+      reason: reason || 'Urgent 30-min SLA breach proximity reassignment by Regional Dispatcher',
       slaExtensionMinutes: slaExtensionMinutes || 20,
     });
 
     await db.recordWormAuditLog({
-      actorId: 'usr_partner_01',
-      actorRole: 'PARTNER',
+      actorId: payload.sub,
+      actorRole: payload.role,
       action: 'SLA_BREACH_REASSIGNMENT',
       resourceType: 'JOB_ORDER',
       resourceId: result.job.jobTicketNumber,

@@ -43,35 +43,21 @@ export async function POST(request: NextRequest) {
 
     // 1. Update in-memory technician record
     let tech = dbStore.technicians.find((t) => t.id === technicianId || t.badgeNumber === technicianId);
-    if (tech) {
-      tech.currentLatitude = latitude;
-      tech.currentLongitude = longitude;
-      if (typeof isOnline === 'boolean') {
-        tech.isOnline = isOnline;
+    if (!tech) {
+      const dbTech = await db.getTechnicianById(technicianId);
+      if (dbTech) {
+        tech = dbTech as any;
       }
-    } else {
-      // Auto-insert if new technician pinging telemetry
-      const newTech: (typeof dbStore.technicians)[number] = {
-        id: technicianId,
-        userId: `usr_${technicianId}`,
-        partnerId: 'part_odisha_01',
-        badgeNumber: `GTS-TECH-${technicianId.slice(-4)}`,
-        fullName: 'Certified Professional',
-        phone: '+91 98201 44091',
-        rating: 5.0,
-        totalJobsCompleted: 0,
-        isOnline: isOnline ?? true,
-        currentLatitude: latitude,
-        currentLongitude: longitude,
-        assignedPincode: '759001',
-        kycStatus: 'VERIFIED' as const,
-        electricalLicenseNumber: `LIC-759001-${Math.floor(1000 + Math.random() * 9000)}`,
-        insulatedGlovesVerified: true,
-        safetyKitSerial: `KIT-${Math.floor(10000 + Math.random() * 90000)}`,
-        trade: 'Certified Professional',
-      };
-      dbStore.technicians.unshift(newTech);
-      tech = newTech;
+    }
+
+    if (!tech) {
+      return apiError(`Technician '${technicianId}' not registered in platform dispatch roster`, 404);
+    }
+
+    tech.currentLatitude = latitude;
+    tech.currentLongitude = longitude;
+    if (typeof isOnline === 'boolean') {
+      tech.isOnline = isOnline;
     }
 
     // Persist live telemetry coordinates to PostgreSQL if connected

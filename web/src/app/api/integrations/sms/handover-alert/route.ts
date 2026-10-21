@@ -18,7 +18,10 @@ export async function POST(request: NextRequest) {
     }
 
     const jobAny = job as any;
-    const customerPhone = jobAny.customerPhone || jobAny.customer?.phone || '+919876543213';
+    const customerPhone = jobAny.customerPhone || jobAny.customer?.phone;
+    if (!customerPhone) {
+      return apiError('Customer mobile phone is not registered for this work order', 400);
+    }
     const techName = jobAny.technicianName || jobAny.technician?.fullName || jobAny.technician?.user?.fullName || 'Field Engineer';
 
     const smsRecord = await SmsGateway.sendSms(customerPhone, 'CUSTOMER_HANDOVER_OTP', {

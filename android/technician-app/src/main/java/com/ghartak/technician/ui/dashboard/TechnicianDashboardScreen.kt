@@ -176,8 +176,7 @@ fun TechnicianDashboardScreen(
                         onRejectNotification = { viewModel.rejectNotificationJob(it) },
                         onSelectJob = { viewModel.viewJobDetails(it) },
                         onViewJobsTab = { viewModel.selectTab("JOBS") },
-                        onViewEarningsTab = { viewModel.selectTab("EARNINGS") },
-                        onSimulateDispatch = { onNavigateToDispatchAlert("job_1001") }
+                        onViewEarningsTab = { viewModel.selectTab("EARNINGS") }
                     )
                 }
                 "JOB_DETAILS" -> {
@@ -347,8 +346,7 @@ fun TechnicianHomeScreenContent(
     onRejectNotification: (id: String) -> Unit,
     onSelectJob: (TechnicianJob) -> Unit,
     onViewJobsTab: () -> Unit,
-    onViewEarningsTab: () -> Unit,
-    onSimulateDispatch: () -> Unit
+    onViewEarningsTab: () -> Unit
 ) {
     val context = LocalContext.current
 

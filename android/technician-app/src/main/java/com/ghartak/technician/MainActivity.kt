@@ -186,32 +186,17 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("dispatch_alert/{jobId}") { backStackEntry ->
-                            val jobId = backStackEntry.arguments?.getString("jobId") ?: "job_live_01"
-                            val resolvedPincode = sessionManager.getPincode().ifEmpty { "760001" }
-                            val isOdisha = resolvedPincode.startsWith("75") || resolvedPincode.startsWith("76") || resolvedPincode.startsWith("77")
-                            val stateCode = if (isOdisha) "OD" else "MH"
-                            val defaultLat = if (isOdisha) 19.3150 else 18.9220
-                            val defaultLng = if (isOdisha) 84.7941 else 72.8347
-
+                            val jobId = backStackEntry.arguments?.getString("jobId") ?: ""
                             val currentJob = dashboardViewModel.getJobById(jobId)
                                 ?: dashboardViewModel.uiState.collectAsState().value.assignedJobs.find { it.id == jobId }
-                                ?: TechnicianJob(
-                                    id = jobId,
-                                    jobTicketNumber = "GTS-$stateCode-${(1000..9999).random()}",
-                                    serviceTitle = "Doorstep Service Order",
-                                    pincode = resolvedPincode,
-                                    customerName = "Customer ($resolvedPincode)",
-                                    customerPhone = "+91 98765 43210",
-                                    customerAddressText = "Doorstep Delivery Address, PIN: $resolvedPincode",
-                                    customerLatitude = defaultLat,
-                                    customerLongitude = defaultLng,
-                                    status = "DISPATCHED",
-                                    priority = "STANDARD",
-                                    totalAmountInr = Math.round(299.0 * 1.18 * 100.0) / 100.0,
-                                    safetyGlovesConfirmed = false,
-                                    safetyMcbSwitchConfirmed = false,
-                                    handoverOtp = ""
-                                )
+
+                            if (currentJob == null) {
+                                LaunchedEffect(jobId) {
+                                    Toast.makeText(this@MainActivity, "Dispatch order not found or already assigned", Toast.LENGTH_SHORT).show()
+                                    navController.popBackStack()
+                                }
+                                return@composable
+                            }
 
                             DispatchAlertScreen(
                                 job = currentJob,
@@ -271,23 +256,16 @@ class MainActivity : ComponentActivity() {
                             val currentJob = dashboardViewModel.getJobById(jobId)
                                 ?: dashState.assignedJobs.find {
                                     it.id.equals(jobId, ignoreCase = true) || it.jobTicketNumber.equals(jobId, ignoreCase = true)
-                                } ?: dashState.selectedJob ?: run {
-                                    val userPin = sessionManager.getPincode()
-                                    val (cLat, cLng) = com.ghartak.technician.util.IndianPincodeResolver.getCoordinatesForPincode(userPin)
-                                    TechnicianJob(
-                                        id = jobId,
-                                        jobTicketNumber = "#J-${jobId.takeLast(4).ifEmpty { "1001" }}",
-                                        serviceTitle = "Doorstep Service Order",
-                                        pincode = userPin,
-                                        customerName = "Customer",
-                                        customerPhone = "",
-                                        customerAddressText = "Customer Address, PIN: $userPin",
-                                        customerLatitude = cLat,
-                                        customerLongitude = cLng,
-                                        status = "EN_ROUTE",
-                                        totalAmountInr = 0.0
-                                    )
+                                } ?: dashState.selectedJob
+
+                            if (currentJob == null) {
+                                LaunchedEffect(jobId) {
+                                    Toast.makeText(this@MainActivity, "Job details not found", Toast.LENGTH_SHORT).show()
+                                    navController.popBackStack()
                                 }
+                                return@composable
+                            }
+
                             navigationViewModel.initJob(currentJob)
 
                             NavigationScreen(
@@ -308,23 +286,16 @@ class MainActivity : ComponentActivity() {
                             val currentJob = dashboardViewModel.getJobById(jobId)
                                 ?: dashState.assignedJobs.find {
                                     it.id.equals(jobId, ignoreCase = true) || it.jobTicketNumber.equals(jobId, ignoreCase = true)
-                                } ?: dashState.selectedJob ?: run {
-                                    val userPin = sessionManager.getPincode()
-                                    val (cLat, cLng) = com.ghartak.technician.util.IndianPincodeResolver.getCoordinatesForPincode(userPin)
-                                    TechnicianJob(
-                                        id = jobId,
-                                        jobTicketNumber = "#J-${jobId.takeLast(4).ifEmpty { "1001" }}",
-                                        serviceTitle = "Doorstep Service Order",
-                                        pincode = userPin,
-                                        customerName = "Customer",
-                                        customerPhone = "",
-                                        customerAddressText = "Customer Address, PIN: $userPin",
-                                        customerLatitude = cLat,
-                                        customerLongitude = cLng,
-                                        status = "COMPLETED",
-                                        totalAmountInr = 0.0
-                                    )
+                                } ?: dashState.selectedJob
+
+                            if (currentJob == null) {
+                                LaunchedEffect(jobId) {
+                                    Toast.makeText(this@MainActivity, "Job details not found", Toast.LENGTH_SHORT).show()
+                                    navController.popBackStack()
                                 }
+                                return@composable
+                            }
+
                             jobCompleteViewModel.initJob(currentJob)
 
                             JobCompleteScreen(

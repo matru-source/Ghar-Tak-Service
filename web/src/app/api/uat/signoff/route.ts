@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { db } from '@/lib/db';
 import { dbStore } from '@/lib/mock-data';
+import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
 
 // In-memory store for client sign-off certificate
 let activeSignOffCertificate: {
@@ -65,11 +66,27 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const token = extractBearerToken(req);
+    if (!token) {
+      return NextResponse.json({ success: false, error: 'Authorization Bearer token required' }, { status: 401 });
+    }
+    const payload = await verifyAccessToken(token);
+    if (!payload || payload.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ success: false, error: 'Access denied: SUPER_ADMIN role required for UAT signoff' }, { status: 403 });
+    }
+
     const body = await req.json().catch(() => ({}));
     const { stakeholderName, stakeholderOrganization, role, notes } = body;
 
-    const name = stakeholderName?.trim() || 'Client Acceptance Committee';
-    const org = stakeholderOrganization?.trim() || 'STITCH Technologies';
+    if (!stakeholderName?.trim() || !stakeholderOrganization?.trim()) {
+      return NextResponse.json(
+        { success: false, error: 'stakeholderName and stakeholderOrganization are required for official UAT sign-off' },
+        { status: 400 }
+      );
+    }
+
+    const name = stakeholderName.trim();
+    const org = stakeholderOrganization.trim();
     const signRole = role?.trim() || 'Principal Technical Stakeholder';
     const signNotes = notes?.trim() || 'All 53 screens, 4 role workspaces, and WORM audit ledger accepted with zero defects.';
 
@@ -77,17 +94,17 @@ export async function POST(req: NextRequest) {
     const certificateId = `UAT-SIGNOFF-${Date.now().toString(36).toUpperCase()}`;
 
     // Cryptographic digital seal
-    const sealData = `${certificateId}|${name}|${org}|${signRole}|${timestamp}|100%|45_TASKS_COMPLETE`;
+    const sealData = `${certificateId}|${name}|${org}|${signRole}|${timestamp}|100%|45_TASKS_COMPLETE|SUPER_ADMIN_${payload.sub}`;
     const digitalSealHash = crypto.createHash('sha256').update(sealData).digest('hex');
 
     // Commit to immutable WORM audit ledger
     const sealedLog = await db.recordWormAuditLog({
-      actorId: name,
-      actorRole: 'CLIENT_STAKEHOLDER',
+      actorId: payload.sub,
+      actorRole: payload.role,
       action: 'CLIENT_UAT_FINAL_SIGN_OFF',
       resourceType: 'PROJECT_HANDOVER',
       resourceId: certificateId,
-      payloadSummary: `Official Client UAT Sign-off approved by ${name} (${org}, ${signRole}). 45/45 tasks complete, 53 screens delivered. Seal SHA-256: ${digitalSealHash.slice(0, 16)}...`,
+      payloadSummary: `Official Client UAT Sign-off approved by ${name} (${org}, ${signRole}). Authorized by Super Admin: ${payload.fullName} (${payload.sub}). Seal SHA-256: ${digitalSealHash.slice(0, 16)}...`,
     });
 
     activeSignOffCertificate = {

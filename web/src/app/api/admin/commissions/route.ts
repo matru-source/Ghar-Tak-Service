@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { apiSuccess, apiError } from '@/lib/api-response';
+import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
 
 export async function GET() {
   try {
@@ -17,6 +18,15 @@ export async function GET() {
 
 export async function PATCH(request: NextRequest) {
   try {
+    const token = extractBearerToken(request);
+    if (!token) {
+      return apiError('Missing or malformed Authorization header. Bearer token required.', 401);
+    }
+    const payload = await verifyAccessToken(token);
+    if (!payload || payload.role !== 'SUPER_ADMIN') {
+      return apiError('Access denied: SUPER_ADMIN role authorization required.', 403);
+    }
+
     const body = await request.json();
     const {
       platformRevenueSharePct,

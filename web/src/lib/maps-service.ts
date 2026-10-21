@@ -34,7 +34,7 @@ export interface DistanceMatrixResult {
 
 export const MAPS_CONFIG = {
   provider: (process.env.MAPS_PROVIDER || 'GOOGLE_MAPS_SANDBOX') as 'GOOGLE_MAPS' | 'GOOGLE_MAPS_SANDBOX',
-  apiKey: process.env.GOOGLE_MAPS_API_KEY || 'AIzaSyMockElectriCareGoogleMapsKey_2026',
+  apiKey: process.env.GOOGLE_MAPS_API_KEY || '',
   countryCode: 'IN',
   urbanAvgSpeedKmH: 25.0,
 };

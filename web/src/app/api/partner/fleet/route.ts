@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
 
 export async function GET(request: NextRequest) {
   try {
@@ -52,8 +53,17 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    const token = extractBearerToken(request);
+    if (!token) {
+      return NextResponse.json({ success: false, error: 'Authorization Bearer token required' }, { status: 401 });
+    }
+    const payload = await verifyAccessToken(token);
+    if (!payload || (payload.role !== 'PARTNER' && payload.role !== 'SUPER_ADMIN')) {
+      return NextResponse.json({ success: false, error: 'Access denied: PARTNER or SUPER_ADMIN role required' }, { status: 403 });
+    }
+
     const body = await request.json();
-    const { technicianId, isOnline, assignedPincode, insulatedGlovesVerified, safetyKitSerial, actorId } = body;
+    const { technicianId, isOnline, assignedPincode, insulatedGlovesVerified, safetyKitSerial } = body;
 
     if (!technicianId) {
       return NextResponse.json(
@@ -79,8 +89,8 @@ export async function PATCH(request: NextRequest) {
     const techName = (updatedTech as any).fullName || (updatedTech as any).user?.fullName || 'Technician';
     const auditSummary = `Partner Shift/Roster Update: ${techName} (${(updatedTech as any).badgeNumber}) - isOnline=${(updatedTech as any).isOnline}, pincode=${(updatedTech as any).assignedPincode}`;
     const auditLog = await db.recordWormAuditLog({
-      actorId: actorId || 'usr_partner_01',
-      actorRole: 'PARTNER',
+      actorId: payload.sub,
+      actorRole: payload.role,
       action: 'UPDATE_FLEET_SHIFT_ASSIGNMENT',
       resourceType: 'TECHNICIAN',
       resourceId: technicianId,

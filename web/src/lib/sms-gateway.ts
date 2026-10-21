@@ -32,8 +32,8 @@ const rateLimitStore = new Map<string, number[]>();
 
 export const SMS_GATEWAY_CONFIG = {
   provider: (process.env.SMS_PROVIDER || 'MOCK_SANDBOX') as 'MOCK_SANDBOX' | 'FAST2SMS' | 'MSG91' | 'TWILIO',
-  senderId: process.env.SMS_SENDER_ID || 'ELCARE',
-  apiKey: process.env.SMS_API_KEY || 'sandbox_key_electricare_2026',
+  senderId: process.env.SMS_SENDER_ID || 'GHARTAK',
+  apiKey: process.env.SMS_API_KEY || '',
   maxPerWindow: 5,
   windowMs: 10 * 60 * 1000, // 10 minutes
 };
@@ -114,7 +114,7 @@ export class SmsGateway {
           },
           body: JSON.stringify({
             route: 'otp',
-            variables_values: String(params.otp || '1234'),
+            variables_values: String(params.otp || ''),
             numbers: rawNumbers,
           }),
         });

@@ -105,7 +105,7 @@ class SessionManager(val context: Context) {
         fullName: String,
         email: String,
         phone: String,
-        password: String,
+        password: String = "",
         address: String = "",
         pincode: String = "760001"
     ) {
@@ -118,7 +118,7 @@ class SessionManager(val context: Context) {
                 put("name", fullName.trim())
                 put("email", cleanEmail)
                 put("phone", if (phone.startsWith("+")) phone.trim() else if (cleanPhone.isNotEmpty()) "+91 $cleanPhone" else "")
-                put("password", password.trim())
+                // Security Hardening: Passwords must never be stored locally in plaintext SharedPreferences
                 put("address", address.trim())
                 put("pincode", pincode.trim().ifEmpty { "760001" })
             }
@@ -132,20 +132,6 @@ class SessionManager(val context: Context) {
         }
     }
 
-    fun validatePassword(rawEmail: String, rawPassword: String): Boolean {
-        val cleanEmail = rawEmail.trim().lowercase()
-        val registryStr = prefs.getString(KEY_USERS_REGISTRY, "{}") ?: "{}"
-        return try {
-            val json = JSONObject(registryStr)
-            if (!json.has(cleanEmail)) return false
-            val userObj = json.getJSONObject(cleanEmail)
-            val savedPassword = userObj.optString("password", "")
-            savedPassword == rawPassword.trim()
-        } catch (e: Exception) {
-            false
-        }
-    }
-
     fun getUserByEmail(rawEmail: String): JSONObject? {
         val cleanEmail = rawEmail.trim().lowercase()
         val registryStr = prefs.getString(KEY_USERS_REGISTRY, "{}") ?: "{}"
@@ -154,22 +140,6 @@ class SessionManager(val context: Context) {
             if (json.has(cleanEmail)) json.getJSONObject(cleanEmail) else null
         } catch (e: Exception) {
             null
-        }
-    }
-
-    fun updatePassword(rawEmail: String, newPassword: String): Boolean {
-        val cleanEmail = rawEmail.trim().lowercase()
-        val registryStr = prefs.getString(KEY_USERS_REGISTRY, "{}") ?: "{}"
-        return try {
-            val json = JSONObject(registryStr)
-            if (!json.has(cleanEmail)) return false
-            val userObj = json.getJSONObject(cleanEmail)
-            userObj.put("password", newPassword.trim())
-            json.put(cleanEmail, userObj)
-            prefs.edit().putString(KEY_USERS_REGISTRY, json.toString()).apply()
-            true
-        } catch (e: Exception) {
-            false
         }
     }
 

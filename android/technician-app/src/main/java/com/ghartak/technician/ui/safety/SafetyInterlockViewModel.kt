@@ -220,11 +220,6 @@ class SafetyInterlockViewModel(
         )
     }
 
-    fun simulateCaptureEvidence() {
-        val simulatedPhoto = "https://storage.ghartak.in/evidence/service_site_${System.currentTimeMillis()}.jpg"
-        setBeforePhoto(simulatedPhoto, null)
-    }
-
     fun submitSafetyVerification(
         context: Context,
         onSuccess: () -> Unit

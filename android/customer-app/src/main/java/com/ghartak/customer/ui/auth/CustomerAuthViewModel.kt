@@ -151,7 +151,14 @@ class CustomerAuthViewModel(
 
                 if (response.isSuccessful && response.body()?.success == true && response.body()?.data != null) {
                     val data = response.body()!!.data!!
-                    val token = data["token"]?.toString() ?: "jwt_cust_${System.currentTimeMillis()}"
+                    val token = data["token"]?.toString()
+                    if (token.isNullOrBlank()) {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = "Authentication failed: Access token was not issued by server."
+                        )
+                        return@launch
+                    }
                     val userMap = data["user"] as? Map<*, *>
 
                     val userId = userMap?.get("id")?.toString() ?: "cust_${System.currentTimeMillis()}"
@@ -177,12 +184,11 @@ class CustomerAuthViewModel(
                         pincode = resolvedPincode
                     )
 
-                    // Cache locally in SessionManager for offline support
+                    // Cache user profile metadata locally without storing plaintext password
                     sessionManager.registerUser(
                         fullName = resolvedName,
                         email = resolvedEmail,
                         phone = resolvedPhone,
-                        password = password,
                         address = resolvedAddress,
                         pincode = resolvedPincode
                     )
@@ -202,39 +208,6 @@ class CustomerAuthViewModel(
                     return@launch
                 }
             } catch (netEx: Exception) {
-                // If offline / network error, check if user credentials exist locally in sessionManager without backdoor
-                val isValidLocal = sessionManager.validatePassword(email, password)
-                if (isValidLocal) {
-                    val existing = sessionManager.getUserByEmail(email)
-                    val resolvedName = existing?.optString("name", "Customer") ?: "Customer"
-                    val resolvedPhone = existing?.optString("phone", "") ?: ""
-                    val resolvedAddress = existing?.optString("address", "") ?: ""
-                    val resolvedPincode = existing?.optString("pincode", "400001") ?: "400001"
-
-                    val profile = UserProfile(
-                        id = sessionManager.getUserId().ifEmpty { "cust_offline" },
-                        phone = resolvedPhone,
-                        fullName = resolvedName,
-                        email = email,
-                        role = "CUSTOMER"
-                    )
-
-                    val savedToken = sessionManager.getAuthToken()?.ifEmpty { null } ?: "offline_token_${System.currentTimeMillis()}"
-                    sessionManager.saveSession(
-                        token = savedToken,
-                        user = profile,
-                        address = resolvedAddress,
-                        pincode = resolvedPincode
-                    )
-
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        isLoggedIn = true,
-                        successMessage = "Offline login successful. Welcome back, $resolvedName!"
-                    )
-                    return@launch
-                }
-
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     errorMessage = "Unable to connect to Ghar Tak auth server. Please check your internet connection."
@@ -417,7 +390,14 @@ class CustomerAuthViewModel(
 
                 if (response.isSuccessful && response.body()?.success == true && response.body()?.data != null) {
                     val data = response.body()!!.data!!
-                    val token = data["token"]?.toString() ?: "jwt_cust_${System.currentTimeMillis()}"
+                    val token = data["token"]?.toString()
+                    if (token.isNullOrBlank()) {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = "Registration failed: Access token was not issued by server."
+                        )
+                        return@launch
+                    }
                     val userMap = data["user"] as? Map<*, *>
 
                     val userId = userMap?.get("id")?.toString() ?: "cust_${System.currentTimeMillis()}"
@@ -439,12 +419,11 @@ class CustomerAuthViewModel(
                         pincode = pincode
                     )
 
-                    // Also cache locally in SessionManager for offline support
+                    // Also cache profile metadata locally without storing plaintext password
                     sessionManager.registerUser(
                         fullName = name,
                         email = email,
                         phone = phone,
-                        password = password,
                         address = address,
                         pincode = pincode
                     )
@@ -577,7 +556,14 @@ class CustomerAuthViewModel(
 
                 if (response.isSuccessful && response.body()?.success == true && response.body()?.data != null) {
                     val data = response.body()!!.data!!
-                    val token = data["token"]?.toString() ?: "jwt_cust_${System.currentTimeMillis()}"
+                    val token = data["token"]?.toString()
+                    if (token.isNullOrBlank()) {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = "Password reset failed: Access token was not issued by server."
+                        )
+                        return@launch
+                    }
                     val userMap = data["user"] as? Map<*, *>
 
                     val userId = userMap?.get("id")?.toString() ?: "cust_${System.currentTimeMillis()}"
@@ -603,12 +589,11 @@ class CustomerAuthViewModel(
                         pincode = resolvedPincode
                     )
 
-                    // Update password in local SessionManager cache for offline authentication
+                    // Update user profile metadata in local SessionManager cache without plaintext password
                     sessionManager.registerUser(
                         fullName = resolvedName,
                         email = resolvedEmail,
                         phone = resolvedPhone,
-                        password = newPassword,
                         address = resolvedAddress,
                         pincode = resolvedPincode
                     )
@@ -647,85 +632,18 @@ class CustomerAuthViewModel(
         selectedAddress: String = "",
         selectedPincode: String = "760001"
     ) {
-        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
-        viewModelScope.launch {
-            delay(300)
-            val cleanEmail = selectedEmail.trim().lowercase()
-            val existingUserJson = sessionManager.getUserByEmail(cleanEmail)
-
-            val name = if (existingUserJson != null && existingUserJson.optString("name", "").isNotBlank()) {
-                existingUserJson.optString("name")
-            } else {
-                selectedName.trim().ifEmpty { cleanEmail.substringBefore("@") }
-            }
-            val phone = if (!selectedPhone.isNullOrBlank()) selectedPhone else existingUserJson?.optString("phone", "") ?: ""
-            val address = if (!selectedAddress.isNullOrBlank()) selectedAddress else existingUserJson?.optString("address", "") ?: ""
-            val pincode = if (!selectedPincode.isNullOrBlank()) selectedPincode else existingUserJson?.optString("pincode", "760001") ?: "760001"
-
-            val uid = "cust_google_${System.currentTimeMillis() % 10000}"
-            val profile = UserProfile(
-                id = uid,
-                phone = phone,
-                fullName = name,
-                email = cleanEmail,
-                role = "CUSTOMER"
-            )
-
-            // If account was not in registry, register it now
-            if (existingUserJson == null) {
-                sessionManager.registerUser(
-                    fullName = name,
-                    email = cleanEmail,
-                    phone = phone,
-                    password = "google_auth_${System.currentTimeMillis()}",
-                    address = address,
-                    pincode = pincode
-                )
-            }
-
-            sessionManager.saveSession(
-                token = "gts_google_token_${uid}",
-                user = profile,
-                address = address,
-                pincode = pincode
-            )
-
-            // Sync with backend database
-            try {
-                val api = ApiClient.getService(sessionManager.context)
-                val regRes = api.register(
-                    mapOf(
-                        "fullName" to name,
-                        "email" to cleanEmail,
-                        "password" to "GoogleOAuth2026!",
-                        "phone" to phone,
-                        "address" to address,
-                        "pincode" to pincode
-                    )
-                )
-                if (regRes.isSuccessful && regRes.body()?.data != null) {
-                    val serverData = regRes.body()!!.data!!
-                    val serverToken = serverData["token"]?.toString()
-                    val userMap = serverData["user"] as? Map<*, *>
-                    val serverUid = userMap?.get("id")?.toString()
-                    if (!serverToken.isNullOrBlank() && !serverUid.isNullOrBlank()) {
-                        val serverProfile = profile.copy(id = serverUid)
-                        sessionManager.saveSession(serverToken, serverProfile, address, pincode)
-                    }
-                }
-            } catch (_: Exception) {
-            }
-
+        if (selectedEmail.isBlank()) {
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
-                isLoggedIn = true,
-                successMessage = if (existingUserJson != null) {
-                    "Welcome back, $name! Signed in via Google."
-                } else {
-                    "Welcome to Ghar Tak, $name! Google account linked."
-                }
+                errorMessage = "Google sign-in requires a valid email address."
             )
+            return
         }
+
+        _uiState.value = _uiState.value.copy(
+            isLoading = false,
+            errorMessage = "Google Play Services cryptographic ID token is required for secure authentication. Please sign in with email and password."
+        )
     }
 
     fun loginWithGoogleIdToken(idToken: String) {
@@ -742,7 +660,14 @@ class CustomerAuthViewModel(
 
                 if (response.isSuccessful && response.body()?.success == true && response.body()?.data != null) {
                     val data = response.body()!!.data!!
-                    val token = data["token"]?.toString() ?: "jwt_google_${System.currentTimeMillis()}"
+                    val token = data["token"]?.toString()
+                    if (token.isNullOrBlank()) {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = "Google authentication failed: Access token was not issued by server."
+                        )
+                        return@launch
+                    }
                     val userMap = data["user"] as? Map<*, *>
 
                     val userId = userMap?.get("id")?.toString() ?: "cust_${System.currentTimeMillis()}"
@@ -771,7 +696,6 @@ class CustomerAuthViewModel(
                         fullName = resolvedName,
                         email = resolvedEmail,
                         phone = resolvedPhone,
-                        password = "GOOGLE_OAUTH_AUTHENTICATED",
                         address = resolvedAddress,
                         pincode = resolvedPincode
                     )

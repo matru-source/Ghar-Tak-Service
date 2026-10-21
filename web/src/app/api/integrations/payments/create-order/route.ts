@@ -31,12 +31,18 @@ export async function POST(request: NextRequest) {
       return apiError("Valid 'invoiceId' or 'jobId' with generated invoice is required", 400);
     }
 
+    const phone = job.customerPhone || job.customer?.phone || body.customerPhone;
+    if (!phone) {
+      return apiError('Customer phone number is required to initialize payment gateway order', 400);
+    }
+    const name = job.customerName || job.customer?.fullName || body.customerName || 'Customer';
+
     const orderData = PaymentGateway.createOrder({
       invoiceId: invoice.id,
       jobTicketNumber: job.jobTicketNumber,
       amountInr: invoice.totalAmount,
-      customerPhone: job.customerPhone || '+919876543213',
-      customerName: job.customerName || 'Valued Customer',
+      customerPhone: phone,
+      customerName: name,
     });
 
     return apiSuccess(

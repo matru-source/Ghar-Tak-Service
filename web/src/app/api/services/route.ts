@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { dbStore } from '@/lib/mock-data';
 import { calculateIndianGst18 } from '@/lib/tax-engine';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
+import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
 
 export async function OPTIONS() {
   return corsOptionsResponse();
@@ -79,6 +80,15 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const token = extractBearerToken(request);
+    if (!token) {
+      return apiError('Authorization Bearer token required', 401);
+    }
+    const payload = await verifyAccessToken(token);
+    if (!payload || (payload.role !== 'SUPER_ADMIN' && payload.role !== 'PARTNER')) {
+      return apiError('Access denied: SUPER_ADMIN or PARTNER role required', 403);
+    }
+
     const body = await request.json();
     const { title, categoryId, categorySlug, basePriceInr, estimatedDurationMinutes, isEmergencySosEligible, code } = body;
 
@@ -121,6 +131,15 @@ export async function POST(request: NextRequest) {
  */
 export async function PATCH(request: NextRequest) {
   try {
+    const token = extractBearerToken(request);
+    if (!token) {
+      return apiError('Authorization Bearer token required', 401);
+    }
+    const payload = await verifyAccessToken(token);
+    if (!payload || (payload.role !== 'SUPER_ADMIN' && payload.role !== 'PARTNER')) {
+      return apiError('Access denied: SUPER_ADMIN or PARTNER role required', 403);
+    }
+
     const body = await request.json();
     const { id, isPaused, basePriceInr, estimatedDurationMinutes } = body;
 
@@ -154,6 +173,15 @@ export async function PATCH(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
+    const token = extractBearerToken(request);
+    if (!token) {
+      return apiError('Authorization Bearer token required', 401);
+    }
+    const payload = await verifyAccessToken(token);
+    if (!payload || (payload.role !== 'SUPER_ADMIN' && payload.role !== 'PARTNER')) {
+      return apiError('Access denied: SUPER_ADMIN or PARTNER role required', 403);
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 

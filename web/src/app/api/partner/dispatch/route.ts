@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { dbStore } from '@/lib/mock-data';
 import { realtimeBus } from '@/lib/realtime-bus';
+import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
 
 export async function GET(req: NextRequest) {
   try {
@@ -83,6 +84,15 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
+    const token = extractBearerToken(req);
+    if (!token) {
+      return NextResponse.json({ success: false, error: 'Authorization Bearer token required' }, { status: 401 });
+    }
+    const payload = await verifyAccessToken(token);
+    if (!payload || (payload.role !== 'PARTNER' && payload.role !== 'SUPER_ADMIN')) {
+      return NextResponse.json({ success: false, error: 'Access denied: PARTNER or SUPER_ADMIN role required' }, { status: 403 });
+    }
+
     const body = await req.json();
     const { jobId, status, technicianId, technicianName } = body;
 
@@ -106,12 +116,12 @@ export async function PATCH(req: NextRequest) {
     const updatedJob = dbStore.jobs[jobIndex];
 
     await db.recordWormAuditLog({
-      actorId: 'usr_partner_01',
-      actorRole: 'PARTNER',
+      actorId: payload.sub,
+      actorRole: payload.role,
       action: 'TERRITORY_DISPATCH_UPDATED',
       resourceType: 'JOB_ORDER',
       resourceId: updatedJob.jobTicketNumber,
-      payloadSummary: `Maharashtra Hub updated ${updatedJob.jobTicketNumber}: status=${updatedJob.status}, tech=${updatedJob.technicianName}`,
+      payloadSummary: `Territory Hub updated ${updatedJob.jobTicketNumber}: status=${updatedJob.status}, tech=${updatedJob.technicianName}`,
     });
 
     if (technicianId) {

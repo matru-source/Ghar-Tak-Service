@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { dbStore } from '@/lib/mock-data';
+import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
 
 export async function GET(req: NextRequest) {
   try {
@@ -89,6 +90,15 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const token = extractBearerToken(req);
+    if (!token) {
+      return NextResponse.json({ success: false, error: 'Authorization Bearer token required' }, { status: 401 });
+    }
+    const payload = await verifyAccessToken(token);
+    if (!payload || payload.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ success: false, error: 'Access denied: SUPER_ADMIN role required' }, { status: 403 });
+    }
+
     const body = await req.json().catch(() => ({}));
     const testAction = body.action || 'RUN_FULL_SECURITY_DIAGNOSTICS';
 
@@ -141,8 +151,8 @@ export async function POST(req: NextRequest) {
 
       // Record this diagnostic run as a WORM audit entry
       await db.recordWormAuditLog({
-        actorId: 'usr_admin_01',
-        actorRole: 'SUPER_ADMIN',
+        actorId: payload.sub,
+        actorRole: payload.role,
         action: 'SECURITY_AUDIT_DIAGNOSTIC_COMPLETED',
         resourceType: 'SYSTEM_SECURITY',
         resourceId: 'SEC_DIAG_01',

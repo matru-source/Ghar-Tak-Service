@@ -418,9 +418,9 @@ export const db = {
       currentLatitude: defaultLat,
       currentLongitude: defaultLng,
       assignedPincode: cleanPin,
-      kycStatus: 'VERIFIED' as const,
+      kycStatus: 'PENDING_REVIEW' as const,
       electricalLicenseNumber: `LIC-${cleanPin}-${Math.floor(1000 + Math.random() * 9000)}`,
-      insulatedGlovesVerified: true,
+      insulatedGlovesVerified: false,
       safetyKitSerial: `KIT-${Math.floor(10000 + Math.random() * 90000)}`,
       email: params.email?.trim() || `${techId}@ghartak.in`,
       trade: params.trade || 'Certified Professional',
@@ -860,8 +860,11 @@ export const db = {
     }
 
     const customerUser = dbStore.users.find((u) => u.id === params.customerId || u.phone === params.customerId);
-    const customerName = params.customerName || (customerUser ? customerUser.fullName : 'Valued Customer');
-    const customerPhone = params.customerPhone || (customerUser ? customerUser.phone : '+919876543213');
+    const customerName = params.customerName || (customerUser ? customerUser.fullName : 'Customer');
+    const customerPhone = params.customerPhone || (customerUser ? customerUser.phone : '');
+    if (!customerPhone) {
+      throw new Error("Valid customer phone number is required to create a service work order.");
+    }
 
     // Direct or Algorithmic Dispatch
     // 1. Concurrency Lock: Identify all busy technicians currently engaged on active jobs
@@ -905,16 +908,16 @@ export const db = {
           reqTechId.toLowerCase().includes(fName)
         );
       });
-      // Only assign if the requested technician is currently FREE
-      if (candidate && !busyTechnicianIds.has(candidate.id)) {
+      // Only assign if the requested technician is currently FREE, KYC-verified, and gloves verified
+      if (candidate && !busyTechnicianIds.has(candidate.id) && candidate.kycStatus === 'VERIFIED' && candidate.insulatedGlovesVerified) {
         assignedTech = candidate;
       }
     }
 
     if (!assignedTech) {
-      // 1. Prioritize active online technician in the exact pincode who is NOT busy
+      // 1. Prioritize active online technician in the exact pincode who is NOT busy and safety certified
       const onlineInPincode = dbStore.technicians.filter(
-        (t) => t.isOnline && t.assignedPincode === params.pincode && t.kycStatus !== 'REJECTED' && !busyTechnicianIds.has(t.id)
+        (t) => t.isOnline && t.assignedPincode === params.pincode && t.kycStatus === 'VERIFIED' && t.insulatedGlovesVerified && !busyTechnicianIds.has(t.id)
       );
       if (onlineInPincode.length > 0) {
         assignedTech = onlineInPincode[0];
@@ -922,13 +925,12 @@ export const db = {
     }
 
     if (!assignedTech) {
-      // 2. Prioritize regional online mobile technician who is NOT busy
+      // 2. Prioritize regional online mobile technician who is NOT busy and safety certified
       const statePrefix = params.pincode.substring(0, 2);
       const regionalOnline = dbStore.technicians.filter(
-        (t) => t.isOnline && t.kycStatus !== 'REJECTED' && t.assignedPincode?.startsWith(statePrefix) && !busyTechnicianIds.has(t.id)
+        (t) => t.isOnline && t.kycStatus === 'VERIFIED' && t.insulatedGlovesVerified && t.assignedPincode?.startsWith(statePrefix) && !busyTechnicianIds.has(t.id)
       );
       if (regionalOnline.length > 0) {
-        // Prioritize dynamic app-registered technicians in this region
         regionalOnline.sort((a, b) => (b.id.startsWith('tech_') ? 1 : 0) - (a.id.startsWith('tech_') ? 1 : 0));
         assignedTech = regionalOnline[0];
       }
@@ -1796,7 +1798,7 @@ export const db = {
     const tech = dbStore.technicians.find((t) => t.id === input.technicianId || t.badgeNumber === input.technicianId);
     const techName = tech?.fullName || 'Certified Technician';
     const techBadge = tech?.badgeNumber || input.technicianId;
-    const techPhone = tech?.phone || '+91 9876543210';
+    const techPhone = tech?.phone || '';
     const partnerId = tech?.partnerId || 'ptnr_mah_01';
 
     if (!dbStore.withdrawals) {
@@ -2172,24 +2174,7 @@ export const db = {
 
     let customer = dbStore.customers.find((c) => c.id === id || c.userId === id || (updates.phone && c.phone === updates.phone));
     if (!customer) {
-      customer = {
-        id: id.startsWith('cust_') ? id : `cust_${Date.now().toString(36)}`,
-        userId: id,
-        fullName: updates.fullName || 'Customer',
-        phone: updates.phone || '9876543210',
-        email: updates.email || 'customer@ghartak.in',
-        defaultAddressLine: updates.defaultAddressLine || '',
-        defaultPincode: updates.defaultPincode || '400001',
-        defaultLatitude: updates.defaultLatitude || 18.9220,
-        defaultLongitude: updates.defaultLongitude || 72.8347,
-        activeSubscriptionPlan: 'STARTER_SAFETY_CARE',
-        totalOrdersCount: 0,
-        totalSpendInr: 0,
-        disputeCount: 0,
-        isVip: false,
-        memberSince: new Date().toISOString(),
-      };
-      dbStore.customers.push(customer);
+      return null;
     }
     Object.assign(customer, updates);
     return customer;

@@ -21,7 +21,7 @@ export async function sendBrevoEmail({
     console.error('[Brevo] BREVO_API_KEY is not defined in environment variables');
     return { success: false, error: 'BREVO_API_KEY is not configured on server' };
   }
-  const senderEmail = process.env.BREVO_SENDER_EMAIL || 'matruprasadpanda497@gmail.com';
+  const senderEmail = process.env.BREVO_SENDER_EMAIL || 'notifications@ghartak.in';
   const senderName = process.env.BREVO_SENDER_NAME || 'Ghar Tak Services (GTS)';
 
   try {

@@ -163,6 +163,11 @@ export async function POST(request: NextRequest) {
       return apiError("Valid 10-digit 'phone' is required", 400);
     }
 
+    const cleanPin = (pincode || '').trim();
+    if (!/^\d{6}$/.test(cleanPin)) {
+      return apiError("Valid 6-digit Indian postal 'pincode' is required", 400);
+    }
+
     const registered = await db.registerTechnician({
       id,
       badgeNumber,
@@ -170,7 +175,7 @@ export async function POST(request: NextRequest) {
       phone,
       email,
       trade,
-      pincode: pincode || '759001',
+      pincode: cleanPin,
       latitude: typeof latitude === 'number' ? latitude : undefined,
       longitude: typeof longitude === 'number' ? longitude : undefined,
     });

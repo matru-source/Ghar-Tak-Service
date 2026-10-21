@@ -76,11 +76,6 @@ class JobCompleteViewModel(
         )
     }
 
-    fun simulateCaptureAfterPhoto() {
-        val simulatedPhoto = "https://storage.ghartak.in/evidence/after_work_completed_${System.currentTimeMillis()}.jpg"
-        setAfterPhoto(simulatedPhoto, null)
-    }
-
     fun onRatingChanged(stars: Int) {
         _uiState.value = _uiState.value.copy(rating = stars)
     }

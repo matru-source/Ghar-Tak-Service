@@ -12,14 +12,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { orderId, razorpayPaymentId, razorpaySignature, paymentMethod } = body;
 
-    if (!orderId || !razorpayPaymentId) {
-      return apiError("'orderId' and 'razorpayPaymentId' are required", 400);
+    if (!orderId || !razorpayPaymentId || !razorpaySignature) {
+      return apiError("'orderId', 'razorpayPaymentId', and 'razorpaySignature' are required", 400);
     }
 
     const { isValid, order } = PaymentGateway.verifyPaymentSignature(
       orderId,
       razorpayPaymentId,
-      razorpaySignature || `mock_sig_${razorpayPaymentId}`
+      razorpaySignature
     );
 
     if (!isValid || !order) {

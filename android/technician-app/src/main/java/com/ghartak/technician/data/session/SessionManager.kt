@@ -103,7 +103,7 @@ class SessionManager(val context: Context) {
         fullName: String,
         email: String,
         phone: String,
-        password: String,
+        password: String = "",
         trade: String = "Certified Electrician",
         pincode: String = "760001",
         experience: String = "",
@@ -135,8 +135,8 @@ class SessionManager(val context: Context) {
                 put("badgeNumber", badgeNumber)
                 put("fullName", fullName.trim())
                 put("email", cleanEmail)
-                put("phone", if (phone.startsWith("+")) phone.trim() else if (cleanPhone.isNotEmpty()) "+91 $cleanPhone" else "+91 9876543210")
-                put("password", password.trim())
+                put("phone", if (phone.startsWith("+")) phone.trim() else if (cleanPhone.isNotEmpty()) "+91 $cleanPhone" else "")
+                // Security Hardening: Passwords must never be stored locally in plaintext SharedPreferences
                 put("trade", resolvedTrade)
                 put("pincode", cleanPin)
                 put("experience", resolvedExp)
@@ -185,46 +185,7 @@ class SessionManager(val context: Context) {
             license = resolvedLic,
             serviceArea = resolvedArea
         )
-        saveSession("token_${System.currentTimeMillis()}", profile)
         return profile
-    }
-
-    fun validatePassword(rawEmailOrPhone: String, rawPassword: String): Boolean {
-        val cleanKey = rawEmailOrPhone.trim().lowercase()
-        val phoneKey = rawEmailOrPhone.filter { it.isDigit() }.takeLast(10)
-        val registryStr = prefs.getString(KEY_TECHNICIANS_REGISTRY, "{}") ?: "{}"
-        return try {
-            val json = JSONObject(registryStr)
-            val techObj = when {
-                json.has(cleanKey) -> json.getJSONObject(cleanKey)
-                phoneKey.isNotEmpty() && json.has(phoneKey) -> json.getJSONObject(phoneKey)
-                else -> return false
-            }
-            val savedPassword = techObj.optString("password", "")
-            savedPassword == rawPassword.trim()
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-    fun updatePassword(rawEmail: String, newPassword: String): Boolean {
-        val cleanEmail = rawEmail.trim().lowercase()
-        val registryStr = prefs.getString(KEY_TECHNICIANS_REGISTRY, "{}") ?: "{}"
-        return try {
-            val json = JSONObject(registryStr)
-            if (!json.has(cleanEmail)) return false
-            val userObj = json.getJSONObject(cleanEmail)
-            userObj.put("password", newPassword.trim())
-            json.put(cleanEmail, userObj)
-            val phone = userObj.optString("phone", "").filter { it.isDigit() }.takeLast(10)
-            if (phone.isNotEmpty() && json.has(phone)) {
-                json.put(phone, userObj)
-            }
-            prefs.edit().putString(KEY_TECHNICIANS_REGISTRY, json.toString()).apply()
-            true
-        } catch (e: Exception) {
-            false
-        }
     }
 
     fun getTechnicianProfile(emailOrPhone: String): TechnicianProfile? {

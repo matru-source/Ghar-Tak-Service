@@ -1,15 +1,25 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { apiSuccess, apiError } from '@/lib/api-response';
+import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const token = extractBearerToken(request);
+    if (!token) {
+      return apiError('Missing or malformed Authorization header. Bearer token required.', 401);
+    }
+    const payload = await verifyAccessToken(token);
+    if (!payload || payload.role !== 'SUPER_ADMIN') {
+      return apiError('Access denied: SUPER_ADMIN role authorization required.', 403);
+    }
+
     const { id } = await params;
     const body = await request.json();
-    const { action, reason, insulatedGlovesVerified, verifierId, safetyKitSerial, electricalLicenseNumber } = body;
+    const { action, reason, insulatedGlovesVerified, safetyKitSerial, electricalLicenseNumber } = body;
 
     if (!action || !['VERIFY', 'REJECT'].includes(action)) {
       return apiError("Field 'action' must be either 'VERIFY' or 'REJECT'", 400);
@@ -36,8 +46,8 @@ export async function POST(
       action === 'VERIFY' ? 'VERIFIED' : 'REJECTED',
       {
         reason,
-        verifierId: verifierId || 'usr_admin_01',
-        insulatedGlovesVerified: action === 'VERIFY' ? (insulatedGlovesVerified ?? true) : false,
+        verifierId: payload.sub,
+        insulatedGlovesVerified: action === 'VERIFY' ? Boolean(insulatedGlovesVerified) : false,
       }
     );
 

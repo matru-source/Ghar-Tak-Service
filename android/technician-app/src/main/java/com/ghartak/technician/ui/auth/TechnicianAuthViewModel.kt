@@ -161,7 +161,14 @@ class TechnicianAuthViewModel(
 
                 if (response.isSuccessful && response.body()?.success == true && response.body()?.data != null) {
                     val data = response.body()!!.data!!
-                    val token = data["token"]?.toString() ?: "jwt_tech_${System.currentTimeMillis()}"
+                    val token = data["token"]?.toString()
+                    if (token.isNullOrBlank()) {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = "Server authentication error: Access token was not issued."
+                        )
+                        return@launch
+                    }
                     val userMap = data["user"] as? Map<*, *>
 
                     val userId = userMap?.get("id")?.toString() ?: ""
@@ -213,22 +220,6 @@ class TechnicianAuthViewModel(
                     return@launch
                 }
             } catch (netEx: Exception) {
-                // If network connection failed, check strictly registered local credentials without bypass backdoors
-                val isLocalValid = sessionManager.validatePassword(emailOrPhone, password)
-                if (isLocalValid) {
-                    val localProfile = sessionManager.getTechnicianProfile(emailOrPhone)
-                    if (localProfile != null) {
-                        sessionManager.saveSession("offline_token_${localProfile.id}", localProfile)
-                        com.ghartak.technician.service.TechnicianLocationService.startService(sessionManager.context, null)
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            isLoggedIn = true,
-                            successMessage = "Offline Shift Activated. Welcome back, ${localProfile.fullName}!"
-                        )
-                        return@launch
-                    }
-                }
-
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     errorMessage = "Unable to connect to Ghar Tak auth server. Please check your internet connection."
@@ -261,56 +252,21 @@ class TechnicianAuthViewModel(
 
     // ================= GOOGLE SIGN IN =================
     fun loginWithGoogle(
-        selectedEmail: String = "itsmatruprasad@gmail.com",
-        selectedName: String = "Matru Prasad"
+        selectedEmail: String,
+        selectedName: String
     ) {
-        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null, successMessage = null)
-        viewModelScope.launch {
-            delay(400)
-            val cleanEmail = selectedEmail.trim().lowercase()
-            var profile = sessionManager.getTechnicianProfile(cleanEmail)
-
-            if (profile == null) {
-                val cleanName = selectedName.trim().ifEmpty { "Certified Professional" }
-                profile = sessionManager.registerTechnician(
-                    fullName = cleanName,
-                    email = cleanEmail,
-                    phone = sessionManager.getPhone(),
-                    password = "google_auth_${System.currentTimeMillis()}",
-                    trade = "Certified Service Specialist",
-                    pincode = sessionManager.getPincode().ifEmpty { "759001" }
-                )
-            } else {
-                sessionManager.saveSession("gts_google_token_${profile.id}", profile)
-            }
-
-            try {
-                val (liveLat, liveLng) = getBestKnownLocation(profile.assignedPincode)
-                val api = ApiClient.getService(sessionManager.context)
-                api.registerTechnician(
-                    RegisterTechnicianRequest(
-                        id = profile.id,
-                        badgeNumber = profile.badgeNumber,
-                        fullName = profile.fullName,
-                        phone = profile.phone,
-                        email = profile.email,
-                        trade = profile.specialization,
-                        pincode = profile.assignedPincode,
-                        latitude = liveLat,
-                        longitude = liveLng
-                    )
-                )
-                com.ghartak.technician.service.TechnicianLocationService.startService(sessionManager.context, null)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-
+        if (selectedEmail.isBlank()) {
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
-                isLoggedIn = true,
-                successMessage = "Google Sign-In successful! Welcome back, ${profile.fullName}."
+                errorMessage = "Google sign-in requires a valid email address."
             )
+            return
         }
+
+        _uiState.value = _uiState.value.copy(
+            isLoading = false,
+            errorMessage = "Google Play Services cryptographic ID token is required for secure authentication. Please sign in with email and password."
+        )
     }
 
     fun loginWithGoogleIdToken(idToken: String) {
@@ -327,21 +283,27 @@ class TechnicianAuthViewModel(
 
                 if (response.isSuccessful && response.body()?.success == true && response.body()?.data != null) {
                     val data = response.body()!!.data!!
-                    val token = data["token"]?.toString() ?: "jwt_google_tech_${System.currentTimeMillis()}"
+                    val token = data["token"]?.toString()
+                    if (token.isNullOrBlank()) {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = "Google authentication failed: Access token was not issued by server."
+                        )
+                        return@launch
+                    }
                     val userMap = data["user"] as? Map<*, *>
 
                     val techId = userMap?.get("technicianId")?.toString() ?: userMap?.get("id")?.toString() ?: "tech_${System.currentTimeMillis()}"
                     val badgeNumber = userMap?.get("badgeNumber")?.toString() ?: "GTS-TECH-${(1000..9999).random()}"
                     val fullName = userMap?.get("fullName")?.toString() ?: "Certified Professional"
                     val email = userMap?.get("email")?.toString() ?: ""
-                    val phone = userMap?.get("phone")?.toString() ?: sessionManager.getPhone().ifEmpty { "+91 9876543210" }
+                    val phone = userMap?.get("phone")?.toString() ?: sessionManager.getPhone().ifEmpty { "" }
                     val pincode = userMap?.get("pincode")?.toString() ?: sessionManager.getPincode().ifEmpty { "760001" }
 
                     val profile = sessionManager.registerTechnician(
                         fullName = fullName,
                         email = email,
                         phone = phone,
-                        password = "GOOGLE_OAUTH_AUTHENTICATED",
                         trade = "Certified Professional",
                         pincode = pincode
                     )
@@ -656,8 +618,6 @@ class TechnicianAuthViewModel(
                 )
 
                 if (response.isSuccessful && response.body()?.success == true) {
-                    sessionManager.updatePassword(state.email, newPassword)
-
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         mode = "LOGIN",

@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { SmsGateway } from '@/lib/sms-gateway';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
+import { getAreaForPincode } from '@/lib/pincode-resolver';
 
 export async function OPTIONS() {
   return corsOptionsResponse();
@@ -29,13 +30,22 @@ export async function POST(request: NextRequest) {
 
     const techAny = tech as any;
     const jobAny = job as any;
-    const techPhone = techAny.phone || techAny.user?.phone || '+919876543212';
+    const techPhone = techAny.phone || techAny.user?.phone;
+    if (!techPhone) {
+      return apiError('Technician mobile phone number is not available', 400);
+    }
+
     const techName = techAny.fullName || techAny.user?.fullName || 'Field Technician';
-    const fee = jobAny.totalAmountInr || 1250;
+    const fee = jobAny.totalAmountInr;
+    if (!fee || fee <= 0) {
+      return apiError('Invalid or missing work order fee', 400);
+    }
+
+    const areaName = getAreaForPincode(job.pincode);
 
     const smsRecord = await SmsGateway.sendSms(techPhone, 'JOB_DISPATCH_ALERT', {
       ticketNumber: job.jobTicketNumber,
-      areaName: 'Colaba Hub',
+      areaName,
       pincode: job.pincode,
       fee,
     });

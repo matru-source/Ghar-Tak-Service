@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
 
 export async function GET(request: NextRequest) {
   try {
@@ -86,6 +87,15 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    const token = extractBearerToken(request);
+    if (!token) {
+      return NextResponse.json({ success: false, error: 'Authorization Bearer token required' }, { status: 401 });
+    }
+    const payload = await verifyAccessToken(token);
+    if (!payload || (payload.role !== 'PARTNER' && payload.role !== 'SUPER_ADMIN')) {
+      return NextResponse.json({ success: false, error: 'Access denied: PARTNER or SUPER_ADMIN role required' }, { status: 403 });
+    }
+
     const body = await request.json();
     const {
       pincode,
@@ -94,7 +104,6 @@ export async function PATCH(request: NextRequest) {
       perimeterRadiusKm,
       isExclusive,
       isActive,
-      actorId,
     } = body;
 
     if (!pincode) {
@@ -122,8 +131,8 @@ export async function PATCH(request: NextRequest) {
     // Record WORM audit log
     const auditSummary = `Partner Pincode Perimeter Update: [${pincode}] Radius=${(updatedPin as any).perimeterRadiusKm || 5}km, TargetETA=${updatedPin.targetEtaMinutes}m, MaxCapacity=${updatedPin.activeCapacityCount}, Exclusive=${updatedPin.isExclusive}`;
     const auditLog = await db.recordWormAuditLog({
-      actorId: actorId || 'usr_partner_01',
-      actorRole: 'PARTNER',
+      actorId: payload.sub,
+      actorRole: payload.role,
       action: 'UPDATE_PINCODE_TERRITORY_CAPACITY',
       resourceType: 'PINCODE_TERRITORY',
       resourceId: pincode,

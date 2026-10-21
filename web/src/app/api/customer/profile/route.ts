@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { dbStore } from '@/lib/mock-data';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
+import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
 
 export async function OPTIONS() {
   return corsOptionsResponse();
@@ -9,20 +10,34 @@ export async function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   try {
+    const token = extractBearerToken(request);
+    if (!token) {
+      return apiError('Authorization Bearer token required', 401);
+    }
+    const payload = await verifyAccessToken(token);
+    if (!payload) {
+      return apiError('Invalid or expired authentication token', 401);
+    }
+
     const { searchParams } = new URL(request.url);
-    const customerId = searchParams.get('customerId') || 'cust_amit_01';
+    const paramCustomerId = searchParams.get('customerId');
+
+    let targetId = (payload.customerId as string) || payload.sub;
+    if (paramCustomerId && paramCustomerId !== targetId) {
+      if (payload.role !== 'SUPER_ADMIN' && payload.role !== 'PARTNER') {
+        return apiError('Access denied: You can only access your own customer profile', 403);
+      }
+      targetId = paramCustomerId;
+    }
 
     // Find customer in mockStore / db
-    let customer = await db.getCustomerById(customerId);
+    let customer = await db.getCustomerById(targetId);
     if (!customer) {
-      // Fallback search by userId or default to Amit Sharma
       const found = dbStore.customers.find(
-        (c) => c.id === customerId || c.userId === customerId || c.phone.includes(customerId)
+        (c) => c.id === targetId || c.userId === targetId || (payload.phone && c.phone === payload.phone)
       );
       if (found) {
         customer = await db.getCustomerById(found.id);
-      } else {
-        customer = await db.getCustomerById('cust_amit_01');
       }
     }
 
@@ -108,6 +123,15 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    const token = extractBearerToken(request);
+    if (!token) {
+      return apiError('Authorization Bearer token required', 401);
+    }
+    const payload = await verifyAccessToken(token);
+    if (!payload) {
+      return apiError('Invalid or expired authentication token', 401);
+    }
+
     const body = await request.json();
     const {
       customerId,
@@ -122,11 +146,18 @@ export async function PATCH(request: NextRequest) {
       defaultLongitude,
     } = body;
 
-    const id = customerId || 'cust_amit_01';
+    let targetId = (payload.customerId as string) || payload.sub;
+    if (customerId && customerId !== targetId) {
+      if (payload.role !== 'SUPER_ADMIN') {
+        return apiError('Access denied: You can only update your own customer profile', 403);
+      }
+      targetId = customerId;
+    }
+
     const addressToUse = defaultAddressLine || address;
     const pinToUse = defaultPincode || pincode;
 
-    const updated = await db.updateCustomer(id, {
+    const updated = await db.updateCustomer(targetId, {
       fullName,
       email,
       phone,
@@ -137,7 +168,7 @@ export async function PATCH(request: NextRequest) {
     });
 
     if (!updated) {
-      return apiError(`Customer '${id}' not found`, 404);
+      return apiError(`Customer '${targetId}' not found`, 404);
     }
 
     return apiSuccess(updated, 'Customer profile updated successfully');

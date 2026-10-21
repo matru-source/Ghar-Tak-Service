@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
+import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
 
 export async function OPTIONS() {
   return corsOptionsResponse();
@@ -11,6 +12,15 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const token = extractBearerToken(request);
+    if (!token) {
+      return apiError('Missing or malformed Authorization header. Bearer token required.', 401);
+    }
+    const payload = await verifyAccessToken(token);
+    if (!payload || (payload.role !== 'SUPER_ADMIN' && payload.role !== 'PARTNER')) {
+      return apiError('Access denied: SUPER_ADMIN or PARTNER role authorization required.', 403);
+    }
+
     const { id } = await params;
     const body = await request.json();
     const { status, reason, insulatedGlovesVerified } = body;
@@ -29,8 +39,8 @@ export async function PATCH(
       status as 'VERIFIED' | 'REJECTED',
       {
         reason,
-        verifierId: 'usr_admin_01',
-        insulatedGlovesVerified,
+        verifierId: payload.sub,
+        insulatedGlovesVerified: status === 'VERIFIED' ? Boolean(insulatedGlovesVerified) : false,
       }
     );
 

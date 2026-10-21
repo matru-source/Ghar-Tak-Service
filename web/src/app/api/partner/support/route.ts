@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
 
 export async function GET(request: NextRequest) {
   try {
@@ -55,6 +56,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const token = extractBearerToken(request);
+    if (!token) {
+      return NextResponse.json({ success: false, error: 'Authorization Bearer token required' }, { status: 401 });
+    }
+    const payload = await verifyAccessToken(token);
+    if (!payload || (payload.role !== 'PARTNER' && payload.role !== 'SUPER_ADMIN')) {
+      return NextResponse.json({ success: false, error: 'Access denied: PARTNER or SUPER_ADMIN role required' }, { status: 403 });
+    }
+
     const body = await request.json();
     const {
       actionType, // 'CREATE_TICKET' | 'ADD_REPLY' | 'RESOLVE'
@@ -76,8 +86,8 @@ export async function POST(request: NextRequest) {
       }
 
       const auditLog = await db.recordWormAuditLog({
-        actorId: actorId || 'usr_partner_01',
-        actorRole: 'PARTNER',
+        actorId: payload.sub,
+        actorRole: payload.role,
         action: 'RESOLVE_PARTNER_SUPPORT_TICKET',
         resourceType: 'SUPPORT_TICKET',
         resourceId: resolved.ticketNumber,
@@ -109,8 +119,8 @@ export async function POST(request: NextRequest) {
       });
 
       const auditLog = await db.recordWormAuditLog({
-        actorId: actorId || 'usr_partner_01',
-        actorRole: 'PARTNER',
+        actorId: payload.sub,
+        actorRole: payload.role,
         action: 'PARTNER_SUPPORT_TICKET_INTERVENTION',
         resourceType: 'SUPPORT_TICKET',
         resourceId: existing.ticketNumber,
@@ -142,14 +152,14 @@ export async function POST(request: NextRequest) {
       priority: priority || 'MEDIUM',
       category: category || 'DISPATCH_DELAY',
       jobTicketNumber,
-      customerName: 'Maharashtra Regional Partner Ops',
-      customerPhone: '+919876543211',
+      customerName: payload.fullName || 'Regional Partner Ops',
+      customerPhone: payload.phone || '',
       assignedTo: 'National Support HQ',
     });
 
     const auditLog = await db.recordWormAuditLog({
-      actorId: actorId || 'usr_partner_01',
-      actorRole: 'PARTNER',
+      actorId: payload.sub,
+      actorRole: payload.role,
       action: 'OPEN_PARTNER_SUPPORT_TICKET',
       resourceType: 'SUPPORT_TICKET',
       resourceId: newTicket.ticketNumber,
