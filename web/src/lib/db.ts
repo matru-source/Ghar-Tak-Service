@@ -89,22 +89,39 @@ export function calculateCommissionSplit(input: {
 export const db = {
   // Users & Auth
   async getUserByPhone(phone: string) {
+    const clean = phone.trim();
+    if (!clean) return null;
+    const digits = clean.replace(/\D/g, '');
+    const variants = [clean];
+    if (digits.length >= 10) {
+      const last10 = digits.slice(-10);
+      variants.push(`+91${last10}`, `+91 ${last10}`, last10);
+    }
+
     if (await isDatabaseConnected()) {
       try {
-        const liveUser = await prisma.user.findUnique({
-          where: { phone },
+        const liveUser = await prisma.user.findFirst({
+          where: { phone: { in: variants } },
           include: { partnerProfile: true, technicianProfile: true, customerProfile: true },
         });
         if (liveUser) return liveUser;
+        return null;
       } catch {
-        // Fallback
+        // Fallback only if database connection errored
       }
     }
-    return dbStore.users.find((u) => u.phone === phone) || null;
+    return (
+      dbStore.users.find((u) => {
+        const uDigits = u.phone.replace(/\D/g, '');
+        return u.phone === clean || (digits.length >= 10 && uDigits.endsWith(digits.slice(-10)));
+      }) || null
+    );
   },
 
   async getUserByEmail(email: string) {
     const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) return null;
+
     if (await isDatabaseConnected()) {
       try {
         const liveUser = await prisma.user.findFirst({
@@ -112,8 +129,9 @@ export const db = {
           include: { partnerProfile: true, technicianProfile: true, customerProfile: true },
         });
         if (liveUser) return liveUser;
+        return null;
       } catch {
-        // Fallback
+        // Fallback only if database connection errored
       }
     }
     return dbStore.users.find((u) => u.email?.toLowerCase() === cleanEmail) || null;
@@ -146,15 +164,17 @@ export const db = {
         const phoneVariants = [clean];
         if (digits.length >= 10) {
           const last10 = digits.slice(-10);
-          phoneVariants.push(`+91${last10}`, last10);
+          phoneVariants.push(`+91${last10}`, `+91 ${last10}`, last10);
         }
         const userByPhone = await prisma.user.findFirst({
           where: { phone: { in: phoneVariants } },
           include: { partnerProfile: true, technicianProfile: true, customerProfile: true },
         });
         if (userByPhone) return userByPhone;
+
+        return null;
       } catch {
-        // Fallback to in-memory store
+        // Fallback to in-memory store only if DB query errored
       }
     }
 

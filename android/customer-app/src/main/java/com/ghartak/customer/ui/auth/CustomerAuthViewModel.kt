@@ -434,10 +434,10 @@ class CustomerAuthViewModel(
                     return@launch
                 }
             } catch (e: Exception) {
-                // If offline / network error
+                val detail = e.localizedMessage?.takeIf { it.isNotBlank() } ?: "Please check your internet connection."
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = "Unable to connect to Ghar Tak registration server. Please check your internet connection."
+                    errorMessage = "Unable to connect to registration server ($detail). Please try again."
                 )
             }
         }
