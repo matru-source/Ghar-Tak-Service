@@ -60,6 +60,10 @@ class SafetyInterlockViewModel(
     val uiState: StateFlow<SafetyUiState> = _uiState.asStateFlow()
 
     fun initJob(jobId: String, ticketNumber: String = "GTS-MH-9821", serviceTitle: String = "Doorstep Service") {
+        if (_uiState.value.jobId == jobId && _uiState.value.jobId.isNotBlank()) {
+            // Preserve user's checklist selections and photo evidence across recompositions or screen rotations
+            return
+        }
         val titleLower = serviceTitle.lowercase()
         val badge = sessionManager.getBadgeNumber()
 

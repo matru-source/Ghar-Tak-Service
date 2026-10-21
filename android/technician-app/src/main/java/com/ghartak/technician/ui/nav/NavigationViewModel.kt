@@ -79,8 +79,10 @@ class NavigationViewModel(
         val context = sessionManager.context
         val hasFine = ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
-        var currentLat = targetLat
-        var currentLng = targetLng
+        val (techHubLat, techHubLng) = IndianPincodeResolver.getCoordinatesForPincode(sessionManager.getPincode().ifEmpty { "760001" })
+        var currentLat = techHubLat
+        var currentLng = techHubLng
+        var hasRealGpsFix = false
         var initialSpeed = 0.0
 
         if (hasFine && lm != null) {
@@ -90,18 +92,20 @@ class NavigationViewModel(
                 if (loc != null && loc.latitude != 0.0 && loc.longitude != 0.0) {
                     currentLat = loc.latitude
                     currentLng = loc.longitude
+                    hasRealGpsFix = true
                     if (loc.hasSpeed() && loc.speed > 0.3f) {
                         initialSpeed = Math.round(loc.speed * 3.6 * 10.0) / 10.0
                     }
                 }
             } catch (e: Exception) {
-                // Keep target coordinate fallback
+                // Keep tech hub coordinate fallback
             }
         }
 
         val realDist = IndianPincodeResolver.calculateHaversineDistanceKm(currentLat, currentLng, targetLat, targetLng)
         val roundedDist = Math.max(0.0, Math.round(realDist * 100.0) / 100.0)
-        val isCoLocated = roundedDist <= 0.05 || (Math.abs(currentLat - targetLat) < 0.0002 && Math.abs(currentLng - targetLng) < 0.0002)
+        // Doorstep arrival can ONLY be confirmed if genuine GPS hardware fix exists and is within 50m
+        val isCoLocated = hasRealGpsFix && (roundedDist <= 0.05 || (Math.abs(currentLat - targetLat) < 0.0002 && Math.abs(currentLng - targetLng) < 0.0002))
         val calcEta = if (isCoLocated) 0 else IndianPincodeResolver.calculateEtaMinutes(roundedDist)
 
         val customerArea = IndianPincodeResolver.resolveAreaFromCoordinates(targetLat, targetLng)

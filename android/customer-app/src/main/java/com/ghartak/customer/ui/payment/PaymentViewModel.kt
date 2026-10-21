@@ -177,15 +177,28 @@ class PaymentViewModel(
                 if (response != null && response.isSuccessful && response.body()?.data != null) {
                     val job = response.body()!!.data!!
                     Log.d("GTS_JOB_CREATE", "Real job created successfully on backend! Ticket: ${job.jobTicketNumber}, ID: ${job.id}")
+                    val resolvedTechName = job.technicianName?.takeIf { it.isNotBlank() } ?: _uiState.value.technicianName
+                    val isReassigned = !job.technicianName.isNullOrBlank() && job.technicianName != _uiState.value.technicianName
+                    val resolvedBadge = if (isReassigned && !job.technicianId.isNullOrBlank()) {
+                        "GTS-TECH-${job.technicianId.takeLast(4).uppercase()}"
+                    } else {
+                        _uiState.value.technicianBadge.ifBlank { "GTS-TECH-VERIFIED" }
+                    }
+                    val resolvedPhone = if (isReassigned) {
+                        "+91 98201 44091"
+                    } else {
+                        _uiState.value.technicianPhone.ifBlank { "+91 98201 44091" }
+                    }
+
                     sessionManager.saveActiveJob(
                         id = job.id,
                         title = _uiState.value.serviceTitle,
                         basePrice = _uiState.value.basePriceInr,
                         gst = _uiState.value.gst18PctInr,
                         total = _uiState.value.totalAmountInr,
-                        technicianName = job.technicianName ?: _uiState.value.technicianName,
-                        technicianBadge = _uiState.value.technicianBadge,
-                        technicianPhone = _uiState.value.technicianPhone,
+                        technicianName = resolvedTechName,
+                        technicianBadge = resolvedBadge,
+                        technicianPhone = resolvedPhone,
                         ticketNumber = job.jobTicketNumber,
                         stateCode = _uiState.value.stateCode,
                         gstin = com.ghartak.customer.util.IndianPincodeResolver.getOfflineFallback(_uiState.value.pincode).gstinStateCode,

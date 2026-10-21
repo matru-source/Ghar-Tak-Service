@@ -18,8 +18,12 @@ import kotlinx.coroutines.*
 class TechnicianLocationService : Service() {
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private var telemetryJob: Job? = null
     private var isRunning = false
     private var activeJobId: String? = null
+
+    private var activeLocationManager: android.location.LocationManager? = null
+    private var activeLocationListener: android.location.LocationListener? = null
 
     private var sensorManager: android.hardware.SensorManager? = null
     private var compassSensor: android.hardware.Sensor? = null
@@ -155,7 +159,8 @@ class TechnicianLocationService : Service() {
             return
         }
 
-        serviceScope.launch {
+        telemetryJob?.cancel()
+        telemetryJob = serviceScope.launch {
             val sessionManager = SessionManager(applicationContext)
             val techId = sessionManager.getTechnicianId()
             val pin = sessionManager.getPincode().ifEmpty { "759001" }
@@ -193,6 +198,9 @@ class TechnicianLocationService : Service() {
                     }
                 }
             }
+
+            activeLocationManager = lm
+            activeLocationListener = locationListener
 
             try {
                 if (lm != null && (hasFine || hasCoarse)) {
@@ -312,10 +320,17 @@ class TechnicianLocationService : Service() {
         activeJobId = null
         try {
             sensorManager?.unregisterListener(sensorListener)
-        } catch (e: Throwable) {
+        } catch (_: Throwable) {
             // Ignore
         }
-        serviceScope.cancel()
+        try {
+            activeLocationListener?.let { activeLocationManager?.removeUpdates(it) }
+            activeLocationListener = null
+        } catch (e: Throwable) {
+            Log.w("GTS_LOC_SVC", "removeUpdates error: ${e.message}")
+        }
+        telemetryJob?.cancel()
+        telemetryJob = null
         try {
             stopForeground(STOP_FOREGROUND_REMOVE)
         } catch (e: Throwable) {
@@ -361,6 +376,11 @@ class TechnicianLocationService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        try {
+            activeLocationListener?.let { activeLocationManager?.removeUpdates(it) }
+            activeLocationListener = null
+        } catch (_: Throwable) {}
+        telemetryJob?.cancel()
         serviceScope.cancel()
     }
 }

@@ -539,7 +539,7 @@ class TechnicianDashboardViewModel(
         )
     }
 
-    fun markJobCompleted(jobId: String, payoutInr: Double = 0.0) {
+    fun markJobCompleted(jobId: String, payoutInr: Double = 0.0, creditEarnings: Boolean = false) {
         val updatedJobs = _uiState.value.assignedJobs.map { job ->
             if (job.id.equals(jobId, ignoreCase = true) || job.jobTicketNumber.equals(jobId, ignoreCase = true) || jobId.contains(job.id, ignoreCase = true)) {
                 job.copy(status = "COMPLETED")
@@ -561,7 +561,8 @@ class TechnicianDashboardViewModel(
         val ticket = completedJob?.jobTicketNumber?.ifBlank { "#J-${jobId.takeLast(4)}" } ?: "#J-${jobId.takeLast(4)}"
         val service = completedJob?.serviceTitle?.ifBlank { "Doorstep Service" } ?: "Doorstep Service"
 
-        if (finalPayout > 0.0) {
+        // Avoid duplicate credit: JobCompleteViewModel already credited earnings to sessionManager
+        if (creditEarnings && finalPayout > 0.0) {
             sessionManager.addEarnings(finalPayout)
         }
 
@@ -580,15 +581,17 @@ class TechnicianDashboardViewModel(
         val updatedTransactions = (listOf(newTx) + _uiState.value.recentTransactions).distinctBy { it.jobTicketNumber }
         saveTransactionsToSession(updatedTransactions)
 
+        val sessionTotalEarned = sessionManager.getMonthEarnings().takeIf { it > 0.0 } ?: updatedTransactions.sumOf { it.amountInr }
+
         _uiState.value = _uiState.value.copy(
             assignedJobs = updatedJobs,
             selectedJob = completedJob?.copy(status = "COMPLETED"),
-            todayEarningsInr = _uiState.value.todayEarningsInr + finalPayout,
-            weekEarningsInr = _uiState.value.weekEarningsInr + finalPayout,
-            monthEarningsInr = _uiState.value.monthEarningsInr + finalPayout,
-            allTimeEarningsInr = _uiState.value.allTimeEarningsInr + finalPayout,
-            availableWithdrawalInr = _uiState.value.availableWithdrawalInr + finalPayout,
-            jobsCompletedCount = _uiState.value.jobsCompletedCount + 1,
+            todayEarningsInr = sessionManager.getTodayEarnings().takeIf { it > 0.0 } ?: (_uiState.value.todayEarningsInr + (if (creditEarnings) finalPayout else 0.0)),
+            weekEarningsInr = sessionManager.getWeekEarnings().takeIf { it > 0.0 } ?: (_uiState.value.weekEarningsInr + (if (creditEarnings) finalPayout else 0.0)),
+            monthEarningsInr = sessionTotalEarned,
+            allTimeEarningsInr = sessionTotalEarned,
+            availableWithdrawalInr = maxOf(0.0, sessionTotalEarned - _uiState.value.withdrawalHistory.filter { it.status == "PENDING" || it.status == "PAID" }.sumOf { it.amountInr }),
+            jobsCompletedCount = sessionManager.getTotalJobsCompleted().takeIf { it > 0 } ?: updatedTransactions.size,
             jobsPendingCount = maxOf(0, _uiState.value.jobsPendingCount - 1),
             recentTransactions = updatedTransactions,
             currentTab = "HOME"

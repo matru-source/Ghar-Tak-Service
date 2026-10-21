@@ -98,10 +98,12 @@ class MainActivity : ComponentActivity() {
                         composable("booking/{serviceId}") { backStackEntry ->
                             val serviceId = backStackEntry.arguments?.getString("serviceId") ?: "srv_fan_install"
                             val allServices = catalogViewModel.uiState.collectAsState().value.services
-                            val service = allServices.find { it.id == serviceId }
-                                ?: com.ghartak.customer.data.model.ServiceCatalogRegistry.findService(serviceId)
-                            if (service != null) {
-                                bookingViewModel.initService(service.id, service.title, service.priceInr)
+                            LaunchedEffect(serviceId) {
+                                val service = allServices.find { it.id == serviceId }
+                                    ?: com.ghartak.customer.data.model.ServiceCatalogRegistry.findService(serviceId)
+                                if (service != null) {
+                                    bookingViewModel.initService(service.id, service.title, service.priceInr)
+                                }
                             }
 
                             AddressBookingScreen(
@@ -119,49 +121,34 @@ class MainActivity : ComponentActivity() {
                             val bookingState = bookingViewModel.uiState.collectAsState().value
                             val selectedTech = bookingState.selectedTechnician
 
-                            paymentViewModel.initPaymentDetails(
-                                serviceId = serviceId,
-                                serviceTitle = bookingState.serviceTitle,
-                                basePrice = bookingState.basePriceInr,
-                                pincode = bookingState.pincode,
-                                addressText = "${bookingState.flatNumber}, ${bookingState.streetName}, ${bookingState.landmark}",
-                                priority = bookingState.bookingPriority,
-                                technicianId = selectedTech?.id ?: "",
-                                technicianName = selectedTech?.name ?: "Certified Professional",
-                                technicianBadge = selectedTech?.badge ?: "GTS-TECH-VERIFIED",
-                                technicianPhone = selectedTech?.phone ?: "+91 98765 43210",
-                                stateCode = bookingState.stateCode
-                            )
+                            LaunchedEffect(serviceId) {
+                                paymentViewModel.initPaymentDetails(
+                                    serviceId = serviceId,
+                                    serviceTitle = bookingState.serviceTitle,
+                                    basePrice = bookingState.basePriceInr,
+                                    pincode = bookingState.pincode,
+                                    addressText = "${bookingState.flatNumber}, ${bookingState.streetName}, ${bookingState.landmark}",
+                                    priority = bookingState.bookingPriority,
+                                    technicianId = selectedTech?.id ?: "",
+                                    technicianName = selectedTech?.name ?: "Certified Professional",
+                                    technicianBadge = selectedTech?.badge ?: "GTS-TECH-VERIFIED",
+                                    technicianPhone = selectedTech?.phone ?: "+91 98765 43210",
+                                    stateCode = bookingState.stateCode
+                                )
+                            }
 
                             PaymentScreen(
                                 serviceId = serviceId,
                                 viewModel = paymentViewModel,
                                 onBack = { navController.popBackStack() },
                                 onBookingSuccess = { jobId ->
-                                    val currentSelectedTech = bookingViewModel.uiState.value.selectedTechnician
                                     val currentState = bookingViewModel.uiState.value
-                                    val cleanState = currentState.stateCode.ifEmpty { sessionManager.getActiveJobStateCode() }
-                                    val ticketNo = sessionManager.getActiveJobTicketNumber()
+                                    val currentSelectedTech = currentState.selectedTechnician
+                                    val ticketNo = sessionManager.getActiveJobTicketNumber().ifBlank { "GTS-${jobId.takeLast(6).uppercase()}" }
 
-                                    val techName = currentSelectedTech?.name ?: "Certified Professional"
-                                    val techBadge = currentSelectedTech?.badge ?: "GTS-TECH-VERIFIED"
-                                    val techPhone = currentSelectedTech?.phone ?: "+91 98765 43210"
-
-                                    sessionManager.saveActiveJob(
-                                        id = jobId,
-                                        title = currentState.serviceTitle,
-                                        basePrice = currentState.basePriceInr,
-                                        gst = currentState.gst18PctInr,
-                                        total = currentState.totalPayableInr,
-                                        technicianName = techName,
-                                        technicianBadge = techBadge,
-                                        technicianPhone = techPhone,
-                                        ticketNumber = ticketNo,
-                                        stateCode = cleanState,
-                                        gstin = currentState.gstinStateCode,
-                                        handoverOtp = sessionManager.getActiveJobOtp()
-                                    )
-                                    sessionManager.setUserPincode(currentState.pincode)
+                                    val techName = sessionManager.getActiveJobTechnicianName().ifBlank { currentSelectedTech?.name ?: "Certified Professional" }
+                                    val techBadge = sessionManager.getActiveJobTechnicianBadge().ifBlank { currentSelectedTech?.badge ?: "GTS-TECH-VERIFIED" }
+                                    val techPhone = sessionManager.getActiveJobTechnicianPhone().ifBlank { currentSelectedTech?.phone ?: "+91 98765 43210" }
 
                                     catalogViewModel.updateActiveJob(
                                         id = jobId,
