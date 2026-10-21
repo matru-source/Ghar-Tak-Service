@@ -79,7 +79,8 @@ data class TelemetryPingRequest(
     @SerializedName("heading") val heading: Double? = null,
     @SerializedName("speedKmh") val speedKmh: Double? = null,
     @SerializedName("batteryLevelPct") val batteryLevelPct: Int? = null,
-    @SerializedName("isOnline") val isOnline: Boolean = true
+    @SerializedName("isOnline") val isOnline: Boolean = true,
+    @SerializedName("isGpsActive") val isGpsActive: Boolean = true
 )
 
 data class TelemetryPingResponse(

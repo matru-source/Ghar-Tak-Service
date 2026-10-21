@@ -355,52 +355,6 @@ class CustomerTrackingViewModel(
         }
     }
 
-    /* =========================================================================
-     * [TESTING FEATURE] Staging Demo Transit Simulation:
-     * Toggleable test bypass - will be removed once physical field testing completes
-     * ========================================================================= */
-    var isTestingBypassEnabled: Boolean = true
-
-    fun simulateStepCloser() {
-        if (!isTestingBypassEnabled) return
-        val nextStep = (_uiState.value.transitStep + 1).coerceAtMost(3)
-        val targetLat = _uiState.value.destLatitude
-        val targetLng = _uiState.value.destLongitude
-        val fraction = nextStep.toDouble() / 3.0
-
-        val startLat = targetLat + 0.012
-        val startLng = targetLng + 0.012
-        val newLat = startLat + (targetLat - startLat) * fraction
-        val newLng = startLng + (targetLng - startLng) * fraction
-
-        val simDist = if (nextStep == 3) 0.0 else com.ghartak.customer.util.IndianPincodeResolver.calculateHaversineDistanceKm(newLat, newLng, targetLat, targetLng)
-        val roundedDist = Math.max(0.03, (Math.round(simDist * 100.0) / 100.0))
-        val simEta = com.ghartak.customer.util.IndianPincodeResolver.calculateEtaMinutes(roundedDist)
-        val simArea = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(newLat, newLng)
-
-        val (status, arrived) = when (nextStep) {
-            3 -> "ARRIVED" to true
-            else -> "EN_ROUTE" to false
-        }
-
-        _uiState.value = _uiState.value.copy(
-            transitStep = nextStep,
-            distanceKm = roundedDist,
-            etaMinutes = simEta,
-            status = status,
-            isDoorstepArrived = arrived,
-            techLatitude = newLat,
-            techLongitude = newLng,
-            techAreaName = simArea
-        )
-    }
-
-    fun simulateSafetyVerified() {
-        _uiState.value = _uiState.value.copy(
-            status = "IN_PROGRESS",
-            isSafetyInterlockVerified = true
-        )
-    }
 
     override fun onCleared() {
         super.onCleared()

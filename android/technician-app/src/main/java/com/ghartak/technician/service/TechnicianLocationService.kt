@@ -166,10 +166,12 @@ class TechnicianLocationService : Service() {
             var currentLng = hubLng
             var dynamicSpeedKmh = 0.0
             var dynamicHeadingDeg = lastCompassHeadingDeg
+            var isGpsActive = false
 
             // LocationListener for continuous live updates from Android LocationManager
             val locationListener = object : android.location.LocationListener {
                 override fun onLocationChanged(loc: android.location.Location) {
+                    isGpsActive = true
                     currentLat = loc.latitude
                     currentLng = loc.longitude
                     if (loc.hasSpeed()) {
@@ -180,8 +182,16 @@ class TechnicianLocationService : Service() {
                     }
                 }
                 override fun onStatusChanged(provider: String?, status: Int, extras: android.os.Bundle?) {}
-                override fun onProviderEnabled(provider: String) {}
-                override fun onProviderDisabled(provider: String) {}
+                override fun onProviderEnabled(provider: String) {
+                    if (provider == android.location.LocationManager.GPS_PROVIDER) {
+                        isGpsActive = true
+                    }
+                }
+                override fun onProviderDisabled(provider: String) {
+                    if (provider == android.location.LocationManager.GPS_PROVIDER) {
+                        isGpsActive = false
+                    }
+                }
             }
 
             try {
@@ -213,8 +223,16 @@ class TechnicianLocationService : Service() {
                         break
                     }
 
+                    val isGpsProviderOn = lm?.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER) == true
+                    val isNetworkProviderOn = lm?.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER) == true
+                    val hasLocationPermission = hasFine || hasCoarse
+
+                    if (!hasLocationPermission || (!isGpsProviderOn && !isNetworkProviderOn)) {
+                        isGpsActive = false
+                    }
+
                     // Best effort check across all location providers
-                    if (lm != null && (hasFine || hasCoarse)) {
+                    if (lm != null && hasLocationPermission) {
                         try {
                             var best: android.location.Location? = null
                             val providers = listOf(
@@ -230,7 +248,8 @@ class TechnicianLocationService : Service() {
                                     }
                                 } catch (_: SecurityException) {}
                             }
-                            if (best != null) {
+                            if (best != null && (System.currentTimeMillis() - best.time) < 120_000) {
+                                isGpsActive = true
                                 currentLat = best.latitude
                                 currentLng = best.longitude
                                 if (best.hasSpeed()) {
@@ -239,6 +258,8 @@ class TechnicianLocationService : Service() {
                                 if (best.hasBearing() && best.speed > 0.5f) {
                                     dynamicHeadingDeg = Math.round(best.bearing * 10.0) / 10.0
                                 }
+                            } else if (!isGpsActive) {
+                                dynamicSpeedKmh = 0.0
                             }
                         } catch (e: SecurityException) {
                             Log.w("GTS_LOC_SVC", "Location read error: ${e.message}")
@@ -259,13 +280,16 @@ class TechnicianLocationService : Service() {
                             heading = dynamicHeadingDeg,
                             speedKmh = dynamicSpeedKmh,
                             batteryLevelPct = dynamicBatteryPct,
-                            isOnline = isOnline
+                            isOnline = isOnline,
+                            isGpsActive = isGpsActive
                         )
                     )
 
                     if (response.isSuccessful) {
                         val data = response.body()?.data
-                        if (activeJobId != null && data != null && data.distanceRemainingKm != null) {
+                        if (!isGpsActive) {
+                            updateNotification("GPS Inactive • Centroid Mode", "Please enable GPS for live dispatch tracking • Battery: ${dynamicBatteryPct}%")
+                        } else if (activeJobId != null && data != null && data.distanceRemainingKm != null) {
                             val dist = data.distanceRemainingKm
                             val eta = data.etaMinutes ?: 4
                             updateNotification("Doorstep Transit • ${dist} km away", "ETA: ${eta} mins • Speed: ${dynamicSpeedKmh} km/h • Battery: ${dynamicBatteryPct}%")

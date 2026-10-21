@@ -32,7 +32,10 @@ export async function POST(request: NextRequest) {
       speedKmh,
       batteryLevelPct,
       isOnline,
+      isGpsActive: rawIsGpsActive,
     } = body;
+
+    const isGpsActive = typeof rawIsGpsActive === 'boolean' ? rawIsGpsActive : true;
 
     if (!technicianId) {
       return apiError("'technicianId' is required", 400);
@@ -93,7 +96,8 @@ export async function POST(request: NextRequest) {
         customerArea = resolveAreaFromCoordinates(destLat, destLng);
 
         const rawDist = calculateHaversineDistanceKm(latitude, longitude, destLat, destLng);
-        const isCoLocated = rawDist <= 0.05 || (Math.abs(latitude - destLat) < 0.0002 && Math.abs(longitude - destLng) < 0.0002);
+        // Geofence doorstep arrival strictly requires genuine active GPS hardware
+        const isCoLocated = isGpsActive && (rawDist <= 0.05 || (Math.abs(latitude - destLat) < 0.0002 && Math.abs(longitude - destLng) < 0.0002));
 
         if (isCoLocated) {
           distanceRemainingKm = 0.0;
@@ -161,6 +165,7 @@ export async function POST(request: NextRequest) {
         customerArea: customerArea || undefined,
         batteryLevelPct: typeof batteryLevelPct === 'number' ? batteryLevelPct : 85,
         isOnline: tech?.isOnline ?? true,
+        isGpsActive,
       },
     });
 
@@ -174,6 +179,7 @@ export async function POST(request: NextRequest) {
         distanceRemainingKm,
         etaMinutes,
         isDoorstepNearby,
+        isGpsActive,
         updatedStatus: targetJob?.status,
         timestamp: new Date().toISOString(),
       },

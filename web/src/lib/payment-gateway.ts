@@ -62,6 +62,32 @@ export class PaymentGateway {
     upiIntentUrl: string;
   } {
     const amountPaise = Math.round(params.amountInr * 100);
+
+    // Idempotency: Re-use existing valid CREATED order for this invoice within 15 minutes
+    const existingOrder = Array.from(paymentOrdersStore.values()).find(
+      (o) =>
+        o.invoiceId === params.invoiceId &&
+        o.paymentStatus === 'CREATED' &&
+        Date.now() - new Date(o.createdAt).getTime() < 15 * 60 * 1000
+    );
+
+    if (existingOrder) {
+      const upiIntentUrl = this.generateUpiIntentUrl(
+        existingOrder.amountInr,
+        existingOrder.jobTicketNumber,
+        existingOrder.invoiceId
+      );
+      return {
+        orderId: existingOrder.orderId,
+        amountPaise: existingOrder.amountPaise,
+        amountInr: existingOrder.amountInr,
+        currency: 'INR',
+        keyId: PAYMENT_GATEWAY_CONFIG.keyId,
+        merchantName: PAYMENT_GATEWAY_CONFIG.merchantName,
+        upiIntentUrl,
+      };
+    }
+
     const orderId = `order_${Date.now().toString(36)}_${crypto.randomBytes(4).toString('hex')}`;
 
     // Generate NPCI compliant UPI Intent link

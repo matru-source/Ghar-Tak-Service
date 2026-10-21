@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
+import { dbStore } from '@/lib/mock-data';
 import { realtimeBus } from '@/lib/realtime-bus';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
 
@@ -48,9 +49,26 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// Idempotency cache to protect against rapid double-tapping / network retries
+const jobCreationIdempotencyCache = new Map<string, { job: any; timestamp: number }>();
+
 export async function POST(request: NextRequest) {
   try {
+    const idempotencyKey =
+      request.headers.get('x-idempotency-key') ||
+      request.headers.get('idempotency-key');
     const body = await request.json();
+    const clientKey = idempotencyKey || body.idempotencyKey;
+
+    if (clientKey && jobCreationIdempotencyCache.has(clientKey)) {
+      const cached = jobCreationIdempotencyCache.get(clientKey)!;
+      return apiSuccess(
+        cached.job,
+        `Idempotent request: returning existing work order '${cached.job.jobTicketNumber}'.`,
+        200
+      );
+    }
+
     const {
       customerId,
       customerName,
@@ -77,6 +95,28 @@ export async function POST(request: NextRequest) {
       return apiError("'customerAddressText' must contain a detailed address", 400);
     }
 
+    // Check duplicate window (30-second rapid double-tap deduplication)
+    const phoneToMatch = customerPhone?.trim() || '';
+    const thirtySecondsAgo = Date.now() - 30_000;
+    const recentDuplicate = dbStore.jobs.find((j) => {
+      const isSameCust = (customerId && j.customerId === customerId) || (phoneToMatch && j.customerPhone === phoneToMatch);
+      const isSameService = j.serviceId === serviceId;
+      const isSamePin = j.pincode === pincode;
+      const createdTime = new Date(j.scheduledAt).getTime();
+      return isSameCust && isSameService && isSamePin && createdTime > thirtySecondsAgo && j.status !== 'CANCELLED';
+    });
+
+    if (recentDuplicate) {
+      if (clientKey) {
+        jobCreationIdempotencyCache.set(clientKey, { job: recentDuplicate, timestamp: Date.now() });
+      }
+      return apiSuccess(
+        recentDuplicate,
+        `Duplicate booking prevented. Returning active work order '${recentDuplicate.jobTicketNumber}'.`,
+        200
+      );
+    }
+
     // Generate or use customerId
     const activeCustomerId = customerId || `cust_${Date.now().toString(36)}`;
 
@@ -95,6 +135,10 @@ export async function POST(request: NextRequest) {
       priority,
       scheduledAt,
     });
+
+    if (clientKey) {
+      jobCreationIdempotencyCache.set(clientKey, { job: newJob, timestamp: Date.now() });
+    }
 
     const dispatchNote = newJob.technicianId
       ? `Assigned to verified technician '${newJob.technicianName}' with sub-30-minute SLA.`

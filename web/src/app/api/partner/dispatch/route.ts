@@ -105,15 +105,35 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Job not found' }, { status: 404 });
     }
 
-    if (status) {
-      dbStore.jobs[jobIndex].status = status;
-    }
-    if (technicianId) {
-      dbStore.jobs[jobIndex].technicianId = technicianId;
-      dbStore.jobs[jobIndex].technicianName = technicianName || 'Assigned Technician';
+    const currentJob = dbStore.jobs[jobIndex];
+
+    // Optimistic Concurrency Lock: Prevent multiple technicians or partners from claiming the same job simultaneously
+    if (
+      technicianId &&
+      currentJob.technicianId &&
+      currentJob.technicianId !== technicianId &&
+      currentJob.status !== 'PENDING_DISPATCH'
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Conflict: Work order #${currentJob.jobTicketNumber} has already been claimed by another technician (${currentJob.technicianName}).`,
+          code: 'JOB_ALREADY_CLAIMED',
+          currentTechnicianId: currentJob.technicianId,
+        },
+        { status: 409 }
+      );
     }
 
-    const updatedJob = dbStore.jobs[jobIndex];
+    if (status) {
+      currentJob.status = status;
+    }
+    if (technicianId) {
+      currentJob.technicianId = technicianId;
+      currentJob.technicianName = technicianName || 'Assigned Technician';
+    }
+
+    const updatedJob = currentJob;
 
     await db.recordWormAuditLog({
       actorId: payload.sub,

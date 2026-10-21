@@ -47,6 +47,15 @@ object ApiClient {
                 chain.proceed(requestBuilder.build())
             }
 
+            val unauthorizedInterceptor = Interceptor { chain ->
+                val request = chain.request()
+                val response = chain.proceed(request)
+                if (response.code == 401 && !request.url.encodedPath.contains("/auth/")) {
+                    sessionManager.clearSession()
+                }
+                response
+            }
+
             val isDebuggable = (context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0
             val loggingInterceptor = HttpLoggingInterceptor().apply {
                 level = if (isDebuggable) {
@@ -61,6 +70,7 @@ object ApiClient {
 
             val okHttpClient = OkHttpClient.Builder()
                 .addInterceptor(authInterceptor)
+                .addInterceptor(unauthorizedInterceptor)
                 .addInterceptor(loggingInterceptor)
                 .connectTimeout(timeoutSec, TimeUnit.SECONDS)
                 .readTimeout(timeoutSec, TimeUnit.SECONDS)
