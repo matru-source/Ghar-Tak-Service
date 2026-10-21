@@ -201,58 +201,31 @@ class PaymentViewModel(
                 } else {
                     val code = response?.code()
                     val errorBody = response?.errorBody()?.string()
-                    Log.w("GTS_JOB_CREATE", "Network job create response unsuccessful: code=$code, error=$errorBody. Using local session fallback.")
-                    handleFallbackSuccess(onSuccess)
+                    val msg = try {
+                        if (!errorBody.isNullOrBlank()) {
+                            org.json.JSONObject(errorBody).optString("details", org.json.JSONObject(errorBody).optString("error", "Failed to book service ($code)."))
+                        } else {
+                            "Failed to book service on server ($code). Please retry."
+                        }
+                    } catch (_: Exception) {
+                        "Failed to create booking on central server. Please check connection and retry."
+                    }
+                    _uiState.value = _uiState.value.copy(
+                        isProcessing = false,
+                        errorMessage = msg
+                    )
                 }
             } catch (e: Exception) {
-                Log.w("GTS_JOB_CREATE", "Network job create error: ${e.message}. Using local session fallback.")
-                handleFallbackSuccess(onSuccess)
+                Log.w("GTS_JOB_CREATE", "Network job create error: ${e.message}")
+                _uiState.value = _uiState.value.copy(
+                    isProcessing = false,
+                    errorMessage = "Unable to connect to Ghar Tak booking service: ${e.message ?: "Network timeout. Please retry."}"
+                )
             }
         }
     }
 
     fun cancelDispatch() {
-        _uiState.value = _uiState.value.copy(isProcessing = false)
-    }
-
-    private fun handleFallbackSuccess(onSuccess: (jobId: String) -> Unit) {
-        val cleanState = _uiState.value.stateCode.ifEmpty { "OD" }
-        val ticketNo = "GTS-$cleanState-" + (1000..9999).random()
-        val generatedOtp = (1000..9999).random().toString()
-        val fallbackJobId = "job_${cleanState.lowercase()}_live_01"
-        val fallbackJob = Job(
-            id = fallbackJobId,
-            jobTicketNumber = ticketNo,
-            serviceTitle = _uiState.value.serviceTitle,
-            pincode = _uiState.value.pincode,
-            customerAddressText = _uiState.value.addressText,
-            status = "DISPATCHED",
-            priority = _uiState.value.priority,
-            totalAmountInr = _uiState.value.totalAmountInr,
-            technicianId = _uiState.value.technicianId,
-            technicianName = _uiState.value.technicianName,
-            handoverOtp = generatedOtp
-        )
-        sessionManager.saveActiveJob(
-            id = fallbackJobId,
-            title = _uiState.value.serviceTitle,
-            basePrice = _uiState.value.basePriceInr,
-            gst = _uiState.value.gst18PctInr,
-            total = _uiState.value.totalAmountInr,
-            technicianName = _uiState.value.technicianName,
-            technicianBadge = _uiState.value.technicianBadge,
-            technicianPhone = _uiState.value.technicianPhone,
-            ticketNumber = ticketNo,
-            stateCode = cleanState,
-            gstin = com.ghartak.customer.util.IndianPincodeResolver.getOfflineFallback(_uiState.value.pincode).gstinStateCode,
-            handoverOtp = generatedOtp
-        )
-        sessionManager.setUserPincode(_uiState.value.pincode)
-        _uiState.value = _uiState.value.copy(
-            isProcessing = false,
-            createdJob = fallbackJob,
-            createdJobId = fallbackJobId
-        )
-        onSuccess(fallbackJobId)
+        _uiState.value = _uiState.value.copy(isProcessing = false, errorMessage = null)
     }
 }

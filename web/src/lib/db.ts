@@ -942,7 +942,7 @@ export const db = {
     const totalExisting = dbStore.jobs.length;
     const nextTicketNumber = `J-${1000 + totalExisting + 1}`;
     const generatedId = `job_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
-    const handoverOtp = Math.floor(1000 + Math.random() * 9000).toString();
+    const handoverOtp = crypto.randomInt(1000, 10000).toString();
 
     const taxCalc = calculateIndianGst18({ baseLaborInr: service.basePriceInr });
 
@@ -1043,38 +1043,10 @@ export const db = {
     }
 
     if (!job) {
-      // Auto-recover virtual job record so technician is never blocked from completing work
-      const ticketNum = jobId.startsWith('J-') ? jobId : `J-${jobId.slice(-4)}`;
-      const activeHandoverOtp = fallback?.handoverOtp || '6657';
-      const recovered: (typeof dbStore.jobs)[number] = {
-        id: jobId,
-        jobTicketNumber: ticketNum,
-        customerId: fallback?.customerId || 'cust_app_user',
-        customerName: fallback?.customerName || 'Valued Customer',
-        customerPhone: fallback?.customerPhone || '+91 98201 44091',
-        partnerId: fallback?.partnerId || 'ptnr_odisha_01',
-        technicianId: fallback?.technicianId || 'tech_field_operator',
-        technicianName: fallback?.technicianName || 'Verified Professional',
-        serviceId: fallback?.serviceId || 'srv_fan_repair',
-        serviceTitle: fallback?.serviceTitle || 'Ceiling Fan Repair / Bearing Replacement',
-        pincode: fallback?.pincode || '759001',
-        customerAddressText: fallback?.customerAddressText || 'Customer Premises Doorstep',
-        customerLatitude: 20.6678,
-        customerLongitude: 85.5959,
-        status: (fallback?.status || 'IN_PROGRESS') as any,
-        priority: 'STANDARD',
-        scheduledAt: new Date().toISOString(),
-        slaExpiryAt: new Date(Date.now() + 30 * 60000).toISOString(),
-        safetyGlovesConfirmed: true,
-        safetyMcbSwitchConfirmed: true,
-        handoverOtp: activeHandoverOtp,
-        totalAmountInr: fallback?.totalAmountInr || 1250,
-      };
-      dbStore.jobs.unshift(recovered);
-      job = recovered;
+      throw new Error(`Work order '${jobId}' not found in database.`);
     }
 
-    return job!;
+    return job;
   },
 
   async respondToDispatch(
@@ -1168,10 +1140,19 @@ export const db = {
   ) {
     const job = await this.findOrRecoverJob(jobId);
 
+    if (!data.safetyGlovesConfirmed || !data.safetyMcbSwitchConfirmed) {
+      throw new Error(
+        'Safety Interlock Failure: 1000V Insulated Safety Gloves and MCB Main Switch Lockout must both be physically confirmed prior to proceeding.'
+      );
+    }
+
+    if (!data.beforePhotoUrl || typeof data.beforePhotoUrl !== 'string' || data.beforePhotoUrl.trim() === '') {
+      throw new Error('Safety Interlock Failure: Valid pre-work photograph is mandatory before commencing electrical repairs.');
+    }
+
     job.safetyGlovesConfirmed = true;
     job.safetyMcbSwitchConfirmed = true;
-    if (data.beforePhotoUrl) job.beforePhotoUrl = data.beforePhotoUrl;
-
+    job.beforePhotoUrl = data.beforePhotoUrl;
     job.status = 'SAFETY_CHECKED';
 
     await this.recordWormAuditLog({
@@ -1190,21 +1171,28 @@ export const db = {
     jobId: string,
     data: { handoverOtp: string; afterPhotoUrl?: string; customerRating?: number; customerFeedback?: string }
   ) {
-    const job = await this.findOrRecoverJob(jobId, { handoverOtp: data.handoverOtp });
+    const job = await this.findOrRecoverJob(jobId);
 
     // Validate 4-digit handover OTP
     const submittedOtp = (data.handoverOtp || '').trim();
-    if (!job.handoverOtp || job.handoverOtp.length !== 4) {
-      job.handoverOtp = submittedOtp;
+    if (!submittedOtp || !/^\d{4}$/.test(submittedOtp)) {
+      throw new Error('Handover Verification Failure: A valid 4-digit numeric code is required.');
     }
 
-    if (submittedOtp !== job.handoverOtp && submittedOtp !== '1234') {
-      // If customer confirmed satisfaction with valid 4-digit code, align OTP
-      if (submittedOtp.length === 4) {
-        job.handoverOtp = submittedOtp;
-      } else {
-        throw new Error(`Invalid handover OTP. The code provided does not match customer's 4-digit verification code.`);
-      }
+    const actualOtp = (job.handoverOtp || '').trim();
+    if (!actualOtp) {
+      throw new Error('Work order has no registered handover OTP.');
+    }
+
+    // Cryptographic timing-safe comparison against timing attacks
+    const submittedBuf = Buffer.from(submittedOtp);
+    const actualBuf = Buffer.from(actualOtp);
+    const isOtpMatch =
+      submittedBuf.length === actualBuf.length &&
+      crypto.timingSafeEqual(submittedBuf, actualBuf);
+
+    if (!isOtpMatch) {
+      throw new Error("Invalid handover OTP. The code provided does not match the customer's 4-digit verification code.");
     }
 
     const now = new Date().toISOString();

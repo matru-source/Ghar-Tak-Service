@@ -35,9 +35,9 @@ const webhookEventsLog: Array<{
 }> = [];
 
 export const PAYMENT_GATEWAY_CONFIG = {
-  provider: (process.env.PAYMENT_PROVIDER || 'RAZORPAY_SANDBOX') as 'RAZORPAY' | 'CASHFREE' | 'RAZORPAY_SANDBOX',
-  keyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_ghartak_services_2026',
-  keySecret: process.env.RAZORPAY_KEY_SECRET || 'secret_mock_ghartak_sandbox_key',
+  provider: (process.env.PAYMENT_PROVIDER || 'RAZORPAY') as 'RAZORPAY' | 'CASHFREE' | 'RAZORPAY_SANDBOX',
+  keyId: process.env.RAZORPAY_KEY_ID || '',
+  keySecret: process.env.RAZORPAY_KEY_SECRET || '',
   upiVpa: process.env.MERCHANT_UPI_VPA || 'ghartak@icici',
   merchantName: 'Ghar Tak Services Platform',
 };
@@ -62,7 +62,7 @@ export class PaymentGateway {
     upiIntentUrl: string;
   } {
     const amountPaise = Math.round(params.amountInr * 100);
-    const orderId = `order_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
+    const orderId = `order_${Date.now().toString(36)}_${crypto.randomBytes(4).toString('hex')}`;
 
     // Generate NPCI compliant UPI Intent link
     const upiIntentUrl = this.generateUpiIntentUrl(
@@ -119,17 +119,21 @@ export class PaymentGateway {
       return { isValid: false };
     }
 
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    if (!keySecret) {
+      console.error('[PaymentGateway] RAZORPAY_KEY_SECRET is not configured on server.');
+      return { isValid: false };
+    }
+
     const payload = `${orderId}|${paymentId}`;
     const expectedSignature = crypto
-      .createHmac('sha256', PAYMENT_GATEWAY_CONFIG.keySecret)
+      .createHmac('sha256', keySecret)
       .update(payload)
       .digest('hex');
 
-    // In dev sandbox, accept valid calculated signature or mock token
-    const isValid =
-      signature === expectedSignature ||
-      signature === `mock_sig_${paymentId}` ||
-      process.env.NODE_ENV !== 'production';
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expectedSignature);
+    const isValid = sigBuf.length === expBuf.length && crypto.timingSafeEqual(sigBuf, expBuf);
 
     if (isValid) {
       order.paymentStatus = 'PAID';

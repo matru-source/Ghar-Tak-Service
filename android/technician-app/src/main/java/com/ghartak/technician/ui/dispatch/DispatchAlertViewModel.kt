@@ -91,52 +91,31 @@ class DispatchAlertViewModel(
                 }
 
                 if (response?.isSuccessful == true && response.body()?.data != null) {
-                    _uiState.value = _uiState.value.copy(isAccepting = false)
+                    _uiState.value = _uiState.value.copy(isAccepting = false, errorMessage = null)
                     val acceptedJob = response.body()!!.data!!
                     TechnicianLocationService.startService(context, acceptedJob.id)
                     onSuccess(acceptedJob)
                 } else {
-                    handleFallbackAccept(job, onSuccess)
+                    val rawErr = response?.errorBody()?.string()
+                    val msg = try {
+                        if (!rawErr.isNullOrBlank()) {
+                            org.json.JSONObject(rawErr).optString("details", org.json.JSONObject(rawErr).optString("error", "Dispatch acceptance rejected by server."))
+                        } else {
+                            "Dispatch acceptance rejected. The work order may have been reassigned or expired."
+                        }
+                    } catch (_: Exception) {
+                        "Dispatch acceptance failed on server. Please refresh your job queue."
+                    }
+                    _uiState.value = _uiState.value.copy(isAccepting = false, errorMessage = msg)
                 }
             } catch (e: Throwable) {
-                Log.w("GTS_DISPATCH", "Network dispatch accept fallback: ${e.message}")
-                handleFallbackAccept(job, onSuccess)
+                Log.w("GTS_DISPATCH", "Network dispatch accept error: ${e.message}")
+                _uiState.value = _uiState.value.copy(
+                    isAccepting = false,
+                    errorMessage = "Network error: Unable to contact dispatch server. Please check connection."
+                )
             }
         }
-    }
-
-    fun acceptDispatch(
-        context: Context,
-        jobId: String,
-        onSuccess: (TechnicianJob) -> Unit
-    ) {
-        val pin = sessionManager.getPincode().ifEmpty { "760001" }
-        val isOdisha = pin.startsWith("75") || pin.startsWith("76") || pin.startsWith("77")
-        val fallback = TechnicianJob(
-            id = jobId,
-            jobTicketNumber = "GTS-${if (isOdisha) "OD" else "MH"}-${(1000..9999).random()}",
-            serviceTitle = "Doorstep Service Order",
-            pincode = pin,
-            customerName = "Customer ($pin)",
-            customerPhone = "+91 98765 43210",
-            customerAddressText = "Doorstep Delivery Address, PIN: $pin",
-            customerLatitude = if (isOdisha) 19.3150 else 18.9220,
-            customerLongitude = if (isOdisha) 84.7941 else 72.8347,
-            status = "EN_ROUTE",
-            priority = "STANDARD",
-            totalAmountInr = Math.round(299.0 * 1.18 * 100.0) / 100.0,
-            safetyGlovesConfirmed = false,
-            safetyMcbSwitchConfirmed = false,
-            handoverOtp = ""
-        )
-        acceptDispatch(context, fallback, onSuccess)
-    }
-
-    private fun handleFallbackAccept(job: TechnicianJob, onSuccess: (TechnicianJob) -> Unit) {
-        _uiState.value = _uiState.value.copy(isAccepting = false)
-        val acceptedJob = job.copy(status = "EN_ROUTE")
-        TechnicianLocationService.startService(sessionManager.context, acceptedJob.id)
-        onSuccess(acceptedJob)
     }
 
     fun rejectDispatch(

@@ -5,6 +5,7 @@
 
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 
 export type StorageCategory = 'kyc-documents' | 'job-photos-before' | 'job-photos-after' | 'tax-invoices';
 
@@ -20,12 +21,25 @@ export interface StoredFileRecord {
   uploadedAt: string;
 }
 
-// In-memory registry of stored files
+// Persistent local vault root under public/uploads
+const UPLOAD_ROOT = path.join(process.cwd(), 'public', 'uploads');
+
+function ensureDir(dir: string) {
+  try {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  } catch (err) {
+    console.error('[Storage] Error ensuring directory:', dir, err);
+  }
+}
+
+// Memory registry cache backed by persistent filesystem
 const storageRegistry = new Map<string, StoredFileRecord>();
 
 export const STORAGE_CONFIG = {
-  provider: (process.env.STORAGE_PROVIDER || 'AWS_S3_MOCK') as 'AWS_S3' | 'GCS' | 'AWS_S3_MOCK',
-  bucketName: process.env.STORAGE_BUCKET_NAME || 'electricare-prod-media-mumbai',
+  provider: (process.env.STORAGE_PROVIDER || 'LOCAL_VAULT') as 'AWS_S3' | 'GCS' | 'LOCAL_VAULT',
+  bucketName: process.env.STORAGE_BUCKET_NAME || 'ghartak-media-production',
   region: process.env.AWS_REGION || 'ap-south-1',
   maxFileSizeBytes: 10 * 1024 * 1024, // 10MB
   allowedMimeTypes: [
@@ -38,7 +52,7 @@ export const STORAGE_CONFIG = {
 
 export class CloudStorageService {
   /**
-   * Generates a pre-signed upload URL for direct client-to-cloud upload (Flutter/React)
+   * Generates an authorized upload target for client-side uploads (Android/Web)
    */
   static generatePresignedUploadUrl(
     category: StorageCategory,
@@ -56,12 +70,12 @@ export class CloudStorageService {
 
     const sanitizedName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
     const timestamp = Date.now();
-    const randomHex = Math.random().toString(36).substring(2, 8);
+    const randomHex = crypto.randomBytes(4).toString('hex');
     const fileKey = `${category}/${timestamp}_${randomHex}_${sanitizedName}`;
 
-    const isPrivate = category === 'kyc-documents';
-    const downloadUrl = `/api/integrations/storage/${encodeURIComponent(fileKey)}`;
-    const uploadUrl = `https://${STORAGE_CONFIG.bucketName}.s3.${STORAGE_CONFIG.region}.amazonaws.com/${fileKey}?X-Amz-Signature=mock_sig_${randomHex}`;
+    // Target API endpoint for streaming multipart or base64 upload
+    const uploadUrl = `/api/integrations/storage/upload?key=${encodeURIComponent(fileKey)}`;
+    const downloadUrl = `/uploads/${fileKey}`;
 
     return {
       fileKey,
@@ -72,7 +86,7 @@ export class CloudStorageService {
   }
 
   /**
-   * Uploads and registers a file directly
+   * Uploads and registers a file directly to persistent disk storage
    */
   static async uploadFile(
     category: StorageCategory,
@@ -92,11 +106,17 @@ export class CloudStorageService {
 
     const sanitizedName = originalFileName.replace(/[^a-zA-Z0-9._-]/g, '_');
     const timestamp = Date.now();
-    const randomHex = Math.random().toString(36).substring(2, 8);
-    const fileKey = `${category}/${timestamp}_${randomHex}_${sanitizedName}`;
+    const randomHex = crypto.randomBytes(4).toString('hex');
+    const fileNameOnDisk = `${timestamp}_${randomHex}_${sanitizedName}`;
+    const fileKey = `${category}/${fileNameOnDisk}`;
+
+    const targetCategoryDir = path.join(UPLOAD_ROOT, category);
+    ensureDir(targetCategoryDir);
+    const destinationPath = path.join(targetCategoryDir, fileNameOnDisk);
+    fs.writeFileSync(destinationPath, buffer);
 
     const isPrivate = category === 'kyc-documents';
-    const publicUrl = `/api/integrations/storage/${encodeURIComponent(fileKey)}`;
+    const publicUrl = `/uploads/${category}/${fileNameOnDisk}`;
 
     const record: StoredFileRecord = {
       fileKey,

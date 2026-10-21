@@ -7,9 +7,9 @@ import { BrandLogo, BrandMark } from '@/components/ui/brand-logo';
 
 export default function SuperAdminLoginPage() {
   const router = useRouter();
-  const [identifier, setIdentifier] = useState('admin@electricare.in');
-  const [password, setPassword] = useState('ElectricCare@2026');
-  const [securityToken, setSecurityToken] = useState('984-219');
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const [securityToken, setSecurityToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -51,13 +51,6 @@ export default function SuperAdminLoginPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleQuickDemoFill = () => {
-    setIdentifier('admin@electricare.in');
-    setPassword('ElectricCare@2026');
-    setSecurityToken('984-219');
-    showToast('Demo Super Admin credentials loaded');
   };
 
   return (
@@ -170,16 +163,8 @@ export default function SuperAdminLoginPage() {
           </button>
         </form>
 
-        {/* 1-Click Demo Fill Action */}
-        <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={handleQuickDemoFill}
-            className="text-[11px] font-bold text-purple-400 hover:text-purple-300 transition flex items-center gap-1"
-          >
-            <span>⚡</span>
-            <span>Fill Staging Admin Credentials</span>
-          </button>
+        {/* Navigation Action */}
+        <div className="pt-2 border-t border-slate-800/80 flex items-center justify-end">
           <Link
             href="/partner/login"
             className="text-[11px] text-slate-400 hover:text-slate-200 transition"

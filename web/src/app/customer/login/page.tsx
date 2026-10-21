@@ -22,18 +22,17 @@ type Step = 'PHONE' | 'OTP' | 'LOCATION';
 export default function CustomerLoginPage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>('PHONE');
-  const [phone, setPhone] = useState('9876543213');
-  const [otp, setOtp] = useState(['1', '2', '3', '4', '5', '6']);
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [resendTimer, setResendTimer] = useState(30);
-  const [devOtpReceived, setDevOtpReceived] = useState<string | null>('123456');
 
   // Location onboarding options
   const [selectedPincode, setSelectedPincode] = useState('400001');
   const [selectedArea, setSelectedArea] = useState('Colaba, Mumbai Hub');
-  const [addressLine, setAddressLine] = useState('Flat 402, Sea View Apartments, Colaba, Mumbai');
+  const [addressLine, setAddressLine] = useState('');
 
   // Resend countdown timer
   useEffect(() => {
@@ -73,8 +72,7 @@ export default function CustomerLoginPage() {
         throw new Error(data.error || 'Failed to send OTP code');
       }
 
-      setDevOtpReceived(data.data?.devOtp || '123456');
-      setSuccessMsg(`OTP sent to ${fullPhone}. Use code: ${data.data?.devOtp || '123456'}`);
+      setSuccessMsg(`Verification code sent to ${fullPhone}. Please enter it below.`);
       setResendTimer(30);
       setStep('OTP');
     } catch (err) {
@@ -96,12 +94,6 @@ export default function CustomerLoginPage() {
       const nextInput = document.getElementById(`otp-input-${index + 1}`);
       nextInput?.focus();
     }
-  };
-
-  // Quick fill demo OTP
-  const handleQuickFillOtp = () => {
-    const target = devOtpReceived || '123456';
-    setOtp(target.split('').slice(0, 6));
   };
 
   // Handle Verify OTP
@@ -321,23 +313,6 @@ export default function CustomerLoginPage() {
                   Edit
                 </button>
               </p>
-            </div>
-
-            {/* Dev Demo OTP notification */}
-            <div className="mb-6 p-3.5 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-between">
-              <div>
-                <p className="text-[11px] font-bold text-amber-900 uppercase tracking-wide">Developer Sandbox Code</p>
-                <p className="text-xs font-mono font-bold text-amber-800">
-                  {devOtpReceived || '123456'}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleQuickFillOtp}
-                className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs"
-              >
-                Auto-Fill Code
-              </button>
             </div>
 
             <form onSubmit={handleVerifyOtp} className="space-y-6">

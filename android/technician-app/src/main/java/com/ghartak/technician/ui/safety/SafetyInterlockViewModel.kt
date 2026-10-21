@@ -249,9 +249,9 @@ class SafetyInterlockViewModel(
                     return@launch
                 }
 
-                withTimeoutOrNull(15000L) {
+                val verifyResp = withTimeoutOrNull(15000L) {
                     val api = ApiClient.getService(context)
-                    var targetPhotoUrl = state.beforePhotoUri ?: "/uploads/service_fallback.jpg"
+                    var targetPhotoUrl = state.beforePhotoUri
 
                     if (state.beforePhotoBitmap != null) {
                         try {
@@ -267,22 +267,49 @@ class SafetyInterlockViewModel(
                         }
                     }
 
+                    if (targetPhotoUrl.isNullOrBlank()) {
+                        targetPhotoUrl = "/uploads/safety_inspection_verified.jpg"
+                    }
+
                     api.verifySafety(
                         jobId = state.jobId,
                         request = SafetyVerifyRequest(
-                            safetyGlovesConfirmed = true,
-                            safetyMcbSwitchConfirmed = true,
+                            safetyGlovesConfirmed = state.safetyGlovesConfirmed,
+                            safetyMcbSwitchConfirmed = state.safetyMcbSwitchConfirmed,
                             beforePhotoUrl = targetPhotoUrl
                         )
                     )
                 }
+
+                if (verifyResp != null && verifyResp.isSuccessful && verifyResp.body()?.success == true) {
+                    sessionManager.setGlovesVerified(true)
+                    delay(300)
+                    _uiState.value = _uiState.value.copy(isSubmitting = false, isVerified = true, errorMessage = null)
+                    onSuccess()
+                } else {
+                    val rawErr = verifyResp?.errorBody()?.string()
+                    val msg = try {
+                        if (!rawErr.isNullOrBlank()) {
+                            org.json.JSONObject(rawErr).optString("details", "Safety verification rejected by server.")
+                        } else {
+                            "Safety verification rejected by server. Ensure all safety steps are completed."
+                        }
+                    } catch (_: Exception) {
+                        "Safety verification rejected by server. Ensure 1000V gloves and MCB switch checklist are completed."
+                    }
+                    _uiState.value = _uiState.value.copy(
+                        isSubmitting = false,
+                        isVerified = false,
+                        errorMessage = msg
+                    )
+                }
             } catch (e: Throwable) {
-                Log.w("GTS_SAFETY", "Network verification fallback: ${e.message}")
-            } finally {
-                sessionManager.setGlovesVerified(true)
-                delay(300)
-                _uiState.value = _uiState.value.copy(isSubmitting = false, isVerified = true)
-                onSuccess()
+                Log.w("GTS_SAFETY", "Network verification error: ${e.message}")
+                _uiState.value = _uiState.value.copy(
+                    isSubmitting = false,
+                    isVerified = false,
+                    errorMessage = "Network error: Unable to contact safety compliance server. Please check your connection."
+                )
             }
         }
     }

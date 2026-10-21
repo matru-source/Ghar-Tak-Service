@@ -62,9 +62,9 @@ export async function POST(request: NextRequest) {
       bankName,
     } = body;
 
-    if (!entityName || !directorName || !email || !phone || !stateLicensed || !gstin) {
+    if (!entityName || !directorName || !email || !phone || !stateLicensed || !gstin || !ifscCode || !bankAccountNumber || !bankName) {
       return apiError(
-        'Missing required fields: entityName, directorName, email, phone, stateLicensed, and gstin are mandatory',
+        'Missing mandatory fields: entityName, directorName, email, phone, stateLicensed, gstin, ifscCode, bankAccountNumber, and bankName are all required.',
         400
       );
     }
@@ -82,9 +82,9 @@ export async function POST(request: NextRequest) {
       activeTechnicianQuota: Number(activeTechnicianQuota) || 50,
       platformRevenueSharePct: Number(platformRevenueSharePct) || 15.0,
       partnerRevenueSharePct: Number(partnerRevenueSharePct) || 15.0,
-      ifscCode: ifscCode || 'HDFC0001234',
-      bankAccountNumber: bankAccountNumber || '50200012345678',
-      bankName: bankName || 'HDFC Bank Ltd',
+      ifscCode: String(ifscCode).trim().toUpperCase(),
+      bankAccountNumber: String(bankAccountNumber).trim(),
+      bankName: String(bankName).trim(),
     });
 
     return apiSuccess(partner, `Franchise partner '${entityName}' onboarded successfully`, 201);

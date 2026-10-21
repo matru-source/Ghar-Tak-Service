@@ -14,9 +14,9 @@ const FRANCHISE_HUBS = [
 export default function RegionalPartnerLoginPage() {
   const router = useRouter();
   const [selectedHub, setSelectedHub] = useState('MH-01');
-  const [identifier, setIdentifier] = useState('maharashtra.ops@electricare.in');
-  const [password, setPassword] = useState('ElectricCare@2026');
-  const [licenseCode, setLicenseCode] = useState('LIC-MH-2026-991');
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const [licenseCode, setLicenseCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -59,14 +59,6 @@ export default function RegionalPartnerLoginPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleQuickDemoFill = () => {
-    setSelectedHub('MH-01');
-    setIdentifier('maharashtra.ops@electricare.in');
-    setPassword('ElectricCare@2026');
-    setLicenseCode('LIC-MH-2026-991');
-    showToast('Loaded Maharashtra Hub demo credentials');
   };
 
   const currentHubInfo = FRANCHISE_HUBS.find((h) => h.id === selectedHub) || FRANCHISE_HUBS[0];
@@ -197,16 +189,8 @@ export default function RegionalPartnerLoginPage() {
           </button>
         </form>
 
-        {/* 1-Click Demo Fill Action */}
-        <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={handleQuickDemoFill}
-            className="text-[11px] font-bold text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1"
-          >
-            <span>⚡</span>
-            <span>Fill Demo Maharashtra Hub</span>
-          </button>
+        {/* Navigation Action */}
+        <div className="pt-2 border-t border-slate-800/80 flex items-center justify-end">
           <Link
             href="/admin/login"
             className="text-[11px] text-slate-400 hover:text-slate-200 transition"
