@@ -86,6 +86,7 @@ fun TechnicianAuthScreen(
 
     val googleSignInOptions = remember {
         GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken("909074400529-iocqa69oa75ta26v3u3cmpnctgn05iq6.apps.googleusercontent.com")
             .requestEmail()
             .build()
     }

@@ -49,14 +49,32 @@ export async function POST(request: NextRequest) {
     if (!user) {
       // Dynamically provision verified user account
       const cleanPhone = `+91${googleSubId.replace(/\D/g, '').slice(-10).padEnd(10, '0')}`;
-      user = await db.createCustomerUser({
-        fullName,
-        email,
-        phone: cleanPhone,
-        passwordHash: 'GOOGLE_OAUTH_AUTHENTICATED',
-        address: 'Doorstep Service Hub',
-        pincode: '760001',
-      });
+      if (requestedRole === 'TECHNICIAN') {
+        const registeredTech = await db.registerTechnician({
+          fullName,
+          email,
+          phone: cleanPhone,
+          trade: 'Certified Professional',
+          pincode: '760001',
+          password: 'GOOGLE_OAUTH_AUTHENTICATED',
+        });
+        user = (await db.getUserByIdentifier(email)) || {
+          id: registeredTech.userId,
+          phone: registeredTech.phone,
+          email: registeredTech.email,
+          fullName: registeredTech.fullName,
+          role: 'TECHNICIAN',
+        };
+      } else {
+        user = await db.createCustomerUser({
+          fullName,
+          email,
+          phone: cleanPhone,
+          passwordHash: 'GOOGLE_OAUTH_AUTHENTICATED',
+          address: 'Doorstep Service Hub',
+          pincode: '760001',
+        });
+      }
     }
 
     // Determine specialized role profile
