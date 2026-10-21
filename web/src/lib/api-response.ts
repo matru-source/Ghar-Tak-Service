@@ -33,6 +33,7 @@ export function apiError(error: string, status: number = 400, details?: unknown)
     {
       success: false,
       error,
+      message: error,
       details,
       timestamp: new Date().toISOString(),
     },

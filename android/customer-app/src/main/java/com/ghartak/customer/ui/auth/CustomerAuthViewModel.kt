@@ -200,7 +200,7 @@ class CustomerAuthViewModel(
                     )
                     return@launch
                 } else {
-                    val errMsg = response.body()?.message ?: "Invalid email or password. Please check your credentials."
+                    val errMsg = extractErrorMessage(response, "Invalid email or password. Please check your credentials.")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         errorMessage = errMsg
@@ -265,13 +265,7 @@ class CustomerAuthViewModel(
                         successMessage = "Verification code sent to $email. Please check your inbox."
                     )
                 } else {
-                    val errMsg = try {
-                        val errStr = response.errorBody()?.string()
-                        val errJson = org.json.JSONObject(errStr ?: "{}")
-                        errJson.optString("message", "Failed to send verification code. Please try again.")
-                    } catch (_: Exception) {
-                        response.body()?.message ?: "Failed to send verification code. Please try again."
-                    }
+                    val errMsg = extractErrorMessage(response, "Failed to send verification code. Please try again.")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         errorMessage = errMsg
@@ -319,13 +313,7 @@ class CustomerAuthViewModel(
                         successMessage = "Email verified successfully! Please set your password and pincode."
                     )
                 } else {
-                    val errMsg = try {
-                        val errStr = response.errorBody()?.string()
-                        val errJson = org.json.JSONObject(errStr ?: "{}")
-                        errJson.optString("message", "Invalid or expired verification code.")
-                    } catch (_: Exception) {
-                        response.body()?.message ?: "Invalid or expired verification code."
-                    }
+                    val errMsg = extractErrorMessage(response, "Invalid or expired verification code.")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         errorMessage = errMsg
@@ -438,7 +426,7 @@ class CustomerAuthViewModel(
                     )
                     return@launch
                 } else {
-                    val errMsg = response.body()?.message ?: "Registration failed. Please check your details."
+                    val errMsg = extractErrorMessage(response, "Registration failed. Please check your details.")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         errorMessage = errMsg
@@ -497,13 +485,7 @@ class CustomerAuthViewModel(
                         successMessage = "Security verification code sent to $email. Please check your inbox."
                     )
                 } else {
-                    val errMsg = try {
-                        val errStr = response.errorBody()?.string()
-                        val errJson = org.json.JSONObject(errStr ?: "{}")
-                        errJson.optString("message", "No account found with this email or server error.")
-                    } catch (_: Exception) {
-                        response.body()?.message ?: "No registered account found with email '$email'."
-                    }
+                    val errMsg = extractErrorMessage(response, "No account found with this email or server error.")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         errorMessage = errMsg
@@ -604,13 +586,7 @@ class CustomerAuthViewModel(
                         successMessage = "Password reset successfully! Welcome back, $resolvedName!"
                     )
                 } else {
-                    val errMsg = try {
-                        val errStr = response.errorBody()?.string()
-                        val errJson = org.json.JSONObject(errStr ?: "{}")
-                        errJson.optString("message", "Failed to reset password. Please check your verification code.")
-                    } catch (_: Exception) {
-                        response.body()?.message ?: "Failed to reset password. Please verify your code."
-                    }
+                    val errMsg = extractErrorMessage(response, "Failed to reset password. Please check your verification code.")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         errorMessage = errMsg
@@ -706,13 +682,7 @@ class CustomerAuthViewModel(
                         successMessage = "Signed in successfully with Google! Welcome, $resolvedName!"
                     )
                 } else {
-                    val errMsg = try {
-                        val errStr = response.errorBody()?.string()
-                        val errJson = org.json.JSONObject(errStr ?: "{}")
-                        errJson.optString("message", "Google authentication failed on server.")
-                    } catch (_: Exception) {
-                        response.body()?.message ?: "Google authentication failed."
-                    }
+                    val errMsg = extractErrorMessage(response, "Google authentication failed on server.")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         errorMessage = errMsg
@@ -734,5 +704,24 @@ class CustomerAuthViewModel(
     fun logout() {
         sessionManager.clearSession()
         _uiState.value = CustomerAuthUiState()
+    }
+
+    private fun extractErrorMessage(response: retrofit2.Response<*>, defaultMsg: String): String {
+        return try {
+            val errStr = response.errorBody()?.string()
+            if (!errStr.isNullOrBlank()) {
+                val errJson = org.json.JSONObject(errStr)
+                when {
+                    errJson.has("message") && errJson.getString("message").isNotBlank() -> errJson.getString("message")
+                    errJson.has("error") && errJson.getString("error").isNotBlank() -> errJson.getString("error")
+                    errJson.has("details") && errJson.getString("details").isNotBlank() -> errJson.getString("details")
+                    else -> defaultMsg
+                }
+            } else {
+                defaultMsg
+            }
+        } catch (_: Exception) {
+            defaultMsg
+        }
     }
 }

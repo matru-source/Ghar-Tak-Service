@@ -212,7 +212,7 @@ class TechnicianAuthViewModel(
                     )
                     return@launch
                 } else {
-                    val errMsg = response.body()?.message ?: "Invalid credentials. Please verify your email / badge ID and password."
+                    val errMsg = extractErrorMessage(response, "Invalid credentials. Please verify your email / badge ID and password.")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         errorMessage = errMsg
@@ -316,13 +316,7 @@ class TechnicianAuthViewModel(
                         successMessage = "Signed in successfully with Google! Welcome back, $fullName."
                     )
                 } else {
-                    val errMsg = try {
-                        val errStr = response.errorBody()?.string()
-                        val errJson = org.json.JSONObject(errStr ?: "{}")
-                        errJson.optString("message", "Google authentication failed on server.")
-                    } catch (_: Exception) {
-                        response.body()?.message ?: "Google authentication failed."
-                    }
+                    val errMsg = extractErrorMessage(response, "Google authentication failed on server.")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         errorMessage = errMsg
@@ -379,13 +373,7 @@ class TechnicianAuthViewModel(
                         successMessage = "Verification OTP sent to $email. Please check your inbox."
                     )
                 } else {
-                    val errMsg = try {
-                        val errStr = response.errorBody()?.string()
-                        val errJson = org.json.JSONObject(errStr ?: "{}")
-                        errJson.optString("message", "Failed to dispatch verification code.")
-                    } catch (_: Exception) {
-                        response.body()?.message ?: "Failed to dispatch verification code."
-                    }
+                    val errMsg = extractErrorMessage(response, "Failed to dispatch verification code.")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         errorMessage = errMsg
@@ -432,13 +420,7 @@ class TechnicianAuthViewModel(
                         successMessage = "Email verified successfully! Now complete your technician credentials."
                     )
                 } else {
-                    val errMsg = try {
-                        val errStr = response.errorBody()?.string()
-                        val errJson = org.json.JSONObject(errStr ?: "{}")
-                        errJson.optString("message", "Incorrect or expired verification code.")
-                    } catch (_: Exception) {
-                        response.body()?.message ?: "Incorrect or expired verification code."
-                    }
+                    val errMsg = extractErrorMessage(response, "Incorrect or expired verification code.")
                     _uiState.value = state.copy(
                         isLoading = false,
                         errorMessage = errMsg
@@ -561,13 +543,7 @@ class TechnicianAuthViewModel(
                         successMessage = "Password reset code sent to $email. Please check your inbox."
                     )
                 } else {
-                    val errMsg = try {
-                        val errStr = response.errorBody()?.string()
-                        val errJson = org.json.JSONObject(errStr ?: "{}")
-                        errJson.optString("message", "No technician account found with this email.")
-                    } catch (_: Exception) {
-                        response.body()?.message ?: "No technician account found with this email."
-                    }
+                    val errMsg = extractErrorMessage(response, "No technician account found with this email.")
                     _uiState.value = state.copy(
                         isLoading = false,
                         errorMessage = errMsg
@@ -627,13 +603,7 @@ class TechnicianAuthViewModel(
                         successMessage = "Password reset successfully! Please sign in with your new password."
                     )
                 } else {
-                    val errMsg = try {
-                        val errStr = response.errorBody()?.string()
-                        val errJson = org.json.JSONObject(errStr ?: "{}")
-                        errJson.optString("message", "Failed to reset password. Please check your verification code.")
-                    } catch (_: Exception) {
-                        response.body()?.message ?: "Failed to reset password. Please check your verification code."
-                    }
+                    val errMsg = extractErrorMessage(response, "Failed to reset password. Please check your verification code.")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         errorMessage = errMsg
@@ -677,5 +647,24 @@ class TechnicianAuthViewModel(
             errorMessage = null,
             successMessage = null
         )
+    }
+
+    private fun extractErrorMessage(response: retrofit2.Response<*>, defaultMsg: String): String {
+        return try {
+            val errStr = response.errorBody()?.string()
+            if (!errStr.isNullOrBlank()) {
+                val errJson = org.json.JSONObject(errStr)
+                when {
+                    errJson.has("message") && errJson.getString("message").isNotBlank() -> errJson.getString("message")
+                    errJson.has("error") && errJson.getString("error").isNotBlank() -> errJson.getString("error")
+                    errJson.has("details") && errJson.getString("details").isNotBlank() -> errJson.getString("details")
+                    else -> defaultMsg
+                }
+            } else {
+                defaultMsg
+            }
+        } catch (_: Exception) {
+            defaultMsg
+        }
     }
 }

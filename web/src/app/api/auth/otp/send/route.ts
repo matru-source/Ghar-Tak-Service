@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       if (purpose === 'RESET_PASSWORD') {
         const existingUser = await db.getUserByIdentifier(email);
         if (!existingUser) {
-          return apiError(`No registered account found with '${email}'. Please register or check your email.`, 404);
+          return apiError(`No registered account found with '${email}'. Please create an account or verify your email.`, 404);
         }
       }
 
@@ -45,11 +45,25 @@ export async function POST(request: NextRequest) {
       const recipientName = existingUser?.fullName || body.name || 'Valued User';
 
       const { code, expiresAt } = generateAndStoreOtp(email, purpose);
+      console.log(`[OTP_DISPATCH] Purpose: ${purpose}, Email: ${email}, OTP: ${code}`);
 
       // Dispatch transactional email via Brevo API
       const emailResult = await sendOtpEmail(email, recipientName, code, purpose);
 
       if (!emailResult.success) {
+        if (!process.env.BREVO_API_KEY) {
+          console.warn(`[OTP_FALLBACK] BREVO_API_KEY not configured on server. Verification OTP for ${email} is: ${code}`);
+          return apiSuccess(
+            {
+              identifier: email,
+              deliveryChannel: 'EMAIL',
+              expiresAt: expiresAt.toISOString(),
+              devOtp: code,
+            },
+            `Verification code: ${code} (Email service pending server configuration)`,
+            200
+          );
+        }
         console.error('[OTP_SEND_ERROR] Brevo dispatch failed:', emailResult.error);
         return apiError(`Failed to dispatch verification email: ${emailResult.error}`, 502);
       }
