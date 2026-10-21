@@ -59,8 +59,8 @@ fun CustomerAuthScreen(
 
     val googleSignInOptions = remember {
         GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken("909074400529-iocqa69oa75ta26v3u3cmpnctgn05iq6.apps.googleusercontent.com")
             .requestEmail()
+            .requestProfile()
             .build()
     }
     val googleSignInClient = remember(context) {
@@ -72,18 +72,26 @@ fun CustomerAuthScreen(
         val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
         try {
             val account = task.getResult(ApiException::class.java)
-            val idToken = account?.idToken
-            if (!idToken.isNullOrBlank()) {
-                viewModel.loginWithGoogleIdToken(idToken)
+            val email = account?.email ?: ""
+            val name = account?.displayName ?: "Google User"
+            val idToken = account?.idToken ?: ""
+            val googleId = account?.id ?: ""
+            if (email.isNotBlank() || idToken.isNotBlank()) {
+                viewModel.loginWithGoogle(
+                    selectedEmail = email,
+                    selectedName = name,
+                    idToken = idToken,
+                    googleId = googleId
+                )
             } else {
-                val email = account?.email ?: ""
-                val name = account?.displayName ?: "Google User"
-                if (email.isNotBlank()) {
-                    viewModel.loginWithGoogle(email, name)
-                }
+                viewModel.setErrorMessage("Google Sign-In did not return an account. Please try again.")
             }
-        } catch (_: Exception) {
-            // Dismissed or cancelled by user
+        } catch (apiEx: ApiException) {
+            if (apiEx.statusCode != 12501) {
+                viewModel.setErrorMessage("Google Sign-In error (${apiEx.statusCode}). Please use Email & Password.")
+            }
+        } catch (e: Exception) {
+            viewModel.setErrorMessage("Google Sign-In failed: ${e.localizedMessage ?: "Please try again."}")
         }
     }
 
@@ -559,12 +567,9 @@ fun CustomerAuthScreen(
                         Surface(
                             onClick = {
                                 try {
-                                    googleSignInClient.signOut().addOnCompleteListener {
-                                        googleLauncher.launch(googleSignInClient.signInIntent)
-                                    }
-                                } catch (_: Exception) {
-                                    googleLauncher.launch(googleSignInClient.signInIntent)
-                                }
+                                    googleSignInClient.signOut()
+                                } catch (_: Exception) {}
+                                googleLauncher.launch(googleSignInClient.signInIntent)
                             },
                             shape = RoundedCornerShape(12.dp),
                             border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0)),

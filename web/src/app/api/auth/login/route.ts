@@ -47,18 +47,25 @@ export async function POST(request: NextRequest) {
     let defaultAddress: string | undefined;
     let defaultPincode: string | undefined;
 
+    const requestedRole = (body.role || '').toUpperCase();
+
     if (user.role === 'PARTNER') {
       const partner = await db.getPartnerHub();
       partnerId = partner?.id;
-    } else if (user.role === 'TECHNICIAN') {
-      const tech = await db.getTechnicianByUserId(user.id);
-      technicianId = tech?.id;
-      partnerId = tech?.partnerId;
-      badgeNumber = tech?.badgeNumber;
-    } else if (user.role === 'CUSTOMER') {
-      const customerProfile = (user as any).customerProfile;
-      defaultAddress = customerProfile?.defaultAddressLine;
-      defaultPincode = customerProfile?.defaultPincode;
+    }
+
+    const tech = await db.getTechnicianByUserId(user.id);
+    if (tech) {
+      technicianId = tech.id;
+      partnerId = tech.partnerId;
+      badgeNumber = tech.badgeNumber;
+      defaultPincode = tech.assignedPincode || '760001';
+    }
+
+    const customerProfile = (user as any).customerProfile;
+    if (customerProfile) {
+      defaultAddress = customerProfile.defaultAddressLine;
+      if (!defaultPincode) defaultPincode = customerProfile.defaultPincode;
     }
 
     const token = await signAccessToken({
@@ -79,8 +86,7 @@ export async function POST(request: NextRequest) {
           id: user.id,
           phone: user.phone,
           email: user.email,
-          fullName: user.fullName,
-          role: user.role,
+          role: (requestedRole === 'TECHNICIAN' && technicianId) ? 'TECHNICIAN' : (requestedRole === 'CUSTOMER' ? 'CUSTOMER' : user.role),
           technicianId,
           partnerId,
           badgeNumber,
