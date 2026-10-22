@@ -47,6 +47,67 @@ fun CustomerProfileView(
     var pastOrders by remember { mutableStateOf(sessionManager.getPastOrders()) }
     LaunchedEffect(Unit) {
         pastOrders = sessionManager.getPastOrders()
+        val customerId = sessionManager.getUserId().ifEmpty { sessionManager.getUserPhone() }
+        if (customerId.isNotBlank()) {
+            try {
+                val api = com.ghartak.customer.data.api.ApiClient.getService(context)
+                val response = api.getMyJobs(customerId)
+                if (response.isSuccessful && response.body()?.data != null) {
+                    val serverJobs = response.body()!!.data!!.jobs
+                    val mappedOrders = serverJobs.map { job ->
+                        val isCancelled = job.status.equals("CANCELLED", ignoreCase = true)
+                        val total = if (isCancelled) 0.0 else if (job.totalAmountInr > 0.0) job.totalAmountInr else 299.0
+                        val taxable = if (isCancelled) 0.0 else Math.round((total / 1.18) * 100.0) / 100.0
+                        val gst = if (isCancelled) 0.0 else Math.round((total - taxable) * 100.0) / 100.0
+                        val cgst = if (isCancelled) 0.0 else Math.round((gst / 2.0) * 100.0) / 100.0
+                        val sgst = if (isCancelled) 0.0 else Math.round((gst - cgst) * 100.0) / 100.0
+
+                        val dateFormatted = try {
+                            val raw = job.createdAt ?: job.scheduledAt ?: ""
+                            if (raw.length >= 10) {
+                                val sdfIn = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.ENGLISH)
+                                val parsed = sdfIn.parse(raw.take(10))
+                                val sdfOut = java.text.SimpleDateFormat("d MMM, yyyy", java.util.Locale.ENGLISH)
+                                parsed?.let { sdfOut.format(it) } ?: raw.take(10)
+                            } else {
+                                java.text.SimpleDateFormat("d MMM, yyyy", java.util.Locale.ENGLISH).format(java.util.Date())
+                            }
+                        } catch (_: Exception) {
+                            java.text.SimpleDateFormat("d MMM, yyyy", java.util.Locale.ENGLISH).format(java.util.Date())
+                        }
+
+                        val invNum = if (job.jobTicketNumber.startsWith("GTS")) {
+                            job.jobTicketNumber.replace("GTS", "INV-2026")
+                        } else {
+                            "INV-2026-${job.jobTicketNumber.removePrefix("#")}"
+                        }
+
+                        com.ghartak.customer.data.model.PastOrderItem(
+                            ticketNumber = job.jobTicketNumber,
+                            invoiceNumber = invNum,
+                            serviceTitle = job.serviceTitle,
+                            dateText = dateFormatted,
+                            technicianName = job.technicianName ?: "Certified Field Specialist",
+                            amountInr = total,
+                            taxableAmount = taxable,
+                            cgstAmount = cgst,
+                            sgstAmount = sgst,
+                            status = job.status
+                        )
+                    }
+
+                    if (mappedOrders.isNotEmpty()) {
+                        val serverTicketSet = mappedOrders.map { it.ticketNumber.removePrefix("#").trim().lowercase() }.toSet()
+                        val nonOverlappingLocal = sessionManager.getPastOrders().filterNot {
+                            serverTicketSet.contains(it.ticketNumber.removePrefix("#").trim().lowercase())
+                        }
+                        val merged = mappedOrders + nonOverlappingLocal
+                        sessionManager.savePastOrders(merged)
+                        pastOrders = merged
+                    }
+                }
+            } catch (_: Exception) {}
+        }
     }
     var profileImageUri by remember { mutableStateOf(sessionManager.getProfileImageUri()) }
 
@@ -642,7 +703,13 @@ fun CustomerProfileView(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Metric 1: Orders (Dynamic based on real bookings)
+                    // Metric 1: Orders (Dynamic based on real completed bookings)
+                    val completedOrdersCount = pastOrders.count {
+                        it.status.equals("COMPLETED", ignoreCase = true) ||
+                        it.status.equals("WORK_COMPLETED", ignoreCase = true) ||
+                        it.status.equals("SETTLED", ignoreCase = true)
+                    }
+
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
@@ -657,13 +724,13 @@ fun CustomerProfileView(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "${pastOrders.size} Orders",
+                            text = "$completedOrdersCount Completed Order${if (completedOrdersCount != 1) "s" else ""}",
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.sp,
                             color = TextDarkPrimary
                         )
                         Text(
-                            text = if (pastOrders.isEmpty()) "Book first →" else "View all →",
+                            text = if (pastOrders.isEmpty()) "Book first →" else "View all (${pastOrders.size}) →",
                             fontSize = 10.5.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = SapphireBlue800

@@ -486,4 +486,24 @@ class SessionManager(val context: Context) {
         }
         prefs.edit().putString(KEY_PAST_ORDERS, arr.toString()).apply()
     }
+
+    fun savePastOrders(orders: List<PastOrderItem>) {
+        val arr = JSONArray()
+        for (item in orders) {
+            val obj = JSONObject().apply {
+                put("ticketNumber", item.ticketNumber)
+                put("invoiceNumber", item.invoiceNumber)
+                put("serviceTitle", item.serviceTitle)
+                put("dateText", item.dateText)
+                put("technicianName", item.technicianName)
+                put("amountInr", item.amountInr)
+                put("taxableAmount", item.taxableAmount)
+                put("cgstAmount", item.cgstAmount)
+                put("sgstAmount", item.sgstAmount)
+                put("status", item.status)
+            }
+            arr.put(obj)
+        }
+        prefs.edit().putString(KEY_PAST_ORDERS, arr.toString()).apply()
+    }
 }
