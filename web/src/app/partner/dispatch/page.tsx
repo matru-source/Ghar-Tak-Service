@@ -312,9 +312,13 @@ export default function PartnerDispatchPage() {
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
                 <div className="flex items-center gap-3">
-                  <span className="font-mono text-sm font-bold text-white">
+                  <Link
+                    href={`/partner/jobs?ticket=${encodeURIComponent(job.jobTicketNumber.replace('#', ''))}`}
+                    className="font-mono text-sm font-bold text-white hover:text-emerald-400 hover:underline transition-colors"
+                    title="View full lifecycle ticket details"
+                  >
                     {job.jobTicketNumber}
-                  </span>
+                  </Link>
                   <span
                     className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                       isEscalated

@@ -13,7 +13,7 @@ export function PartnerShell({ children }: { children: React.ReactNode }) {
   const mobileTabs = [
     { name: 'Dashboard', href: '/partner', icon: '📊' },
     { name: 'Technicians', href: '/partner/fleet', icon: '👷' },
-    { name: 'Jobs', href: '/partner/jobs', icon: '⚡' },
+    { name: 'Jobs', href: '/partner/dispatch', icon: '⚡' },
     { name: 'Finance', href: '/partner/invoices', icon: '🧾' },
   ];
 
@@ -41,7 +41,7 @@ export function PartnerShell({ children }: { children: React.ReactNode }) {
             const isActive =
               tab.href === '/partner'
                 ? pathname === '/partner'
-                : pathname.startsWith(tab.href);
+                : pathname.startsWith(tab.href) || (tab.href === '/partner/dispatch' && pathname.startsWith('/partner/jobs'));
             return (
               <Link
                 key={tab.name}

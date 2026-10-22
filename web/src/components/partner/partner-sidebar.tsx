@@ -25,7 +25,7 @@ const PARTNER_NAVIGATION: NavSection[] = [
       { name: 'Dashboard', href: '/partner', icon: '📊' },
       { name: 'Service Catalog', href: '/partner/services', icon: '🛠️', badge: 'Live', badgeColor: 'bg-blue-600' },
       { name: 'Manage Technicians', href: '/partner/fleet', icon: '👷', badge: '18 Active', badgeColor: 'bg-emerald-600' },
-      { name: 'Job Management', href: '/partner/jobs', icon: '⚡', badge: '3 Escalated', badgeColor: 'bg-amber-600' },
+      { name: 'Job Management', href: '/partner/dispatch', icon: '⚡', badge: 'Dispatch', badgeColor: 'bg-emerald-700' },
     ],
   },
   {
@@ -109,7 +109,9 @@ export function PartnerSidebar({ isOpen = false, onClose }: PartnerSidebarProps)
                 {section.title}
               </div>
               {section.items.map((item) => {
-                const isActive = pathname === item.href;
+                const isActive =
+                  pathname === item.href ||
+                  (item.href === '/partner/dispatch' && (pathname === '/partner/dispatch' || pathname.startsWith('/partner/jobs')));
                 return (
                   <Link
                     key={item.href}
