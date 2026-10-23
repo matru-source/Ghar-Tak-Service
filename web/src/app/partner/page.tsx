@@ -84,12 +84,17 @@ export default function PartnerDashboardPage() {
   const [jobs, setJobs] = useState<JobItem[]>([]);
 
   // Standby Technicians for Manual Assignment (Module 2 & 3)
-  const [availableTechnicians, setAvailableTechnicians] = useState([
-    { id: 'tech_suresh_01', name: 'Suresh Patil', badge: 'TECH-1025', rating: 4.9, distance: '0.8 km', pincode: '400001', status: 'Online' },
-    { id: 'tech_rajesh_01', name: 'Rajesh Kumar', badge: 'TECH-1024', rating: 4.8, distance: '1.2 km', pincode: '400001', status: 'Online' },
-    { id: 'tech_pradeep_04', name: 'Pradeep Jadhav', badge: 'TECH-1028', rating: 4.7, distance: '1.5 km', pincode: '400002', status: 'Online' },
-    { id: 'tech_ankit_02', name: 'Ankit Verma', badge: 'TECH-1026', rating: 4.8, distance: '2.1 km', pincode: '400001', status: 'Online' },
-  ]);
+  const [availableTechnicians, setAvailableTechnicians] = useState<
+    Array<{
+      id: string;
+      name: string;
+      badge: string;
+      rating: number;
+      distance: string;
+      pincode: string;
+      status: string;
+    }>
+  >([]);
 
   // Connect to live API endpoints on mount
   useEffect(() => {

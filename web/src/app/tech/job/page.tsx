@@ -27,6 +27,9 @@ function TechJobNavigationContent() {
   const searchParams = useSearchParams();
   const jobId = searchParams.get('id') || 'J-1001';
 
+  // Live Job State from PostgreSQL
+  const [liveJob, setLiveJob] = useState<any>(null);
+
   // Status & Telemetry State
   const [etaMinutes, setEtaMinutes] = useState<number>(10);
   const [distanceKm, setDistanceKm] = useState<number>(2.4);
@@ -37,14 +40,39 @@ function TechJobNavigationContent() {
   // Chat Drawer State
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
   const [chatMessages, setChatMessages] = useState<Array<{ sender: 'tech' | 'cust'; text: string; time: string }>>([
-    { sender: 'cust', text: 'Hi Rajesh, are you nearby?', time: '09:35 AM' },
-    { sender: 'tech', text: 'Yes Amit ji, I am turning onto Shahid Bhagat Singh Rd. 5-7 mins away.', time: '09:37 AM' },
+    { sender: 'cust', text: 'Hi, are you nearby?', time: '09:35 AM' },
+    { sender: 'tech', text: 'Yes, I am turning onto the approach road. 5-7 mins away.', time: '09:37 AM' },
     { sender: 'cust', text: 'Great, lift is working to 4th floor. Ring bell #402.', time: '09:38 AM' },
   ]);
   const [newChatText, setNewChatText] = useState<string>('');
 
   // SOS Emergency Modal State
   const [isSosModalOpen, setIsSosModalOpen] = useState<boolean>(false);
+
+  // Fetch live job details from PostgreSQL
+  useEffect(() => {
+    let isCancelled = false;
+    async function loadJob() {
+      try {
+        const res = await fetch(`/api/jobs/${encodeURIComponent(jobId)}`);
+        if (!res.ok) return;
+        const json = await res.json();
+        const job = json.data;
+        if (!isCancelled && job) {
+          setLiveJob(job);
+          if (['ARRIVED', 'SAFETY_CHECKED', 'WORK_COMPLETED', 'SETTLED'].includes(job.status)) {
+            setHasArrived(true);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load job:', err);
+      }
+    }
+    loadJob();
+    return () => {
+      isCancelled = true;
+    };
+  }, [jobId]);
 
   // Dynamic ETA simulation
   useEffect(() => {
@@ -60,16 +88,25 @@ function TechJobNavigationContent() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // Arrival Handler (Geofence handshake simulation)
+  // Arrival Handler (Geofence handshake and persistence to PostgreSQL)
   const handleArrival = async () => {
     setIsVerifyingGeofence(true);
     showToast('📡 Geofence Verification: Pinging GPS coords (18.9220° N, 72.8347° E)...');
 
-    setTimeout(() => {
-      setIsVerifyingGeofence(false);
-      setHasArrived(true);
-      showToast('✓ Geofence Verified: You have arrived at Flat 402, Sea Green Apartments!');
-    }, 1200);
+    try {
+      const targetJobId = liveJob?.id || jobId;
+      await fetch(`/api/jobs/${encodeURIComponent(targetJobId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'ARRIVED' }),
+      });
+    } catch (e) {
+      console.warn('Arrival status update error:', e);
+    }
+
+    setIsVerifyingGeofence(false);
+    setHasArrived(true);
+    showToast(`✓ Geofence Verified: You have arrived at ${liveJob?.customerAddressText || 'Flat 402, Sea Green Apartments'}!`);
   };
 
   // Send in-app chat message
@@ -153,7 +190,7 @@ function TechJobNavigationContent() {
 
           <div>
             <h2 className="font-extrabold text-lg text-slate-900 leading-tight">
-              Ceiling Fan Installation &amp; Wiring
+              {liveJob?.serviceTitle || 'Ceiling Fan Installation & Wiring'}
             </h2>
             <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
               <span className="text-emerald-700 font-semibold flex items-center gap-1">
@@ -198,7 +235,7 @@ function TechJobNavigationContent() {
                 <Zap className="w-5 h-5 fill-current" />
               </div>
               <span className="text-[10px] font-bold text-white bg-slate-900/90 px-1.5 py-0.2 rounded mt-1 shadow-xs">
-                You (Rajesh)
+                You (Field Tech)
               </span>
             </div>
 
@@ -264,24 +301,26 @@ function TechJobNavigationContent() {
           <div className="flex items-center justify-between pb-2 border-b border-slate-100">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-800 font-extrabold text-sm flex items-center justify-center shrink-0 border border-blue-200">
-                AS
+                {(liveJob?.customerName || 'AS').slice(0, 2).toUpperCase()}
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <h3 className="font-bold text-sm text-slate-900 truncate">Amit Sharma</h3>
+                  <h3 className="font-bold text-sm text-slate-900 truncate">
+                    {liveJob?.customerName || 'Customer'}
+                  </h3>
                   <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center text-[10px]">
                     ✓
                   </span>
                 </div>
-                <p className="text-xs text-slate-500">Verified Resident • Flat 402</p>
+                <p className="text-xs text-slate-500">Verified Resident • Order #{liveJob?.jobTicketNumber || jobId}</p>
               </div>
             </div>
 
             {/* Masked Touch-target Phone & Message actions */}
             <div className="flex items-center gap-2">
               <a
-                href="tel:+919876543213"
-                onClick={() => showToast('📞 Dialing customer Amit Sharma (+91 98765 43213)...')}
+                href={`tel:${liveJob?.customerPhone || '+919876543213'}`}
+                onClick={() => showToast(`📞 Dialing customer ${liveJob?.customerName || 'Customer'} (${liveJob?.customerPhone || '+91 98765 43213'})...`)}
                 aria-label="Call Customer"
                 className="w-10 h-10 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center shadow-xs active:scale-90 transition-all"
               >
@@ -305,14 +344,14 @@ function TechJobNavigationContent() {
                 Service Delivery Address
               </span>
               <p className="text-xs font-semibold text-slate-800 mt-0.5 leading-snug">
-                Flat 402, 4th Floor, Sea Green Apartments, Shahid Bhagat Singh Rd, Colaba, Mumbai, Maharashtra 400001
+                {liveJob?.customerAddressText || 'Flat 402, 4th Floor, Sea Green Apartments, Shahid Bhagat Singh Rd, Colaba, Mumbai, Maharashtra 400001'}
               </p>
               <div className="flex items-center gap-2 mt-2">
                 <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                  🛗 Lift Operational to 4th Floor
+                  PIN: {liveJob?.pincode || '400001'}
                 </span>
                 <span className="text-[10px] text-slate-500">
-                  Landmark: Near Colaba Post Office
+                  Priority: {liveJob?.priority || 'STANDARD'}
                 </span>
               </div>
             </div>
@@ -334,7 +373,9 @@ function TechJobNavigationContent() {
               <span className="text-[10px] font-bold text-orange-900 uppercase">
                 Your Direct Take-Home Cut
               </span>
-              <p className="text-2xl font-black text-orange-700 mt-0.5">₹1,000</p>
+              <p className="text-2xl font-black text-orange-700 mt-0.5">
+                ₹{Math.round((liveJob?.totalAmountInr || 1250) * 0.7).toLocaleString('en-IN')}
+              </p>
               <span className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1 mt-0.5">
                 <Zap className="w-3 h-3" />
                 Instant wallet credit on customer OTP sign-off
@@ -344,7 +385,9 @@ function TechJobNavigationContent() {
               <span className="text-[10px] font-bold text-slate-500 uppercase">
                 Customer Total Bill
               </span>
-              <p className="text-sm font-bold text-slate-700 line-through">₹1,250</p>
+              <p className="text-sm font-bold text-slate-700 line-through">
+                ₹{(liveJob?.totalAmountInr || 1250).toLocaleString('en-IN')}
+              </p>
               <span className="text-[10px] text-slate-500">18% GST incl.</span>
             </div>
           </div>
@@ -461,11 +504,11 @@ function TechJobNavigationContent() {
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-800 font-bold text-xs flex items-center justify-center">
-                  AS
+                  {(liveJob?.customerName || 'CU').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm text-slate-900">Amit Sharma (Masked)</h3>
-                  <span className="text-[10px] text-emerald-600 font-semibold">Online • Flat 402</span>
+                  <h3 className="font-bold text-sm text-slate-900">{liveJob?.customerName || 'Customer'} (Masked)</h3>
+                  <span className="text-[10px] text-emerald-600 font-semibold">Online • Verified Address</span>
                 </div>
               </div>
               <button

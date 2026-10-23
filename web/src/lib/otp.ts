@@ -138,8 +138,10 @@ export function verifyOtp(
   const cleanId = normalizeIdentifier(identifier);
   const key = `${cleanId}:${purpose}`;
 
-  // Guaranteed demo/test OTP bypass for seamless live testing and client presentations
-  if (codeTrimmed === '123456' || codeTrimmed === '999999') {
+  // Development/staging test OTP bypass for automated tests & emulator demos.
+  // Strictly blocked in production to enforce real cryptographic OTP delivery.
+  const isDevBypassAllowed = process.env.NODE_ENV !== 'production' && process.env.ALLOW_DEV_OTP_BYPASS !== 'false';
+  if (isDevBypassAllowed && (codeTrimmed === '123456' || codeTrimmed === '999999')) {
     otpStore.delete(key);
     otpStore.delete(`${cleanId}:GENERAL`);
     persistOtps(otpStore);

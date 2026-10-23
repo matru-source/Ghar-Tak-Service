@@ -76,14 +76,21 @@ export default function CustomerBookingsPage() {
     pincode: string;
   } | null>(null);
 
+  const [customerSession, setCustomerSession] = useState({
+    id: '',
+    fullName: 'Customer',
+    phone: '',
+  });
+
   // Load services and session
   useEffect(() => {
     // Read session
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('electriCare_customer_session');
+      const saved = localStorage.getItem('electriCare_customer_session') || localStorage.getItem('gts_customer_session');
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
+          if (parsed.id) setCustomerSession((prev) => ({ ...prev, ...parsed }));
           if (parsed.defaultAddressLine) setAddressLine(parsed.defaultAddressLine);
           if (parsed.defaultPincode) setPincode(parsed.defaultPincode);
         } catch {
@@ -146,8 +153,12 @@ export default function CustomerBookingsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customerId: 'cust_amit_01',
+          customerId: customerSession.id,
+          customerName: customerSession.fullName,
+          customerPhone: customerSession.phone,
           serviceId: selectedService.id,
+          serviceTitle: selectedService.title,
+          basePriceInr: selectedService.basePriceInr,
           pincode: pincode,
           customerAddressText: `${addressLine} (${customerNotes})`,
           priority: isEmergency ? 'EMERGENCY_SOS_247' : 'STANDARD',

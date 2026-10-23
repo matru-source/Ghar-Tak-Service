@@ -27,26 +27,25 @@ export default function CustomerLayout({
     return () => clearInterval(interval);
   }, []);
 
+  const [customerPersona, setCustomerPersona] = useState({
+    name: 'Customer',
+    phone: '',
+    pincode: '400001',
+  });
+
   // Customer session initialization in localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const existing = localStorage.getItem('electriCare_customer_session');
-      if (!existing) {
-        localStorage.setItem(
-          'electriCare_customer_session',
-          JSON.stringify({
-            id: `cust_${Date.now()}`,
-            userId: `usr_${Date.now()}`,
-            fullName: 'Valued Customer',
-            phone: '+919876543213',
-            email: 'customer@ghartak.in',
-            defaultAddressLine: 'Doorstep Hub Service Sector',
-            defaultPincode: '760001',
-            activeSubscriptionPlan: 'ZEX_SHIELD_1MO',
-            isVip: true,
-            isLoggedIn: true,
-          })
-        );
+      const existing = localStorage.getItem('electriCare_customer_session') || localStorage.getItem('gts_customer_session');
+      if (existing) {
+        try {
+          const parsed = JSON.parse(existing);
+          setCustomerPersona({
+            name: parsed.fullName || parsed.name || 'Valued Customer',
+            phone: parsed.phone || '',
+            pincode: parsed.defaultPincode || parsed.pincode || '400001',
+          });
+        } catch (_) {}
       }
     }
   }, []);
@@ -68,7 +67,7 @@ export default function CustomerLayout({
             Customer App Shell (CUST-SCR-01)
           </span>
           <span className="text-slate-500">
-            Active Persona: <strong className="text-slate-800">Amit Sharma</strong> (+91 98765 43213 • Colaba 400001)
+            Active Persona: <strong className="text-slate-800">{customerPersona.name}</strong> {customerPersona.phone ? `(${customerPersona.phone} • ${customerPersona.pincode})` : `(${customerPersona.pincode})`}
           </span>
         </div>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -47,6 +47,28 @@ export default function TechEarningsPage() {
   const [isProcessingWithdraw, setIsProcessingWithdraw] = useState<boolean>(false);
   const [withdrawSuccessUtr, setWithdrawSuccessUtr] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [techProfile, setTechProfile] = useState<{ name: string; badge: string }>({
+    name: 'Field Technician',
+    badge: 'TECH-ACTIVE',
+  });
+
+  useEffect(() => {
+    try {
+      const saved =
+        localStorage.getItem('gts_tech_session') ||
+        localStorage.getItem('electriCare_tech_session') ||
+        localStorage.getItem('electriCare_technician_session');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.fullName || parsed.name) {
+          setTechProfile({
+            name: parsed.fullName || parsed.name,
+            badge: parsed.badgeNumber || parsed.badge || 'TECH-ACTIVE',
+          });
+        }
+      }
+    } catch (_) {}
+  }, []);
 
   // Timeframe configurations
   const timeframeData: Record<Timeframe, EarningsData> = {
@@ -159,8 +181,8 @@ export default function TechEarningsPage() {
             </div>
             <div>
               <div className="font-bold text-xs text-slate-900 flex items-center gap-1">
-                <span>Rajesh Kumar</span>
-                <span className="text-slate-400 font-normal">• ID #TK-8491</span>
+                <span>{techProfile.name}</span>
+                <span className="text-slate-400 font-normal">• ID #{techProfile.badge}</span>
               </div>
               <p className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>

@@ -105,9 +105,13 @@ export default function PartnerDispatchPage() {
 
     try {
       setIsUpdating(true);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('gts_token') : null;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const res = await fetch('/api/partner/dispatch', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           jobId: selectedJob.id,
           technicianId: tech.id,

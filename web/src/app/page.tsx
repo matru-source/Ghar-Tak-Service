@@ -123,7 +123,7 @@ export default function Home() {
                     Technician Fleet
                   </div>
                   <div className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
-                    Field Mobile Work Orders, Rajesh Kumar (TECH-7821), 1000V Gloves, GPS & Handover.
+                    Field Mobile Work Orders, Live Proximity Dispatch, 1000V Gloves, GPS & Handover.
                   </div>
                 </div>
                 <div className="mt-4 pt-3 border-t border-orange-100 flex items-center justify-between text-xs font-bold text-[#E65100]">
@@ -150,7 +150,7 @@ export default function Home() {
                     Customer Mobile App
                   </div>
                   <div className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
-                    Amit Sharma (CUST-SCR-01), Colaba 400001, 24/7 Rapid SOS Chip, Live Job #J-1001 Tracking.
+                    Instant Doorstep Bookings, Colaba 400001, 24/7 Rapid SOS Chip, Live Work Order Tracking.
                   </div>
                 </div>
                 <div className="mt-4 pt-3 border-t border-blue-100 flex items-center justify-between text-xs font-bold text-[#0D47A1]">

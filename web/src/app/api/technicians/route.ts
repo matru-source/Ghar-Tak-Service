@@ -14,6 +14,14 @@ export async function OPTIONS() {
   return corsOptionsResponse();
 }
 
+import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
+
+function maskPhoneNumber(phone?: string | null): string {
+  if (!phone) return '+91 ••••••••••';
+  const clean = phone.trim();
+  return clean.replace(/(\+?\d{2,4})\s*(\d{2})\d{4,6}(\d{2})/, '$1 $2••••••$3');
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -23,28 +31,39 @@ export async function GET(request: NextRequest) {
     const isOnline = isOnlineParam !== null ? isOnlineParam === 'true' : undefined;
     const kycStatus = searchParams.get('kycStatus') || undefined;
     const search = searchParams.get('search') || undefined;
+    const maxRadiusKm = parseFloat(searchParams.get('maxRadiusKm') || searchParams.get('radius') || '35.0');
 
+    // Customer GPS coordinates
+    const latParam = searchParams.get('lat') || searchParams.get('latitude');
+    const lngParam = searchParams.get('lng') || searchParams.get('longitude');
+    const hasCoordinates = Boolean(
+      latParam && lngParam && !isNaN(parseFloat(latParam)) && !isNaN(parseFloat(lngParam))
+    );
+    const customerGeo = hasCoordinates
+      ? { latitude: parseFloat(latParam!), longitude: parseFloat(lngParam!) }
+      : (pincode ? getCoordinatesForPincode(pincode) : null);
+
+    // Check authorization: Admin & Partner see full unmasked PII; customer search gets sanitized PII
+    const authHeaderToken = extractBearerToken(request);
+    const tokenPayload = authHeaderToken ? await verifyAccessToken(authHeaderToken) : null;
+    const isInternalAdmin = tokenPayload?.role === 'SUPER_ADMIN' || tokenPayload?.role === 'PARTNER';
+
+    // If customer provided exact GPS coordinates, do not filter out technicians merely on a pincode boundary.
+    // Query online candidates and rank by true radial proximity.
     let technicians = await db.getAllTechnicians({
       partnerId,
-      pincode,
+      pincode: hasCoordinates ? undefined : pincode,
       isOnline,
       kycStatus,
       search,
     });
 
-    // If no exact match for this pincode, provide online technicians in same 2-digit postal region
-    if (technicians.length === 0 && pincode) {
+    // If no exact match for this pincode (and no coordinates), provide online technicians in same 2-digit postal region
+    if (technicians.length === 0 && pincode && !hasCoordinates) {
       const statePrefix = pincode.substring(0, 2);
       const allOnline = await db.getAllTechnicians({ isOnline: true, kycStatus });
       technicians = allOnline.filter((t) => (t.assignedPincode && t.assignedPincode.startsWith(statePrefix)));
     }
-
-    // Resolve customer coordinates from params or pincode
-    const latParam = searchParams.get('lat') || searchParams.get('latitude');
-    const lngParam = searchParams.get('lng') || searchParams.get('longitude');
-    const customerGeo = (latParam && lngParam)
-      ? { latitude: parseFloat(latParam), longitude: parseFloat(lngParam) }
-      : (pincode ? getCoordinatesForPincode(pincode) : null);
 
     const busyTechnicianIds = new Set<string>();
     for (const j of dbStore.jobs) {
@@ -67,7 +86,7 @@ export async function GET(request: NextRequest) {
       // Prisma offline or schema mismatch
     }
 
-    const enhancedTechnicians = technicians.map((t: any, index: number) => {
+    let enhancedTechnicians = technicians.map((t: any) => {
       let dist: number;
       let eta: number;
 
@@ -95,13 +114,24 @@ export async function GET(request: NextRequest) {
       }
 
       const area = resolveAreaFromCoordinates(techLat || customerGeo?.latitude || 20.6678, techLng || customerGeo?.longitude || 85.5959);
-
       const isBusy = busyTechnicianIds.has(t.id);
       const distanceDisplay = dist <= 0.0 ? '0.0 km away (Same Location)' : `${dist} km away`;
       const etaDisplay = eta <= 1 ? '1 min (Immediate)' : `${eta} mins`;
 
-      return {
-        ...t,
+      // Customer Privacy Shield (DPDP & GDPR Compliance):
+      // Mask phone number, withhold private personal email, and withhold exact home coordinates.
+      const sanitizedPhone = isInternalAdmin ? (t.phone || '') : maskPhoneNumber(t.phone);
+
+      const payload: Record<string, unknown> = {
+        id: t.id,
+        badgeNumber: t.badgeNumber,
+        fullName: t.fullName,
+        rating: t.rating ?? 5.0,
+        totalJobsCompleted: t.totalJobsCompleted ?? 0,
+        isOnline: t.isOnline ?? true,
+        trade: t.trade || 'Certified Professional',
+        kycStatus: t.kycStatus || 'VERIFIED',
+        assignedPincode: t.assignedPincode,
         isBusy,
         availabilityStatus: isBusy ? 'BUSY_ON_JOB' : 'AVAILABLE',
         area,
@@ -109,16 +139,37 @@ export async function GET(request: NextRequest) {
         etaMinutes: eta,
         distance: distanceDisplay,
         eta: etaDisplay,
+        phone: sanitizedPhone,
+        maskedPhone: maskPhoneNumber(t.phone),
       };
+
+      if (isInternalAdmin) {
+        payload.email = t.email;
+        payload.userId = t.userId;
+        payload.partnerId = t.partnerId;
+        payload.currentLatitude = t.currentLatitude;
+        payload.currentLongitude = t.currentLongitude;
+        payload.electricalLicenseNumber = t.electricalLicenseNumber;
+      }
+
+      return payload;
     });
+
+    // If customer provided GPS, filter to technicians within service radius (or show nearest available)
+    if (hasCoordinates && enhancedTechnicians.length > 0) {
+      const withinRadius = enhancedTechnicians.filter((t) => ((t.distanceKm as number) <= maxRadiusKm));
+      if (withinRadius.length > 0) {
+        enhancedTechnicians = withinRadius;
+      }
+    }
 
     const sortBy = searchParams.get('sortBy') || searchParams.get('orderBy');
     if (sortBy === 'rating') {
-      enhancedTechnicians.sort((a, b) => (a.isBusy ? 1 : 0) - (b.isBusy ? 1 : 0) || (b.rating || 0) - (a.rating || 0));
+      enhancedTechnicians.sort((a, b) => ((a.isBusy ? 1 : 0) - (b.isBusy ? 1 : 0)) || (((b.rating as number) || 0) - ((a.rating as number) || 0)));
     } else if (sortBy === 'jobs') {
-      enhancedTechnicians.sort((a, b) => (a.isBusy ? 1 : 0) - (b.isBusy ? 1 : 0) || (b.totalJobsCompleted || 0) - (a.totalJobsCompleted || 0));
+      enhancedTechnicians.sort((a, b) => ((a.isBusy ? 1 : 0) - (b.isBusy ? 1 : 0)) || (((b.totalJobsCompleted as number) || 0) - ((a.totalJobsCompleted as number) || 0)));
     } else {
-      enhancedTechnicians.sort((a, b) => (a.isBusy ? 1 : 0) - (b.isBusy ? 1 : 0) || a.distanceKm - b.distanceKm);
+      enhancedTechnicians.sort((a, b) => ((a.isBusy ? 1 : 0) - (b.isBusy ? 1 : 0)) || ((a.distanceKm as number) - (b.distanceKm as number)));
     }
 
     const summary = {

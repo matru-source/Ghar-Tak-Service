@@ -467,7 +467,7 @@ export default function AdminSupportPage() {
                   <span>Technician</span>
                 </div>
                 <div className="mt-1 font-bold text-slate-900">
-                  {selectedTicket.technicianName || 'Pradeep Jadhav'}
+                  {selectedTicket.technicianName || 'Unassigned / Standby Fleet'}
                 </div>
                 <div className="text-[11px] text-emerald-600 font-mono">Nearby Fleet Standby</div>
               </div>
@@ -494,7 +494,7 @@ export default function AdminSupportPage() {
                   rows={3}
                   value={resolutionInput}
                   onChange={(e) => setResolutionInput(e.target.value)}
-                  placeholder="Detail the technical actions taken (e.g. proximity reassignment to Pradeep Jadhav, surge claims processed, circuit breaker inspection)..."
+                  placeholder="Detail the technical actions taken (e.g. proximity reassignment, surge claims processed, circuit breaker inspection)..."
                   className="w-full rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-rose-500 focus:bg-white"
                   required
                 />

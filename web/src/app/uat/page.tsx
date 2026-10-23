@@ -476,7 +476,7 @@ export default function ClientUATWalkthroughPage() {
                 <span className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold font-mono">3 Screens</span>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Colaba 400001 Onboarding, 24/7 Rapid SOS Emergency Dispatch Chip, Service Category Hierarchy, Real-Time Live GPS Telemetry of Tech Rajesh Kumar, 4-Digit Handover OTP &amp; Official GST Tax Invoice Receipt.
+                Colaba 400001 Onboarding, 24/7 Rapid SOS Emergency Dispatch Chip, Service Category Hierarchy, Real-Time Live GPS Telemetry of Assigned Field Technician, 4-Digit Handover OTP &amp; Official GST Tax Invoice Receipt.
               </p>
               <div className="pt-2 flex flex-wrap gap-2 text-xs font-bold">
                 <Link href="/customer" target="_blank" className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-800 hover:bg-blue-100 flex items-center gap-1 border border-blue-200">
@@ -503,7 +503,7 @@ export default function ClientUATWalkthroughPage() {
 
             <div className="space-y-4 text-xs font-medium">
               {[
-                { step: '1', title: 'Customer Booking Creation', desc: 'Customer Amit Sharma books MCB Diagnostic at Colaba 400001. System matches Maharashtra Hub and assigns top-rated Tech Rajesh Kumar.' },
+                { step: '1', title: 'Customer Booking Creation', desc: 'Customer creates booking for MCB Diagnostic at Colaba 400001. System matches Maharashtra Hub and assigns top-rated verified proximity technician.' },
                 { step: '2', title: 'Technician Push Dispatch Acceptance', desc: 'Inbound 60s alert modal accepted by technician. Work order transitions to EN_ROUTE with live GPS turn-by-turn navigation.' },
                 { step: '3', title: 'Doorstep Arrival Telemetry', desc: 'Technician reaches customer residence at Sea Green Apartments, Colaba. Geofence timestamp logged as ARRIVED.' },
                 { step: '4', title: 'Mandatory 1000V Gloves & MCB Safety Interlock', desc: 'Strict electrical safety protocol enforces physical 1000V Class 0 gloves confirmation and MCB lockout before work can commence.' },

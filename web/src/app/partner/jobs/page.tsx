@@ -248,7 +248,7 @@ function PartnerJobDetailsContent() {
           <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-2.5 text-emerald-300">
             <div className="text-[10px] uppercase font-bold text-emerald-400">Stage 2</div>
             <div className="font-bold mt-0.5">Dispatched</div>
-            <div className="text-[9px] text-slate-400 font-mono mt-1">Rajesh Kumar</div>
+            <div className="text-[9px] text-slate-400 font-mono mt-1">{job?.technicianName || job?.technicianProfile?.fullName || 'Assigned Technician'}</div>
           </div>
 
           <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-2.5 text-emerald-300">
@@ -426,7 +426,7 @@ function PartnerJobDetailsContent() {
                   <span>4-Digit Service Handover OTP Verification</span>
                 </h3>
                 <p className="text-xs text-slate-300 mt-0.5">
-                  Mandatory OTP generated on customer Amit Sharma&apos;s phone to prevent fraud &amp; close the work order.
+                  Mandatory OTP generated on customer{job?.customerName || job?.customerProfile?.fullName ? ` ${job.customerName || job.customerProfile?.fullName}'s` : "'s"} phone to prevent fraud &amp; close the work order.
                 </p>
               </div>
 
@@ -533,7 +533,7 @@ function PartnerJobDetailsContent() {
               <div className="p-2.5 rounded-lg bg-sky-500/10 border border-sky-500/30 flex items-center justify-between">
                 <div>
                   <div className="font-bold text-sky-300">Technician Net Payout (70.0%)</div>
-                  <div className="text-[10px] text-slate-400">Rajesh Kumar (Direct Transfer)</div>
+                  <div className="text-[10px] text-slate-400">{job?.technicianName || job?.technicianProfile?.fullName ? `${job.technicianName || job.technicianProfile?.fullName} (Direct Transfer)` : 'Technician Direct Transfer'}</div>
                 </div>
                 <div className="font-bold text-sky-400 text-sm">
                   +₹741.52

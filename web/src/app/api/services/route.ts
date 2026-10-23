@@ -1,4 +1,6 @@
 import { NextRequest } from 'next/server';
+import { db, isDatabaseConnected } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 import { dbStore } from '@/lib/mock-data';
 import { calculateIndianGst18 } from '@/lib/tax-engine';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
@@ -14,6 +16,78 @@ export async function GET(request: NextRequest) {
     const categoryParam = searchParams.get('category');
     const emergencyOnly = searchParams.get('emergencyOnly') === 'true';
     const search = searchParams.get('search')?.toLowerCase();
+
+    if (await isDatabaseConnected()) {
+      try {
+        const whereClause: any = { isActive: true };
+
+        if (categoryParam) {
+          whereClause.category = {
+            OR: [
+              { slug: categoryParam },
+              { id: categoryParam },
+              { name: { contains: categoryParam, mode: 'insensitive' } },
+            ],
+          };
+        }
+
+        if (emergencyOnly) {
+          whereClause.isEmergencySosEligible = true;
+        }
+
+        if (search) {
+          whereClause.OR = [
+            { title: { contains: search, mode: 'insensitive' } },
+            { code: { contains: search, mode: 'insensitive' } },
+            { description: { contains: search, mode: 'insensitive' } },
+          ];
+        }
+
+        const liveServices = await prisma.serviceCatalog.findMany({
+          where: whereClause,
+          include: { category: true },
+          orderBy: { title: 'asc' },
+        });
+
+        if (liveServices.length > 0 || categoryParam || search || emergencyOnly) {
+          const servicesWithTax = liveServices.map((s) => {
+            const tax = calculateIndianGst18({ baseLaborInr: s.basePriceInr });
+            return {
+              id: s.id,
+              code: s.code,
+              title: s.title,
+              categoryId: s.categoryId,
+              categoryName: s.category?.name || 'General',
+              basePriceInr: s.basePriceInr,
+              gstRatePct: s.gstRatePct,
+              estimatedDurationMinutes: s.estimatedDurationMinutes,
+              isEmergencySosEligible: s.isEmergencySosEligible,
+              isPaused: false,
+              description: s.description || undefined,
+              pricing: {
+                baseAmount: tax.baseLaborInr,
+                cgstAmount: tax.cgstAmountInr,
+                sgstAmount: tax.sgstAmountInr,
+                totalGstAmount: tax.totalGstAmountInr,
+                totalPayableInr: tax.totalPayableInr,
+                formatted: tax.formattedTotal,
+              },
+            };
+          });
+
+          return apiSuccess(
+            {
+              count: servicesWithTax.length,
+              services: servicesWithTax,
+            },
+            `Retrieved ${servicesWithTax.length} service catalog offerings from live database`,
+            200
+          );
+        }
+      } catch (err) {
+        console.warn('Prisma services query fallback:', err);
+      }
+    }
 
     let filtered = dbStore.serviceCatalog;
 

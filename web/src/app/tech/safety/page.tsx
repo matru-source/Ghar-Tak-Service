@@ -79,6 +79,9 @@ function TechSafetyChecklistContent() {
   );
   const [isCapturing, setIsCapturing] = useState<boolean>(false);
 
+  // Live Job State from PostgreSQL
+  const [liveJob, setLiveJob] = useState<any>(null);
+
   // Submission / Verification State
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
@@ -87,6 +90,27 @@ function TechSafetyChecklistContent() {
 
   // SOS Emergency Modal State
   const [isSosModalOpen, setIsSosModalOpen] = useState<boolean>(false);
+
+  // Fetch live job details from PostgreSQL
+  useEffect(() => {
+    let isCancelled = false;
+    async function loadJob() {
+      try {
+        const res = await fetch(`/api/jobs/${encodeURIComponent(jobId)}`);
+        if (!res.ok) return;
+        const json = await res.json();
+        if (!isCancelled && json.data) {
+          setLiveJob(json.data);
+        }
+      } catch (e) {
+        console.warn('Failed to load job details:', e);
+      }
+    }
+    loadJob();
+    return () => {
+      isCancelled = true;
+    };
+  }, [jobId]);
 
   // Computed Interlocks
   const isOtpComplete = otpDigits.every((d) => d.length === 1 && /^\d$/.test(d));
@@ -169,8 +193,8 @@ function TechSafetyChecklistContent() {
     setErrorMessage(null);
 
     try {
-      // Call backend API if available
-      const res = await fetch(`/api/jobs/${jobId}/verify-safety`, {
+      const targetJobId = liveJob?.id || jobId;
+      const res = await fetch(`/api/jobs/${encodeURIComponent(targetJobId)}/verify-safety`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -268,11 +292,11 @@ function TechSafetyChecklistContent() {
 
         <div className="flex items-baseline justify-between mb-3.5">
           <div>
-            <h2 className="font-extrabold text-base text-slate-900">Amit Sharma</h2>
-            <p className="text-xs text-slate-500">Colaba, South Mumbai • Flat 402 Sea Green</p>
+            <h2 className="font-extrabold text-base text-slate-900">{liveJob?.customerName || 'Customer'}</h2>
+            <p className="text-xs text-slate-500">{liveJob?.customerAddressText || 'Colaba, South Mumbai • Flat 402 Sea Green'}</p>
           </div>
           <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded border border-orange-200/60">
-            Fan Install & Balancing
+            {liveJob?.serviceTitle || 'Fan Install & Balancing'}
           </span>
         </div>
 
@@ -323,7 +347,7 @@ function TechSafetyChecklistContent() {
                 <h3 className="font-bold text-sm text-slate-900">Enter Customer Start OTP</h3>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                Ask client <strong className="text-slate-800">Amit Sharma</strong> for the 4-digit token generated on their phone.
+                Ask client <strong className="text-slate-800">{liveJob?.customerName || 'Customer'}</strong> for the 4-digit token generated on their phone.
               </p>
             </div>
             <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-red-100 text-red-700 uppercase tracking-wide border border-red-200">

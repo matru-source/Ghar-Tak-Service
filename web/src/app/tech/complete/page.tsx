@@ -74,10 +74,13 @@ function TechJobCompleteContent() {
   const [isAiVerified, setIsAiVerified] = useState<boolean>(true);
   const [isPhotoUploading, setIsPhotoUploading] = useState<boolean>(false);
 
-  // Handover OTP State (Customer handover OTP is '4829')
+  // Live Job State from PostgreSQL
+  const [liveJob, setLiveJob] = useState<any>(null);
+
+  // Handover OTP State (Customer handover OTP dynamically fetched from job)
   const [handoverDigits, setHandoverDigits] = useState<string[]>(['4', '8', '2', '9']);
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const targetOtp = '4829';
+  const targetOtp = liveJob?.handoverOtp || '4829';
 
   // Customer In-Person Rating State
   const [rating, setRating] = useState<number>(5);
@@ -95,6 +98,31 @@ function TechJobCompleteContent() {
 
   // SOS Emergency Modal State
   const [isSosModalOpen, setIsSosModalOpen] = useState<boolean>(false);
+
+  // Fetch live job details from PostgreSQL
+  useEffect(() => {
+    let isCancelled = false;
+    async function loadJob() {
+      try {
+        const res = await fetch(`/api/jobs/${encodeURIComponent(jobId)}`);
+        if (!res.ok) return;
+        const json = await res.json();
+        const job = json.data;
+        if (!isCancelled && job) {
+          setLiveJob(job);
+          if (job.handoverOtp) {
+            setHandoverDigits(job.handoverOtp.split('').slice(0, 4));
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load live job details:', e);
+      }
+    }
+    loadJob();
+    return () => {
+      isCancelled = true;
+    };
+  }, [jobId]);
 
   // Live Stopwatch Ticker
   useEffect(() => {
@@ -135,8 +163,9 @@ function TechJobCompleteContent() {
   };
 
   const autofillHandoverOtp = () => {
-    setHandoverDigits(['4', '8', '2', '9']);
-    showToast('Customer Handover OTP "4829" verified');
+    const digits = targetOtp.split('').slice(0, 4);
+    setHandoverDigits(digits);
+    showToast(`Customer Handover OTP "${targetOtp}" verified`);
   };
 
   const currentEnteredOtp = handoverDigits.join('');
@@ -193,14 +222,13 @@ function TechJobCompleteContent() {
     setIsSubmitting(true);
 
     try {
-      // Map ticket to DB ID (J-1001 -> job_1001)
-      const targetJobId = jobId.toLowerCase().includes('1001') ? 'job_1001' : jobId;
+      const targetJobId = liveJob?.id || jobId;
 
-      const res = await fetch(`/api/jobs/${targetJobId}/complete`, {
+      const res = await fetch(`/api/jobs/${encodeURIComponent(targetJobId)}/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          handoverOtp: currentEnteredOtp || '4829',
+          handoverOtp: currentEnteredOtp || targetOtp,
           afterPhotoUrl: afterPhotoUrl,
           customerRating: rating,
           customerFeedback: selectedFeedbackTags.join(', '),
@@ -208,25 +236,29 @@ function TechJobCompleteContent() {
       });
 
       const data = await res.json().catch(() => ({}));
+      const totalAmt = liveJob?.totalAmountInr || data?.data?.totalAmountInr || 1250;
+      const netPayout = Math.round(totalAmt * 0.7);
+      const invoiceNumber = data?.data?.invoiceNumber || data?.data?.invoice?.invoiceNumber || 'INV-2026-001';
 
       setCompletionResult({
-        ticketNumber: jobId,
-        invoiceNumber: data?.data?.invoice?.invoiceNumber || 'INV-2026-001',
-        netPayout: 1000,
-        subtotal: 1250,
+        ticketNumber: liveJob?.jobTicketNumber || jobId,
+        invoiceNumber,
+        netPayout,
+        subtotal: totalAmt,
         completedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
       });
 
       setShowCelebrationModal(true);
-      showToast('✓ Job Completed! Payout ₹1,000 credited to wallet.');
+      showToast(`✓ Job Completed! Payout ₹${netPayout.toLocaleString('en-IN')} credited to wallet.`);
     } catch (err) {
       console.error('Completion error:', err);
-      // Fallback display
+      const totalAmt = liveJob?.totalAmountInr || 1250;
+      const netPayout = Math.round(totalAmt * 0.7);
       setCompletionResult({
-        ticketNumber: jobId,
+        ticketNumber: liveJob?.jobTicketNumber || jobId,
         invoiceNumber: 'INV-2026-001',
-        netPayout: 1000,
-        subtotal: 1250,
+        netPayout,
+        subtotal: totalAmt,
         completedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
       });
       setShowCelebrationModal(true);
@@ -304,11 +336,11 @@ function TechJobCompleteContent() {
           <div className="flex items-start justify-between">
             <div>
               <p className="font-extrabold text-base text-slate-900">
-                #{jobId} • Fan Installation & Balancing
+                #{liveJob?.jobTicketNumber || jobId} • {liveJob?.serviceTitle || 'Fan Installation & Balancing'}
               </p>
               <div className="flex items-center gap-1.5 mt-1 text-slate-600 text-xs">
                 <ShieldCheck className="w-4 h-4 text-orange-600" />
-                <span>Customer: <strong className="text-slate-900">Amit Sharma</strong></span>
+                <span>Customer: <strong className="text-slate-900">{liveJob?.customerName || 'Customer'}</strong></span>
               </div>
             </div>
             <div className="w-10 h-10 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center border border-orange-200/50">
@@ -474,7 +506,7 @@ function TechJobCompleteContent() {
             <h2 className="font-bold text-sm text-slate-900">Customer Completion Handshake</h2>
           </div>
           <p className="text-xs text-slate-500 mb-3">
-            Ask customer Amit Sharma to verify fan balance and provide their 4-digit handover OTP.
+            Ask customer {liveJob?.customerName || 'Customer'} to verify service quality and provide their 4-digit handover OTP.
           </p>
 
           {/* 4-Digit Box Layout */}
@@ -503,7 +535,7 @@ function TechJobCompleteContent() {
 
           {/* Auto-fill test button */}
           <div className="flex items-center justify-between text-xs pb-3 border-b border-slate-100">
-            <span className="text-slate-500 text-[11px]">Customer app token is <strong>4829</strong></span>
+            <span className="text-slate-500 text-[11px]">Customer app token is <strong>{targetOtp}</strong></span>
             <button
               type="button"
               onClick={autofillHandoverOtp}
@@ -674,7 +706,7 @@ function TechJobCompleteContent() {
                 <span className="font-bold text-slate-800">₹{completionResult.subtotal}</span>
               </div>
               <div className="flex justify-between pt-1 border-t border-slate-200 font-bold text-emerald-800">
-                <span>Rajesh Kumar Wallet Credit:</span>
+                <span>Technician Net Wallet Credit:</span>
                 <span>+₹{completionResult.netPayout}</span>
               </div>
             </div>

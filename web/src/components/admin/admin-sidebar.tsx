@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { BrandLogo, BrandMark } from '@/components/ui/brand-logo';
@@ -59,6 +59,29 @@ const ADMIN_NAVIGATION: NavSection[] = [
 export function AdminSidebar() {
   const pathname = usePathname();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [adminUser, setAdminUser] = useState({ name: 'Platform Admin', initials: 'PA' });
+
+  useEffect(() => {
+    try {
+      const saved =
+        localStorage.getItem('gts_admin_session') ||
+        localStorage.getItem('electriCare_admin_session') ||
+        localStorage.getItem('admin_session');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.fullName || parsed.name) {
+          const name = parsed.fullName || parsed.name;
+          const initials = name
+            .split(' ')
+            .map((n: string) => n[0])
+            .join('')
+            .slice(0, 2)
+            .toUpperCase();
+          setAdminUser({ name, initials });
+        }
+      }
+    } catch (_) {}
+  }, []);
 
   return (
     <>
@@ -155,10 +178,10 @@ export function AdminSidebar() {
         <div className="p-3.5 border-t border-slate-200 bg-slate-50/80 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-[#4A148C] flex items-center justify-center text-xs font-bold text-white ring-2 ring-purple-200 shadow-xs">
-              VM
+              {adminUser.initials}
             </div>
             <div>
-              <div className="text-xs font-bold text-slate-900 leading-tight">Vikram Malhotra</div>
+              <div className="text-xs font-bold text-slate-900 leading-tight">{adminUser.name}</div>
               <div className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
                 Super Admin

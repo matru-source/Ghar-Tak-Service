@@ -27,6 +27,31 @@ export default function TechnicianLayout({
     return () => clearInterval(interval);
   }, []);
 
+  const [techPersona, setTechPersona] = useState({
+    name: 'Field Operative',
+    badge: 'TECH-LIVE',
+    pincode: '400001',
+  });
+
+  useEffect(() => {
+    try {
+      const savedSession =
+        localStorage.getItem('gts_tech_session') ||
+        localStorage.getItem('electriCare_tech_session') ||
+        localStorage.getItem('electriCare_technician_session');
+      if (savedSession) {
+        const parsed = JSON.parse(savedSession);
+        if (parsed.fullName || parsed.name) {
+          setTechPersona({
+            name: parsed.fullName || parsed.name,
+            badge: parsed.badgeNumber || parsed.badge || 'TECH-ACTIVE',
+            pincode: parsed.assignedPincode || parsed.pincode || '400001',
+          });
+        }
+      }
+    } catch (_) {}
+  }, []);
+
   return (
     <div className="min-h-screen bg-slate-100/90 text-slate-900 flex flex-col font-sans selection:bg-orange-100 selection:text-orange-900">
       {/* Top Desktop Helper Toolbar */}
@@ -44,7 +69,7 @@ export default function TechnicianLayout({
             Field Operative Shell (TECH-SCR-01)
           </span>
           <span className="text-slate-500">
-            Active Persona: <strong className="text-slate-800">Rajesh Kumar</strong> (TECH-4819 • Colaba 400001)
+            Active Persona: <strong className="text-slate-800">{techPersona.name}</strong> ({techPersona.badge} • {techPersona.pincode})
           </span>
         </div>
 

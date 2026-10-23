@@ -109,7 +109,8 @@ export default function CustomerLoginPage() {
     }
 
     setLoading(true);
-    const fullPhone = `+91${phone.replace(/\D/g, '')}`;
+    const cleanPhone = phone.replace(/\D/g, '');
+    const fullPhone = `+91${cleanPhone}`;
 
     try {
       const res = await fetch('/api/auth/otp/verify', {
@@ -119,7 +120,7 @@ export default function CustomerLoginPage() {
           phone: fullPhone,
           otp: enteredOtp,
           role: 'CUSTOMER',
-          fullName: 'Amit Sharma',
+          fullName: `Customer ${cleanPhone.slice(-4)}`,
         }),
       });
 
@@ -228,7 +229,7 @@ export default function CustomerLoginPage() {
             <div className="mb-4 p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span className="text-xs text-slate-700 font-medium">Test Persona: Amit Sharma</span>
+                <span className="text-xs text-slate-700 font-medium">Fast Demo OTP (+91 98765 43213)</span>
               </div>
               <button
                 type="button"

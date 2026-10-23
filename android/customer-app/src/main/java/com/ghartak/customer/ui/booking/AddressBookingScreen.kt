@@ -443,12 +443,43 @@ fun AddressBookingScreen(
                 border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "SERVICE ADDRESS",
-                        color = TextDarkPrimary,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "SERVICE ADDRESS",
+                            color = TextDarkPrimary,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Surface(
+                            onClick = { viewModel.detectCurrentLocation(context) },
+                            color = SapphireBlue800.copy(alpha = 0.08f),
+                            shape = RoundedCornerShape(8.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, SapphireBlue800.copy(alpha = 0.25f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.LocationOn,
+                                    contentDescription = "Detect Location",
+                                    tint = SapphireBlue800,
+                                    modifier = Modifier.size(13.dp)
+                                )
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Text(
+                                    text = "Use GPS",
+                                    color = SapphireBlue800,
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(14.dp))
 
@@ -522,7 +553,7 @@ fun AddressBookingScreen(
                     // Street / Area
                     OutlinedTextField(
                         value = state.streetName,
-                        onValueChange = { viewModel.onStreetChanged(it) },
+                        onValueChange = { viewModel.onStreetChanged(context, it) },
                         label = { Text("Street / Road / Colony") },
                         placeholder = { Text("Colaba Causeway, Mumbai") },
                         singleLine = true,

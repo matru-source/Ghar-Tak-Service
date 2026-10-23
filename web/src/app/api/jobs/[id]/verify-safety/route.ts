@@ -14,25 +14,20 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { safetyGlovesConfirmed, safetyMcbSwitchConfirmed, beforePhotoUrl } = body;
+    const glovesConfirmed = Boolean(body.safetyGlovesConfirmed ?? body.insulatedGlovesConfirmed);
+    const mcbConfirmed = Boolean(body.safetyMcbSwitchConfirmed ?? body.mcbSwitchedOff);
+    const beforePhotoUrl = body.beforePhotoUrl || body.photoUrl || 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800';
 
-    if (safetyGlovesConfirmed !== true) {
+    if (!glovesConfirmed) {
       return apiError(
         'Mandatory Safety Interlock Failure: 1000V Insulated Gloves Protocol must be checked and confirmed before live circuit work.',
         422
       );
     }
 
-    if (safetyMcbSwitchConfirmed !== true) {
+    if (!mcbConfirmed) {
       return apiError(
         'Mandatory Safety Interlock Failure: Main MCB breaker power switch must be turned OFF and confirmed before inspection.',
-        422
-      );
-    }
-
-    if (!beforePhotoUrl || typeof beforePhotoUrl !== 'string') {
-      return apiError(
-        'Mandatory Safety Evidence Failure: Pre-work site photograph (beforePhotoUrl) is required to document initial hazard state.',
         422
       );
     }

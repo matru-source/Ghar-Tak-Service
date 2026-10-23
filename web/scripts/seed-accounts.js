@@ -45,24 +45,7 @@ async function main() {
     console.log('Updated user password:', user.email);
   }
 
-  // Also attach technician profile to ghartakservicesit so it works in technician app too
-  let tech = await prisma.technician.findUnique({ where: { userId: user.id } });
-  if (!tech && defaultPartner) {
-    tech = await prisma.technician.create({
-      data: {
-        id: 'tech_gts_it',
-        userId: user.id,
-        partnerId: defaultPartner.id,
-        badgeNumber: 'GTS-TECH-1001',
-        rating: 5.0,
-        isOnline: true,
-        assignedPincode: '760001',
-        kycStatus: 'VERIFIED',
-        insulatedGlovesVerified: true
-      }
-    });
-    console.log('Attached technician profile to ghartakservicesit');
-  }
+  // ghartakservicesit remains a clean administrative user (no fake technician profile)
 
   // 2. Seed customer@ghartak.in
   let cust = await prisma.user.findFirst({ where: { email: 'customer@ghartak.in' } });
@@ -104,22 +87,7 @@ async function main() {
         isActive: true
       }
     });
-    if (defaultPartner) {
-      await prisma.technician.create({
-        data: {
-          id: 'tech_master_01',
-          userId: techUser.id,
-          partnerId: defaultPartner.id,
-          badgeNumber: 'GTS-TECH-2002',
-          rating: 4.95,
-          isOnline: true,
-          assignedPincode: '760001',
-          kycStatus: 'VERIFIED',
-          insulatedGlovesVerified: true
-        }
-      });
-    }
-    console.log('Created demo technician:', techUser.email);
+    console.log('Created demo user:', techUser.email);
   } else {
     await prisma.user.update({ where: { id: techUser.id }, data: { passwordHash: passHash } });
     console.log('Updated demo technician password');
@@ -152,22 +120,7 @@ async function main() {
         }
       }
     });
-    if (defaultPartner) {
-      await prisma.technician.create({
-        data: {
-          id: 'tech_matru_01',
-          userId: devUser.id,
-          partnerId: defaultPartner.id,
-          badgeNumber: 'GTS-TECH-3003',
-          rating: 5.0,
-          isOnline: true,
-          assignedPincode: '760001',
-          kycStatus: 'VERIFIED',
-          insulatedGlovesVerified: true
-        }
-      });
-    }
-    console.log('Created Matru Prasad user & technician profile');
+    console.log('Created Matru Prasad user profile');
   } else {
     await prisma.user.update({ where: { id: devUser.id }, data: { passwordHash: passHash } });
     console.log('Updated Matru Prasad password');
@@ -193,22 +146,7 @@ async function main() {
         }
       }
     });
-    if (defaultPartner) {
-      await prisma.technician.create({
-        data: {
-          id: 'tech_itsmatru_01',
-          userId: itsUser.id,
-          partnerId: defaultPartner.id,
-          badgeNumber: 'GTS-TECH-4004',
-          rating: 5.0,
-          isOnline: true,
-          assignedPincode: '760001',
-          kycStatus: 'VERIFIED',
-          insulatedGlovesVerified: true
-        }
-      });
-    }
-    console.log('Created itsmatruprasad@gmail.com customer and technician profile');
+    console.log('Created itsmatruprasad@gmail.com customer profile');
   } else {
     await prisma.user.update({ where: { id: itsUser.id }, data: { passwordHash: passHash } });
     console.log('Updated itsmatruprasad@gmail.com password');

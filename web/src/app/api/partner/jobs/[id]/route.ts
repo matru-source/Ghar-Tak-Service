@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/db';
+import db, { isDatabaseConnected } from '@/lib/db';
 import { dbStore } from '@/lib/mock-data';
 import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
 
@@ -75,12 +75,14 @@ export async function PATCH(
     const body = await req.json();
     const { status, safetyGlovesConfirmed, safetyMcbSwitchConfirmed, handoverOtpInput } = body;
 
+    const currentJob = await db.getJobById(id);
     const jobIndex = dbStore.jobs.findIndex((j) => j.id === id || j.jobTicketNumber === id);
-    if (jobIndex === -1) {
+
+    if (!currentJob && jobIndex === -1) {
       return NextResponse.json({ success: false, error: 'Job not found' }, { status: 404 });
     }
 
-    const job = dbStore.jobs[jobIndex];
+    const job = jobIndex !== -1 ? dbStore.jobs[jobIndex] : (currentJob as any);
 
     if (safetyGlovesConfirmed !== undefined) {
       job.safetyGlovesConfirmed = Boolean(safetyGlovesConfirmed);
@@ -90,7 +92,7 @@ export async function PATCH(
     }
 
     if (handoverOtpInput) {
-      if (handoverOtpInput.trim() !== job.handoverOtp) {
+      if (handoverOtpInput.trim() !== (job.handoverOtp || currentJob?.handoverOtp)) {
         return NextResponse.json(
           { success: false, error: 'Invalid 4-digit handover OTP provided by customer.' },
           { status: 400 }
@@ -99,6 +101,31 @@ export async function PATCH(
       job.status = 'WORK_COMPLETED';
     } else if (status) {
       job.status = status;
+    }
+
+    // Persist to PostgreSQL if connected
+    if (await isDatabaseConnected()) {
+      try {
+        const updateData: any = {};
+        if (safetyGlovesConfirmed !== undefined) updateData.safetyGlovesConfirmed = Boolean(safetyGlovesConfirmed);
+        if (safetyMcbSwitchConfirmed !== undefined) updateData.safetyMcbSwitchConfirmed = Boolean(safetyMcbSwitchConfirmed);
+        if (handoverOtpInput) {
+          updateData.status = 'WORK_COMPLETED';
+          updateData.completedAt = new Date();
+        } else if (status) {
+          updateData.status = status;
+        }
+
+        if (Object.keys(updateData).length > 0) {
+          const { prisma } = await import('@/lib/prisma');
+          await prisma.job.updateMany({
+            where: { OR: [{ id }, { jobTicketNumber: id }, { jobTicketNumber: `#${id.replace(/^#/, '')}` }] },
+            data: updateData,
+          });
+        }
+      } catch (prismaErr) {
+        console.warn('Prisma job update error:', prismaErr);
+      }
     }
 
     await db.recordWormAuditLog({

@@ -4,7 +4,7 @@ import { isDatabaseConnected, db } from '@/lib/db';
 export async function GET() {
   const dbConnected = await isDatabaseConnected();
   const colabaPincode = await db.getPincodeCoverage('400001');
-  const activeTech = await db.getTechnicianById('tech_rajesh_01');
+  const activeTech = await db.getFirstTechnician();
 
   const healthData = {
     status: 'healthy',
@@ -29,7 +29,7 @@ export async function GET() {
         'Job', 'Invoice', 'LedgerEntry', 'SupportTicket', 'AuditLog'
       ],
       activeTestPincode: colabaPincode?.pincode || '400001',
-      activeTestTechnician: activeTech && 'user' in activeTech ? activeTech.user?.fullName : (activeTech && 'fullName' in activeTech ? activeTech.fullName : 'Rajesh Kumar (TECH-7821)'),
+      activeTestTechnician: activeTech && 'user' in activeTech ? activeTech.user?.fullName : (activeTech && 'fullName' in activeTech ? activeTech.fullName : 'Active Field Technician'),
     },
     supportedClients: [
       { name: 'Flutter Customer Mobile App', platform: 'Android / iOS', protocol: 'REST / JSON' },

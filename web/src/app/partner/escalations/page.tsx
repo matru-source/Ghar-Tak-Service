@@ -269,10 +269,10 @@ export default function PartnerEscalationsPage() {
                   <div className="text-[11px] text-slate-400 uppercase font-semibold">Standby Recovery Unit</div>
                   <div className="font-bold text-emerald-400 mt-0.5 flex items-center gap-1.5">
                     <Wrench className="h-3.5 w-3.5 text-emerald-400" />
-                    <span>Pradeep Jadhav (0.59 km away)</span>
+                    <span>{candidates[0]?.fullName || 'Standby Recovery Unit'} ({candidates[0]?.distanceKm ? `${candidates[0].distanceKm} km away` : 'Proximity Standby'})</span>
                   </div>
                   <div className="text-[11px] text-slate-400 mt-1">
-                    Estimated Transit Time: <strong className="text-white">4 Minutes</strong>
+                    Estimated Transit Time: <strong className="text-white">{candidates[0]?.etaMinutes ? `${candidates[0].etaMinutes} Minutes` : 'Rapid Transit'}</strong>
                   </div>
                 </div>
               </div>
@@ -288,7 +288,7 @@ export default function PartnerEscalationsPage() {
                     onClick={() => {
                       setSelectedJob(job);
                       const best = candidates.find((c) => c.isEligible);
-                      setSelectedTechId(best ? best.id : 'tech_pradeep_04');
+                      setSelectedTechId(best ? best.id : (candidates[0]?.id || ''));
                     }}
                     className="rounded-lg bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-500 transition-colors shadow-lg shadow-rose-600/30"
                   >

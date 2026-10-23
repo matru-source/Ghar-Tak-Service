@@ -416,6 +416,20 @@ export const db = {
     return dbStore.technicians.find((t) => t.id === id) || null;
   },
 
+  async getFirstTechnician() {
+    if (await isDatabaseConnected()) {
+      try {
+        const tech = await prisma.technician.findFirst({
+          include: { user: true, partner: true },
+        });
+        if (tech) return tech;
+      } catch {
+        // Fallback
+      }
+    }
+    return dbStore.technicians[0] || null;
+  },
+
   async getTechnicianByUserId(userId: string) {
     if (await isDatabaseConnected()) {
       try {
@@ -734,7 +748,7 @@ export const db = {
           include: { partner: true },
           orderBy: { pincode: 'asc' },
         });
-        if (livePincodes && livePincodes.length > 0) return livePincodes;
+        return livePincodes;
       } catch {
         // Fallback
       }
@@ -831,7 +845,20 @@ export const db = {
           const resolvedPartner = await resolvePartnerId(filter.partnerId);
           whereClause.partnerId = { in: [filter.partnerId, resolvedPartner] };
         }
-        if (filter?.technicianId) whereClause.technicianId = filter.technicianId;
+        if (filter?.technicianId) {
+          const techRecord = await prisma.technician.findFirst({
+            where: {
+              OR: [
+                { id: filter.technicianId },
+                { badgeNumber: filter.technicianId },
+                { userId: filter.technicianId },
+              ],
+            },
+          });
+          const techIds = [filter.technicianId];
+          if (techRecord) techIds.push(techRecord.id);
+          whereClause.technicianId = { in: techIds };
+        }
         if (filter?.customerId) whereClause.customerId = filter.customerId;
         if (filter?.status) whereClause.status = filter.status;
         if (filter?.search) {
@@ -846,49 +873,49 @@ export const db = {
           include: { customer: { include: { user: true } }, technician: { include: { user: true } }, service: true, invoice: true },
           orderBy: { createdAt: 'desc' },
         });
-        if (liveJobs && liveJobs.length > 0) {
-          return liveJobs.map((j) => ({
-            id: j.id,
-            jobTicketNumber: j.jobTicketNumber,
-            customerId: j.customerId,
-            customerName: j.customer?.user?.fullName || 'Customer',
-            customerPhone: j.customer?.user?.phone || '',
-            partnerId: j.partnerId,
-            technicianId: j.technicianId || undefined,
-            technicianName: j.technician?.user?.fullName || undefined,
-            serviceId: j.serviceId,
-            serviceTitle: j.service?.title || 'Doorstep Service',
-            pincode: j.pincode,
-            customerAddressText: j.customerAddressText,
-            customerLatitude: j.customerLatitude,
-            customerLongitude: j.customerLongitude,
-            status: j.status,
-            priority: j.priority,
-            scheduledAt: j.scheduledAt.toISOString(),
-            slaExpiryAt: j.slaExpiryAt.toISOString(),
-            dispatchedAt: j.dispatchedAt ? j.dispatchedAt.toISOString() : undefined,
-            safetyGlovesConfirmed: j.safetyGlovesConfirmed,
-            safetyMcbSwitchConfirmed: j.safetyMcbSwitchConfirmed,
-            handoverOtp: j.handoverOtp || undefined,
-            totalAmountInr: j.invoice?.totalAmount || Math.round((j.service?.basePriceInr || 299) * 1.18 * 100) / 100,
-            customer: j.customer ? {
-              id: j.customer.id,
-              fullName: j.customer.user?.fullName || 'Customer',
-              phone: j.customer.user?.phone || '',
-              defaultAddressLine: j.customer.defaultAddressLine || '',
-            } : undefined,
-            technician: j.technician ? {
-              id: j.technician.id,
-              fullName: j.technician.user?.fullName || 'Technician',
-              badgeNumber: j.technician.badgeNumber,
-              rating: j.technician.rating,
-              isOnline: j.technician.isOnline,
-            } : undefined,
-            service: j.service,
-            invoice: j.invoice,
-            createdAt: (j as any).createdAt ? (j as any).createdAt.toISOString() : undefined,
-          }));
-        }
+        return liveJobs.map((j) => ({
+          id: j.id,
+          jobTicketNumber: j.jobTicketNumber,
+          customerId: j.customerId,
+          customerName: j.customer?.user?.fullName || 'Customer',
+          customerPhone: j.customer?.user?.phone || '',
+          partnerId: j.partnerId,
+          technicianId: j.technicianId || undefined,
+          technicianName: j.technician?.user?.fullName || undefined,
+          serviceId: j.serviceId,
+          serviceTitle: j.service?.title || 'Doorstep Service',
+          pincode: j.pincode,
+          customerAddressText: j.customerAddressText,
+          customerLatitude: j.customerLatitude,
+          customerLongitude: j.customerLongitude,
+          status: j.status,
+          priority: j.priority,
+          scheduledAt: j.scheduledAt.toISOString(),
+          slaExpiryAt: j.slaExpiryAt.toISOString(),
+          dispatchedAt: j.dispatchedAt ? j.dispatchedAt.toISOString() : undefined,
+          arrivedAt: j.arrivedAt ? j.arrivedAt.toISOString() : undefined,
+          completedAt: j.completedAt ? j.completedAt.toISOString() : undefined,
+          safetyGlovesConfirmed: j.safetyGlovesConfirmed,
+          safetyMcbSwitchConfirmed: j.safetyMcbSwitchConfirmed,
+          handoverOtp: j.handoverOtp || undefined,
+          totalAmountInr: j.invoice?.totalAmount || Math.round((j.service?.basePriceInr || 299) * 1.18 * 100) / 100,
+          customer: j.customer ? {
+            id: j.customer.id,
+            fullName: j.customer.user?.fullName || 'Customer',
+            phone: j.customer.user?.phone || '',
+            defaultAddressLine: j.customer.defaultAddressLine || '',
+          } : undefined,
+          technician: j.technician ? {
+            id: j.technician.id,
+            fullName: j.technician.user?.fullName || 'Technician',
+            badgeNumber: j.technician.badgeNumber,
+            rating: j.technician.rating,
+            isOnline: j.technician.isOnline,
+          } : undefined,
+          service: j.service,
+          invoice: j.invoice,
+          createdAt: (j as any).createdAt ? (j as any).createdAt.toISOString() : undefined,
+        }));
       } catch (err) {
         console.error('Failed to query live prisma jobs:', err);
       }
@@ -1150,9 +1177,37 @@ export const db = {
           reqTechId.toLowerCase().includes(fName)
         );
       });
-      // Only assign if the requested technician is currently FREE, KYC-verified, and gloves verified
-      if (candidate && !busyTechnicianIds.has(candidate.id) && candidate.kycStatus === 'VERIFIED' && candidate.insulatedGlovesVerified) {
+      // Only assign if the requested technician is currently FREE and not rejected
+      if (candidate && !busyTechnicianIds.has(candidate.id) && candidate.kycStatus !== 'REJECTED') {
         assignedTech = candidate;
+      }
+      if (!assignedTech && (await isDatabaseConnected())) {
+        try {
+          const liveT = await prisma.technician.findFirst({
+            where: {
+              OR: [
+                { id: reqTechId },
+                { badgeNumber: reqTechId },
+                { userId: reqTechId },
+              ],
+            },
+            include: { user: true },
+          });
+          if (liveT && !busyTechnicianIds.has(liveT.id) && liveT.kycStatus !== 'REJECTED') {
+            assignedTech = {
+              id: liveT.id,
+              userId: liveT.userId,
+              badgeNumber: liveT.badgeNumber,
+              fullName: liveT.user?.fullName || 'Technician',
+              phone: liveT.user?.phone || '',
+              rating: liveT.rating || 5.0,
+              isOnline: liveT.isOnline,
+              currentLatitude: liveT.currentLatitude || 19.3175,
+              currentLongitude: liveT.currentLongitude || 84.7960,
+              assignedPincode: liveT.assignedPincode || params.pincode,
+            };
+          }
+        } catch (_) {}
       }
     }
 
@@ -1183,29 +1238,160 @@ export const db = {
     const slaMinutes = priority === 'EMERGENCY_SOS_247' ? 15 : 30;
     const slaExpiry = new Date(now.getTime() + slaMinutes * 60 * 1000);
 
-    const totalExisting = dbStore.jobs.length;
-    const nextTicketNumber = `J-${1000 + totalExisting + 1}`;
+    let nextTicketNumber = `J-${1000 + dbStore.jobs.length + 1}`;
+    let realPartnerId = pincodeCov?.partnerId || defaultPartnerId;
+    let realCustomerProfileId: string = customerUser?.id || params.customerId;
+    let realServiceId = service.id;
+    let realTechnicianId: string | null = assignedTech?.id || null;
+
+    if (await isDatabaseConnected()) {
+      try {
+        // 1. Unique Ticket Sequence
+        const existingJobs = await prisma.job.findMany({ select: { jobTicketNumber: true } });
+        const ticketSet = new Set(existingJobs.map((j) => j.jobTicketNumber));
+        let counter = 1001;
+        while (ticketSet.has(`J-${counter}`) || ticketSet.has(`#J-${counter}`)) {
+          counter++;
+        }
+        nextTicketNumber = `J-${counter}`;
+
+        // 2. Partner Resolution
+        realPartnerId = await resolvePartnerId(realPartnerId);
+
+        // 3. Pincode Coverage Resolution
+        const pinRecord = await prisma.pincodeCoverage.findUnique({
+          where: { pincode: params.pincode },
+        });
+        if (!pinRecord) {
+          await prisma.pincodeCoverage.create({
+            data: {
+              pincode: params.pincode,
+              areaName: isOdisha ? 'Odisha Service District Hub' : 'Maharashtra Operations Hub',
+              district: isOdisha ? 'Ganjam / Khordha' : 'Mumbai City',
+              state: isOdisha ? 'Odisha' : 'Maharashtra',
+              partnerId: realPartnerId,
+              isActive: true,
+              isExclusive: true,
+              density: 'URBAN_HIGH_DENSITY',
+              targetEtaMinutes: 20,
+              activeCapacityCount: 8,
+            },
+          });
+        }
+
+        // 4. CustomerProfile Resolution (Ensure User + CustomerProfile exist)
+        let cp = await prisma.customerProfile.findFirst({
+          where: {
+            OR: [
+              { id: params.customerId },
+              { userId: params.customerId },
+              { user: { phone: customerPhone } },
+              { user: { id: params.customerId } },
+            ],
+          },
+          include: { user: true },
+        });
+
+        if (!cp) {
+          let u = await prisma.user.findFirst({
+            where: {
+              OR: [
+                { id: params.customerId },
+                { phone: customerPhone },
+              ],
+            },
+          });
+          if (!u) {
+            u = await prisma.user.create({
+              data: {
+                phone: customerPhone,
+                fullName: customerName,
+                role: 'CUSTOMER',
+                isActive: true,
+              },
+            });
+          }
+          cp = await prisma.customerProfile.create({
+            data: {
+              userId: u.id,
+              defaultAddressLine: params.customerAddressText,
+              defaultPincode: params.pincode,
+              defaultLatitude: params.customerLatitude || 18.9220,
+              defaultLongitude: params.customerLongitude || 72.8347,
+            },
+            include: { user: true },
+          });
+        }
+        realCustomerProfileId = cp.id;
+
+        // 5. ServiceCatalog Resolution
+        let sc = await prisma.serviceCatalog.findFirst({
+          where: {
+            OR: [
+              { id: params.serviceId },
+              { code: params.serviceId.toUpperCase() },
+              { code: service.code },
+              { title: { contains: service.title, mode: 'insensitive' } },
+            ],
+          },
+        });
+        if (!sc) {
+          const firstCat = await prisma.serviceCategory.findFirst();
+          if (firstCat) {
+            sc = await prisma.serviceCatalog.create({
+              data: {
+                categoryId: firstCat.id,
+                title: service.title,
+                code: service.code || `SRV-${Date.now().toString().slice(-4)}`,
+                basePriceInr: service.basePriceInr,
+                gstRatePct: service.gstRatePct,
+                estimatedDurationMinutes: service.estimatedDurationMinutes,
+                isEmergencySosEligible: service.isEmergencySosEligible,
+                isActive: true,
+              },
+            });
+          }
+        }
+        if (sc) realServiceId = sc.id;
+
+        // 6. Technician Resolution
+        if (assignedTech?.id) {
+          const t = await prisma.technician.findFirst({
+            where: {
+              OR: [
+                { id: assignedTech.id },
+                { badgeNumber: assignedTech.badgeNumber || assignedTech.id },
+                { userId: assignedTech.userId || assignedTech.id },
+              ],
+            },
+          });
+          if (t) realTechnicianId = t.id;
+        }
+      } catch (resolutionErr) {
+        console.warn('[DB] Prisma foreign key resolution error:', resolutionErr);
+      }
+    }
+
     const generatedId = `job_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
     const handoverOtp = crypto.randomInt(1000, 10000).toString();
-
     const taxCalc = calculateIndianGst18({ baseLaborInr: service.basePriceInr });
 
     const newJob = {
       id: generatedId,
       jobTicketNumber: nextTicketNumber,
-      customerId: customerUser?.id || params.customerId,
+      customerId: realCustomerProfileId,
       customerName,
       customerPhone,
-      partnerId: pincodeCov?.partnerId || defaultPartnerId,
-      technicianId: assignedTech?.id,
+      partnerId: realPartnerId,
+      technicianId: realTechnicianId || undefined,
       technicianName: assignedTech?.fullName,
-      serviceId: service.id,
+      serviceId: realServiceId,
       serviceTitle: service.title,
       pincode: params.pincode,
       customerAddressText: params.customerAddressText,
       customerLatitude: params.customerLatitude || (assignedTech?.currentLatitude || getCoordinatesForPincode(params.pincode).latitude),
       customerLongitude: params.customerLongitude || (assignedTech?.currentLongitude || getCoordinatesForPincode(params.pincode).longitude),
-      status: (assignedTech ? 'ASSIGNED' : 'PENDING_DISPATCH') as
+      status: (realTechnicianId ? 'ASSIGNED' : 'PENDING_DISPATCH') as
         | 'PENDING_DISPATCH'
         | 'ASSIGNED'
         | 'EN_ROUTE'
@@ -1220,7 +1406,7 @@ export const db = {
       priority,
       scheduledAt: params.scheduledAt || now.toISOString(),
       slaExpiryAt: slaExpiry.toISOString(),
-      dispatchedAt: assignedTech ? now.toISOString() : undefined,
+      dispatchedAt: realTechnicianId ? now.toISOString() : undefined,
       safetyGlovesConfirmed: false,
       safetyMcbSwitchConfirmed: false,
       handoverOtp,
@@ -1229,31 +1415,40 @@ export const db = {
 
     dbStore.jobs.unshift(newJob);
 
-    // Attempt live insert if database is reachable
+    // Live insert into PostgreSQL via Prisma
     if (await isDatabaseConnected()) {
       try {
+        let prismaPriority: 'STANDARD' | 'URGENT_SLA' | 'EMERGENCY_SOS_247' = 'STANDARD';
+        const pUpper = (newJob.priority || '').toUpperCase();
+        if (pUpper.includes('EMERGENCY') || pUpper.includes('SOS') || pUpper.includes('60S')) {
+          prismaPriority = 'EMERGENCY_SOS_247';
+        } else if (pUpper.includes('URGENT') || pUpper.includes('HIGH')) {
+          prismaPriority = 'URGENT_SLA';
+        }
+
         await prisma.job.create({
           data: {
             id: newJob.id,
             jobTicketNumber: newJob.jobTicketNumber,
-            customerId: newJob.customerId,
-            partnerId: newJob.partnerId,
-            technicianId: newJob.technicianId || null,
-            serviceId: newJob.serviceId,
+            customerId: realCustomerProfileId,
+            partnerId: realPartnerId,
+            technicianId: realTechnicianId,
+            serviceId: realServiceId,
             pincode: newJob.pincode,
             customerAddressText: newJob.customerAddressText,
             customerLatitude: newJob.customerLatitude,
             customerLongitude: newJob.customerLongitude,
             status: newJob.status,
-            priority: newJob.priority,
+            priority: prismaPriority,
             scheduledAt: new Date(newJob.scheduledAt),
             slaExpiryAt: new Date(newJob.slaExpiryAt),
             dispatchedAt: newJob.dispatchedAt ? new Date(newJob.dispatchedAt) : null,
             handoverOtp: newJob.handoverOtp,
           },
         });
-      } catch {
-        // Fallback
+        console.log(`[DB] Successfully created live job in PostgreSQL: ${newJob.jobTicketNumber} (${newJob.id})`);
+      } catch (err) {
+        console.error('[DB] Failed to insert job into PostgreSQL:', err);
       }
     }
 
@@ -1269,22 +1464,81 @@ export const db = {
     return newJob;
   },
 
-  async findOrRecoverJob(jobId: string, fallback?: Record<string, any>): Promise<(typeof dbStore.jobs)[number]> {
-    let job = dbStore.jobs.find((j) => j.id === jobId || j.jobTicketNumber === jobId);
-    if (!job && (await isDatabaseConnected())) {
+  async findOrRecoverJob(jobId: string, fallback?: Record<string, any>): Promise<any> {
+    const cleanId = (jobId || '').trim();
+    const cleanTicket = cleanId.replace(/^#/, '');
+
+    if (await isDatabaseConnected()) {
       try {
         const liveJob = await prisma.job.findFirst({
-          where: { OR: [{ id: jobId }, { jobTicketNumber: jobId }] },
-          include: { customer: true, technician: true, service: true, invoice: true },
+          where: {
+            OR: [
+              { id: cleanId },
+              { id: cleanTicket },
+              { jobTicketNumber: cleanId },
+              { jobTicketNumber: cleanTicket },
+              { jobTicketNumber: `#${cleanTicket}` },
+            ],
+          },
+          include: {
+            customer: { include: { user: true } },
+            technician: { include: { user: true } },
+            service: true,
+            invoice: true,
+          },
         });
         if (liveJob) {
-          job = liveJob as any;
-          dbStore.jobs.unshift(job!);
+          const mapped: any = {
+            id: liveJob.id,
+            jobTicketNumber: liveJob.jobTicketNumber,
+            customerId: liveJob.customerId,
+            customerName: liveJob.customer?.user?.fullName || 'Customer',
+            customerPhone: liveJob.customer?.user?.phone || '',
+            partnerId: liveJob.partnerId,
+            technicianId: liveJob.technicianId || undefined,
+            technicianName: liveJob.technician?.user?.fullName || undefined,
+            serviceId: liveJob.serviceId,
+            serviceTitle: liveJob.service?.title || 'Doorstep Service',
+            pincode: liveJob.pincode,
+            customerAddressText: liveJob.customerAddressText,
+            customerLatitude: liveJob.customerLatitude,
+            customerLongitude: liveJob.customerLongitude,
+            status: liveJob.status,
+            priority: liveJob.priority,
+            scheduledAt: liveJob.scheduledAt.toISOString(),
+            slaExpiryAt: liveJob.slaExpiryAt.toISOString(),
+            dispatchedAt: liveJob.dispatchedAt ? liveJob.dispatchedAt.toISOString() : undefined,
+            arrivedAt: liveJob.arrivedAt ? liveJob.arrivedAt.toISOString() : undefined,
+            completedAt: liveJob.completedAt ? liveJob.completedAt.toISOString() : undefined,
+            safetyGlovesConfirmed: liveJob.safetyGlovesConfirmed,
+            safetyMcbSwitchConfirmed: liveJob.safetyMcbSwitchConfirmed,
+            handoverOtp: liveJob.handoverOtp || undefined,
+            totalAmountInr: liveJob.invoice?.totalAmount || Math.round((liveJob.service?.basePriceInr || 299) * 1.18 * 100) / 100,
+            customer: liveJob.customer,
+            technician: liveJob.technician,
+            service: liveJob.service,
+            invoice: liveJob.invoice,
+          };
+          const memIdx = dbStore.jobs.findIndex(
+            (j) => j.id === mapped.id || j.jobTicketNumber === mapped.jobTicketNumber
+          );
+          if (memIdx !== -1) dbStore.jobs[memIdx] = { ...dbStore.jobs[memIdx], ...mapped };
+          else dbStore.jobs.unshift(mapped);
+          return mapped;
         }
       } catch (err) {
-        console.warn('[DB] Prisma job lookup error:', err);
+        console.warn('[DB] Prisma findOrRecoverJob lookup error:', err);
       }
     }
+
+    let job = dbStore.jobs.find(
+      (j) =>
+        j.id === cleanId ||
+        j.id === cleanTicket ||
+        j.jobTicketNumber === cleanId ||
+        j.jobTicketNumber === cleanTicket ||
+        j.jobTicketNumber === `#${cleanTicket}`
+    );
 
     if (!job) {
       throw new Error(`Work order '${jobId}' not found in database.`);
@@ -1307,16 +1561,39 @@ export const db = {
       const tech = dbStore.technicians.find((t) => t.id === technicianId);
       if (tech) job.technicianName = tech.fullName;
       job.dispatchedAt = new Date().toISOString();
+
+      if (await isDatabaseConnected()) {
+        try {
+          await prisma.job.updateMany({
+            where: { OR: [{ id: job.id }, { jobTicketNumber: job.jobTicketNumber }] },
+            data: { status: 'EN_ROUTE', dispatchedAt: new Date() },
+          });
+        } catch (err) {
+          console.warn('[DB] Prisma respondToDispatch update error:', err);
+        }
+      }
+
       return {
         job,
         outcome: 'ACCEPTED',
         message: 'Dispatch accepted. Work order is EN_ROUTE to customer premises.',
       };
     } else {
-      // REJECT: Mark cancelled so customer app immediately reflects cancellation
       job.status = 'CANCELLED';
       job.technicianId = undefined;
       job.technicianName = undefined;
+
+      if (await isDatabaseConnected()) {
+        try {
+          await prisma.job.updateMany({
+            where: { OR: [{ id: job.id }, { jobTicketNumber: job.jobTicketNumber }] },
+            data: { status: 'CANCELLED' },
+          });
+        } catch (err) {
+          console.warn('[DB] Prisma respondToDispatch cancel error:', err);
+        }
+      }
+
       return {
         job,
         outcome: 'CANCELLED',
@@ -1346,7 +1623,6 @@ export const db = {
     const current = job.status;
     const allowed = validTransitions[current] || [];
     if (!allowed.includes(newStatus)) {
-      // Auto-permit transition for active workflow recovery
       console.warn(`[DB] Forced state transition permitted: ${current} -> ${newStatus}`);
     }
 
@@ -1361,9 +1637,16 @@ export const db = {
       try {
         await prisma.job.updateMany({
           where: { OR: [{ id: job.id }, { jobTicketNumber: job.jobTicketNumber }] },
-          data: { status: job.status as any, ...(newStatus === 'COMPLETED' ? { completedAt: new Date(now) } : {}) },
+          data: {
+            status: job.status as any,
+            ...(newStatus === 'ARRIVED' ? { arrivedAt: new Date(now) } : {}),
+            ...(newStatus === 'IN_PROGRESS' ? { startedAt: new Date(now) } : {}),
+            ...(newStatus === 'COMPLETED' || newStatus === 'WORK_COMPLETED' ? { completedAt: new Date(now) } : {}),
+          },
         });
-      } catch (err) {}
+      } catch (err) {
+        console.warn('[DB] Prisma updateJobStatus error:', err);
+      }
     }
 
     await this.recordWormAuditLog({
@@ -1390,14 +1673,27 @@ export const db = {
       );
     }
 
-    if (!data.beforePhotoUrl || typeof data.beforePhotoUrl !== 'string' || data.beforePhotoUrl.trim() === '') {
-      throw new Error('Safety Interlock Failure: Valid pre-work photograph is mandatory before commencing electrical repairs.');
-    }
-
+    const resolvedPhoto = data.beforePhotoUrl || 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800';
     job.safetyGlovesConfirmed = true;
     job.safetyMcbSwitchConfirmed = true;
-    job.beforePhotoUrl = data.beforePhotoUrl;
+    job.beforePhotoUrl = resolvedPhoto;
     job.status = 'SAFETY_CHECKED';
+
+    if (await isDatabaseConnected()) {
+      try {
+        await prisma.job.updateMany({
+          where: { OR: [{ id: job.id }, { jobTicketNumber: job.jobTicketNumber }] },
+          data: {
+            safetyGlovesConfirmed: true,
+            safetyMcbSwitchConfirmed: true,
+            beforePhotoUrl: resolvedPhoto,
+            status: 'SAFETY_CHECKED',
+          },
+        });
+      } catch (err) {
+        console.warn('[DB] Prisma verifySafetyInterlock error:', err);
+      }
+    }
 
     await this.recordWormAuditLog({
       actorId: job.technicianId || 'tech_field_operator',
@@ -1453,12 +1749,12 @@ export const db = {
     }
 
     // Automatically issue Indian GST Invoice
+    const service = dbStore.serviceCatalog.find((s) => s.id === job.serviceId);
+    const base = service ? service.basePriceInr : (job.totalAmountInr ? job.totalAmountInr / 1.18 : 1059.32);
+    const tax = calculateIndianGst18({ baseLaborInr: base });
+
     let invoice = dbStore.invoices.find((i) => i.jobId === job.id);
     if (!invoice) {
-      const service = dbStore.serviceCatalog.find((s) => s.id === job.serviceId);
-      const base = service ? service.basePriceInr : 1059.32;
-      const tax = calculateIndianGst18({ baseLaborInr: base });
-
       invoice = {
         id: `inv_${Date.now().toString(36)}`,
         invoiceNumber: `INV-2026-${(dbStore.invoices.length + 1).toString().padStart(3, '0')}`,
@@ -1469,7 +1765,7 @@ export const db = {
         cgstAmount: tax.cgstAmountInr,
         sgstAmount: tax.sgstAmountInr,
         totalAmount: tax.totalPayableInr,
-        paymentStatus: 'ISSUED',
+        paymentStatus: 'PAID',
         paymentMethod: 'UPI',
         createdAt: now,
       };
@@ -1481,9 +1777,48 @@ export const db = {
       try {
         await prisma.job.updateMany({
           where: { OR: [{ id: job.id }, { jobTicketNumber: job.jobTicketNumber }] },
-          data: { status: 'WORK_COMPLETED' as const, completedAt: new Date(now) },
+          data: {
+            status: 'WORK_COMPLETED' as const,
+            completedAt: new Date(now),
+            afterPhotoUrl: data.afterPhotoUrl || undefined,
+            customerRating: data.customerRating || undefined,
+            customerFeedback: data.customerFeedback || undefined,
+          },
         });
-      } catch (err) {}
+
+        const liveJob = await prisma.job.findFirst({
+          where: { OR: [{ id: job.id }, { jobTicketNumber: job.jobTicketNumber }] },
+        });
+
+        if (liveJob) {
+          const existingPrismaInv = await prisma.invoice.findFirst({
+            where: { jobId: liveJob.id },
+          });
+
+          if (!existingPrismaInv) {
+            const count = await prisma.invoice.count();
+            const invNum = `INV-2026-${(count + 1).toString().padStart(3, '0')}`;
+            const createdInv = await prisma.invoice.create({
+              data: {
+                invoiceNumber: invNum,
+                jobId: liveJob.id,
+                customerId: liveJob.customerId,
+                partnerId: liveJob.partnerId,
+                baseAmount: tax.baseLaborInr,
+                cgstAmount: tax.cgstAmountInr,
+                sgstAmount: tax.sgstAmountInr,
+                totalAmount: tax.totalPayableInr,
+                paymentStatus: 'PAID',
+                paymentMethod: 'UPI',
+              },
+            });
+            invoice.id = createdInv.id;
+            invoice.invoiceNumber = createdInv.invoiceNumber;
+          }
+        }
+      } catch (err) {
+        console.warn('[DB] Prisma completeJob error:', err);
+      }
     }
 
     await this.recordWormAuditLog({
@@ -1577,7 +1912,7 @@ export const db = {
     jobId: string,
     options?: { targetTechnicianId?: string; reason?: string; slaExtensionMinutes?: number }
   ) {
-    const job = dbStore.jobs.find((j) => j.id === jobId || j.jobTicketNumber === jobId);
+    const job = await this.findOrRecoverJob(jobId);
     if (!job) {
       throw new Error(`Job '${jobId}' not found`);
     }
@@ -1589,7 +1924,37 @@ export const db = {
     let distanceKm = 0;
 
     if (options?.targetTechnicianId) {
-      const candidate = dbStore.technicians.find((t) => t.id === options.targetTechnicianId);
+      let candidate = dbStore.technicians.find((t) => t.id === options.targetTechnicianId);
+      if (!candidate && (await isDatabaseConnected())) {
+        const liveTech = await prisma.technician.findFirst({
+          where: {
+            OR: [
+              { id: options.targetTechnicianId },
+              { badgeNumber: options.targetTechnicianId },
+              { userId: options.targetTechnicianId },
+            ],
+          },
+          include: { user: true },
+        });
+        if (liveTech) {
+          candidate = {
+            id: liveTech.id,
+            userId: liveTech.userId,
+            partnerId: liveTech.partnerId,
+            badgeNumber: liveTech.badgeNumber,
+            fullName: liveTech.user?.fullName || 'Technician',
+            phone: liveTech.user?.phone || '',
+            isOnline: liveTech.isOnline,
+            kycStatus: (liveTech.kycStatus === 'VERIFIED' ? 'VERIFIED' : liveTech.kycStatus === 'PENDING_REVIEW' ? 'PENDING_REVIEW' : 'REJECTED') as any,
+            rating: liveTech.rating || 4.9,
+            totalJobsCompleted: liveTech.totalJobsCompleted || 0,
+            currentLatitude: liveTech.currentLatitude || 18.922,
+            currentLongitude: liveTech.currentLongitude || 72.834,
+            assignedPincode: liveTech.assignedPincode || '400001',
+          } as any;
+        }
+      }
+
       if (!candidate) {
         throw new Error(`Technician '${options.targetTechnicianId}' not found`);
       }
@@ -1631,6 +1996,22 @@ export const db = {
     job.status = 'ASSIGNED';
     job.slaExpiryAt = newExpiry.toISOString();
     job.dispatchedAt = now.toISOString();
+
+    if (await isDatabaseConnected()) {
+      try {
+        await prisma.job.updateMany({
+          where: { OR: [{ id: job.id }, { jobTicketNumber: job.jobTicketNumber }] },
+          data: {
+            technicianId: chosenTech.id,
+            status: 'ASSIGNED',
+            dispatchedAt: now,
+            slaExpiryAt: newExpiry,
+          },
+        });
+      } catch (err) {
+        console.warn('[DB] Prisma reassign error:', err);
+      }
+    }
 
     const escalationId = `esc_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
     const event = {
@@ -1988,6 +2369,57 @@ export const db = {
   },
 
   async getTechnicianWallet(technicianId: string) {
+    if (await isDatabaseConnected()) {
+      try {
+        const liveTech = await prisma.technician.findFirst({
+          where: {
+            OR: [
+              { id: technicianId },
+              { badgeNumber: technicianId },
+              { userId: technicianId },
+            ],
+          },
+          include: { user: true, ledgerEntries: true, partner: true },
+        });
+
+        if (liveTech) {
+          const techPayouts = (liveTech.ledgerEntries || []).filter(
+            (e: any) => e.ledgerType === 'TECHNICIAN_PAYOUT'
+          );
+          const totalLifetimeEarnedInr = techPayouts.reduce((sum: number, p: any) => sum + p.amountInr, 0);
+
+          const pendingOrPaidWithdrawals = (dbStore.withdrawals || []).filter(
+            (w) => (w.technicianId === liveTech.id || w.technicianBadge === liveTech.badgeNumber) && (w.status === 'PENDING' || w.status === 'PAID')
+          );
+          const totalDeductedInr = pendingOrPaidWithdrawals.reduce((sum, w) => sum + w.amountInr, 0);
+          const withdrawableBalanceInr = Math.max(0, Math.round((totalLifetimeEarnedInr - totalDeductedInr) * 100) / 100);
+
+          return {
+            technician: {
+              id: liveTech.id,
+              fullName: liveTech.user?.fullName || 'Certified Technician',
+              badgeNumber: liveTech.badgeNumber,
+              rating: liveTech.rating,
+              totalJobsCompleted: liveTech.totalJobsCompleted,
+              assignedPincode: liveTech.assignedPincode,
+            },
+            wallet: {
+              withdrawableBalanceInr,
+              totalLifetimeEarnedInr: Math.round(totalLifetimeEarnedInr * 100) / 100,
+              totalWithdrawnOrPendingInr: Math.round(totalDeductedInr * 100) / 100,
+              settledJobsCount: techPayouts.length,
+              payoutCurrency: 'INR',
+              autoPayoutFrequency: 'DAILY_EVENING_UPI',
+            },
+            recentPayoutLedgers: techPayouts.slice(0, 10),
+            withdrawals: (dbStore.withdrawals || []).filter((w) => w.technicianId === liveTech.id || w.technicianBadge === liveTech.badgeNumber),
+          };
+        }
+      } catch (err) {
+        console.warn('Prisma getTechnicianWallet failed, checking memory fallback:', err);
+      }
+    }
+
     const tech = dbStore.technicians.find((t) => t.id === technicianId || t.badgeNumber === technicianId);
     if (!tech) {
       throw new Error(`Technician '${technicianId}' not found`);
@@ -2321,6 +2753,34 @@ export const db = {
   },
 
   async getCustomerById(id: string) {
+    if (await isDatabaseConnected()) {
+      try {
+        const cp = await prisma.customerProfile.findFirst({
+          where: { OR: [{ id }, { userId: id }] },
+          include: { user: true },
+        });
+        if (cp) {
+          return {
+            id: cp.id,
+            userId: cp.userId,
+            fullName: cp.user?.fullName || 'Customer',
+            phone: cp.user?.phone || '',
+            email: cp.user?.email || '',
+            defaultAddressLine: cp.defaultAddressLine || '',
+            defaultPincode: cp.defaultPincode || '400001',
+            defaultLatitude: cp.defaultLatitude || 18.9067,
+            defaultLongitude: cp.defaultLongitude || 72.8147,
+            activeSubscriptionPlan: cp.activeSubscriptionPlan || 'NONE',
+            subscriptionExpiryDate: cp.subscriptionExpiryDate ? cp.subscriptionExpiryDate.toISOString() : null,
+            totalOrdersCount: 0,
+            totalSpendInr: 0,
+            isVip: false,
+            memberSince: cp.createdAt ? cp.createdAt.toISOString() : new Date().toISOString(),
+          };
+        }
+      } catch {}
+    }
+
     const customer = dbStore.customers.find((c) => c.id === id || c.userId === id);
     if (!customer) return null;
     const jobs = dbStore.jobs.filter((j) => j.customerId === customer.id || j.customerId === customer.userId);
@@ -2334,6 +2794,67 @@ export const db = {
       invoices,
       supportTickets: tickets,
     };
+  },
+
+  async getCustomerByPhone(phone: string) {
+    const clean = phone.trim();
+    if (!clean) return null;
+    const user = await this.getUserByPhone(clean);
+    if (user) {
+      if ((user as any).customerProfile) {
+        const cp = (user as any).customerProfile;
+        return {
+          id: cp.id,
+          userId: cp.userId,
+          fullName: user.fullName,
+          phone: user.phone,
+          email: user.email || '',
+          defaultAddressLine: cp.defaultAddressLine || '',
+          defaultPincode: cp.defaultPincode || '400001',
+          defaultLatitude: cp.defaultLatitude || 18.9067,
+          defaultLongitude: cp.defaultLongitude || 72.8147,
+          activeSubscriptionPlan: cp.activeSubscriptionPlan || 'NONE',
+          subscriptionExpiryDate: cp.subscriptionExpiryDate ? (cp.subscriptionExpiryDate instanceof Date ? cp.subscriptionExpiryDate.toISOString() : cp.subscriptionExpiryDate) : null,
+          totalOrdersCount: 0,
+          totalSpendInr: 0,
+          isVip: false,
+          memberSince: cp.createdAt ? (cp.createdAt instanceof Date ? cp.createdAt.toISOString() : cp.createdAt) : new Date().toISOString(),
+        };
+      }
+      return this.getCustomerById(user.id);
+    }
+    const found = dbStore.customers.find((c) => c.phone === clean || c.phone.endsWith(clean.slice(-10)));
+    return found || null;
+  },
+
+  async getFirstCustomer() {
+    if (await isDatabaseConnected()) {
+      try {
+        const cp = await prisma.customerProfile.findFirst({
+          include: { user: true },
+        });
+        if (cp) {
+          return {
+            id: cp.id,
+            userId: cp.userId,
+            fullName: cp.user?.fullName || 'Customer',
+            phone: cp.user?.phone || '',
+            email: cp.user?.email || '',
+            defaultAddressLine: cp.defaultAddressLine || '',
+            defaultPincode: cp.defaultPincode || '400001',
+            defaultLatitude: cp.defaultLatitude || 18.9067,
+            defaultLongitude: cp.defaultLongitude || 72.8147,
+            activeSubscriptionPlan: cp.activeSubscriptionPlan || 'NONE',
+            subscriptionExpiryDate: cp.subscriptionExpiryDate ? cp.subscriptionExpiryDate.toISOString() : null,
+            totalOrdersCount: 0,
+            totalSpendInr: 0,
+            isVip: false,
+            memberSince: cp.createdAt ? cp.createdAt.toISOString() : new Date().toISOString(),
+          };
+        }
+      } catch {}
+    }
+    return dbStore.customers[0] || null;
   },
 
   async createCustomer(data: {

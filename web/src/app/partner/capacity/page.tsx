@@ -53,6 +53,7 @@ export default function PartnerCapacityPage() {
   const [editCapacity, setEditCapacity] = useState<number>(8);
   const [editExclusive, setEditExclusive] = useState<boolean>(true);
   const [savingSettings, setSavingSettings] = useState(false);
+  const [stationedTechs, setStationedTechs] = useState<any[]>([]);
 
   // Toast feedback
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -71,6 +72,14 @@ export default function PartnerCapacityPage() {
       if (data.success) {
         setPincodes(data.pincodes || []);
         setSummary(data.summary || null);
+
+        // Fetch live fleet technicians for dynamic stationing roster
+        try {
+          const fleetRes = await fetch(`/api/partner/fleet?partnerId=${encodeURIComponent(activePartner)}`).then((r) => r.json());
+          if (fleetRes?.technicians) {
+            setStationedTechs(fleetRes.technicians);
+          }
+        } catch (_) {}
 
         // Select Colaba 400001 by default if none selected
         if (!selectedPin && data.pincodes && data.pincodes.length > 0) {
@@ -526,53 +535,23 @@ export default function PartnerCapacityPage() {
               </div>
 
               <div className="space-y-2">
-                {selectedPin.pincode === '400001' ? (
-                  <>
-                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+                {stationedTechs && stationedTechs.length > 0 ? (
+                  stationedTechs.slice(0, 4).map((tech) => (
+                    <div key={tech.id} className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white font-bold flex items-center justify-center text-[10px]">
-                          RK
+                        <div className={`w-7 h-7 rounded-lg ${tech.isOnline ? 'bg-emerald-600' : 'bg-slate-400'} text-white font-bold flex items-center justify-center text-[10px]`}>
+                          {tech.fullName ? tech.fullName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : 'TC'}
                         </div>
                         <div>
-                          <div className="font-bold text-slate-900">Rajesh Kumar (TECH-7821)</div>
-                          <div className="text-[10px] text-slate-500">4.9 ★ &bull; High-Voltage Verified</div>
+                          <div className="font-bold text-slate-900">{tech.fullName} ({tech.badgeNumber || 'TECH-ACTIVE'})</div>
+                          <div className="text-[10px] text-slate-500">{tech.rating || 4.9} ★ &bull; {tech.isOnline ? 'Online Shift' : 'Standby / Offline'}</div>
                         </div>
                       </div>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-[#1B5E20] font-bold text-[10px]">
-                        Online Shift 🟢
+                      <span className={`px-2 py-0.5 rounded-full ${tech.isOnline ? 'bg-emerald-100 text-[#1B5E20]' : 'bg-slate-200 text-slate-600'} font-bold text-[10px]`}>
+                        {tech.isOnline ? 'Online Shift 🟢' : 'Off-duty ⚪'}
                       </span>
                     </div>
-
-                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white font-bold flex items-center justify-center text-[10px]">
-                          PJ
-                        </div>
-                        <div>
-                          <div className="font-bold text-slate-900">Pradeep Jadhav (TECH-9104)</div>
-                          <div className="text-[10px] text-slate-500">4.88 ★ &bull; Standby Reserve</div>
-                        </div>
-                      </div>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-[#1B5E20] font-bold text-[10px]">
-                        Online Shift 🟢
-                      </span>
-                    </div>
-
-                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-lg bg-slate-400 text-white font-bold flex items-center justify-center text-[10px]">
-                          AS
-                        </div>
-                        <div>
-                          <div className="font-bold text-slate-900">Anil Shinde (TECH-6619)</div>
-                          <div className="text-[10px] text-slate-500">4.2 ★ &bull; Offline</div>
-                        </div>
-                      </div>
-                      <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 font-bold text-[10px]">
-                        Off-duty ⚪
-                      </span>
-                    </div>
-                  </>
+                  ))
                 ) : (
                   <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600">
                     Technicians are assigned dynamically to this territory based on proximity routing.

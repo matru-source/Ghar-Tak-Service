@@ -8,11 +8,13 @@ import com.ghartak.customer.data.api.ApiClient
 import com.ghartak.customer.data.model.ServiceCatalogRegistry
 import com.ghartak.customer.data.session.SessionManager
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 enum class TechnicianSortOption(val displayName: String, val shortLabel: String) {
     MIN_DISTANCE("Minimum Distance", "Min Distance"),
@@ -288,6 +290,80 @@ class AddressBookingViewModel(
 
     fun onStreetChanged(value: String) {
         _uiState.value = _uiState.value.copy(streetName = value, errorMessage = null)
+    }
+
+    fun onStreetChanged(context: Context, value: String) {
+        _uiState.value = _uiState.value.copy(streetName = value, errorMessage = null)
+        val lower = value.lowercase()
+        val suggestedPin = when {
+            lower.contains("colaba") || lower.contains("radio club") || lower.contains("cuffe parade") -> "400001"
+            lower.contains("bandra") || lower.contains("linking road") -> "400050"
+            lower.contains("andheri") -> "400069"
+            lower.contains("nariman point") || lower.contains("churchgate") -> "400021"
+            lower.contains("dhenkanal") -> "759001"
+            lower.contains("bhubaneswar") || lower.contains("saheed nagar") -> "751007"
+            lower.contains("berhampur") || lower.contains("ganjam") -> "760001"
+            lower.contains("cuttack") -> "753001"
+            else -> null
+        }
+        if (suggestedPin != null && suggestedPin != _uiState.value.pincode) {
+            onPincodeChanged(context, suggestedPin)
+        }
+    }
+
+    fun detectCurrentLocation(context: Context) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isCheckingPincode = true)
+            var lat: Double? = null
+            var lng: Double? = null
+
+            val lm = context.getSystemService(Context.LOCATION_SERVICE) as? android.location.LocationManager
+            if (lm != null) {
+                try {
+                    val fineLoc = lm.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
+                    val netLoc = lm.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER)
+                    val passiveLoc = lm.getLastKnownLocation(android.location.LocationManager.PASSIVE_PROVIDER)
+                    val bestLoc = fineLoc ?: netLoc ?: passiveLoc
+                    if (bestLoc != null) {
+                        lat = bestLoc.latitude
+                        lng = bestLoc.longitude
+                    }
+                } catch (e: SecurityException) {
+                    Log.w("GTS_LOC", "Location permission denied: ${e.message}")
+                }
+            }
+
+            if (lat != null && lng != null) {
+                try {
+                    val geocoder = android.location.Geocoder(context, java.util.Locale.getDefault())
+                    val addresses = withContext(Dispatchers.IO) {
+                        @Suppress("DEPRECATION")
+                        geocoder.getFromLocation(lat, lng, 1)
+                    }
+                    if (!addresses.isNullOrEmpty()) {
+                        val addr = addresses[0]
+                        val resolvedPin = addr.postalCode?.filter { it.isDigit() }?.take(6)
+                        val thoroughfare = addr.thoroughfare ?: addr.subLocality ?: ""
+                        val locality = addr.locality ?: addr.subAdminArea ?: ""
+
+                        if (!resolvedPin.isNullOrBlank()) {
+                            onPincodeChanged(context, resolvedPin)
+                        }
+                        if (thoroughfare.isNotBlank()) {
+                            _uiState.value = _uiState.value.copy(streetName = thoroughfare)
+                        }
+                        if (locality.isNotBlank()) {
+                            _uiState.value = _uiState.value.copy(landmark = "Near $locality")
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.w("GTS_GEOCODE", "Geocoding error: ${e.message}")
+                }
+                loadLiveTechnicians(context, _uiState.value.pincode)
+            } else {
+                _uiState.value = _uiState.value.copy(isCheckingPincode = false)
+            }
+        }
     }
 
     fun onLandmarkChanged(value: String) {

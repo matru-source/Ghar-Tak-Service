@@ -32,10 +32,26 @@ export default function CustomerInvoiceReceiptPage() {
   const [technicianBadge, setTechnicianBadge] = useState<string>('#TECH-VERIFIED');
   const [invoiceNumber, setInvoiceNumber] = useState<string>('#INV-2026-001');
   const [serviceDate, setServiceDate] = useState<string>('Today, 11:45 AM');
+  const [invoiceData, setInvoiceData] = useState({
+    serviceTitle: 'Professional Doorstep Service',
+    baseAmount: 1059.32,
+    cgstAmount: 95.34,
+    sgstAmount: 95.34,
+    totalAmount: 1250.00,
+    paymentMethod: 'UPI',
+    hsnCode: '9987',
+  });
 
   useEffect(() => {
+    let invNum = '';
+    let ticketNum = '';
+
     if (typeof window !== 'undefined') {
       try {
+        const params = new URLSearchParams(window.location.search);
+        invNum = params.get('invoiceNumber') || params.get('invoice') || '';
+        ticketNum = params.get('ticket') || params.get('jobId') || '';
+
         const storedUser = localStorage.getItem('gts_customer_name') || localStorage.getItem('key_user_name');
         const storedAddr = localStorage.getItem('gts_customer_address') || localStorage.getItem('key_user_address');
         const storedTech = localStorage.getItem('gts_active_tech_name') || localStorage.getItem('key_active_job_tech_name');
@@ -53,6 +69,59 @@ export default function CustomerInvoiceReceiptPage() {
         setServiceDate(`Today, ${timeStr}`);
       } catch {}
     }
+
+    const fetchLiveInvoice = async () => {
+      try {
+        if (invNum) {
+          const res = await fetch(`/api/partner/invoices?invoiceNumber=${encodeURIComponent(invNum.replace(/^#/, ''))}`);
+          const data = await res.json();
+          if (data.success && data.invoice) {
+            const inv = data.invoice;
+            setInvoiceNumber(inv.invoiceNumber.startsWith('#') ? inv.invoiceNumber : `#${inv.invoiceNumber}`);
+            if (inv.customer?.fullName) setCustomerName(inv.customer.fullName);
+            if (inv.job?.customerAddressText) setCustomerAddress(inv.job.customerAddressText);
+            if (inv.job?.technicianName) setTechnicianName(inv.job.technicianName);
+            if (inv.technician?.badgeNumber) setTechnicianBadge(`#${inv.technician.badgeNumber.replace(/^#/, '')}`);
+            setInvoiceData({
+              serviceTitle: inv.job?.serviceTitle || 'Professional Doorstep Service',
+              baseAmount: inv.baseAmount,
+              cgstAmount: inv.cgstAmount,
+              sgstAmount: inv.sgstAmount,
+              totalAmount: inv.totalAmount,
+              paymentMethod: inv.paymentMethod || 'UPI',
+              hsnCode: '9987',
+            });
+            return;
+          }
+        }
+
+        // Fallback or ticket query
+        const query = ticketNum || invNum || 'INV-2026-001';
+        const res = await fetch(`/api/partner/invoices?search=${encodeURIComponent(query.replace(/^#/, ''))}`);
+        const data = await res.json();
+        if (data.success && data.invoices && data.invoices.length > 0) {
+          const inv = data.invoices[0];
+          setInvoiceNumber(inv.invoiceNumber.startsWith('#') ? inv.invoiceNumber : `#${inv.invoiceNumber}`);
+          if (inv.customer?.fullName) setCustomerName(inv.customer.fullName);
+          if (inv.job?.customerAddressText) setCustomerAddress(inv.job.customerAddressText);
+          if (inv.job?.technicianName) setTechnicianName(inv.job.technicianName);
+          if (inv.technician?.badgeNumber) setTechnicianBadge(`#${inv.technician.badgeNumber.replace(/^#/, '')}`);
+          setInvoiceData({
+            serviceTitle: inv.job?.serviceTitle || 'Professional Doorstep Service',
+            baseAmount: inv.baseAmount,
+            cgstAmount: inv.cgstAmount,
+            sgstAmount: inv.sgstAmount,
+            totalAmount: inv.totalAmount,
+            paymentMethod: inv.paymentMethod || 'UPI',
+            hsnCode: '9987',
+          });
+        }
+      } catch (err) {
+        console.warn('Failed to fetch live invoice:', err);
+      }
+    };
+
+    fetchLiveInvoice();
   }, []);
 
   const labels = ['Poor', 'Fair', 'Good', 'Very Good', 'Exceptional!'];
@@ -187,29 +256,29 @@ export default function CustomerInvoiceReceiptPage() {
           <div className="space-y-2 pt-3 text-xs">
             <div className="flex items-center justify-between">
               <div>
-                <span className="font-bold text-slate-900 block">Ceiling Fan Installation & Wiring</span>
+                <span className="font-bold text-slate-900 block">{invoiceData.serviceTitle}</span>
                 <span className="text-[10px] text-slate-500">Standard Labor (1 Unit)</span>
               </div>
-              <span className="font-mono font-bold text-slate-900">₹1,059.32</span>
+              <span className="font-mono font-bold text-slate-900">₹{invoiceData.baseAmount.toFixed(2)}</span>
             </div>
 
             <div className="flex items-center justify-between">
               <div>
-                <span className="font-bold text-slate-900 block">Replacement Capacitor Part</span>
-                <span className="text-[10px] text-slate-500">Havells 2.50 MFD Certified Part</span>
+                <span className="font-bold text-slate-900 block">Warranty & Safety Inspection Protocol</span>
+                <span className="text-[10px] text-slate-500">1000V Insulated Safety Standard</span>
               </div>
-              <span className="font-mono font-bold text-slate-900">₹0.00 (Covered)</span>
+              <span className="font-mono font-bold text-slate-900">₹0.00 (Included)</span>
             </div>
 
             {/* GST Box */}
             <div className="bg-slate-50 rounded-xl p-2.5 my-1.5 space-y-1 text-slate-600 border border-slate-100">
               <div className="flex items-center justify-between text-[11px]">
                 <span>Central GST (CGST 9%):</span>
-                <span className="font-mono font-bold text-slate-900">₹95.34</span>
+                <span className="font-mono font-bold text-slate-900">₹{invoiceData.cgstAmount.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between text-[11px]">
                 <span>State GST (SGST 9%):</span>
-                <span className="font-mono font-bold text-slate-900">₹95.34</span>
+                <span className="font-mono font-bold text-slate-900">₹{invoiceData.sgstAmount.toFixed(2)}</span>
               </div>
             </div>
 
@@ -221,7 +290,7 @@ export default function CustomerInvoiceReceiptPage() {
                 </span>
                 <span className="text-[10px] text-slate-500">Inclusive of statutory 18% GST</span>
               </div>
-              <span className="font-mono font-black text-lg text-blue-700">₹1,250.00</span>
+              <span className="font-mono font-black text-lg text-blue-700">₹{invoiceData.totalAmount.toFixed(2)}</span>
             </div>
 
             {/* Payment Transaction Details */}
@@ -296,7 +365,7 @@ export default function CustomerInvoiceReceiptPage() {
             <Star className="w-5 h-5 fill-current" />
           </div>
           <h3 className="font-bold text-xs text-slate-900">Rate Your Service Experience</h3>
-          <p className="text-[11px] text-slate-500 mt-0.5">How was Rajesh Kumar's service today?</p>
+          <p className="text-[11px] text-slate-500 mt-0.5">How was {technicianName || 'your technician'}&apos;s service today?</p>
 
           <div className="flex items-center justify-center gap-2 my-2.5">
             {[1, 2, 3, 4, 5].map((star) => (

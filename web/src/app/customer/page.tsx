@@ -119,11 +119,11 @@ interface ServiceItem {
 
 export default function CustomerDashboardPage() {
   const [session, setSession] = useState<CustomerSession>({
-    id: 'cust_amit_01',
-    fullName: 'Amit Sharma',
-    phone: '+919876543213',
-    email: 'amit.sharma@gmail.com',
-    defaultAddressLine: 'Flat 402, Sea Green Apartments, Colaba, Mumbai',
+    id: '',
+    fullName: 'Customer',
+    phone: '',
+    email: '',
+    defaultAddressLine: 'Colaba, Mumbai',
     defaultPincode: '400001',
     activeSubscriptionPlan: 'ZEX_SHIELD_1MO',
   });
@@ -164,8 +164,20 @@ export default function CustomerDashboardPage() {
       try {
         setLoading(true);
 
+        // Read customer ID from session or query dynamically
+        let activeCustId = session.id;
+        if (typeof window !== 'undefined') {
+          const local = localStorage.getItem('electriCare_customer_session') || localStorage.getItem('gts_customer_session');
+          if (local) {
+            try {
+              const parsed = JSON.parse(local);
+              if (parsed.id) activeCustId = parsed.id;
+            } catch (_) {}
+          }
+        }
+
         // Fetch customer profile & active job
-        const profileRes = await fetch('/api/customer/profile?customerId=cust_amit_01');
+        const profileRes = await fetch(`/api/customer/profile${activeCustId ? `?customerId=${encodeURIComponent(activeCustId)}` : ''}`);
         const profileData = await profileRes.json();
         if (profileData.success && profileData.data?.activeJob) {
           setActiveJob(profileData.data.activeJob);
@@ -249,10 +261,10 @@ export default function CustomerDashboardPage() {
         routeOrigin: 'Colaba Rapid Standby Hub',
         routeDestination: session.defaultAddressLine,
         technician: {
-          fullName: newJob.technicianName || 'Rajesh Kumar (Lead Tech)',
-          rating: 4.8,
+          fullName: newJob.technicianName || 'Assigned Lead Technician',
+          rating: 4.9,
           phone: '+919876543212',
-          badgeNumber: 'TECH-4819',
+          badgeNumber: 'TECH-DISPATCHED',
         },
       });
 
@@ -320,9 +332,9 @@ export default function CustomerDashboardPage() {
             <Link
               href="/customer/login"
               className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-xs hover:ring-2 hover:ring-blue-300 transition-all"
-              title="Amit Sharma - Switch Account / Login"
+              title={`${session.fullName || 'User'} - Switch Account / Login`}
             >
-              <span>AS</span>
+              <span>{(session.fullName || 'CU').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}</span>
             </Link>
           </div>
         </div>
@@ -418,7 +430,7 @@ export default function CustomerDashboardPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <p className="font-bold text-sm text-slate-900 truncate">
-                    {activeJob.technician?.fullName || 'Rajesh Kumar'}
+                    {activeJob.technician?.fullName || 'Assigned Technician'}
                   </p>
                   <div className="flex items-center gap-0.5 text-slate-900">
                     <Star className="w-3.5 h-3.5 text-amber-500 fill-current" />
@@ -869,7 +881,9 @@ export default function CustomerDashboardPage() {
               <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-xs">
                 <div className="font-bold text-blue-900">Technician En Route</div>
                 <p className="text-slate-600 mt-0.5">
-                  Rajesh Kumar is arriving in approx. 12 mins for Job #J-1001. Keep Handover OTP ready.
+                  {activeJob?.technician?.fullName
+                    ? `${activeJob.technician.fullName} is arriving in approx. 12 mins for Job #${activeJob.jobTicketNumber}. Keep Handover OTP ready.`
+                    : 'Your assigned technician is arriving shortly. Keep Handover OTP ready.'}
                 </p>
                 <span className="text-[10px] text-blue-700 font-mono mt-1 block">5 mins ago</span>
               </div>

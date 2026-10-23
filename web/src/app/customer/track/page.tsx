@@ -47,22 +47,22 @@ interface ActiveJobTrack {
 
 export default function CustomerLiveTrackingPage() {
   const [job, setJob] = useState<ActiveJobTrack>({
-    id: 'job_1001',
-    jobTicketNumber: 'J-1001',
-    serviceTitle: 'Ceiling Fan Installation & Wiring Check',
+    id: 'job_active',
+    jobTicketNumber: 'J-TRACKING',
+    serviceTitle: 'Doorstep Service Diagnostic',
     status: 'EN_ROUTE',
     priority: 'STANDARD',
-    handoverOtp: '4829',
+    handoverOtp: '----',
     totalAmountInr: 1250.0,
-    customerAddressText: 'Flat 402, Sea View Apartments, Colaba, Mumbai 400001',
+    customerAddressText: 'Detecting verified doorstep address...',
     pincode: '400001',
     technician: {
-      fullName: 'Rajesh Kumar',
+      fullName: 'Field Specialist',
       phone: '+919876543212',
-      badgeNumber: 'TECH-4819',
-      rating: 4.8,
-      experienceYears: 7,
-      completedJobsCount: 340,
+      badgeNumber: 'TECH-DISPATCHED',
+      rating: 4.9,
+      experienceYears: 6,
+      completedJobsCount: 180,
     },
   });
 
@@ -99,11 +99,55 @@ export default function CustomerLiveTrackingPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch real active job if available
+  // Fetch real active job and live telemetry
   useEffect(() => {
     const fetchActiveJob = async () => {
       try {
-        const res = await fetch('/api/customer/profile?customerId=cust_amit_01');
+        let ticketOrId = '';
+        let customerId = '';
+
+        if (typeof window !== 'undefined') {
+          const params = new URLSearchParams(window.location.search);
+          ticketOrId = params.get('ticket') || params.get('id') || params.get('jobId') || '';
+          const savedSession = localStorage.getItem('electriCare_customer_session') || localStorage.getItem('gts_customer_session');
+          if (savedSession) {
+            try {
+              const parsed = JSON.parse(savedSession);
+              if (parsed.id) customerId = parsed.id;
+            } catch (_) {}
+          }
+        }
+
+        if (ticketOrId) {
+          const telemRes = await fetch(`/api/technicians/telemetry?jobId=${encodeURIComponent(ticketOrId)}`);
+          const telemData = await telemRes.json();
+          if (telemData.success && telemData.data) {
+            const d = telemData.data;
+            setJob((prev) => ({
+              ...prev,
+              id: d.jobId || prev.id,
+              jobTicketNumber: d.jobTicketNumber || prev.jobTicketNumber,
+              serviceTitle: d.serviceTitle || prev.serviceTitle,
+              status: d.status || prev.status,
+              handoverOtp: d.handoverOtp || prev.handoverOtp,
+              totalAmountInr: d.totalAmountInr || prev.totalAmountInr,
+              customerAddressText: d.destination?.address || prev.customerAddressText,
+              technician: {
+                ...prev.technician,
+                fullName: d.technician?.fullName || prev.technician.fullName,
+                phone: d.technician?.phone || prev.technician.phone,
+                badgeNumber: d.technician?.badgeNumber || prev.technician.badgeNumber,
+                rating: d.technician?.rating || prev.technician.rating,
+              },
+            }));
+            if (typeof d.technician?.etaMinutes === 'number') setEtaMinutes(d.technician.etaMinutes);
+            if (d.technician?.distanceKm !== undefined) setDistanceKm(String(d.technician.distanceKm));
+            return;
+          }
+        }
+
+        // Fallback to customer profile active job
+        const res = await fetch(`/api/customer/profile?customerId=${encodeURIComponent(customerId)}`);
         const data = await res.json();
         if (data.success && data.data?.activeJob) {
           const apiJob = data.data.activeJob;
@@ -112,6 +156,7 @@ export default function CustomerLiveTrackingPage() {
             id: apiJob.id || prev.id,
             jobTicketNumber: apiJob.jobTicketNumber || prev.jobTicketNumber,
             serviceTitle: apiJob.serviceTitle || prev.serviceTitle,
+            status: apiJob.status || prev.status,
             handoverOtp: apiJob.handoverOtp || prev.handoverOtp,
             totalAmountInr: apiJob.totalAmountInr || prev.totalAmountInr,
             customerAddressText: apiJob.customerAddressText || prev.customerAddressText,
@@ -128,7 +173,10 @@ export default function CustomerLiveTrackingPage() {
         console.error('Failed to load tracking job', err);
       }
     };
+
     fetchActiveJob();
+    const interval = setInterval(fetchActiveJob, 8000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleConfirmCancel = () => {
@@ -227,7 +275,7 @@ export default function CustomerLiveTrackingPage() {
           >
             <div className="px-2.5 py-1 rounded-full bg-blue-600 text-white shadow-md flex items-center gap-1.5 text-[10px] font-bold mb-1 whitespace-nowrap">
               <Navigation className="w-3 h-3 fill-current" />
-              <span>Rajesh • {etaMinutes} mins away</span>
+              <span>{job.technician?.fullName ? job.technician.fullName.split(' ')[0] : 'Technician'} • {etaMinutes} mins away</span>
             </div>
             <div className="relative flex items-center justify-center">
               <span className="absolute w-10 h-10 rounded-full bg-blue-500/25 animate-pulse"></span>
