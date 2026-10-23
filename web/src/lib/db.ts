@@ -22,7 +22,7 @@ export async function isDatabaseConnected(): Promise<boolean> {
   lastDbCheck = now;
   try {
     const probe = prisma.$queryRaw`SELECT 1`;
-    const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000));
+    const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 12000));
     await Promise.race([probe, timeout]);
     cachedDbConnected = true;
     return true;
@@ -351,32 +351,33 @@ export const db = {
           include: { user: true, partner: true },
           orderBy: { rating: 'desc' },
         });
-        if (liveTechs && liveTechs.length > 0) {
-          results = liveTechs.map((t) => ({
-            id: t.id,
-            userId: t.userId,
-            partnerId: t.partnerId,
-            badgeNumber: t.badgeNumber,
-            fullName: t.user?.fullName || (t as any).fullName || 'Technician',
-            phone: t.user?.phone || (t as any).phone || '',
-            rating: t.rating,
-            totalJobsCompleted: t.totalJobsCompleted,
-            isOnline: t.isOnline,
-            currentLatitude: t.currentLatitude,
-            currentLongitude: t.currentLongitude,
-            assignedPincode: t.assignedPincode,
-            kycStatus: t.kycStatus,
-            email: t.user?.email || (t as any).email || '',
-            trade: (t as any).trade || 'Certified Professional',
-          }));
-        }
-      } catch {
-        // Fallback to memory
+        return liveTechs.map((t) => ({
+          id: t.id,
+          userId: t.userId,
+          partnerId: t.partnerId,
+          badgeNumber: t.badgeNumber,
+          fullName: t.user?.fullName || (t as any).fullName || 'Technician',
+          phone: t.user?.phone || (t as any).phone || '',
+          rating: t.rating,
+          totalJobsCompleted: t.totalJobsCompleted,
+          isOnline: t.isOnline,
+          currentLatitude: t.currentLatitude ?? 18.922,
+          currentLongitude: t.currentLongitude ?? 72.8347,
+          assignedPincode: t.assignedPincode,
+          kycStatus: t.kycStatus as 'VERIFIED' | 'PENDING_REVIEW' | 'REJECTED',
+          email: t.user?.email || (t as any).email || '',
+          trade: (t as any).trade || 'Certified Professional',
+          electricalLicenseNumber: t.electricalLicenseNumber || undefined,
+          insulatedGlovesVerified: t.insulatedGlovesVerified ?? false,
+          safetyKitSerial: t.safetyKitSerial || undefined,
+        }));
+      } catch (err) {
+        console.error('Failed to query live prisma technicians:', err);
       }
     }
 
-    // Merge in-memory registered technicians (e.g. newly signed up technicians in session)
-    const memoryTechs = dbStore.technicians.filter((t) => {
+    // Fallback: only used if database is offline
+    return dbStore.technicians.filter((t) => {
       if (filter?.partnerId && t.partnerId !== filter.partnerId) return false;
       if (filter?.pincode && t.assignedPincode !== filter.pincode) return false;
       if (filter?.isOnline !== undefined && t.isOnline !== filter.isOnline) return false;
@@ -391,14 +392,6 @@ export const db = {
       }
       return true;
     });
-
-    for (const mt of memoryTechs) {
-      if (!results.some((r) => r.id === mt.id || r.phone === mt.phone || r.badgeNumber === mt.badgeNumber)) {
-        results.unshift(mt);
-      }
-    }
-
-    return results;
   },
 
   async getTechnicianById(id: string) {
@@ -3397,7 +3390,7 @@ export const db = {
         // Live fallback: derive invoices for any completed jobs stored in PostgreSQL
         const completedJobs = await prisma.job.findMany({
           where: {
-            status: { in: ['WORK_COMPLETED', 'SETTLED', 'COMPLETED'] as any },
+            status: { in: ['WORK_COMPLETED', 'SETTLED'] },
             ...(filter?.partnerId && filter.partnerId !== 'ALL'
               ? { partnerId: { in: [filter.partnerId, await resolvePartnerId(filter.partnerId)] } }
               : {}),
@@ -3454,11 +3447,13 @@ export const db = {
             };
           });
         }
+        return [];
       } catch (err) {
         console.error('Failed to query live prisma invoices:', err);
       }
     }
 
+    // Fallback: only used if database is offline
     let list = dbStore.invoices.map((inv) => {
       const job = dbStore.jobs.find((j) => j.id === inv.jobId || j.jobTicketNumber === inv.jobId);
       const customer = dbStore.customers.find((c) => c.id === inv.customerId || c.userId === inv.customerId);

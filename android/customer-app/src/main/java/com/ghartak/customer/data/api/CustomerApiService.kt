@@ -4,6 +4,7 @@ import com.ghartak.customer.data.model.*
 import retrofit2.Response
 import retrofit2.http.*
 
+@JvmSuppressWildcards
 interface CustomerApiService {
 
     // Auth & OTP

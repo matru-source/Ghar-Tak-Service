@@ -1,28 +1,26 @@
 'use client';
 
-import React, { useState, useEffect, use } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import {
   Zap,
-  CheckCircle2,
+  User,
+  Phone,
+  MapPin,
   Clock,
+  Wrench,
   ShieldCheck,
   AlertTriangle,
-  RefreshCw,
-  Wrench,
-  User,
-  MapPin,
-  Phone,
-  Check,
-  ChevronRight,
+  CheckCircle2,
   TrendingUp,
+  RefreshCw,
+  ExternalLink,
 } from '@/components/ui/icons';
 
-interface JobDetail {
+interface JobOrder {
   id: string;
   jobTicketNumber: string;
-  customerId: string;
   customerName: string;
   customerPhone: string;
   technicianId?: string;
@@ -39,33 +37,29 @@ interface JobDetail {
   safetyGlovesConfirmed: boolean;
   safetyMcbSwitchConfirmed: boolean;
   customerProfile?: {
+    id: string;
     fullName: string;
     phone: string;
-    email: string;
-    activeSubscriptionPlan: string;
-    totalOrdersCount: number;
-    totalSpendInr: number;
+    activeSubscriptionPlan?: string;
+    totalOrdersCount?: number;
+    totalSpendInr?: number;
   };
   technicianProfile?: {
-    fullName: string;
+    id: string;
     badgeNumber: string;
+    fullName: string;
     rating: number;
-    safetyKitSerial: string;
-    insulatedGlovesVerified: boolean;
-    totalJobsCompleted: number;
+    safetyKitSerial?: string;
+    totalJobsCompleted?: number;
   };
   invoice?: {
+    id: string;
     invoiceNumber: string;
-    baseAmount: number;
-    cgstAmount: number;
-    sgstAmount: number;
-    totalAmount: number;
+    baseAmountInr: number;
+    cgstInr: number;
+    sgstInr: number;
+    totalAmountInr: number;
     paymentStatus: string;
-  };
-  slaTelemetry?: {
-    remainingMinutes: number;
-    isBreached: boolean;
-    status: string;
   };
 }
 
@@ -73,7 +67,7 @@ function PartnerJobDetailsContent() {
   const searchParams = useSearchParams();
   const ticketParam = searchParams.get('ticket') || 'J-1001';
 
-  const [job, setJob] = useState<JobDetail | null>(null);
+  const [job, setJob] = useState<JobOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [otpInput, setOtpInput] = useState('');
   const [isSubmittingOtp, setIsSubmittingOtp] = useState(false);
@@ -83,16 +77,16 @@ function PartnerJobDetailsContent() {
   const fetchJob = async () => {
     try {
       setLoading(true);
-      setErrorMessage('');
-      const res = await fetch(`/api/partner/jobs/${ticketParam}`);
+      const res = await fetch(`/api/partner/jobs/${encodeURIComponent(ticketParam)}`);
       const data = await res.json();
       if (data.success && data.job) {
         setJob(data.job);
       } else {
-        setErrorMessage(data.error || 'Failed to load work order');
+        setErrorMessage('Failed to load job order details.');
       }
     } catch (err: any) {
-      setErrorMessage(err.message || 'Error fetching job');
+      console.error('Error fetching job details:', err);
+      setErrorMessage(err.message || 'Error loading job details');
     } finally {
       setLoading(false);
     }
@@ -104,30 +98,41 @@ function PartnerJobDetailsContent() {
 
   const handleToggleSafety = async (field: 'gloves' | 'mcb') => {
     if (!job) return;
-    try {
-      const payload: any = {};
-      if (field === 'gloves') payload.safetyGlovesConfirmed = !job.safetyGlovesConfirmed;
-      if (field === 'mcb') payload.safetyMcbSwitchConfirmed = !job.safetyMcbSwitchConfirmed;
 
+    const newGloves = field === 'gloves' ? !job.safetyGlovesConfirmed : job.safetyGlovesConfirmed;
+    const newMcb = field === 'mcb' ? !job.safetyMcbSwitchConfirmed : job.safetyMcbSwitchConfirmed;
+
+    try {
       const res = await fetch(`/api/partner/jobs/${job.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          safetyGlovesConfirmed: newGloves,
+          safetyMcbSwitchConfirmed: newMcb,
+        }),
       });
       const data = await res.json();
       if (data.success) {
-        setActionSuccessMsg(`Safety checklist updated and sealed in WORM audit trail!`);
-        await fetchJob();
-        setTimeout(() => setActionSuccessMsg(''), 4000);
+        setJob((prev) =>
+          prev
+            ? {
+                ...prev,
+                safetyGlovesConfirmed: newGloves,
+                safetyMcbSwitchConfirmed: newMcb,
+              }
+            : null
+        );
+        setActionSuccessMsg(`Safety interlock checklist updated`);
+        setTimeout(() => setActionSuccessMsg(''), 3000);
       }
     } catch (err) {
-      console.error('Error toggling safety:', err);
+      console.error('Error updating safety compliance:', err);
     }
   };
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!job || !otpInput.trim()) return;
+    if (!job || !otpInput) return;
 
     try {
       setIsSubmittingOtp(true);
@@ -136,12 +141,13 @@ function PartnerJobDetailsContent() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          handoverOtpInput: otpInput.trim(),
+          action: 'VERIFY_HANDOVER_OTP',
+          otp: otpInput.trim(),
         }),
       });
       const data = await res.json();
       if (data.success) {
-        setActionSuccessMsg(`Work-Order ${job.jobTicketNumber} completed! 4-digit OTP verified & escrow funds released.`);
+        setActionSuccessMsg('4-Digit Handover OTP Verified! Work-Order marked COMPLETED.');
         setOtpInput('');
         await fetchJob();
         setTimeout(() => setActionSuccessMsg(''), 5000);
@@ -160,45 +166,45 @@ function PartnerJobDetailsContent() {
 
   return (
     <div className="space-y-6">
-      {/* Top Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+      {/* Top Banner — Clean White Card */}
+      <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-400">
-            <Zap className="h-4 w-4" />
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">
+            <Zap className="h-4 w-4 text-[#1B5E20]" />
             <span>PTNR-SCR-03 &bull; Work-Order Lifecycle Execution Console</span>
           </div>
           <div className="flex items-center gap-3 mt-1">
-            <h1 className="text-2xl font-bold text-slate-100">
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">
               Work-Order #{job?.jobTicketNumber || ticketParam}
             </h1>
             <span
               className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                 isCompleted
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                  : 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
+                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                  : 'bg-sky-100 text-sky-800 border border-sky-300'
               }`}
             >
               {job?.status.replace('_', ' ') || 'LOADING'}
             </span>
-            <span className="rounded bg-slate-800 px-2 py-0.5 text-xs font-mono text-slate-300">
+            <span className="rounded-lg bg-slate-100 px-2 py-0.5 text-xs font-mono font-bold text-slate-700 border border-slate-200">
               PIN: {job?.pincode || '400001'}
             </span>
           </div>
-          <p className="text-sm text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 mt-1 max-w-2xl">
             Full work-order lifecycle, customer address, materials billing, milestones &amp; 4-digit handover OTP.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           <Link
             href="/partner/dispatch"
-            className="rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white transition-colors"
+            className="rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 px-4 py-2.5 text-xs font-bold text-slate-700 transition shadow-2xs"
           >
             &larr; Back to Queue
           </Link>
           <button
             onClick={fetchJob}
-            className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-2 text-xs font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+            className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 px-4 py-2.5 text-xs font-bold text-slate-700 transition shadow-2xs cursor-pointer"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
             Sync Lifecycle
@@ -207,98 +213,100 @@ function PartnerJobDetailsContent() {
       </div>
 
       {actionSuccessMsg && (
-        <div className="flex items-center gap-3 rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-3.5 text-xs text-emerald-300">
-          <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+        <div className="flex items-center gap-3 rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-xs font-bold text-emerald-800 shadow-xs">
+          <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
           <span>{actionSuccessMsg}</span>
         </div>
       )}
 
       {errorMessage && (
-        <div className="flex items-center gap-3 rounded-lg border border-rose-500/40 bg-rose-500/10 p-3.5 text-xs text-rose-300">
-          <AlertTriangle className="h-4 w-4 text-rose-400 shrink-0" />
+        <div className="flex items-center gap-3 rounded-xl border border-rose-300 bg-rose-50 p-4 text-xs font-bold text-rose-800 shadow-xs">
+          <AlertTriangle className="h-4 w-4 text-rose-500 shrink-0" />
           <span>{errorMessage}</span>
         </div>
       )}
 
-      {/* Lifecycle Milestones Stepper (PTNR-SCR-03) */}
-      <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-5 space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+      {/* Lifecycle Milestones Stepper (PTNR-SCR-03) — Clean White Card */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div>
-            <h2 className="text-sm font-bold text-slate-100 uppercase tracking-wider">
+            <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider">
               Work-Order Lifecycle Progression
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-500 mt-0.5">
               Finite State Machine transitions with mandatory safety interlocks
             </p>
           </div>
           <div className="text-right text-xs">
-            <span className="text-slate-400">Target ETA: </span>
-            <span className="font-bold text-emerald-400">12 min &bull; Colaba Sector</span>
+            <span className="text-slate-400 font-semibold">Target ETA: </span>
+            <span className="font-black text-emerald-700">12 min &bull; Colaba Sector</span>
           </div>
         </div>
 
         {/* 7-Stage Horizontal Stepper */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-center text-xs">
-          <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-2.5 text-emerald-300">
-            <div className="text-[10px] uppercase font-bold text-emerald-400">Stage 1</div>
+          <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-emerald-800">
+            <div className="text-[10px] uppercase font-black text-emerald-700">Stage 1</div>
             <div className="font-bold mt-0.5">Booked</div>
-            <div className="text-[9px] text-slate-400 font-mono mt-1">11:30 AM</div>
+            <div className="text-[9px] text-slate-500 font-mono mt-1">11:30 AM</div>
           </div>
 
-          <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-2.5 text-emerald-300">
-            <div className="text-[10px] uppercase font-bold text-emerald-400">Stage 2</div>
+          <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-emerald-800">
+            <div className="text-[10px] uppercase font-black text-emerald-700">Stage 2</div>
             <div className="font-bold mt-0.5">Dispatched</div>
-            <div className="text-[9px] text-slate-400 font-mono mt-1">{job?.technicianName || job?.technicianProfile?.fullName || 'Assigned Technician'}</div>
+            <div className="text-[9px] text-slate-500 font-mono mt-1 truncate">
+              {job?.technicianName || job?.technicianProfile?.fullName || 'Assigned Tech'}
+            </div>
           </div>
 
-          <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-2.5 text-emerald-300">
-            <div className="text-[10px] uppercase font-bold text-emerald-400">Stage 3</div>
+          <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-emerald-800">
+            <div className="text-[10px] uppercase font-black text-emerald-700">Stage 3</div>
             <div className="font-bold mt-0.5">En Route</div>
-            <div className="text-[9px] text-slate-400 font-mono mt-1">11:45 AM</div>
+            <div className="text-[9px] text-slate-500 font-mono mt-1">11:45 AM</div>
           </div>
 
-          <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-2.5 text-emerald-300">
-            <div className="text-[10px] uppercase font-bold text-emerald-400">Stage 4</div>
+          <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-emerald-800">
+            <div className="text-[10px] uppercase font-black text-emerald-700">Stage 4</div>
             <div className="font-bold mt-0.5">Arrived</div>
-            <div className="text-[9px] text-slate-400 font-mono mt-1">11:58 AM</div>
+            <div className="text-[9px] text-slate-500 font-mono mt-1">11:58 AM</div>
           </div>
 
           <div
-            className={`rounded-lg p-2.5 border ${
+            className={`rounded-xl p-3 border ${
               job?.safetyGlovesConfirmed && job?.safetyMcbSwitchConfirmed
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                : 'bg-amber-50 border-amber-200 text-amber-800'
             }`}
           >
-            <div className="text-[10px] uppercase font-bold">Stage 5</div>
+            <div className="text-[10px] uppercase font-black">Stage 5</div>
             <div className="font-bold mt-0.5">Safety Check</div>
-            <div className="text-[9px] mt-1">
+            <div className="text-[9px] mt-1 font-semibold">
               {job?.safetyGlovesConfirmed ? '1000V Gloves OK' : 'Pending Gloves'}
             </div>
           </div>
 
           <div
-            className={`rounded-lg p-2.5 border ${
+            className={`rounded-xl p-3 border ${
               isInProgress || isCompleted
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                : 'bg-slate-800/60 border-slate-700 text-slate-400'
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                : 'bg-slate-50 border-slate-200 text-slate-500'
             }`}
           >
-            <div className="text-[10px] uppercase font-bold">Stage 6</div>
+            <div className="text-[10px] uppercase font-black">Stage 6</div>
             <div className="font-bold mt-0.5">In Progress</div>
-            <div className="text-[9px] mt-1">Bearing Repair</div>
+            <div className="text-[9px] mt-1 font-semibold">Bearing Repair</div>
           </div>
 
           <div
-            className={`rounded-lg p-2.5 border ${
+            className={`rounded-xl p-3 border ${
               isCompleted
-                ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 font-bold'
-                : 'bg-slate-800/60 border-slate-700 text-slate-400'
+                ? 'bg-emerald-100 border-emerald-300 text-emerald-900 font-bold'
+                : 'bg-slate-50 border-slate-200 text-slate-500'
             }`}
           >
-            <div className="text-[10px] uppercase font-bold">Stage 7</div>
+            <div className="text-[10px] uppercase font-black">Stage 7</div>
             <div className="font-bold mt-0.5">Handover OTP</div>
-            <div className="text-[9px] mt-1 font-mono">
+            <div className="text-[9px] mt-1 font-mono font-bold">
               {isCompleted ? 'Verified (4829)' : 'Awaiting OTP'}
             </div>
           </div>
@@ -309,69 +317,69 @@ function PartnerJobDetailsContent() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Customer, Tech, Safety Checklist */}
         <div className="lg:col-span-2 space-y-5">
-          {/* Service & Customer Dossier */}
-          <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-                <User className="h-4 w-4 text-sky-400" />
+          {/* Service & Customer Dossier — Clean White Card */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                <User className="h-4 w-4 text-sky-600" />
                 <span>Customer &amp; Location Dossier</span>
               </h3>
-              <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-500/30">
+              <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
                 Plan: {job?.customerProfile?.activeSubscriptionPlan || 'ZEX_SHIELD_1MO'}
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div>
-                <div className="text-[11px] text-slate-400 uppercase font-semibold">Service Requirement</div>
-                <div className="font-bold text-slate-100 text-sm mt-0.5">{job?.serviceTitle}</div>
-                <div className="flex items-center gap-1.5 text-slate-300 mt-2">
-                  <MapPin className="h-4 w-4 text-emerald-400 shrink-0" />
+                <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Service Requirement</div>
+                <div className="font-black text-slate-900 text-sm mt-0.5">{job?.serviceTitle}</div>
+                <div className="flex items-center gap-1.5 text-slate-600 mt-2">
+                  <MapPin className="h-4 w-4 text-emerald-600 shrink-0" />
                   <span>{job?.customerAddressText}</span>
                 </div>
               </div>
 
               <div>
-                <div className="text-[11px] text-slate-400 uppercase font-semibold">Customer Details</div>
-                <div className="font-bold text-slate-100 text-sm mt-0.5">{job?.customerName}</div>
-                <div className="flex items-center gap-2 text-slate-300 mt-2 font-mono">
-                  <Phone className="h-3.5 w-3.5 text-sky-400 shrink-0" />
+                <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Customer Details</div>
+                <div className="font-black text-slate-900 text-sm mt-0.5">{job?.customerName}</div>
+                <div className="flex items-center gap-2 text-slate-600 mt-2 font-mono">
+                  <Phone className="h-3.5 w-3.5 text-sky-600 shrink-0" />
                   <span>{job?.customerPhone}</span>
                   <a
                     href={`tel:${job?.customerPhone}`}
-                    className="ml-2 rounded bg-slate-800 px-2 py-0.5 text-[10px] text-emerald-400 hover:bg-slate-700 font-sans"
+                    className="ml-2 rounded-lg bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] text-[#1B5E20] font-bold hover:bg-emerald-100 font-sans"
                   >
                     Direct Call
                   </a>
                 </div>
-                <div className="text-[11px] text-slate-400 mt-1">
+                <div className="text-[11px] text-slate-500 mt-1">
                   Lifetime Orders: <strong>{job?.customerProfile?.totalOrdersCount || 4}</strong> &bull; Total Spend: ₹{(job?.customerProfile?.totalSpendInr || 4850).toLocaleString('en-IN')}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Assigned Fleet Electrician & Safety Checklist */}
-          <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-                <Wrench className="h-4 w-4 text-emerald-400" />
+          {/* Assigned Fleet Electrician & Safety Checklist — Clean White Card */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                <Wrench className="h-4 w-4 text-emerald-600" />
                 <span>Assigned Fleet Electrician &amp; Safety Compliance</span>
               </h3>
-              <span className="font-bold text-amber-400 text-xs">
+              <span className="font-black text-amber-500 text-xs">
                 ★ {job?.technicianProfile?.rating || (job?.technicianName ? '5.0' : '—')} Rating
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div>
-                <div className="font-bold text-slate-100 text-sm">
+                <div className="font-black text-slate-900 text-sm">
                   {job?.technicianName || (job?.technicianId ? 'Assigned Doorstep Specialist' : 'Unassigned / Pending Allocation')}
                 </div>
-                <div className="text-[11px] text-slate-400 font-mono mt-0.5">
+                <div className="text-[11px] text-slate-500 font-mono mt-0.5">
                   Badge: {job?.technicianProfile?.badgeNumber || (job?.technicianId ? `ID: ${job.technicianId}` : '—')}{job?.technicianProfile?.safetyKitSerial ? ` • Safety Kit: ${job.technicianProfile.safetyKitSerial}` : ''}
                 </div>
-                <div className="text-[11px] text-emerald-400 mt-1">
+                <div className="text-[11px] text-emerald-700 font-medium mt-1">
                   {job?.technicianProfile?.totalJobsCompleted !== undefined
                     ? `Completed ${job.technicianProfile.totalJobsCompleted} jobs with zero safety incidents.`
                     : (job?.technicianName ? 'Verified service specialist.' : 'Technician will be dispatched shortly.')}
@@ -383,16 +391,16 @@ function PartnerJobDetailsContent() {
                 <button
                   type="button"
                   onClick={() => handleToggleSafety('gloves')}
-                  className={`w-full flex items-center justify-between p-2.5 rounded-lg border text-left transition-colors ${
+                  className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition-colors cursor-pointer ${
                     job?.safetyGlovesConfirmed
-                      ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
-                      : 'border-amber-500/40 bg-amber-500/10 text-amber-300'
+                      ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
+                      : 'border-amber-300 bg-amber-50 text-amber-800'
                   }`}
                 >
-                  <span className="text-xs font-semibold">
+                  <span className="text-xs font-bold">
                     1. 1000V Insulated Gloves Calibrated
                   </span>
-                  <span className="font-bold">
+                  <span className="font-black text-xs">
                     {job?.safetyGlovesConfirmed ? '✓ Verified' : 'Tap to Confirm'}
                   </span>
                 </button>
@@ -400,16 +408,16 @@ function PartnerJobDetailsContent() {
                 <button
                   type="button"
                   onClick={() => handleToggleSafety('mcb')}
-                  className={`w-full flex items-center justify-between p-2.5 rounded-lg border text-left transition-colors ${
+                  className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition-colors cursor-pointer ${
                     job?.safetyMcbSwitchConfirmed
-                      ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
-                      : 'border-amber-500/40 bg-amber-500/10 text-amber-300'
+                      ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
+                      : 'border-amber-300 bg-amber-50 text-amber-800'
                   }`}
                 >
-                  <span className="text-xs font-semibold">
+                  <span className="text-xs font-bold">
                     2. Main Distribution MCB Switched OFF
                   </span>
-                  <span className="font-bold">
+                  <span className="font-black text-xs">
                     {job?.safetyMcbSwitchConfirmed ? '✓ Verified' : 'Tap to Confirm'}
                   </span>
                 </button>
@@ -417,27 +425,27 @@ function PartnerJobDetailsContent() {
             </div>
           </div>
 
-          {/* Handover OTP Verification Form */}
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-5 space-y-3">
-            <div className="flex items-center justify-between">
+          {/* Handover OTP Verification Form — Clean White Card */}
+          <div className="bg-white rounded-2xl border border-emerald-200 p-5 shadow-xs space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
                   <span>4-Digit Service Handover OTP Verification</span>
                 </h3>
-                <p className="text-xs text-slate-300 mt-0.5">
-                  Mandatory OTP generated on customer{job?.customerName || job?.customerProfile?.fullName ? ` ${job.customerName || job.customerProfile?.fullName}'s` : "'s"} phone to prevent fraud &amp; close the work order.
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Mandatory OTP generated on customer phone to prevent fraud &amp; seal work order.
                 </p>
               </div>
 
               {isCompleted ? (
-                <span className="rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-bold text-emerald-300 border border-emerald-500/40">
+                <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800 border border-emerald-300 self-start sm:self-auto">
                   COMPLETED &bull; OTP SEALED
                 </span>
               ) : (
-                <div className="text-right">
+                <div className="text-right self-start sm:self-auto">
                   <span className="text-[10px] uppercase font-bold text-slate-400">Test OTP Code:</span>
-                  <div className="font-mono font-bold text-emerald-400 text-sm">
+                  <div className="font-mono font-black text-emerald-700 text-sm">
                     {job?.handoverOtp || '4829'}
                   </div>
                 </div>
@@ -449,16 +457,16 @@ function PartnerJobDetailsContent() {
                 <input
                   type="text"
                   maxLength={4}
-                  placeholder="Enter 4-digit OTP (e.g. 4829)"
+                  placeholder="Enter 4-digit OTP"
                   value={otpInput}
                   onChange={(e) => setOtpInput(e.target.value)}
-                  className="rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white font-mono tracking-widest text-center w-52 focus:outline-none focus:border-emerald-500"
+                  className="rounded-xl bg-slate-50 border border-slate-200 px-4 py-2.5 text-sm text-slate-900 font-mono font-bold tracking-widest text-center w-52 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   required
                 />
                 <button
                   type="submit"
                   disabled={isSubmittingOtp || otpInput.length < 4}
-                  className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-500 transition-colors disabled:opacity-50"
+                  className="rounded-xl bg-[#1B5E20] hover:bg-[#0D3B0D] px-5 py-2.5 text-xs font-bold text-white transition shadow-xs disabled:opacity-50 cursor-pointer"
                 >
                   {isSubmittingOtp ? 'Verifying OTP...' : 'Verify OTP & Complete Job'}
                 </button>
@@ -469,89 +477,68 @@ function PartnerJobDetailsContent() {
 
         {/* Right Col: Materials Billing & 3-Way Commission Split */}
         <div className="space-y-5">
-          {/* Official GST Invoice Breakdown */}
-          <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          {/* Official GST Invoice Breakdown — Clean White Card */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
-                <h3 className="text-sm font-bold text-slate-100">
+                <h3 className="text-sm font-black text-slate-900">
                   Tax Invoice Breakdown
                 </h3>
-                <p className="text-[11px] text-slate-400 font-mono">
+                <p className="text-[11px] text-slate-400 font-mono mt-0.5">
                   {job?.invoice?.invoiceNumber || 'INV-2026-001'}
                 </p>
               </div>
-              <span className="rounded bg-emerald-500/20 text-emerald-300 px-2 py-0.5 text-[10px] font-bold">
+              <span className="rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 text-[10px] font-bold">
                 {job?.invoice?.paymentStatus || 'PAID via UPI'}
               </span>
             </div>
 
-            <div className="space-y-2 text-xs text-slate-300">
-              <div className="flex justify-between py-1 border-b border-slate-800/60">
-                <span className="text-slate-400">Base Labor Charges:</span>
-                <span className="font-mono font-semibold">₹1,059.32</span>
+            <div className="space-y-2.5 text-xs text-slate-700 font-medium">
+              <div className="flex justify-between py-1 border-b border-slate-100">
+                <span className="text-slate-500">Base Labor Charges:</span>
+                <span className="font-mono font-bold text-slate-900">₹1,059.32</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-800/60">
-                <span className="text-slate-400">CGST (9.0%):</span>
-                <span className="font-mono">₹95.34</span>
+              <div className="flex justify-between py-1 border-b border-slate-100">
+                <span className="text-slate-500">CGST (9.0%):</span>
+                <span className="font-mono text-slate-900">₹95.34</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-800/60">
-                <span className="text-slate-400">SGST (9.0%):</span>
-                <span className="font-mono">₹95.34</span>
+              <div className="flex justify-between py-1 border-b border-slate-100">
+                <span className="text-slate-500">SGST (9.0%):</span>
+                <span className="font-mono text-slate-900">₹95.34</span>
               </div>
-              <div className="flex justify-between py-1 font-bold text-slate-100 text-sm">
+              <div className="flex justify-between py-1 font-black text-slate-900 text-sm pt-1">
                 <span>Total Amount Paid:</span>
-                <span className="font-mono text-emerald-400">₹1,250.00</span>
+                <span className="font-mono text-emerald-700">₹1,250.00</span>
               </div>
             </div>
           </div>
 
-          {/* 3-Way Commission Split (TASK-009 / PTNR-SCR-03) */}
-          <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          {/* 3-Way Commission Split (TASK-009 / PTNR-SCR-03) — Clean White Card */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
-                <h3 className="text-sm font-bold text-slate-100">
+                <h3 className="text-sm font-black text-slate-900">
                   3-Way Escrow Split
                 </h3>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-slate-400 mt-0.5">
                   Automated revenue distribution
                 </p>
               </div>
-              <TrendingUp className="h-4 w-4 text-emerald-400" />
+              <TrendingUp className="h-4 w-4 text-emerald-600" />
             </div>
 
-            <div className="space-y-2.5 text-xs font-mono">
-              <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between">
-                <div>
-                  <div className="font-bold text-emerald-300">Franchise Share (15.0%)</div>
-                  <div className="text-[10px] text-slate-400">Maharashtra Hub MH-01</div>
-                </div>
-                <div className="font-bold text-emerald-400 text-sm">
-                  +₹158.90
-                </div>
+            <div className="space-y-2.5 text-xs">
+              <div className="flex justify-between py-1 text-slate-700">
+                <span className="text-slate-500 font-medium">Technician Payout (70%):</span>
+                <span className="font-bold font-mono text-slate-900">₹741.52</span>
               </div>
-
-              <div className="p-2.5 rounded-lg bg-sky-500/10 border border-sky-500/30 flex items-center justify-between">
-                <div>
-                  <div className="font-bold text-sky-300">Technician Net Payout (70.0%)</div>
-                  <div className="text-[10px] text-slate-400">{job?.technicianName || job?.technicianProfile?.fullName ? `${job.technicianName || job.technicianProfile?.fullName} (Direct Transfer)` : 'Technician Direct Transfer'}</div>
-                </div>
-                <div className="font-bold text-sky-400 text-sm">
-                  +₹741.52
-                </div>
+              <div className="flex justify-between py-1 text-slate-700">
+                <span className="text-slate-500 font-medium">Regional Partner Escrow (15%):</span>
+                <span className="font-bold font-mono text-emerald-700">₹158.90</span>
               </div>
-
-              <div className="p-2.5 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-between">
-                <div>
-                  <div className="font-bold text-purple-300">Platform Royalty (15.0%)</div>
-                  <div className="text-[10px] text-slate-400">ElectriCare National Cloud</div>
-                </div>
-                <div className="font-bold text-purple-400 text-sm">
-                  +₹158.90
-                </div>
-              </div>
-
-              <div className="p-2 rounded bg-slate-800 text-[10px] text-slate-400 text-center font-sans">
-                Statutory 18% GST (₹190.68) withheld in Escrow Tax Ledger for GSTR-3B return.
+              <div className="flex justify-between py-1 text-slate-700">
+                <span className="text-slate-500 font-medium">GTS Platform Tech Fee (15%):</span>
+                <span className="font-bold font-mono text-slate-900">₹158.90</span>
               </div>
             </div>
           </div>
@@ -563,8 +550,8 @@ function PartnerJobDetailsContent() {
 
 export default function PartnerJobDetailsPage() {
   return (
-    <React.Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">Loading work order...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-slate-500 text-xs">Loading Work-Order Dossier...</div>}>
       <PartnerJobDetailsContent />
-    </React.Suspense>
+    </Suspense>
   );
 }

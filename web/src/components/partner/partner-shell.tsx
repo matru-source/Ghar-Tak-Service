@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { PartnerTopbar } from './partner-topbar';
@@ -8,7 +8,36 @@ import { PartnerSidebar } from './partner-sidebar';
 
 export function PartnerShell({ children }: { children: React.ReactNode }) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isDesktopExpanded, setIsDesktopExpanded] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const pathname = usePathname();
+
+  // Load pinned sidebar preference from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('gts_partner_sidebar_pinned');
+      if (saved !== null) {
+        setIsDesktopExpanded(saved === 'true');
+      } else {
+        // Default to false for compact modern view
+        setIsDesktopExpanded(false);
+      }
+    } catch {
+      // ignore SSR
+    }
+  }, []);
+
+  const handleToggleDesktop = () => {
+    setIsDesktopExpanded((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('gts_partner_sidebar_pinned', String(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  const isExpanded = isDesktopExpanded || isHovered;
 
   const mobileTabs = [
     { name: 'Dashboard', href: '/partner', icon: '📊' },
@@ -18,18 +47,36 @@ export function PartnerShell({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex font-sans antialiased">
-      {/* Navigation Sidebar (Desktop permanent + Mobile slide-over) */}
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex font-sans antialiased max-w-full overflow-x-hidden">
+      {/* Navigation Sidebar (Desktop push-reflow + Mobile slide-over) */}
       <PartnerSidebar
         isOpen={isMobileSidebarOpen}
         onClose={() => setIsMobileSidebarOpen(false)}
+        isExpanded={isExpanded}
+        isPinned={isDesktopExpanded}
+        onTogglePin={handleToggleDesktop}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       />
 
-      {/* Main Application Canvas */}
-      <div className="flex-1 lg:pl-72 flex flex-col min-h-screen">
-        <PartnerTopbar onToggleSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)} />
+      {/* Main Application Canvas — Smooth Content Push Reflow so content is NEVER hidden */}
+      <div
+        className={`flex-1 flex flex-col min-h-screen min-w-0 max-w-full overflow-x-hidden transition-[padding] duration-300 ease-in-out ${
+          isExpanded ? 'lg:pl-72' : 'lg:pl-18'
+        }`}
+      >
+        <PartnerTopbar
+          onToggleSidebar={() => {
+            if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+              setIsMobileSidebarOpen(!isMobileSidebarOpen);
+            } else {
+              handleToggleDesktop();
+            }
+          }}
+          isSidebarExpanded={isExpanded}
+        />
 
-        <main className="flex-1 p-3.5 sm:p-5 lg:p-8 max-w-7xl w-full mx-auto pb-20 lg:pb-8">
+        <main className="flex-1 p-3.5 sm:p-5 lg:p-8 max-w-7xl w-full mx-auto min-w-0 overflow-x-hidden pb-20 lg:pb-8">
           {children}
         </main>
       </div>
@@ -41,7 +88,8 @@ export function PartnerShell({ children }: { children: React.ReactNode }) {
             const isActive =
               tab.href === '/partner'
                 ? pathname === '/partner'
-                : pathname.startsWith(tab.href) || (tab.href === '/partner/dispatch' && pathname.startsWith('/partner/jobs'));
+                : pathname.startsWith(tab.href) ||
+                  (tab.href === '/partner/dispatch' && pathname.startsWith('/partner/jobs'));
             return (
               <Link
                 key={tab.name}

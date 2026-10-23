@@ -361,15 +361,19 @@ export default function PartnerFleetPage() {
 
         <div className="flex flex-wrap items-center gap-2">
           <div className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2 text-xs">
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span className="font-bold text-slate-700">Mumbai South: 3 Online</span>
+            <span className={`w-2 h-2 rounded-full ${technicians.filter((t) => t.isOnline).length > 0 ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
+            <span className="font-bold text-slate-700">
+              {technicians.filter((t) => t.isOnline).length} Online in Territory
+            </span>
           </div>
           <div className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2 text-xs">
             <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-            <span className="font-bold text-slate-700">Pune Central: Standby</span>
+            <span className="font-bold text-slate-700">
+              {technicians.filter((t) => !t.isOnline).length} Standby / Off-Duty
+            </span>
           </div>
           <div className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2 text-xs">
-            <span className="font-bold text-[#1B5E20]">Avg 30-min SLA: 14 mins</span>
+            <span className="font-bold text-[#1B5E20]">Target Dispatch SLA: 30 mins</span>
           </div>
         </div>
       </div>

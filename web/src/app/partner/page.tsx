@@ -182,9 +182,9 @@ export default function PartnerDashboardPage() {
         }
 
         // 4. Compute real KPIs directly from live database queries
-        const totalLiveJobs = jobsRes?.data?.counts?.total ?? mappedJobs.length;
-        const totalLiveTechs = fleetRes?.stats?.totalFleet ?? (fleetRes?.technicians?.length ?? 18);
-        const liveOnlineTechs = fleetRes?.stats?.onlineCount ?? (fleetRes?.technicians?.filter((t: any) => t.isOnline).length ?? 8);
+        const totalLiveJobs = jobsRes?.data?.counts?.total ?? mappedJobs.length ?? 0;
+        const totalLiveTechs = fleetRes?.stats?.totalFleet ?? (fleetRes?.technicians?.length ?? 0);
+        const liveOnlineTechs = fleetRes?.stats?.onlineCount ?? (fleetRes?.technicians?.filter((t: any) => t.isOnline).length ?? 0);
 
         const livePaidRevenue =
           invRes?.stats?.paidSettledAmountInr ??

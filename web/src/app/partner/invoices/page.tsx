@@ -247,13 +247,15 @@ export default function PartnerInvoicesPage() {
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-black text-slate-900">
-              ₹{(stats?.paidSettledAmountInr ?? 3728.0).toLocaleString('en-IN')}
+              ₹{(stats?.paidSettledAmountInr ?? 0).toLocaleString('en-IN')}
             </span>
-            <span className="text-xs font-bold text-emerald-700">({stats?.paidSettledCount ?? 2} Paid)</span>
+            <span className="text-xs font-bold text-emerald-700">({stats?.paidSettledCount ?? 0} Paid)</span>
           </div>
           <div className="flex items-center justify-between text-xs text-slate-500 pt-1 border-t border-slate-100">
             <span>Clearance Rate</span>
-            <span className="font-bold text-slate-800">93.0% on T+2 Schedule</span>
+            <span className="font-bold text-slate-800">
+              {stats?.totalInvoices && stats.totalInvoices > 0 ? `${Math.round(((stats.paidSettledCount || 0) / stats.totalInvoices) * 100)}%` : '0%'} on T+2 Schedule
+            </span>
           </div>
         </div>
 
@@ -267,9 +269,9 @@ export default function PartnerInvoicesPage() {
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-black text-amber-600">
-              ₹{(stats?.pendingEscrowAmountInr ?? 1475.0).toLocaleString('en-IN')}
+              ₹{(stats?.pendingEscrowAmountInr ?? 0).toLocaleString('en-IN')}
             </span>
-            <span className="text-xs font-bold text-amber-800">({stats?.pendingEscrowCount ?? 1} Issued)</span>
+            <span className="text-xs font-bold text-amber-800">({stats?.pendingEscrowCount ?? 0} Issued)</span>
           </div>
           <p className="text-xs text-slate-500 truncate pt-1 border-t border-slate-100">
             Releasing on customer OTP completion
@@ -286,7 +288,7 @@ export default function PartnerInvoicesPage() {
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-black text-slate-900">
-              ₹{(stats?.monthlyGrossVolumeInr ?? 5203.0).toLocaleString('en-IN')}
+              ₹{(stats?.monthlyGrossVolumeInr ?? 0).toLocaleString('en-IN')}
             </span>
             <span className="text-xs font-bold text-blue-700">Oct 2026</span>
           </div>

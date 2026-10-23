@@ -24,8 +24,8 @@ const ADMIN_NAVIGATION: NavSection[] = [
     items: [
       { name: 'Dashboard', href: '/admin', icon: '⚡' },
       { name: 'Live Dispatch', href: '/admin/dispatch', icon: '🛰️', badge: 'Live', badgeColor: 'bg-emerald-500' },
-      { name: 'Work Orders', href: '/admin/jobs', icon: '📋', badge: '3', badgeColor: 'bg-blue-600' },
-      { name: 'Escalations', href: '/admin/escalations', icon: '🚨', badge: '1', badgeColor: 'bg-red-500 animate-pulse' },
+      { name: 'Work Orders', href: '/admin/jobs', icon: '📋' },
+      { name: 'Escalations', href: '/admin/escalations', icon: '🚨' },
     ],
   },
   {
@@ -33,7 +33,7 @@ const ADMIN_NAVIGATION: NavSection[] = [
     items: [
       { name: 'Partners', href: '/admin/partners', icon: '🏢' },
       { name: 'Pincodes & Areas', href: '/admin/pincodes', icon: '📍' },
-      { name: 'Technicians', href: '/admin/technicians', icon: '👷', badge: '1 KYC', badgeColor: 'bg-amber-500' },
+      { name: 'Technicians', href: '/admin/technicians', icon: '👷' },
       { name: 'Customers', href: '/admin/customers', icon: '👥' },
     ],
   },
