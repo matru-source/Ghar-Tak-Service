@@ -72,7 +72,7 @@ fun CustomerProfileView(
                             } else {
                                 java.text.SimpleDateFormat("d MMM, yyyy", java.util.Locale.ENGLISH).format(java.util.Date())
                             }
-                        } catch (_: Exception) {
+                        } catch (e: Exception) {
                             java.text.SimpleDateFormat("d MMM, yyyy", java.util.Locale.ENGLISH).format(java.util.Date())
                         }
 
@@ -106,9 +106,10 @@ fun CustomerProfileView(
                         pastOrders = merged
                     }
                 }
-            } catch (_: Exception) {}
+            } catch (e: Exception) {}
         }
     }
+    val coroutineScope = rememberCoroutineScope()
     var profileImageUri by remember { mutableStateOf(sessionManager.getProfileImageUri()) }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
@@ -116,13 +117,66 @@ fun CustomerProfileView(
     ) { uri: Uri? ->
         if (uri != null) {
             val uriStr = uri.toString()
-            sessionManager.setProfileImageUri(uriStr)
             profileImageUri = uriStr
-            Toast.makeText(context, "Profile photo updated successfully!", Toast.LENGTH_SHORT).show()
+            sessionManager.setProfileImageUri(uriStr)
+            Toast.makeText(context, "Uploading profile photo to cloud...", Toast.LENGTH_SHORT).show()
+
+            coroutineScope.launch {
+                try {
+                    val inputStream = context.contentResolver.openInputStream(uri)
+                    val bytes = inputStream?.readBytes()
+                    inputStream?.close()
+
+                    if (bytes != null && bytes.isNotEmpty()) {
+                        // Compress to max 800x800 JPEG for efficient upload
+                        val originalBmp = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                        val scaledBmp = if (originalBmp != null) {
+                            val maxDim = 800
+                            val width = originalBmp.width
+                            val height = originalBmp.height
+                            if (width > maxDim || height > maxDim) {
+                                val ratio = width.toFloat() / height.toFloat()
+                                val (targetW, targetH) = if (ratio > 1f) maxDim to (maxDim / ratio).toInt() else (maxDim * ratio).toInt() to maxDim
+                                android.graphics.Bitmap.createScaledBitmap(originalBmp, targetW, targetH, true)
+                            } else originalBmp
+                        } else null
+
+                        val baos = java.io.ByteArrayOutputStream()
+                        if (scaledBmp != null) {
+                            scaledBmp.compress(android.graphics.Bitmap.CompressFormat.JPEG, 85, baos)
+                        } else {
+                            baos.write(bytes)
+                        }
+                        val base64Str = android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.NO_WRAP)
+
+                        val api = com.ghartak.customer.data.api.ApiClient.getService(context)
+                        val uploadResp = api.uploadPhoto(mapOf("base64" to base64Str, "photo" to "customer_avatar_${System.currentTimeMillis()}.jpg"))
+
+                        if (uploadResp.isSuccessful && uploadResp.body()?.data != null) {
+                            val remoteCdnUrl = uploadResp.body()!!.data!!.url
+                            sessionManager.setProfileImageUri(remoteCdnUrl)
+                            profileImageUri = remoteCdnUrl
+
+                            val customerId = sessionManager.getUserId().ifBlank { sessionManager.getUserPhone() }
+                            api.updateCustomerProfile(
+                                mapOf(
+                                    "customerId" to customerId,
+                                    "avatarUrl" to remoteCdnUrl
+                                )
+                            )
+                            Toast.makeText(context, "Profile photo synced to cloud successfully!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(context, "Local photo saved (cloud sync pending)", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.w("CustomerProfile", "Cloud avatar upload error: ${e.message}")
+                    Toast.makeText(context, "Photo saved locally. Cloud sync will retry.", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
-    val coroutineScope = rememberCoroutineScope()
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var showEditSecondaryDialog by remember { mutableStateOf(false) }
@@ -162,7 +216,7 @@ fun CustomerProfileView(
                                 val outFormat = java.text.SimpleDateFormat("d MMM, yyyy", java.util.Locale.US)
                                 val d = inFormat.parse(expRaw.substring(0, 19))
                                 if (d != null) outFormat.format(d) else expRaw.take(10)
-                            } catch (_: Exception) {
+                            } catch (e: Exception) {
                                 expRaw.take(10)
                             }
                         } else "Dec 2026"

@@ -136,16 +136,43 @@ export default function PartnerDispatchPage() {
   };
 
   const filteredJobs = jobs.filter((job) => {
-    if (statusFilter !== 'ALL' && job.status !== statusFilter) return false;
+    if (statusFilter !== 'ALL') {
+      const s = (job.status || '').toUpperCase();
+      if (statusFilter === 'COMPLETED' || statusFilter === 'WORK_COMPLETED') {
+        if (!['WORK_COMPLETED', 'SETTLED', 'COMPLETED', 'DONE'].includes(s)) return false;
+      } else if (statusFilter === 'IN_PROGRESS') {
+        if (!['IN_PROGRESS', 'SAFETY_CHECKED', 'ARRIVED', 'STARTED'].includes(s)) return false;
+      } else if (statusFilter === 'ASSIGNED') {
+        if (!['ASSIGNED', 'EN_ROUTE'].includes(s)) return false;
+      } else if (statusFilter === 'ESCALATED_SLA') {
+        if (!['ESCALATED_SLA', 'ESCALATED'].includes(s)) return false;
+      } else if (s !== statusFilter) {
+        return false;
+      }
+    }
+
     if (pincodeFilter !== 'ALL' && job.pincode !== pincodeFilter) return false;
-    if (priorityFilter !== 'ALL' && job.priority !== priorityFilter) return false;
+
+    if (priorityFilter !== 'ALL') {
+      const p = (job.priority || '').toUpperCase();
+      if (priorityFilter === 'EMERGENCY_SOS' || priorityFilter === 'EMERGENCY') {
+        if (!p.includes('EMERGENCY')) return false;
+      } else if (priorityFilter === 'URGENT_SLA' || priorityFilter === 'URGENT') {
+        if (!p.includes('URGENT')) return false;
+      } else if (priorityFilter === 'STANDARD') {
+        if (p.includes('EMERGENCY') || p.includes('URGENT')) return false;
+      } else if (p !== priorityFilter) {
+        return false;
+      }
+    }
+
     if (search) {
       const q = search.toLowerCase();
       return (
-        job.jobTicketNumber.toLowerCase().includes(q) ||
-        job.customerName.toLowerCase().includes(q) ||
-        job.serviceTitle.toLowerCase().includes(q) ||
-        job.pincode.includes(q) ||
+        (job.jobTicketNumber && job.jobTicketNumber.toLowerCase().includes(q)) ||
+        (job.customerName && job.customerName.toLowerCase().includes(q)) ||
+        (job.serviceTitle && job.serviceTitle.toLowerCase().includes(q)) ||
+        (job.pincode && job.pincode.includes(q)) ||
         (job.technicianName && job.technicianName.toLowerCase().includes(q))
       );
     }
@@ -267,9 +294,9 @@ export default function PartnerDispatchPage() {
             className="rounded-xl bg-slate-50 border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
           >
             <option value="ALL">All Statuses</option>
-            <option value="IN_PROGRESS">In Progress</option>
+            <option value="IN_PROGRESS">In Progress / Active</option>
+            <option value="ASSIGNED">Assigned / En Route</option>
             <option value="ESCALATED_SLA">Escalated SLA</option>
-            <option value="ASSIGNED">Assigned</option>
             <option value="COMPLETED">Completed</option>
           </select>
 
@@ -279,9 +306,9 @@ export default function PartnerDispatchPage() {
             className="rounded-xl bg-slate-50 border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
           >
             <option value="ALL">All Pincodes</option>
-            <option value="400001">400001 (Colaba)</option>
-            <option value="400005">400005 (Cuffe Parade)</option>
-            <option value="400020">400020 (Marine Drive)</option>
+            {Array.from(new Set(['400001', '400002', '400005', '400020', ...jobs.map((j) => j.pincode).filter(Boolean)])).map((pin) => (
+              <option key={pin} value={pin}>{pin}</option>
+            ))}
           </select>
 
           <select

@@ -293,7 +293,7 @@ class SafetyInterlockViewModel(
                         } else {
                             "Safety verification rejected by server. Ensure all safety steps are completed."
                         }
-                    } catch (_: Exception) {
+                    } catch (e: Exception) {
                         "Safety verification rejected by server. Ensure 1000V gloves and MCB switch checklist are completed."
                     }
                     _uiState.value = _uiState.value.copy(

@@ -120,6 +120,34 @@ export async function POST(request: NextRequest) {
     // Generate or use customerId
     const activeCustomerId = customerId || `cust_${Date.now().toString(36)}`;
 
+    // AMC Membership Benefits: Check if customer has active ZEX-SHIELD AMC subscription
+    // Automatically sets base labor fee to ₹0.00 for active AMC subscription holders
+    let hasActiveSubscription = false;
+    let baseLaborFee = typeof basePriceInr === 'number' ? basePriceInr : undefined;
+    if (activeCustomerId || customerPhone) {
+      if (await (await import('@/lib/db')).isDatabaseConnected()) {
+        try {
+          const { prisma } = await import('@/lib/prisma');
+          const cp = await prisma.customerProfile.findFirst({
+            where: {
+              OR: [
+                { id: activeCustomerId },
+                { userId: activeCustomerId },
+                ...(customerPhone ? [{ user: { phone: customerPhone } }] : []),
+              ],
+            },
+          });
+          if (cp && cp.activeSubscriptionPlan && cp.activeSubscriptionPlan !== 'NONE') {
+            const isNotExpired = !cp.subscriptionExpiryDate || new Date(cp.subscriptionExpiryDate) > new Date();
+            if (isNotExpired) {
+              hasActiveSubscription = true;
+              baseLaborFee = 0; // ₹0 base labor fee for active AMC subscription
+            }
+          }
+        } catch (_) {}
+      }
+    }
+
     const newJob = await db.createJob({
       customerId: activeCustomerId,
       customerName: customerName || undefined,
@@ -127,7 +155,7 @@ export async function POST(request: NextRequest) {
       technicianId: technicianId || undefined,
       serviceId,
       serviceTitle: serviceTitle || undefined,
-      basePriceInr: typeof basePriceInr === 'number' ? basePriceInr : undefined,
+      basePriceInr: baseLaborFee,
       pincode,
       customerAddressText: customerAddressText.trim(),
       customerLatitude: typeof customerLatitude === 'number' ? customerLatitude : undefined,

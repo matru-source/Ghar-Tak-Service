@@ -431,8 +431,143 @@ export function calculateHaversineDistanceKm(
  */
 export function calculateEtaMinutes(distanceKm: number, avgSpeedKmh = 24.0): number {
   if (distanceKm <= 0.05) return 0;
-  valMins: {
-    const raw = (distanceKm / avgSpeedKmh) * 60.0;
-    return Math.max(1, Math.round(raw));
-  }
+  const raw = (distanceKm / avgSpeedKmh) * 60.0;
+  return Math.max(1, Math.round(raw));
 }
+
+export interface FullLocationDetails {
+  pincode: string;
+  city: string;
+  district: string;
+  state: string;
+  formattedAddress: string;
+}
+
+/**
+ * Reverse-geocode latitude and longitude into complete Indian postal details:
+ * Pincode, City, District, State, and Formatted Address.
+ */
+export function resolveFullLocationFromCoordinates(lat: number, lng: number): FullLocationDetails {
+  let closestPin = '400001';
+  let closestPinDist = Number.MAX_VALUE;
+  let closestPinArea = 'Fort, South Mumbai';
+
+  for (const [pin, info] of Object.entries(PINCODE_MAP)) {
+    const dist = calculateHaversineDistanceKm(lat, lng, info.lat, info.lng);
+    if (dist < closestPinDist) {
+      closestPinDist = dist;
+      closestPin = pin;
+      closestPinArea = info.area;
+    }
+  }
+
+  let closestHub: HubInfo | null = null;
+  let minHubDistance = Number.MAX_VALUE;
+  for (const hub of HUBS) {
+    const dist = calculateHaversineDistanceKm(lat, lng, hub.lat, hub.lng);
+    if (dist < minHubDistance) {
+      minHubDistance = dist;
+      closestHub = hub;
+    }
+  }
+
+  let state = closestHub ? closestHub.state : 'Maharashtra';
+  let city = 'Mumbai';
+  let district = 'Mumbai City';
+
+  if (closestPin.startsWith('75') || closestPin.startsWith('76')) {
+    state = 'Odisha';
+    if (closestPin.startsWith('760')) {
+      city = 'Berhampur';
+      district = 'Ganjam';
+    } else if (closestPin.startsWith('751')) {
+      city = 'Bhubaneswar';
+      district = 'Khordha';
+    } else if (closestPin.startsWith('753')) {
+      city = 'Cuttack';
+      district = 'Cuttack';
+    } else if (closestPin.startsWith('759')) {
+      city = 'Dhenkanal';
+      district = 'Dhenkanal';
+    } else {
+      city = 'Bhubaneswar';
+      district = 'Khordha';
+    }
+  } else if (
+    closestPin.startsWith('400') ||
+    closestPin.startsWith('411') ||
+    closestPin.startsWith('422') ||
+    closestPin.startsWith('440')
+  ) {
+    state = 'Maharashtra';
+    if (closestPin.startsWith('411')) {
+      city = 'Pune';
+      district = 'Pune';
+    } else if (closestPin.startsWith('440')) {
+      city = 'Nagpur';
+      district = 'Nagpur';
+    } else if (closestPin.startsWith('422')) {
+      city = 'Nashik';
+      district = 'Nashik';
+    } else if (closestPin.startsWith('4006') || closestPin.startsWith('4007')) {
+      city = 'Thane';
+      district = 'Thane';
+    } else {
+      city = 'Mumbai';
+      district = 'Mumbai City';
+    }
+  } else if (
+    closestPin.startsWith('110') ||
+    closestPin.startsWith('122') ||
+    closestPin.startsWith('201')
+  ) {
+    if (closestPin.startsWith('122')) {
+      city = 'Gurugram';
+      district = 'Gurugram';
+      state = 'Haryana';
+    } else if (closestPin.startsWith('201')) {
+      city = 'Noida';
+      district = 'Gautam Buddha Nagar';
+      state = 'Uttar Pradesh';
+    } else {
+      city = 'New Delhi';
+      district = 'New Delhi';
+      state = 'Delhi';
+    }
+  } else if (closestPin.startsWith('560')) {
+    city = 'Bengaluru';
+    district = 'Bengaluru Urban';
+    state = 'Karnataka';
+  } else if (closestPin.startsWith('600')) {
+    city = 'Chennai';
+    district = 'Chennai';
+    state = 'Tamil Nadu';
+  } else if (closestPin.startsWith('500')) {
+    city = 'Hyderabad';
+    district = 'Hyderabad';
+    state = 'Telangana';
+  } else if (closestPin.startsWith('700')) {
+    city = 'Kolkata';
+    district = 'Kolkata';
+    state = 'West Bengal';
+  } else if (closestPin.startsWith('380') || closestPin.startsWith('395')) {
+    city = closestPin.startsWith('395') ? 'Surat' : 'Ahmedabad';
+    district = closestPin.startsWith('395') ? 'Surat' : 'Ahmedabad';
+    state = 'Gujarat';
+  } else if (closestPin.startsWith('302')) {
+    city = 'Jaipur';
+    district = 'Jaipur';
+    state = 'Rajasthan';
+  }
+
+  const formattedAddress = `${closestPinArea}, ${city}, ${district}, ${state} - ${closestPin}`;
+
+  return {
+    pincode: closestPin,
+    city,
+    district,
+    state,
+    formattedAddress,
+  };
+}
+

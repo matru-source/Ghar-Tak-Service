@@ -28,7 +28,8 @@ data class TechnicianProfile(
     @SerializedName("specialization") val specialization: String = "Electrician",
     @SerializedName("experience") val experience: String = "5+ Years",
     @SerializedName("license") val license: String = "Trade Certified Professional",
-    @SerializedName("serviceArea") val serviceArea: String = "Doorstep Territory"
+    @SerializedName("serviceArea") val serviceArea: String = "Doorstep Territory",
+    @SerializedName("avatarUrl") val avatarUrl: String? = null
 )
 
 data class TechnicianJob(
@@ -49,13 +50,16 @@ data class TechnicianJob(
     @SerializedName("handoverOtp") val handoverOtp: String? = null,
     @SerializedName("scheduledAt") val scheduledAt: String? = null,
     @SerializedName("createdAt") val createdAt: String? = null,
-    @SerializedName("invoiceNumber") val invoiceNumber: String? = null
+    @SerializedName("invoiceNumber") val invoiceNumber: String? = null,
+    @SerializedName("dispatchedAt") val dispatchedAt: String? = null,
+    @SerializedName("version") val version: Int? = 1
 )
 
 data class DispatchActionRequest(
     @SerializedName("technicianId") val technicianId: String,
     @SerializedName("action") val action: String, // "ACCEPT" or "REJECT"
-    @SerializedName("rejectionReason") val rejectionReason: String? = null
+    @SerializedName("rejectionReason") val rejectionReason: String? = null,
+    @SerializedName("version") val version: Int? = null
 )
 
 data class SafetyVerifyRequest(
@@ -99,6 +103,11 @@ data class RegisterTechnicianRequest(
     @SerializedName("phone") val phone: String,
     @SerializedName("email") val email: String? = null,
     @SerializedName("trade") val trade: String? = null,
+    @SerializedName("specialization") val specialization: String? = null,
+    @SerializedName("experience") val experience: String? = null,
+    @SerializedName("license") val license: String? = null,
+    @SerializedName("serviceArea") val serviceArea: String? = null,
+    @SerializedName("avatarUrl") val avatarUrl: String? = null,
     @SerializedName("pincode") val pincode: String,
     @SerializedName("latitude") val latitude: Double? = null,
     @SerializedName("longitude") val longitude: Double? = null,
@@ -154,7 +163,9 @@ data class EmergencySosRequest(
 data class FileUploadResponse(
     @SerializedName("url") val url: String,
     @SerializedName("fileName") val fileName: String? = null,
-    @SerializedName("sizeBytes") val sizeBytes: Long? = null
+    @SerializedName("sizeBytes") val sizeBytes: Long? = null,
+    @SerializedName("cdnUrl") val cdnUrl: String? = null,
+    @SerializedName("relativeUrl") val relativeUrl: String? = null
 )
 
 

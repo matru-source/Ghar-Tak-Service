@@ -156,6 +156,7 @@ export async function PATCH(request: NextRequest) {
       defaultPincode,
       defaultLatitude,
       defaultLongitude,
+      avatarUrl,
     } = body;
 
     let targetId = (payload.customerId as string) || payload.sub;
@@ -169,6 +170,21 @@ export async function PATCH(request: NextRequest) {
     const addressToUse = defaultAddressLine || address;
     const pinToUse = defaultPincode || pincode;
 
+    // Validate avatarUrl format if provided (accept HTTPS CDN URLs, data URIs, or relative /uploads/)
+    let validatedAvatarUrl: string | undefined = undefined;
+    if (avatarUrl !== undefined) {
+      if (typeof avatarUrl === 'string' && avatarUrl.trim().length > 0) {
+        const clean = avatarUrl.trim();
+        if (clean.startsWith('https://') || clean.startsWith('http://') || clean.startsWith('/uploads/') || clean.startsWith('data:image/')) {
+          validatedAvatarUrl = clean;
+        } else {
+          return apiError('Invalid avatarUrl: Must be a valid HTTP/HTTPS URL or /uploads/ path', 400);
+        }
+      } else if (avatarUrl === null) {
+        validatedAvatarUrl = '';
+      }
+    }
+
     const updated = await db.updateCustomer(targetId, {
       fullName,
       email,
@@ -177,6 +193,7 @@ export async function PATCH(request: NextRequest) {
       defaultPincode: pinToUse,
       defaultLatitude,
       defaultLongitude,
+      avatarUrl: validatedAvatarUrl,
     });
 
     if (!updated) {

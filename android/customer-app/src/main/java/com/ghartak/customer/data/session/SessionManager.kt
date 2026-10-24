@@ -164,9 +164,27 @@ class SessionManager(val context: Context) {
 
     fun getAuthToken(): String? = prefs.getString(KEY_AUTH_TOKEN, null)
 
+    fun setAuthToken(token: String) {
+        prefs.edit().putString(KEY_AUTH_TOKEN, token).apply()
+    }
+
+    fun getRefreshToken(): String? = prefs.getString("key_refresh_token", null)
+
+    fun setRefreshToken(token: String) {
+        prefs.edit().putString("key_refresh_token", token).apply()
+    }
+
+    fun getFcmToken(): String? = prefs.getString("key_fcm_token", null)
+
+    fun setFcmToken(token: String) {
+        prefs.edit().putString("key_fcm_token", token).apply()
+    }
+
     fun getUserId(): String = prefs.getString(KEY_USER_ID, "") ?: ""
+    fun getCustomerId(): String = getUserId()
 
     fun getUserName(): String = prefs.getString(KEY_USER_NAME, "Customer") ?: "Customer"
+    fun getFullName(): String = getUserName()
 
     fun getUserFirstName(): String {
         val full = getUserName().trim()
@@ -176,6 +194,7 @@ class SessionManager(val context: Context) {
     fun getUserEmail(): String = prefs.getString(KEY_USER_EMAIL, "") ?: ""
 
     fun getUserPhone(): String = prefs.getString(KEY_USER_PHONE, "") ?: ""
+    fun getPhone(): String = getUserPhone()
 
     fun getUserAddress(): String = prefs.getString(KEY_USER_ADDRESS, "") ?: ""
 

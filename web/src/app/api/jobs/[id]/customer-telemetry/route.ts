@@ -81,12 +81,16 @@ export async function POST(
     if (await isDatabaseConnected()) {
       try {
         const { prisma } = await import('@/lib/prisma');
+        const shouldSetArrived = isDoorstepNearby && (job.status === 'EN_ROUTE' || job.status === 'ASSIGNED');
         await prisma.job.updateMany({
-          where: { OR: [{ id: job.id }, { jobTicketNumber: job.jobTicketNumber }] },
+          where: {
+            OR: [{ id: job.id }, { jobTicketNumber: job.jobTicketNumber }],
+            ...(shouldSetArrived ? { status: { in: ['EN_ROUTE', 'ASSIGNED'] as any } } : {}),
+          },
           data: {
             customerLatitude: latitude,
             customerLongitude: longitude,
-            ...(isDoorstepNearby ? { status: 'ARRIVED' as any } : {}),
+            ...(shouldSetArrived ? { status: 'ARRIVED' as any } : {}),
           },
         });
       } catch (_) {}

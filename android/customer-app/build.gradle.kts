@@ -100,7 +100,8 @@ dependencies {
     // Image Loading
     implementation("io.coil-kt:coil-compose:2.5.0")
 
-    // Firebase Auth (Real SMS OTP Verification)
+    // Firebase Auth (Real SMS OTP Verification) & Push Messaging
     implementation(platform("com.google.firebase:firebase-bom:33.4.0"))
     implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-messaging")
 }

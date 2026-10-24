@@ -3,6 +3,7 @@ import { verifyOtp, normalizePhoneNumber } from '@/lib/otp';
 import { signAccessToken } from '@/lib/jwt';
 import { db } from '@/lib/db';
 import { dbStore } from '@/lib/mock-data';
+import { prisma } from '@/lib/prisma';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
 
 import { getCoordinatesForPincode } from '@/lib/pincode-resolver';
@@ -38,6 +39,13 @@ export async function POST(request: NextRequest) {
     let user = rawIdentifier.includes('@')
       ? await db.getUserByIdentifier(rawIdentifier)
       : await db.getUserByPhone(cleanPhone);
+
+    // Specialized role profile variables
+    let profile: Record<string, unknown> | null = null;
+    let partnerId: string | undefined;
+    let technicianId: string | undefined;
+    let customerId: string | undefined;
+    let pincode: string | undefined;
 
     // If user does not exist yet, auto-register as Customer (or requested role)
     if (!user) {
@@ -79,41 +87,80 @@ export async function POST(request: NextRequest) {
           createdAt: new Date().toISOString(),
         });
       } else if (assignedRole === 'TECHNICIAN') {
-        const cleanPin = '760001';
-        const geo = getCoordinatesForPincode(cleanPin);
-        const techId = `tech_${Date.now()}`;
-        (dbStore.technicians as any[]).push({
-          id: techId,
-          userId: newUserId,
-          partnerId: 'part_odisha_01',
-          badgeNumber: `GTS-TECH-${Math.floor(1000 + Math.random() * 9000)}`,
-          fullName: name,
-          phone: cleanPhone,
-          rating: 5.0,
-          totalJobsCompleted: 0,
-          isOnline: true,
-          currentLatitude: geo.latitude,
-          currentLongitude: geo.longitude,
-          assignedPincode: cleanPin,
-          kycStatus: 'PENDING_REVIEW',
-          electricalLicenseNumber: `LIC-${cleanPin}-${Math.floor(1000 + Math.random() * 9000)}`,
-          insulatedGlovesVerified: false,
-          safetyKitSerial: `KIT-${Math.floor(10000 + Math.random() * 90000)}`,
-          email: `${cleanPhone.replace('+', '')}@ghartak.in`,
-          trade: 'Certified Professional',
-        });
+        let existingTech: any = null;
+        try {
+          existingTech = await prisma.technician.findFirst({
+            where: {
+              OR: [
+                { userId: newUserId },
+                { user: { phone: cleanPhone } },
+                { user: { phone: rawIdentifier } },
+              ],
+            },
+            include: { user: true },
+          });
+        } catch {
+          // Prisma offline fallback
+        }
+
+        if (!existingTech) {
+          existingTech = dbStore.technicians.find(
+            (t) => t.userId === newUserId || t.phone === cleanPhone || (cleanPhone && t.phone.includes(cleanPhone.slice(-10)))
+          ) || null;
+        }
+
+        if (existingTech) {
+          technicianId = existingTech.id;
+          partnerId = existingTech.partnerId;
+          pincode = existingTech.assignedPincode;
+          profile = existingTech as unknown as Record<string, unknown>;
+        } else {
+          const registered = await db.registerTechnician({
+            fullName: name,
+            phone: cleanPhone,
+            email: `${cleanPhone.replace('+', '')}@ghartak.in`,
+            pincode: '760001',
+            trade: 'Certified Professional',
+          });
+          technicianId = registered.id;
+          partnerId = registered.partnerId;
+          pincode = registered.assignedPincode;
+          profile = registered as unknown as Record<string, unknown>;
+        }
       }
     }
 
-    // Determine specialized role profile
-    let profile: Record<string, unknown> | null = null;
-    let partnerId: string | undefined;
-    let technicianId: string | undefined;
-    let customerId: string | undefined;
-    let pincode: string | undefined;
-
     if (user.role === 'TECHNICIAN') {
-      const tech = await db.getTechnicianByUserId(user.id);
+      let tech: any = null;
+      try {
+        tech = await prisma.technician.findFirst({
+          where: {
+            OR: [
+              { userId: user.id },
+              { user: { phone: user.phone } },
+              { user: { phone: cleanPhone } },
+            ],
+          },
+          include: { user: true },
+        });
+      } catch {
+        // Prisma offline
+      }
+      if (!tech) {
+        tech = await db.getTechnicianByUserId(user.id);
+      }
+      if (!tech && cleanPhone) {
+        tech = dbStore.technicians.find((t) => t.phone === cleanPhone || (user.phone && t.phone === user.phone)) || null;
+      }
+      if (!tech) {
+        tech = await db.registerTechnician({
+          fullName: user.fullName,
+          phone: user.phone || cleanPhone,
+          email: user.email,
+          pincode: '760001',
+          trade: 'Certified Professional',
+        });
+      }
       if (tech) {
         profile = tech as unknown as Record<string, unknown>;
         technicianId = tech.id;

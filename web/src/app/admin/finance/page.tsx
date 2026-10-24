@@ -48,8 +48,12 @@ export default function AdminFinancePage() {
       const jsonFin = await resFin.json();
       const jsonInv = await resInv.json();
 
-      if (jsonFin.success) setFinance(jsonFin.data);
-      if (jsonInv.success) setInvoices(jsonInv.data.invoices);
+      if (jsonFin?.success && jsonFin.data) {
+        setFinance(jsonFin.data);
+      }
+      if (jsonInv?.success && Array.isArray(jsonInv.data?.invoices)) {
+        setInvoices(jsonInv.data.invoices);
+      }
     } catch {
       showToast('Error loading financial treasury data');
     } finally {

@@ -2,6 +2,7 @@ package com.ghartak.customer.ui.home
 
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.speech.RecognizerIntent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -58,6 +59,7 @@ fun CustomerHomeScreen(
     onLogout: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
+    val categories = state.categories // Dynamic categories inflated from /api/services/categories (viewModel.categories)
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
     val focusManager = LocalFocusManager.current
@@ -262,30 +264,63 @@ fun CustomerHomeScreen(
                             }
                         }
 
-                        // Notification Bell with Red Badge Dot
-                        Box {
-                            IconButton(
-                                onClick = {
-                                    showNotificationCenter = true
-                                }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            // 24x7 Emergency SOS Trigger Button (Issue 35)
+                            Surface(
+                                color = Color(0xFFDC2626),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .padding(end = 6.dp)
+                                    .clickable {
+                                        Toast.makeText(context, "🚨 Contacting 24x7 Safety Command Center...", Toast.LENGTH_SHORT).show()
+                                        try {
+                                            val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:112"))
+                                            context.startActivity(dialIntent)
+                                        } catch (e: Exception) {
+                                            Toast.makeText(context, "Dial 112 for emergency", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Notifications,
-                                    contentDescription = "Notifications",
-                                    tint = Color(0xFFFFD54F),
-                                    modifier = Modifier.size(26.dp)
-                                )
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(text = "🚨", fontSize = 11.sp)
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text(
+                                        text = "Emergency SOS",
+                                        color = Color.White,
+                                        fontSize = 10.5.sp,
+                                        fontWeight = FontWeight.Black
+                                    )
+                                }
                             }
-                            if (unreadNotificationCount > 0) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(9.dp)
-                                        .align(Alignment.TopEnd)
-                                        .offset(x = (-6).dp, y = 6.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(0xFFEF4444))
-                                        .border(1.5.dp, Color.White, CircleShape)
-                                )
+
+                            // Notification Bell with Red Badge Dot
+                            Box {
+                                IconButton(
+                                    onClick = {
+                                        showNotificationCenter = true
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Notifications,
+                                        contentDescription = "Notifications",
+                                        tint = Color(0xFFFFD54F),
+                                        modifier = Modifier.size(26.dp)
+                                    )
+                                }
+                                if (unreadNotificationCount > 0) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(9.dp)
+                                            .align(Alignment.TopEnd)
+                                            .offset(x = (-6).dp, y = 6.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFFEF4444))
+                                            .border(1.5.dp, Color.White, CircleShape)
+                                    )
+                                }
                             }
                         }
                     }
@@ -438,7 +473,7 @@ fun CustomerHomeScreen(
                                             putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak a service (e.g. Fan Installation, Electrician, Wiring)...")
                                         }
                                         voiceLauncher.launch(intent)
-                                    } catch (_: Exception) {
+                                    } catch (e: Exception) {
                                         Toast.makeText(context, "Voice recognition service not available on this device", Toast.LENGTH_SHORT).show()
                                     }
                                 },

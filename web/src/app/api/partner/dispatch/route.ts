@@ -105,7 +105,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { jobId, status, technicianId, technicianName } = body;
+    const { jobId, status, technicianId, technicianName, version } = body;
 
     if (!jobId) {
       return NextResponse.json({ success: false, error: 'jobId is required' }, { status: 400 });
@@ -115,6 +115,20 @@ export async function PATCH(req: NextRequest) {
     const currentJob = await db.getJobById(jobId);
     if (!currentJob) {
       return NextResponse.json({ success: false, error: 'Job not found' }, { status: 404 });
+    }
+
+    // Optimistic Concurrency Control (OCC) Check: Prevent reassign collision with active siren acceptance
+    const currentVersion = (currentJob as any).version ?? 1;
+    if (version !== undefined && currentVersion !== undefined && version !== currentVersion) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Conflict: Work order #${currentJob.jobTicketNumber} was concurrently updated by another dispatcher or technician siren acceptance (version ${currentVersion} vs expected ${version}). Please refresh.`,
+          code: 'OCC_VERSION_MISMATCH',
+          currentVersion,
+        },
+        { status: 409 }
+      );
     }
 
     // Concurrency Lock: Prevent collision if already claimed by someone else
@@ -158,6 +172,10 @@ export async function PATCH(req: NextRequest) {
       updatedJob = await db.updateJobStatus(currentJob.id, status);
     }
 
+    // Increment version column for optimistic concurrency control tracking
+    const nextVersion = currentVersion + 1;
+    (updatedJob as any).version = nextVersion;
+
     // Also sync in-memory store for fallback parity
     const memIdx = dbStore.jobs.findIndex((j) => j.id === currentJob.id || j.jobTicketNumber === currentJob.jobTicketNumber);
     if (memIdx !== -1) {
@@ -166,6 +184,7 @@ export async function PATCH(req: NextRequest) {
         dbStore.jobs[memIdx].technicianId = technicianId;
         dbStore.jobs[memIdx].technicianName = technicianName || updatedJob.technicianName || 'Assigned Technician';
       }
+      (dbStore.jobs[memIdx] as any).version = nextVersion;
     }
 
     await db.recordWormAuditLog({

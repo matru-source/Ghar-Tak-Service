@@ -31,6 +31,7 @@ class SessionManager(val context: Context) {
         private const val KEY_EXPERIENCE = "key_experience"
         private const val KEY_LICENSE = "key_license"
         private const val KEY_SERVICE_AREA = "key_service_area"
+        private const val KEY_PROFILE_IMAGE_URI = "key_profile_image_uri"
         private const val KEY_SCHEMA_VERSION = "key_schema_version"
         private const val KEY_CUSTOM_BASE_URL = "key_custom_base_url"
         const val DEFAULT_BASE_URL = "https://ghartak-api.onrender.com/api/"
@@ -223,7 +224,8 @@ class SessionManager(val context: Context) {
                 specialization = techObj.optString("trade", "Certified Electrician"),
                 experience = techObj.optString("experience", "3+ Years"),
                 license = techObj.optString("license", "Govt. Licensed Professional"),
-                serviceArea = techObj.optString("serviceArea", "$techPin Doorstep Hub")
+                serviceArea = techObj.optString("serviceArea", "$techPin Doorstep Hub"),
+                avatarUrl = techObj.optString("avatarUrl", null).takeIf { !it.isNullOrBlank() } ?: getProfileImageUri().takeIf { it.isNotBlank() }
             )
         } catch (e: Exception) {
             null
@@ -251,6 +253,9 @@ class SessionManager(val context: Context) {
             putString(KEY_EXPERIENCE, profile.experience ?: "")
             putString(KEY_LICENSE, profile.license ?: "")
             putString(KEY_SERVICE_AREA, profile.serviceArea ?: "")
+            if (!profile.avatarUrl.isNullOrBlank()) {
+                putString(KEY_PROFILE_IMAGE_URI, profile.avatarUrl)
+            }
             putBoolean(KEY_IS_LOGGED_IN, true)
             apply()
         }
@@ -308,6 +313,9 @@ class SessionManager(val context: Context) {
         }
     }
 
+    fun getFcmToken(): String? = prefs.getString("key_fcm_token", null)
+    fun setFcmToken(token: String) { prefs.edit().putString("key_fcm_token", token).apply() }
+
     fun getLocalWithdrawals(): List<com.ghartak.technician.data.model.WithdrawalItem> {
         val currentTechId = getTechnicianId()
         val currentBadge = getBadgeNumber()
@@ -356,7 +364,7 @@ class SessionManager(val context: Context) {
             distinct.filterNot { item ->
                 item.requestedAt == "Just now" && serverSyncedIds.contains(item.amountInr to item.payoutMethod) && !item.id.contains("_")
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
             emptyList()
         }
     }
@@ -494,7 +502,7 @@ class SessionManager(val context: Context) {
                 json.put(key, techObj)
                 prefs.edit().putString(KEY_TECHNICIANS_REGISTRY, json.toString()).apply()
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) {}
     }
 
     fun updateServiceDetails(specialization: String, experience: String, license: String, serviceArea: String) {
@@ -532,7 +540,7 @@ class SessionManager(val context: Context) {
                 json.put(key, techObj)
                 prefs.edit().putString(KEY_TECHNICIANS_REGISTRY, json.toString()).apply()
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) {}
     }
 
     fun isLoggedIn(): Boolean = prefs.getBoolean(KEY_IS_LOGGED_IN, false)
@@ -561,6 +569,7 @@ class SessionManager(val context: Context) {
             remove(KEY_EXPERIENCE)
             remove(KEY_LICENSE)
             remove(KEY_SERVICE_AREA)
+            remove(KEY_PROFILE_IMAGE_URI)
             remove("key_today_earnings")
             remove("key_week_earnings")
             remove("key_month_earnings")
@@ -574,5 +583,10 @@ class SessionManager(val context: Context) {
             putBoolean(KEY_IS_LOGGED_IN, false)
             apply()
         }
+    }
+
+    fun getProfileImageUri(): String = prefs.getString(KEY_PROFILE_IMAGE_URI, "") ?: ""
+    fun setProfileImageUri(uri: String) {
+        prefs.edit().putString(KEY_PROFILE_IMAGE_URI, uri.trim()).apply()
     }
 }

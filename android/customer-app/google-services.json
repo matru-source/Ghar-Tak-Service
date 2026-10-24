@@ -23,6 +23,44 @@
           "other_platform_oauth_client": []
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:458445561611:android:e2d37cd9b2c64838ffdd1f",
+        "android_client_info": {
+          "package_name": "com.ghartak.technician"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXdbwpkmRCpSPYX4PIaIXboT0YaoC2UpU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:458445561611:android:f3e48de0c3d75949aaee2a",
+        "android_client_info": {
+          "package_name": "com.ghartak.technician.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXdbwpkmRCpSPYX4PIaIXboT0YaoC2UpU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
     }
   ],
   "configuration_version": "1"

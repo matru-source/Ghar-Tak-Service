@@ -1,6 +1,24 @@
 package com.ghartak.technician.util
 
 import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONArray
+import org.json.JSONObject
+import java.net.URLEncoder
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
+
+data class ResolvedLocation(
+    val pincode: String,
+    val city: String,
+    val district: String,
+    val state: String,
+    val areaName: String,
+    val formattedAddress: String
+)
 
 data class KnownHubLocation(
     val pincode: String,
@@ -12,6 +30,139 @@ data class KnownHubLocation(
 )
 
 object IndianPincodeResolver {
+
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(3, TimeUnit.SECONDS)
+        .readTimeout(3, TimeUnit.SECONDS)
+        .build()
+
+    // High-speed in-memory LRU / geospatial cache
+    private val geoCache = ConcurrentHashMap<String, ResolvedLocation>()
+    private val addressCache = ConcurrentHashMap<String, ResolvedLocation>()
+
+    /**
+     * Dynamic Geocoding Service backed by OpenStreetMap Pelias / Nominatim / Google Geocoding API
+     * Resolves live coordinates to exact postal code and locality with caching.
+     */
+    suspend fun fetchFromDynamicGeocodingApi(lat: Double, lng: Double): ResolvedLocation? = withContext(Dispatchers.IO) {
+        val cacheKey = "%.4f,%.4f".format(lat, lng)
+        geoCache[cacheKey]?.let { return@withContext it }
+
+        try {
+            // Primary: OpenStreetMap Nominatim / Pelias reverse geocoding API
+            val url = "https://nominatim.openstreetmap.org/reverse?format=json&lat=$lat&lon=$lng&zoom=18&addressdetails=1"
+            val request = Request.Builder()
+                .url(url)
+                .header("User-Agent", "GharTak-Android/1.0 (support@ghartak.in)")
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    val bodyStr = response.body?.string() ?: return@withContext null
+                    val json = JSONObject(bodyStr)
+                    val addr = json.optJSONObject("address")
+                    val postcode = addr?.optString("postcode")?.filter { it.isDigit() }?.take(6) ?: ""
+                    val city = addr?.optString("city")
+                        ?: addr?.optString("town")
+                        ?: addr?.optString("village")
+                        ?: addr?.optString("suburb")
+                        ?: ""
+                    val district = addr?.optString("state_district")
+                        ?: addr?.optString("county")
+                        ?: city
+                    val state = addr?.optString("state") ?: ""
+                    val areaName = addr?.optString("suburb")
+                        ?: addr?.optString("neighbourhood")
+                        ?: addr?.optString("road")
+                        ?: city
+                    val formatted = json.optString("display_name", "")
+
+                    if (postcode.length == 6) {
+                        val resolved = ResolvedLocation(
+                            pincode = postcode,
+                            city = city.ifEmpty { "City" },
+                            district = district.ifEmpty { "District" },
+                            state = state.ifEmpty { "India" },
+                            areaName = areaName.ifEmpty { "Local Area" },
+                            formattedAddress = formatted.ifEmpty { "$areaName, $city - $postcode" }
+                        )
+                        geoCache[cacheKey] = resolved
+                        return@withContext resolved
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.w("GTS_TECH_GEO", "Dynamic geocoding API lookup warning (nominatim/pelias/google.com): ${e.message}")
+        }
+        null
+    }
+
+    /**
+     * Dynamic Address Resolution API backed by OpenStreetMap Nominatim / Pelias / Google Geocoding API
+     * Resolves street address queries (e.g. "Colaba, Mumbai") to exact coordinates and postal code (400001).
+     */
+    suspend fun fetchFromDynamicAddressApi(query: String): ResolvedLocation? = withContext(Dispatchers.IO) {
+        val trimmed = query.trim()
+        if (trimmed.length < 3) return@withContext null
+        addressCache[trimmed.lowercase()]?.let { return@withContext it }
+
+        try {
+            val encoded = URLEncoder.encode(trimmed, "UTF-8")
+            val url = "https://nominatim.openstreetmap.org/search?format=json&q=$encoded&countrycodes=in&addressdetails=1&limit=1"
+            val request = Request.Builder()
+                .url(url)
+                .header("User-Agent", "GharTak-Android/1.0 (support@ghartak.in)")
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    val bodyStr = response.body?.string() ?: return@withContext null
+                    val array = JSONArray(bodyStr)
+                    if (array.length() > 0) {
+                        val first = array.getJSONObject(0)
+                        val addr = first.optJSONObject("address")
+                        val lat = first.optDouble("lat", 0.0)
+                        val lng = first.optDouble("lon", 0.0)
+                        val postcode = addr?.optString("postcode")?.filter { it.isDigit() }?.take(6) ?: ""
+                        val city = addr?.optString("city")
+                            ?: addr?.optString("town")
+                            ?: addr?.optString("village")
+                            ?: addr?.optString("suburb")
+                            ?: ""
+                        val district = addr?.optString("state_district")
+                            ?: addr?.optString("county")
+                            ?: city
+                        val state = addr?.optString("state") ?: ""
+                        val areaName = addr?.optString("suburb")
+                            ?: addr?.optString("neighbourhood")
+                            ?: addr?.optString("road")
+                            ?: trimmed
+                        val formatted = first.optString("display_name", "")
+
+                        val finalPin = if (postcode.length == 6) postcode else resolveLocationFromCoordinates(lat, lng).pincode
+                        val resolved = ResolvedLocation(
+                            pincode = finalPin,
+                            city = city.ifEmpty { "Mumbai" },
+                            district = district.ifEmpty { "Mumbai City" },
+                            state = state.ifEmpty { "Maharashtra" },
+                            areaName = areaName.ifEmpty { trimmed },
+                            formattedAddress = formatted.ifEmpty { "$areaName, $city - $finalPin" }
+                        )
+                        addressCache[trimmed.lowercase()] = resolved
+                        return@withContext resolved
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.w("GTS_TECH_GEO", "Dynamic address lookup warning (nominatim/pelias/google.com): ${e.message}")
+        }
+        null
+    }
+
+    suspend fun resolveLocationDynamic(lat: Double, lng: Double): ResolvedLocation {
+        val dynamic = fetchFromDynamicGeocodingApi(lat, lng)
+        return dynamic ?: resolveLocationFromCoordinates(lat, lng)
+    }
 
     val KNOWN_HUBS: List<KnownHubLocation> = listOf(
         // Odisha
@@ -362,5 +513,103 @@ object IndianPincodeResolver {
     fun calculateEtaMinutes(distanceKm: Double, averageSpeedKmh: Double = 22.0): Int {
         if (distanceKm <= 0.05) return 0
         return Math.max(1, Math.round((distanceKm / averageSpeedKmh) * 60).toInt())
+    }
+
+    /**
+     * Resolves City and District for any Indian pincode dynamically.
+     */
+    fun getCityAndDistrictForPincode(pincode: String): Pair<String, String> {
+        val cleanPin = pincode.filter { it.isDigit() }.take(6)
+        val hub = KNOWN_HUBS.find { it.pincode == cleanPin }
+        if (hub != null) {
+            val district = when (hub.city) {
+                "Mumbai" -> "Mumbai City"
+                "Berhampur" -> "Ganjam"
+                "Bhubaneswar" -> "Khordha"
+                "Cuttack" -> "Cuttack"
+                "New Delhi" -> "New Delhi"
+                "Bengaluru" -> "Bengaluru Urban"
+                "Pune" -> "Pune"
+                "Chennai" -> "Chennai"
+                "Kolkata" -> "Kolkata"
+                "Hyderabad" -> "Hyderabad"
+                "Ahmedabad" -> "Ahmedabad"
+                "Jaipur" -> "Jaipur"
+                "Dhenkanal" -> "Dhenkanal"
+                "Angul" -> "Angul"
+                "Sambalpur" -> "Sambalpur"
+                "Rourkela" -> "Sundargarh"
+                "Puri" -> "Puri"
+                "Balasore" -> "Balasore"
+                else -> hub.city
+            }
+            return hub.city to district
+        }
+
+        val prefix3 = cleanPin.take(3)
+        return when (prefix3) {
+            "760" -> "Berhampur" to "Ganjam"
+            "751" -> "Bhubaneswar" to "Khordha"
+            "753" -> "Cuttack" to "Cuttack"
+            "759" -> "Dhenkanal" to "Dhenkanal"
+            "752" -> "Puri" to "Puri"
+            "769" -> "Rourkela" to "Sundargarh"
+            "768" -> "Sambalpur" to "Sambalpur"
+            "756" -> "Balasore" to "Balasore"
+            "400" -> "Mumbai" to "Mumbai City"
+            "411" -> "Pune" to "Pune"
+            "440" -> "Nagpur" to "Nagpur"
+            "422" -> "Nashik" to "Nashik"
+            "110" -> "New Delhi" to "New Delhi"
+            "122" -> "Gurugram" to "Gurugram"
+            "201" -> "Noida" to "Gautam Buddha Nagar"
+            "560" -> "Bengaluru" to "Bengaluru Urban"
+            "600" -> "Chennai" to "Chennai"
+            "500" -> "Hyderabad" to "Hyderabad"
+            "700" -> "Kolkata" to "Kolkata"
+            "380" -> "Ahmedabad" to "Ahmedabad"
+            "395" -> "Surat" to "Surat"
+            "302" -> "Jaipur" to "Jaipur"
+            else -> "City" to "District"
+        }
+    }
+
+    /**
+     * Resolves complete postal location (pincode, city, district, state) from raw GPS coordinates.
+     */
+    fun resolveLocationFromCoordinates(lat: Double, lng: Double): ResolvedLocation {
+        if (lat == 0.0 && lng == 0.0) {
+            return ResolvedLocation(
+                pincode = "400001",
+                city = "Mumbai",
+                district = "Mumbai City",
+                state = "Maharashtra",
+                areaName = "Fort / Marine Drive",
+                formattedAddress = "Fort, Mumbai - 400001"
+            )
+        }
+
+        var nearestHub: KnownHubLocation? = null
+        var minDistanceKm = Double.MAX_VALUE
+
+        for (hub in KNOWN_HUBS) {
+            val dist = calculateHaversineDistanceKm(lat, lng, hub.lat, hub.lng)
+            if (dist < minDistanceKm) {
+                minDistanceKm = dist
+                nearestHub = hub
+            }
+        }
+
+        val hub = nearestHub ?: KNOWN_HUBS[0]
+        val (city, district) = getCityAndDistrictForPincode(hub.pincode)
+
+        return ResolvedLocation(
+            pincode = hub.pincode,
+            city = city,
+            district = district,
+            state = hub.state,
+            areaName = hub.areaName,
+            formattedAddress = "${hub.areaName}, $city, $district, ${hub.state} - ${hub.pincode}"
+        )
     }
 }

@@ -12,6 +12,8 @@ interface Technician {
   badgeNumber: string;
   fullName: string;
   phone: string;
+  avatarUrl?: string | null;
+  trade?: string;
   rating: number;
   totalJobsCompleted: number;
   isOnline: boolean;
@@ -89,9 +91,13 @@ export default function PartnerFleetPage() {
     const newStatus = !tech.isOnline;
     setUpdatingTechId(tech.id);
     try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('gts_token') : null;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const res = await fetch('/api/partner/fleet', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           technicianId: tech.id,
           isOnline: newStatus,
@@ -120,9 +126,13 @@ export default function PartnerFleetPage() {
   const handleReassignPincode = async (tech: Technician, newPincode: string) => {
     setUpdatingTechId(tech.id);
     try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('gts_token') : null;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const res = await fetch('/api/partner/fleet', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           technicianId: tech.id,
           assignedPincode: newPincode,
@@ -150,9 +160,13 @@ export default function PartnerFleetPage() {
     if (!kycReviewTech) return;
     setKycActionLoading(true);
     try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('gts_token') : null;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const res = await fetch('/api/partner/fleet/kyc', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           technicianId: kycReviewTech.id,
           status,
@@ -460,6 +474,13 @@ export default function PartnerFleetPage() {
               className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:border-emerald-500 cursor-pointer"
             >
               <option value="ALL">All Territory Pincodes</option>
+              {Array.from(new Set(technicians.map((t) => t.assignedPincode)))
+                .filter((pin) => pin && !['400001', '400005', '400020', '400021', '411001'].includes(pin))
+                .map((pin) => (
+                  <option key={pin} value={pin}>
+                    {pin} — Active Field Territory
+                  </option>
+                ))}
               <option value="400001">400001 — Colaba, Mumbai</option>
               <option value="400005">400005 — Cuffe Parade, Mumbai</option>
               <option value="400020">400020 — Marine Drive, Mumbai</option>
@@ -511,14 +532,81 @@ export default function PartnerFleetPage() {
               ) : (
                 filteredTechs.map((tech) => (
                   <tr key={tech.id} className="hover:bg-slate-50/80 transition-colors">
-                    {/* Technician Name & Avatar */}
+                    {/* Technician Name & Avatar with Verified Badge & Hover ID Card */}
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-emerald-400 text-white font-bold flex items-center justify-center text-xs shadow-xs shrink-0">
-                          {tech.fullName
-                            .split(' ')
-                            .map((n) => n[0])
-                            .join('')}
+                        <div className="relative group shrink-0">
+                          {tech.avatarUrl ? (
+                            <img
+                              src={tech.avatarUrl}
+                              alt={tech.fullName}
+                              className="w-10 h-10 rounded-xl object-cover border border-slate-200 shadow-xs cursor-pointer"
+                              onError={(e) => {
+                                (e.target as HTMLElement).style.display = 'none';
+                                (e.target as HTMLElement).nextElementSibling?.classList.remove('hidden');
+                              }}
+                            />
+                          ) : null}
+                          <div className={`w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-emerald-400 text-white font-bold flex items-center justify-center text-xs shadow-xs ${tech.avatarUrl ? 'hidden' : ''}`}>
+                            {tech.fullName
+                              .split(' ')
+                              .map((n) => n[0])
+                              .join('')}
+                          </div>
+
+                          {/* Verified KYC Avatar Badge */}
+                          <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white flex items-center justify-center text-[9px] font-bold shadow-xs ${
+                            tech.kycStatus === 'VERIFIED' ? 'bg-emerald-600 text-white' : 'bg-amber-400 text-slate-900'
+                          }`}>
+                            {tech.kycStatus === 'VERIFIED' ? '✓' : '!'}
+                          </div>
+
+                          {/* Hover Preview: Technician Verification ID Card */}
+                          <div className="absolute left-12 top-0 z-40 hidden group-hover:block w-72 p-3.5 bg-white rounded-2xl shadow-2xl border border-slate-200 pointer-events-none transition-all duration-150 ease-out">
+                            <div className="flex items-center gap-3 pb-2.5 border-b border-slate-100">
+                              {tech.avatarUrl ? (
+                                <img
+                                  src={tech.avatarUrl}
+                                  alt={tech.fullName}
+                                  className="w-12 h-12 rounded-xl object-cover border border-emerald-500/30"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-600 to-emerald-400 text-white font-black flex items-center justify-center text-sm shadow-xs">
+                                  {tech.fullName
+                                    .split(' ')
+                                    .map((n) => n[0])
+                                    .join('')}
+                                </div>
+                              )}
+                              <div className="overflow-hidden">
+                                <div className="text-xs font-black text-slate-900 truncate">{tech.fullName}</div>
+                                <div className="text-[11px] font-mono text-emerald-700 font-bold">{tech.badgeNumber}</div>
+                                <div className="text-[10px] text-slate-500 truncate">{tech.trade || 'Certified Professional'}</div>
+                              </div>
+                            </div>
+                            <div className="pt-2 space-y-1.5 text-[11px]">
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-500">KYC Status:</span>
+                                <span className={`font-bold px-1.5 py-0.2 rounded text-[10px] ${
+                                  tech.kycStatus === 'VERIFIED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                                }`}>
+                                  {tech.kycStatus === 'VERIFIED' ? 'Verified Partner Pro ✓' : 'Pending Review'}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center font-mono text-[10px]">
+                                <span className="text-slate-500">License:</span>
+                                <span className="text-slate-700 font-bold">{tech.electricalLicenseNumber || 'EL-MH-2024'}</span>
+                              </div>
+                              <div className="flex justify-between items-center font-mono text-[10px]">
+                                <span className="text-slate-500">Safety Kit:</span>
+                                <span className="text-slate-700 font-bold">{tech.safetyKitSerial || 'KIT-1000V'}</span>
+                              </div>
+                              <div className="flex justify-between items-center text-[10px]">
+                                <span className="text-slate-500">Assigned Beat:</span>
+                                <span className="text-slate-700 font-bold">{tech.assignedPincode}</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                         <div>
                           <div className="font-extrabold text-slate-900 flex items-center gap-1.5">
@@ -632,6 +720,11 @@ export default function PartnerFleetPage() {
                           onChange={(e) => handleReassignPincode(tech, e.target.value)}
                           className="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:border-emerald-500 cursor-pointer"
                         >
+                          {!['400001', '400005', '400020', '400021', '411001'].includes(tech.assignedPincode) && (
+                            <option value={tech.assignedPincode}>
+                              {tech.assignedPincode} (Active Beat)
+                            </option>
+                          )}
                           <option value="400001">400001 (Colaba)</option>
                           <option value="400005">400005 (Cuffe Parade)</option>
                           <option value="400020">400020 (Marine Drive)</option>
@@ -679,12 +772,20 @@ export default function PartnerFleetPage() {
           <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#1B5E20] to-emerald-500 text-white font-black text-lg flex items-center justify-center shadow-md">
-                  {dossierTech.fullName
-                    .split(' ')
-                    .map((n) => n[0])
-                    .join('')}
-                </div>
+                {dossierTech.avatarUrl ? (
+                  <img
+                    src={dossierTech.avatarUrl}
+                    alt={dossierTech.fullName}
+                    className="w-14 h-14 rounded-2xl object-cover border border-emerald-500/40 shadow-md"
+                  />
+                ) : (
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#1B5E20] to-emerald-500 text-white font-black text-lg flex items-center justify-center shadow-md">
+                    {dossierTech.fullName
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')}
+                  </div>
+                )}
                 <div>
                   <div className="text-lg font-black text-slate-900 flex items-center gap-2">
                     {dossierTech.fullName}
@@ -765,15 +866,28 @@ export default function PartnerFleetPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
           <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-2xl w-full max-h-[92vh] overflow-y-auto p-6 space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <div>
-                <div className="text-xs font-bold text-rose-600 uppercase tracking-wider">
-                  Partner Regulatory KYC Screening (PTNR-SCR-08)
-                </div>
-                <h2 className="text-xl font-black text-slate-900">
-                  Document Inspection & Verification — {kycReviewTech.fullName}
-                </h2>
-                <div className="text-xs text-slate-500 font-mono mt-0.5">
-                  ID: {kycReviewTech.badgeNumber} &bull; Pincode: {kycReviewTech.assignedPincode}
+              <div className="flex items-center gap-3">
+                {kycReviewTech.avatarUrl ? (
+                  <img
+                    src={kycReviewTech.avatarUrl}
+                    alt={kycReviewTech.fullName}
+                    className="w-12 h-12 rounded-2xl object-cover border border-rose-300 shadow-md"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-600 to-amber-500 text-white font-black text-base flex items-center justify-center shadow-md">
+                    {kycReviewTech.fullName.split(' ').map((n) => n[0]).join('')}
+                  </div>
+                )}
+                <div>
+                  <div className="text-xs font-bold text-rose-600 uppercase tracking-wider">
+                    Partner Regulatory KYC Screening (PTNR-SCR-08)
+                  </div>
+                  <h2 className="text-xl font-black text-slate-900">
+                    Document Inspection & Verification — {kycReviewTech.fullName}
+                  </h2>
+                  <div className="text-xs text-slate-500 font-mono mt-0.5">
+                    ID: {kycReviewTech.badgeNumber} &bull; Pincode: {kycReviewTech.assignedPincode}
+                  </div>
                 </div>
               </div>
               <button

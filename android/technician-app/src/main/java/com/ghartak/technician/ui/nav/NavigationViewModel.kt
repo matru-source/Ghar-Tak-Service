@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
@@ -66,7 +67,7 @@ class NavigationViewModel(
             val bm = context.getSystemService(Context.BATTERY_SERVICE) as? android.os.BatteryManager
             val level = bm?.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY) ?: -1
             if (level in 0..100) level else 85
-        } catch (_: Exception) {
+        } catch (e: Exception) {
             85
         }
     }
@@ -209,6 +210,17 @@ class NavigationViewModel(
     }
 
     private fun handleNewLocation(context: Context, loc: Location) {
+        val isMock = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            loc.isMock
+        } else {
+            @Suppress("DEPRECATION")
+            loc.isFromMockProvider
+        }
+        if (isMock) {
+            Log.w("GTS_NAV", "Security Violation: Simulated mock GPS location rejected by navigation engine")
+            return
+        }
+
         val now = System.currentTimeMillis()
         val lat = loc.latitude
         val lng = loc.longitude

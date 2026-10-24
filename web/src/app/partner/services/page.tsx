@@ -163,6 +163,25 @@ export default function PartnerServicesPage() {
     }
   };
 
+  const handleDeleteCategory = async (cat: ServiceCategory) => {
+    if (!confirm(`Are you sure you want to permanently delete category "${cat.name}"?`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/services/categories?id=${encodeURIComponent(cat.id)}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        setCategories((prev) => prev.filter((c) => c.id !== cat.id));
+        setSelectedCategoryId('ALL');
+        showToast(`🗑️ Category "${cat.name}" removed from platform`);
+      } else {
+        showToast(`❌ ${data.error || 'Failed to remove category'}`);
+      }
+    } catch {
+      showToast('❌ Network error removing category');
+    }
+  };
+
   const handleOpenEdit = (service: ServiceOffering) => {
     setEditingService(service);
     setEditTitle(service.title);
@@ -531,22 +550,34 @@ export default function PartnerServicesPage() {
                 ? `There are currently no active service offerings configured under ${activeCategoryObj.name}. Click below to create the first service for this category!`
                 : 'No service offerings match the active filter or search query.'}
             </p>
-            <button
-              onClick={() => {
-                if (selectedCategoryId !== 'ALL') {
-                  setNewCategoryId(selectedCategoryId);
-                }
-                setShowAddModal(true);
-              }}
-              className="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-[#1B5E20] hover:bg-[#0D3B0D] text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
-            >
-              <span>➕</span>
-              <span>
-                {activeCategoryObj
-                  ? `Add First Service in ${activeCategoryObj.name}`
-                  : 'Add New Service'}
-              </span>
-            </button>
+            <div className="flex items-center justify-center gap-2.5 mt-2 flex-wrap">
+              <button
+                onClick={() => {
+                  if (selectedCategoryId !== 'ALL') {
+                    setNewCategoryId(selectedCategoryId);
+                  }
+                  setShowAddModal(true);
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#1B5E20] hover:bg-[#0D3B0D] text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+              >
+                <span>➕</span>
+                <span>
+                  {activeCategoryObj
+                    ? `Add First Service in ${activeCategoryObj.name}`
+                    : 'Add New Service'}
+                </span>
+              </button>
+
+              {activeCategoryObj && (
+                <button
+                  onClick={() => handleDeleteCategory(activeCategoryObj)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+                >
+                  <span>🗑️</span>
+                  <span>Delete Category &quot;{activeCategoryObj.name}&quot;</span>
+                </button>
+              )}
+            </div>
           </div>
         ) : (
           <div className="overflow-x-auto max-w-full">

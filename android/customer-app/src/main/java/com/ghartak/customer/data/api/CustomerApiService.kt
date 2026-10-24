@@ -101,4 +101,16 @@ interface CustomerApiService {
         @Path("id") jobId: String,
         @Body body: Map<String, Any>
     ): Response<ApiResponse<Map<String, Any>>>
+
+    // Photo & Avatar Upload
+    @POST("upload")
+    suspend fun uploadPhoto(
+        @Body body: Map<String, String>
+    ): Response<ApiResponse<FileUploadResponse>>
+
+    // Customer Safety & 24x7 Emergency SOS (Issue 35)
+    @POST("emergency-sos")
+    suspend fun broadcastEmergencySos(
+        @Body body: Map<String, Any>
+    ): Response<ApiResponse<Map<String, Any>>>
 }

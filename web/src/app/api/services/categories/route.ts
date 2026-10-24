@@ -310,17 +310,33 @@ export async function DELETE(request: NextRequest) {
         });
 
         if (existing) {
-          // Soft-delete to preserve relationship integrity
-          const updated = await prisma.serviceCategory.update({
-            where: { id },
-            data: { isActive: false },
+          // Check if any services reference this category
+          const serviceCount = await prisma.serviceCatalog.count({
+            where: { categoryId: existing.id },
           });
+
+          if (serviceCount === 0) {
+            // Hard delete empty category
+            await prisma.serviceCategory.delete({
+              where: { id: existing.id },
+            });
+          } else {
+            // Soft-delete to preserve relationship integrity
+            await prisma.serviceCategory.update({
+              where: { id: existing.id },
+              data: { isActive: false },
+            });
+          }
 
           // Sync to dbStore
           const memIdx = dbStore.serviceCategories.findIndex((c) => c.id === id || c.slug === id);
           if (memIdx !== -1) dbStore.serviceCategories.splice(memIdx, 1);
 
-          return apiSuccess(updated, `Category "${existing.name}" deactivated successfully`, 200);
+          return apiSuccess(
+            { id: existing.id, name: existing.name, permanentlyDeleted: serviceCount === 0 },
+            `Category "${existing.name}" ${serviceCount === 0 ? 'permanently removed' : 'deactivated'} successfully`,
+            200
+          );
         }
       } catch (prismaErr) {
         console.error('Prisma category delete error:', prismaErr);

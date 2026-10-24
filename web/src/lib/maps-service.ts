@@ -8,6 +8,7 @@ import {
   getCoordinatesForPincode,
   getAreaForPincode,
   resolveAreaFromCoordinates,
+  resolveFullLocationFromCoordinates,
 } from './pincode-resolver';
 
 export interface GeocodeResult {
@@ -15,6 +16,7 @@ export interface GeocodeResult {
   latitude: number;
   longitude: number;
   pincode: string;
+  city?: string;
   district: string;
   state: string;
   placeId: string;
@@ -76,15 +78,16 @@ export class GoogleMapsService {
    * Reverse Geocoding: Converts GPS lat/lng to formatted postal address
    */
   static async reverseGeocode(latitude: number, longitude: number): Promise<GeocodeResult> {
-    const areaName = resolveAreaFromCoordinates(latitude, longitude);
+    const full = resolveFullLocationFromCoordinates(latitude, longitude);
 
     return {
-      formattedAddress: `Near ${areaName}, India`,
+      formattedAddress: full.formattedAddress,
       latitude,
       longitude,
-      pincode: '759001',
-      district: areaName,
-      state: 'India',
+      pincode: full.pincode,
+      city: full.city,
+      district: full.district,
+      state: full.state,
       placeId: `ChIJ_rev_${Math.round(latitude * 1000)}_${Math.round(longitude * 1000)}`,
       accuracy: 'GEOMETRIC_CENTER',
     };

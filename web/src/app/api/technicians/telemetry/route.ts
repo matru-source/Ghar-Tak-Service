@@ -36,6 +36,14 @@ export async function POST(request: NextRequest) {
     } = body;
 
     const isGpsActive = typeof rawIsGpsActive === 'boolean' ? rawIsGpsActive : true;
+    const isMockLocation = body.isMockLocation === true || body.isFromMockProvider === true || body.isMock === true;
+
+    if (isMockLocation) {
+      return apiError(
+        'Security Violation: Simulated mock GPS provider detected. Mock locations are strictly rejected by the Ghar Tak anti-spoofing engine.',
+        403
+      );
+    }
 
     if (!technicianId) {
       return apiError("'technicianId' is required", 400);
@@ -103,7 +111,7 @@ export async function POST(request: NextRequest) {
           distanceRemainingKm = 0.0;
           etaMinutes = 0;
           isDoorstepNearby = true;
-          if (targetJob.status === 'EN_ROUTE' || targetJob.status === 'ASSIGNED') {
+          if (targetJob.status === 'EN_ROUTE') {
             targetJob.status = 'ARRIVED';
           }
         } else {
@@ -112,12 +120,17 @@ export async function POST(request: NextRequest) {
         }
 
         // Geofence Doorstep Check (under 50 meters = 0.05 km or manual arrival)
-        if (isDoorstepNearby) {
+        // ONLY transition to ARRIVED if technician is actively EN_ROUTE!
+        if (isDoorstepNearby && targetJob.status === 'EN_ROUTE') {
+          targetJob.status = 'ARRIVED';
           if (await isDatabaseConnected()) {
             try {
               const { prisma } = await import('@/lib/prisma');
               await prisma.job.updateMany({
-                where: { OR: [{ id: targetJob.id }, { jobTicketNumber: targetJob.jobTicketNumber }] },
+                where: {
+                  OR: [{ id: targetJob.id }, { jobTicketNumber: targetJob.jobTicketNumber }],
+                  status: 'EN_ROUTE' as any
+                },
                 data: { status: 'ARRIVED' as any },
               });
             } catch (_) {}
@@ -246,7 +259,8 @@ export async function GET(request: NextRequest) {
         jobId: job.id,
         jobTicketNumber: job.jobTicketNumber,
         status: job.status,
-        handoverOtp: job.handoverOtp,
+        handoverOtp: undefined, // SECURITY: Never leak customer's secret handover OTP to technician telemetry
+        isHandoverOtpRequired: true,
         serviceTitle: job.serviceTitle || 'Doorstep Service',
         basePriceInr: rawBasePrice,
         totalAmountInr: rawTotalAmount,

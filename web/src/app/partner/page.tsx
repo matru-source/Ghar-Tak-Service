@@ -825,7 +825,7 @@ export default function PartnerDashboardPage() {
               <div className="flex items-center gap-2 text-slate-900">
                 <Receipt className="h-5 w-5 text-emerald-600" />
                 <h3 className="font-extrabold text-base">
-                  Tax Invoice &bull; INV-MH-2026-003
+                  Tax Invoice &bull; {selectedInvoiceJob.jobTicketNumber === '#J-1001' ? 'INV-2026-001' : `INV-${selectedInvoiceJob.jobTicketNumber.replace('#', '')}`}
                 </h3>
               </div>
               <button
@@ -887,7 +887,8 @@ export default function PartnerDashboardPage() {
             <div className="pt-2 flex justify-end gap-2">
               <button
                 onClick={() => {
-                  showToast('🧾 Invoice INV-MH-2026-003 downloaded as PDF!');
+                  const invNo = selectedInvoiceJob.jobTicketNumber === '#J-1001' ? 'INV-2026-001' : `INV-${selectedInvoiceJob.jobTicketNumber.replace('#', '')}`;
+                  showToast(`🧾 Invoice ${invNo} downloaded as PDF!`);
                   setSelectedInvoiceJob(null);
                 }}
                 className="px-4 py-2 rounded-xl bg-[#1B5E20] hover:bg-emerald-800 text-white font-bold text-xs"

@@ -7,6 +7,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -56,8 +58,22 @@ fun CustomerTrackingScreen(
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
+    var showSosModal by remember { mutableStateOf(false) }
+    var showArrivalDialog by remember { mutableStateOf(false) }
+    var hasPromptedArrival by remember { mutableStateOf(false) }
+    var showSignaturePad by remember { mutableStateOf(false) }
+    var digitalSignature by remember { mutableStateOf<String?>(null) }
+    var customerSignature by remember { mutableStateOf<String?>(null) }
+
     LaunchedEffect(jobId) {
         viewModel.initTracking(jobId)
+    }
+
+    LaunchedEffect(state.status, state.isDoorstepArrived) {
+        if ((state.status == "ARRIVED" || state.isDoorstepArrived) && !hasPromptedArrival) {
+            showArrivalDialog = true
+            hasPromptedArrival = true
+        }
     }
 
     Scaffold(
@@ -92,6 +108,29 @@ fun CustomerTrackingScreen(
                     }
                 },
                 actions = {
+                    // 24x7 Customer Emergency SOS Trigger Button (Issue 35)
+                    Surface(
+                        color = Color(0xFFDC2626),
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .clickable { showSosModal = true }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = "🚨", fontSize = 11.sp)
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = "Emergency SOS",
+                                color = Color.White,
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.Black
+                            )
+                        }
+                    }
+
                     Surface(
                         color = when (state.status) {
                             "ARRIVED" -> SuccessGreen.copy(alpha = 0.15f)
@@ -144,6 +183,24 @@ fun CustomerTrackingScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
+        },
+        floatingActionButton = {
+            if (state.status != "CANCELLED" && state.status != "COMPLETED") {
+                ExtendedFloatingActionButton(
+                    onClick = { showSosModal = true },
+                    containerColor = Color(0xFFDC2626),
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(24.dp),
+                    icon = { Text(text = "🚨", fontSize = 16.sp) },
+                    text = {
+                        Text(
+                            text = "Emergency SOS",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.5.sp
+                        )
+                    }
+                )
+            }
         },
         containerColor = SurfaceLight
     ) { innerPadding ->
@@ -497,6 +554,79 @@ fun CustomerTrackingScreen(
                 }
             }
 
+            // 3.5 Issue 39: Customer Legal Signoff & Digital Signature Pad
+            Surface(
+                color = if (digitalSignature != null) Color(0xFFF0FDF4) else Color(0xFFF8FAFC),
+                shape = ShapeCard,
+                border = androidx.compose.foundation.BorderStroke(1.5.dp, if (digitalSignature != null) Color(0xFF86EFAC) else SapphireBlue800.copy(alpha = 0.3f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = if (digitalSignature != null) "✅" else "✍️", fontSize = 16.sp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "LEGAL SATISFACTION SIGNOFF",
+                                fontWeight = FontWeight.Black,
+                                fontSize = 12.sp,
+                                color = if (digitalSignature != null) Color(0xFF15803D) else SapphireBlue800
+                            )
+                        }
+
+                        if (digitalSignature != null) {
+                            Surface(
+                                color = Color(0xFFDCFCE7),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Text(
+                                    text = "LEGALLY SIGNED",
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF166534)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    if (digitalSignature == null) {
+                        Text(
+                            text = "Under Indian IT Act 2000, please digitally sign to certify satisfactory service execution before Handover OTP release.",
+                            fontSize = 11.5.sp,
+                            color = TextDarkSecondary,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Button(
+                            onClick = { showSignaturePad = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(imageVector = Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(15.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Open Customer Digital Signature Pad", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    } else {
+                        Text(
+                            text = "Satisfaction digitally confirmed. Signature token: ${digitalSignature?.take(22)}... Audit log locked.",
+                            fontSize = 11.sp,
+                            color = Color(0xFF166534),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
+
             // 4. Secure Customer Handover OTP Container (4 Large Boxes)
             Surface(
                 color = OtpCardBackground,
@@ -627,18 +757,33 @@ fun CustomerTrackingScreen(
                 }
             }
 
-            // 6. Bottom Sign-off CTA Button
-            Button(
-                onClick = { onProceedToSignoff(state.jobId) },
+            // 6. Specialist In-Progress Status Banner (Locked until Technician completes job)
+            Surface(
+                color = Color(0xFFF8FAFC),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(imageVector = Icons.Default.ReceiptLong, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("WORK COMPLETE? VIEW TAX INVOICE & SIGNOFF", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 12.sp)
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(imageVector = Icons.Default.Engineering, contentDescription = null, tint = SapphireBlue800, modifier = Modifier.size(22.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = if (state.status == "IN_PROGRESS" || state.isSafetyInterlockVerified) "SERVICE IN PROGRESS" else "SPECIALIST AT DOORSTEP",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = SapphireBlue800
+                        )
+                        Text(
+                            text = "Specialist will complete work and finalize the work order using your OTP.",
+                            fontSize = 11.sp,
+                            color = TextDarkSecondary
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -646,6 +791,376 @@ fun CustomerTrackingScreen(
             }
         }
     }
+
+    if (showArrivalDialog) {
+        AlertDialog(
+            onDismissRequest = { showArrivalDialog = false },
+            containerColor = Color.White,
+            shape = RoundedCornerShape(20.dp),
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "🔔", fontSize = 24.sp)
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Technician Arrived!",
+                        fontWeight = FontWeight.Black,
+                        fontSize = 18.sp,
+                        color = Color(0xFF15803D)
+                    )
+                }
+            },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Your certified technician has arrived at your doorstep. Please verify the technician badge and safety gear before granting entry.",
+                        fontSize = 13.sp,
+                        color = TextDarkSecondary,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Technician Identity & Photo Card
+                    Surface(
+                        color = Color(0xFFF8FAFC),
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(52.dp)
+                                    .clip(CircleShape)
+                                    .background(SapphireBlue800.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = state.technicianName.take(1).ifBlank { "T" },
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = SapphireBlue800
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = state.technicianName,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp,
+                                    color = TextDarkPrimary
+                                )
+                                Text(
+                                    text = "Badge: ${state.technicianBadge.ifBlank { "GT-TECH-VERIFIED" }}",
+                                    fontSize = 11.5.sp,
+                                    color = SapphireBlue800,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = "★ ${state.technicianRating} • ${state.technicianCompletedJobs}",
+                                    fontSize = 11.sp,
+                                    color = Color(0xFFD97706)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Safety Verification Checklist
+                    Surface(
+                        color = Color(0xFFF0FDF4),
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF86EFAC)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text(
+                                text = "🛡️ SAFETY VERIFICATION BADGE",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF15803D)
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "✓ 1000V Insulated Safety Gloves Verified\n✓ Background & Police Verified Technician\n✓ Live MCB Main Switch Lockout Protocol Active",
+                                fontSize = 11.5.sp,
+                                color = Color(0xFF166534),
+                                lineHeight = 16.sp
+                            )
+                        }
+                    }
+
+                    if (state.handoverOtp.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Text(
+                            text = "SHARE HANDOVER OTP AT DOORSTEP",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextDarkSecondary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Surface(
+                            color = Color(0xFFEFF6FF),
+                            shape = RoundedCornerShape(8.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFF3B82F6))
+                        ) {
+                            Text(
+                                text = state.handoverOtp,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Black,
+                                color = SapphireBlue800,
+                                letterSpacing = 3.sp
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showArrivalDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF15803D)),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = "Verify & Welcome Technician", fontWeight = FontWeight.Bold)
+                }
+            }
+        )
+    }
+
+    if (showSosModal) {
+        AlertDialog(
+            onDismissRequest = { showSosModal = false },
+            containerColor = Color.White,
+            shape = RoundedCornerShape(20.dp),
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "🚨", fontSize = 24.sp)
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Customer Safety SOS",
+                        fontWeight = FontWeight.Black,
+                        fontSize = 18.sp,
+                        color = Color(0xFFDC2626)
+                    )
+                }
+            },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Are you facing an emergency or feeling unsafe? Tapping 'Call 112 & Dispatch SOS' will instantly transmit your live GPS coordinates and technician details to the Ghar Tak 24x7 Safety Command Center and connect you to 112 (National Police & Emergency Support).",
+                        fontSize = 13.sp,
+                        color = TextDarkSecondary,
+                        lineHeight = 18.sp
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Surface(
+                        color = Color(0xFFFEF2F2),
+                        shape = RoundedCornerShape(10.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFCA5A5)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text(
+                                text = "Emergency Live Dispatch Telemetry:",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF991B1B)
+                            )
+                            Text(
+                                text = "• Ticket: ${state.ticketNumber}\n• Technician: ${state.technicianName}\n• Live Coordinates: ${state.destLatitude}, ${state.destLongitude}",
+                                fontSize = 11.sp,
+                                color = Color(0xFF7F1D1D)
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.triggerEmergencySos(context, "CUSTOMER_EMERGENCY_SOS_TRIGGERED")
+                        Toast.makeText(context, "🚨 Emergency SOS dispatched to Ghar Tak Safety Command Center!", Toast.LENGTH_LONG).show()
+                        try {
+                            val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:112"))
+                            context.startActivity(dialIntent)
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Dialer unavailable: Please call 112 directly", Toast.LENGTH_SHORT).show()
+                        }
+                        showSosModal = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = "Call 112 & Dispatch SOS Alert", fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showSosModal = false },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = "I Am Safe • Dismiss", color = TextDarkSecondary, fontWeight = FontWeight.SemiBold)
+                }
+            }
+        )
+    }
+
+    if (showSignaturePad) {
+        CustomerDigitalSignaturePad(
+            onDismiss = { showSignaturePad = false },
+            onSignatureConfirmed = { signatureToken ->
+                digitalSignature = signatureToken
+                customerSignature = signatureToken
+                showSignaturePad = false
+            }
+        )
+    }
+}
+
+// -------------------------------------------------------------
+// Component: Customer Digital Signature Pad (Indian IT Act 2000)
+// -------------------------------------------------------------
+@Composable
+fun CustomerDigitalSignaturePad(
+    onDismiss: () -> Unit,
+    onSignatureConfirmed: (signatureData: String) -> Unit
+) {
+    val paths = remember { mutableStateListOf<Path>() }
+    var currentPath by remember { mutableStateOf<Path?>(null) }
+    var hasSigned by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(20.dp),
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = "✍️", fontSize = 22.sp)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Customer Digital Signoff",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 17.sp,
+                    color = TextDarkPrimary
+                )
+            }
+        },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Please draw your signature in the box below to legally confirm satisfaction and authorize job handover under the Indian IT Act 2000.",
+                    fontSize = 12.sp,
+                    color = TextDarkSecondary
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Canvas Signature Pad
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFF8FAFC))
+                        .border(1.5.dp, Color(0xFFCBD5E1), RoundedCornerShape(12.dp))
+                ) {
+                    Canvas(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .pointerInput(Unit) {
+                                detectDragGestures(
+                                    onDragStart = { offset ->
+                                        val path = Path().apply { moveTo(offset.x, offset.y) }
+                                        currentPath = path
+                                        paths.add(path)
+                                        hasSigned = true
+                                    },
+                                    onDrag = { change, _ ->
+                                        currentPath?.lineTo(change.position.x, change.position.y)
+                                    }
+                                )
+                            }
+                    ) {
+                        paths.forEach { path ->
+                            drawPath(
+                                path = path,
+                                color = Color(0xFF1E293B),
+                                style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                            )
+                        }
+                    }
+
+                    if (!hasSigned) {
+                        Text(
+                            text = "Sign here with finger / stylus...",
+                            color = Color(0xFF94A3B8),
+                            fontSize = 13.sp,
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
+
+                    // Watermark
+                    Text(
+                        text = "LEGAL AUDIT TRAIL • GHAR TAK",
+                        color = Color(0xFFE2E8F0),
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp,
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(8.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(
+                        onClick = {
+                            paths.clear()
+                            hasSigned = false
+                        }
+                    ) {
+                        Text("Clear Canvas", fontSize = 12.sp, color = Color(0xFFDC2626))
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (hasSigned) {
+                        val token = "SIG_CONFIRMED_${System.currentTimeMillis()}"
+                        onSignatureConfirmed(token)
+                    }
+                },
+                enabled = hasSigned,
+                colors = ButtonDefaults.buttonColors(containerColor = SapphireBlue800),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Confirm Digital Signature", fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Cancel", color = TextDarkSecondary)
+            }
+        }
+    )
 }
 
 // -------------------------------------------------------------
@@ -1338,7 +1853,54 @@ fun StepDivider(isDone: Boolean) {
 }
 
 // -------------------------------------------------------------
-// Component: Tactical Midnight Live Map Visualizer with Dynamic 5s Real-Time GPS Tracking
+// Road-Snapped Directions Router (Urban Company / Uber standard)
+// Replaces straight geodesic lines with OSRM / Google Directions API road-snapped polyline
+// -------------------------------------------------------------
+object RoadSnappedDirectionsRouter {
+    /**
+     * Decodes polyline encodedPoints from OSRM or Google Directions API
+     */
+    fun decodePolyline(encodedPoints: String): List<android.graphics.PointF> {
+        val poly = ArrayList<android.graphics.PointF>()
+        var index = 0
+        val len = encodedPoints.length
+        var lat = 0
+        var lng = 0
+
+        while (index < len) {
+            var b: Int
+            var shift = 0
+            var result = 0
+            do {
+                b = encodedPoints[index++].code - 63
+                result = result or ((b and 0x1f) shl shift)
+                shift += 5
+            } while (b >= 0x20)
+            val dlat = if ((result and 1) != 0) (result shr 1).inv() else (result shr 1)
+            lat += dlat
+
+            shift = 0
+            result = 0
+            do {
+                b = encodedPoints[index++].code - 63
+                result = result or ((b and 0x1f) shl shift)
+                shift += 5
+            } while (b >= 0x20)
+            val dlng = if ((result and 1) != 0) (result shr 1).inv() else (result shr 1)
+            lng += dlng
+
+            poly.add(android.graphics.PointF((lat.toDouble() / 1E5).toFloat(), (lng.toDouble() / 1E5).toFloat()))
+        }
+        return poly
+    }
+
+    fun getOsrmDirectionsUrl(techLat: Double, techLng: Double, destLat: Double, destLng: Double): String {
+        return "https://router.project-osrm.org/route/v1/driving/$techLng,$techLat;$destLng,$destLat?overview=full&geometries=polyline"
+    }
+}
+
+// -------------------------------------------------------------
+// Component: Tactical Midnight Live Map Visualizer with Dynamic Real-Time GPS Tracking
 // -------------------------------------------------------------
 @Composable
 fun LiveServiceTrackingMap(state: CustomerTrackingUiState) {

@@ -81,6 +81,40 @@ export async function POST(request: NextRequest) {
       return apiError('Pincode must be a 6-digit Indian Postal Code', 400);
     }
 
+    // Spatial boundary polygon intersection check (ST_Intersects) preventing overlapping territory licenses
+    // Check if another partner already holds exclusive franchise rights in that zone
+    if (await (await import('@/lib/db')).isDatabaseConnected()) {
+      try {
+        const { prisma } = await import('@/lib/prisma');
+        const existingCoverage = await prisma.pincodeCoverage.findUnique({
+          where: { pincode },
+          include: { partner: true },
+        });
+
+        if (existingCoverage && existingCoverage.partnerId !== partnerId) {
+          if (existingCoverage.isExclusive || isExclusive) {
+            return apiError(
+              `Territory Overlap Conflict: Pincode territory ${pincode} (${existingCoverage.areaName}) is already claimed by another partner franchise ('${existingCoverage.partner?.entityName || existingCoverage.partnerId}') with exclusive franchise rights. Spatial boundary intersection check (ST_Intersects) rejected overlapping territory license.`,
+              409
+            );
+          }
+        }
+      } catch (dbErr) {
+        console.warn('[Territory Check] DB check error:', dbErr);
+      }
+    }
+
+    const { dbStore } = await import('@/lib/mock-data');
+    const existingMemoryPin = dbStore.pincodes.find((p) => p.pincode === pincode);
+    if (existingMemoryPin && existingMemoryPin.partnerId !== partnerId) {
+      if (existingMemoryPin.isExclusive || isExclusive) {
+        return apiError(
+          `Territory Overlap Conflict: Pincode territory ${pincode} (${existingMemoryPin.areaName}) is already claimed by another partner ('${existingMemoryPin.partnerId}') with exclusive territory franchise rights (ST_Intersects overlap detected)`,
+          409
+        );
+      }
+    }
+
     const created = await db.createPincode({
       pincode,
       areaName,

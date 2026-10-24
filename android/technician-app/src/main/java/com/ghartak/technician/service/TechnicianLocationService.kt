@@ -58,8 +58,28 @@ class TechnicianLocationService : Service() {
         private const val CHANNEL_ID = "channel_gts_telemetry"
         private const val NOTIFICATION_ID = 4091
 
+        fun requestBatteryOptimizationWhitelist(context: Context) {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    val powerManager = context.getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager
+                    val packageName = context.packageName
+                    if (powerManager != null && !powerManager.isIgnoringBatteryOptimizations(packageName)) {
+                        val intent = Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                            data = android.net.Uri.parse("package:$packageName")
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                        context.startActivity(intent)
+                    }
+                }
+            } catch (e: Throwable) {
+                Log.w("GTS_LOC_SVC", "Battery whitelist intent failed safely: ${e.message}")
+            }
+        }
+
         fun startService(context: Context, jobId: String? = null) {
             try {
+                requestBatteryOptimizationWhitelist(context)
+
                 val hasFine = ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
                 val hasCoarse = ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
                 if (!hasFine && !hasCoarse) {
@@ -131,7 +151,7 @@ class TechnicianLocationService : Service() {
         } catch (e: Throwable) {
             Log.e("GTS_LOC_SVC", "Unhandled exception in onStartCommand: ${e.message}", e)
         }
-        return START_NOT_STICKY
+        return START_STICKY
     }
 
     private fun startForegroundServiceInternal() {
@@ -176,6 +196,16 @@ class TechnicianLocationService : Service() {
             // LocationListener for continuous live updates from Android LocationManager
             val locationListener = object : android.location.LocationListener {
                 override fun onLocationChanged(loc: android.location.Location) {
+                    val isMock = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        loc.isMock
+                    } else {
+                        @Suppress("DEPRECATION")
+                        loc.isFromMockProvider
+                    }
+                    if (isMock) {
+                        Log.w("GTS_LOC_SVC", "Security Alert: Simulated mock GPS location rejected (provider=${loc.provider})")
+                        return
+                    }
                     isGpsActive = true
                     currentLat = loc.latitude
                     currentLng = loc.longitude
@@ -251,10 +281,22 @@ class TechnicianLocationService : Service() {
                             for (p in providers) {
                                 try {
                                     val loc = lm.getLastKnownLocation(p)
-                                    if (loc != null && (best == null || loc.time > best.time)) {
-                                        best = loc
+                                    if (loc != null) {
+                                        val isMock = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                            loc.isMock
+                                        } else {
+                                            @Suppress("DEPRECATION")
+                                            loc.isFromMockProvider
+                                        }
+                                        if (isMock) {
+                                            Log.w("GTS_LOC_SVC", "Security Alert: Skipping mock location from provider $p")
+                                            continue
+                                        }
+                                        if (best == null || loc.time > best.time) {
+                                            best = loc
+                                        }
                                     }
-                                } catch (_: SecurityException) {}
+                                } catch (e: SecurityException) {}
                             }
                             if (best != null && (System.currentTimeMillis() - best.time) < 120_000) {
                                 isGpsActive = true
@@ -320,7 +362,7 @@ class TechnicianLocationService : Service() {
         activeJobId = null
         try {
             sensorManager?.unregisterListener(sensorListener)
-        } catch (_: Throwable) {
+        } catch (e: Throwable) {
             // Ignore
         }
         try {
@@ -379,7 +421,7 @@ class TechnicianLocationService : Service() {
         try {
             activeLocationListener?.let { activeLocationManager?.removeUpdates(it) }
             activeLocationListener = null
-        } catch (_: Throwable) {}
+        } catch (e: Throwable) {}
         telemetryJob?.cancel()
         serviceScope.cancel()
     }

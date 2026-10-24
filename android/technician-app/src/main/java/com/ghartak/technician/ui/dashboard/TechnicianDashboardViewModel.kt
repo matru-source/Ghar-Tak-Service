@@ -34,7 +34,8 @@ data class InboundJobNotification(
     val customerAddress: String,
     val amountInr: Double,
     val commissionInr: Double,
-    val iconType: String = "FAN"
+    val iconType: String = "FAN",
+    val dispatchedAt: String? = null
 )
 
 data class EarningsTransaction(
@@ -448,13 +449,21 @@ class TechnicianDashboardViewModel(
                                     liveLng = loc.longitude
                                     break
                                 }
-                            } catch (_: SecurityException) {}
+                            } catch (e: SecurityException) {}
                         }
                     }
-                } catch (_: Throwable) {}
+                } catch (e: Throwable) {}
+
+                val effectivePin = if (sessionManager.getPincode().isNotBlank()) {
+                    sessionManager.getPincode()
+                } else {
+                    val resolved = com.ghartak.technician.util.IndianPincodeResolver.resolveLocationFromCoordinates(liveLat, liveLng)
+                    resolved.pincode
+                }
 
                 val techId = sessionManager.getTechnicianId()
                 val api = ApiClient.getService(sessionManager.context)
+                val avatar = sessionManager.getProfileImageUri().ifBlank { null } ?: _uiState.value.profile?.avatarUrl
                 val req = RegisterTechnicianRequest(
                     id = techId.ifEmpty { null },
                     badgeNumber = sessionManager.getBadgeNumber().ifEmpty { null },
@@ -462,7 +471,12 @@ class TechnicianDashboardViewModel(
                     phone = sessionManager.getPhone().ifEmpty { "+91 9876543210" },
                     email = sessionManager.getEmail().ifEmpty { null },
                     trade = sessionManager.getSpecialization(),
-                    pincode = pin,
+                    specialization = sessionManager.getSpecialization(),
+                    experience = sessionManager.getExperience().ifEmpty { null },
+                    license = sessionManager.getLicense().ifEmpty { null },
+                    serviceArea = sessionManager.getServiceArea().ifEmpty { null },
+                    avatarUrl = avatar,
+                    pincode = effectivePin,
                     latitude = liveLat,
                     longitude = liveLng
                 )
@@ -470,11 +484,22 @@ class TechnicianDashboardViewModel(
                 if (res.isSuccessful && techId.isNotEmpty()) {
                     api.updateAvailability(techId, mapOf("isOnline" to sessionManager.isOnline()))
                 }
-                Log.d("TechnicianSync", "Synced profile for $techId ($pin - ${sessionManager.getSpecialization()} at $liveLat,$liveLng) to server: ${res.isSuccessful}")
+                Log.d("TechnicianSync", "Synced profile for $techId ($effectivePin - ${sessionManager.getSpecialization()} at $liveLat,$liveLng) to server: ${res.isSuccessful}")
             } catch (e: Exception) {
                 Log.w("TechnicianSync", "Failed to sync technician profile to server: ${e.message}")
             }
         }
+    }
+
+    fun updateAvatar(avatarUrl: String) {
+        sessionManager.setProfileImageUri(avatarUrl)
+        val current = _uiState.value.profile
+        if (current != null) {
+            _uiState.value = _uiState.value.copy(
+                profile = current.copy(avatarUrl = avatarUrl)
+            )
+        }
+        syncProfileToServer()
     }
 
     fun updatePersonalInfo(name: String, phone: String, email: String, location: String, languages: String) {
@@ -516,7 +541,7 @@ class TechnicianDashboardViewModel(
         val updatedJobs = _uiState.value.assignedJobs.map { job ->
             if (job.id.equals(jobId, ignoreCase = true) || job.jobTicketNumber.equals(jobId, ignoreCase = true) || jobId.contains(job.id, ignoreCase = true)) {
                 job.copy(
-                    status = "STARTED",
+                    status = "IN_PROGRESS",
                     safetyGlovesConfirmed = true,
                     safetyMcbSwitchConfirmed = true
                 )
@@ -528,7 +553,7 @@ class TechnicianDashboardViewModel(
         val updatedSelected = updatedJobs.find {
             it.id.equals(jobId, ignoreCase = true) || it.jobTicketNumber.equals(jobId, ignoreCase = true) || jobId.contains(it.id, ignoreCase = true)
         } ?: currentSelected?.copy(
-            status = "STARTED",
+            status = "IN_PROGRESS",
             safetyGlovesConfirmed = true,
             safetyMcbSwitchConfirmed = true
         )
@@ -542,7 +567,7 @@ class TechnicianDashboardViewModel(
     fun markJobCompleted(jobId: String, payoutInr: Double = 0.0, creditEarnings: Boolean = false) {
         val updatedJobs = _uiState.value.assignedJobs.map { job ->
             if (job.id.equals(jobId, ignoreCase = true) || job.jobTicketNumber.equals(jobId, ignoreCase = true) || jobId.contains(job.id, ignoreCase = true)) {
-                job.copy(status = "COMPLETED")
+                job.copy(status = "WORK_COMPLETED")
             } else {
                 job
             }
@@ -630,7 +655,7 @@ class TechnicianDashboardViewModel(
                 )
             }
             list
-        } catch (_: Exception) {
+        } catch (e: Exception) {
             emptyList()
         }
     }
@@ -654,7 +679,7 @@ class TechnicianDashboardViewModel(
                 arr.put(obj)
             }
             sessionManager.saveEarningsTransactionsJson(arr.toString())
-        } catch (_: Exception) {
+        } catch (e: Exception) {
         }
     }
 
@@ -685,7 +710,7 @@ class TechnicianDashboardViewModel(
                                 val outFormat = java.text.SimpleDateFormat("d MMM, hh:mm a", java.util.Locale.ENGLISH)
                                 val d = inFormat.parse(completedAt.substring(0, 19))
                                 if (d != null) Pair(outFormat.format(d), d.time) else Pair("Completed", System.currentTimeMillis())
-                            } catch (_: Exception) {
+                            } catch (e: Exception) {
                                 Pair("Completed", System.currentTimeMillis())
                             }
                         } else {
@@ -853,6 +878,7 @@ class TechnicianDashboardViewModel(
                         val cPhone = m["customerPhone"]?.toString() ?: "+91 98765 43210"
                         val cAddr = m["customerAddressText"]?.toString() ?: "Customer Address"
                         val amount = (m["totalAmountInr"] as? Number)?.toDouble() ?: (Math.round(299.0 * 1.18 * 100.0) / 100.0)
+                        val dispatchedAt = m["dispatchedAt"]?.toString() ?: m["createdAt"]?.toString()
 
                         InboundJobNotification(
                             id = id,
@@ -864,7 +890,8 @@ class TechnicianDashboardViewModel(
                             customerPhone = cPhone,
                             customerAddress = cAddr,
                             amountInr = amount,
-                            commissionInr = amount * 0.7
+                            commissionInr = amount * 0.7,
+                            dispatchedAt = dispatchedAt
                         )
                     }
 
@@ -888,7 +915,8 @@ class TechnicianDashboardViewModel(
                             priority = "EMERGENCY_60S",
                             totalAmountInr = firstAlert.amountInr,
                             safetyGlovesConfirmed = false,
-                            handoverOtp = ""
+                            handoverOtp = "",
+                            dispatchedAt = firstAlert.dispatchedAt
                         )
                         cacheIncomingJob(alert)
                         alert
@@ -912,6 +940,30 @@ class TechnicianDashboardViewModel(
     }
 
     private var dispatchPollingJob: Job? = null
+
+    /**
+     * Server-synchronized TTL: calculates remaining seconds as max(0, 60 - ((Date.now() - dispatchedAt) / 1000))
+     */
+    fun calculateSirenRemainingSeconds(dispatchedAt: String?): Int {
+        return Companion.calculateSirenRemainingSeconds(dispatchedAt)
+    }
+
+    companion object {
+        fun calculateSirenRemainingSeconds(dispatchedAt: String?): Int {
+            if (dispatchedAt.isNullOrBlank()) return 60
+            return try {
+                val epochMs = if (dispatchedAt.toLongOrNull() != null) {
+                    dispatchedAt.toLong()
+                } else {
+                    java.time.Instant.parse(dispatchedAt).toEpochMilli()
+                }
+                val elapsedSec = ((System.currentTimeMillis() - epochMs) / 1000L).toInt()
+                (60 - elapsedSec).coerceIn(0, 60)
+            } catch (e: Exception) {
+                60
+            }
+        }
+    }
 
     fun startDispatchPolling(context: Context) {
         dispatchPollingJob?.cancel()
@@ -982,19 +1034,36 @@ class TechnicianDashboardViewModel(
                 _uiState.value = _uiState.value.copy(incomingDispatchAlert = inboundJob)
             } else if (eventType == "JOB_CANCELLED") {
                 val cancelledJobId = data.optString("jobId")
+                val details = data.optJSONObject("details")
+                val comp = details?.optDouble("deadMileageCompensationInr", 0.0) ?: 0.0
                 if (cancelledJobId.isNotEmpty()) {
                     val updatedJobs = _uiState.value.assignedJobs.filterNot { it.id == cancelledJobId }
                     val isCurrentJobCancelled = _uiState.value.selectedJob?.id == cancelledJobId
                     if (isCurrentJobCancelled) {
                         TechnicianLocationService.stopService(sessionManager.context)
                     }
+                    val msg = if (comp > 0.0) {
+                        "Customer cancelled order $cancelledJobId. ₹${"%,.0f".format(comp)} dead mileage compensation credited to your wallet."
+                    } else if (isCurrentJobCancelled) {
+                        "Customer cancelled order $cancelledJobId."
+                    } else {
+                        _uiState.value.errorMessage
+                    }
                     _uiState.value = _uiState.value.copy(
                         assignedJobs = updatedJobs,
                         selectedJob = if (isCurrentJobCancelled) null else _uiState.value.selectedJob,
                         incomingDispatchAlert = if (_uiState.value.incomingDispatchAlert?.id == cancelledJobId) null else _uiState.value.incomingDispatchAlert,
-                        errorMessage = if (isCurrentJobCancelled) "Customer cancelled order $cancelledJobId." else _uiState.value.errorMessage
+                        errorMessage = msg
                     )
                 }
+            } else if (eventType == "DEAD_MILEAGE_CREDITED") {
+                val amount = data.optJSONObject("details")?.optDouble("amountInr") ?: 99.0
+                try {
+                    sessionManager.addEarnings(amount)
+                } catch (e: Exception) {}
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "⛽ ₹${"%,.0f".format(amount)} Dead Mileage Fuel Compensation credited to your wallet."
+                )
             }
         }
     }
@@ -1042,6 +1111,23 @@ class TechnicianDashboardViewModel(
         )
         // Immediately start live telemetry for the accepted work order
         TechnicianLocationService.startService(sessionManager.context, job.id)
+
+        // Guarantee backend status is synced to EN_ROUTE
+        viewModelScope.launch {
+            try {
+                val api = ApiClient.getService(sessionManager.context)
+                val techId = sessionManager.getTechnicianId()
+                api.respondToDispatch(
+                    jobId = job.id,
+                    request = DispatchActionRequest(
+                        technicianId = techId,
+                        action = "ACCEPT"
+                    )
+                )
+            } catch (e: Exception) {
+                Log.w("GTS_TECH", "Dispatch accept sync: ${e.message}")
+            }
+        }
     }
 
     fun logout() {
@@ -1070,6 +1156,116 @@ class TechnicianDashboardViewModel(
         sessionManager.setOnline(false)
         sessionManager.clearSession()
         realtimeStreamManager.disconnect()
+    }
+
+    data class SparePartItem(
+        val id: String,
+        val name: String,
+        val partNumber: String,
+        val unitPriceInr: Double,
+        val quantity: Int = 1,
+        val gstInr: Double = 0.0,
+        val totalInr: Double = 0.0
+    )
+
+    /**
+     * In-Job Spare Parts & Material Addition: Allows field technician to add parts or materials
+     * mid-service, which updates the server invoice and broadcasts revision to customer.
+     */
+    fun addPart(jobId: String, name: String, price: Double, quantity: Int = 1) {
+        viewModelScope.launch {
+            try {
+                val api = ApiClient.getService(sessionManager.context)
+                api.addSparePart(
+                    jobId,
+                    mapOf(
+                        "partName" to name,
+                        "unitPriceInr" to price,
+                        "quantity" to quantity,
+                        "technicianId" to sessionManager.getTechnicianId()
+                    )
+                )
+                pollBackendAssignedJobs(sessionManager.context)
+                Log.d("GTS_TECH", "In-job spare part '$name' added to ticket $jobId")
+            } catch (e: Exception) {
+                Log.w("GTS_TECH", "Failed to add spare part: ${e.message}")
+            }
+        }
+    }
+
+    fun fetchAssignedJobs(context: Context) {
+        pollBackendAssignedJobs(context)
+    }
+
+    fun addMaterial(jobId: String, materialName: String, unitPriceInr: Double, quantity: Int = 1) {
+        addPart(jobId, materialName, unitPriceInr, quantity)
+    }
+
+    // =========================================================================
+    // Issue 40: Network Resilience — Offline TOTP Verification Engine
+    // Enables offline handshake between customer and technician apps in
+    // basements, underground parking, and dead zones with zero cell reception.
+    // =========================================================================
+
+    /**
+     * Generates a 4-digit Time-based One-Time Password (TOTP) based on HMAC-SHA256
+     * with the job ticket / work order ID seed and a 5-minute (300-second) window.
+     */
+    fun generateTotp(jobId: String, timestampMs: Long = System.currentTimeMillis(), timeStepSeconds: Long = 300L): String {
+        return try {
+            val step = (timestampMs / 1000L) / timeStepSeconds
+            val keyString = "GTS_OFFLINE_SECRET_${jobId.trim().uppercase()}"
+            val mac = javax.crypto.Mac.getInstance("HmacSHA256")
+            val secretKey = javax.crypto.spec.SecretKeySpec(keyString.toByteArray(Charsets.UTF_8), "HmacSHA256")
+            mac.init(secretKey)
+
+            val buffer = java.nio.ByteBuffer.allocate(8).putLong(step).array()
+            val hash = mac.doFinal(buffer)
+
+            val offset = hash[hash.size - 1].toInt() and 0x0F
+            val binary = ((hash[offset].toInt() and 0x7F) shl 24) or
+                    ((hash[offset + 1].toInt() and 0xFF) shl 16) or
+                    ((hash[offset + 2].toInt() and 0xFF) shl 8) or
+                    (hash[offset + 3].toInt() and 0xFF)
+
+            val otp = (binary % 10000).toString().padStart(4, '0')
+            otp
+        } catch (e: Exception) {
+            val seed = (jobId.hashCode().toLong() xor ((timestampMs / 1000L) / timeStepSeconds)).toString()
+            Math.abs(seed.hashCode() % 10000).toString().padStart(4, '0')
+        }
+    }
+
+    /**
+     * Verifies the customer's 4-digit handover OTP completely offline with a
+     * clock-drift tolerance of ±1 time window (up to ±5 minutes).
+     */
+    fun verifyOfflineOtp(jobId: String, enteredOtp: String): Boolean {
+        val cleanOtp = enteredOtp.trim()
+        if (cleanOtp.length != 4 || !cleanOtp.all { it.isDigit() }) return false
+
+        val currentMs = System.currentTimeMillis()
+        val windowSeconds = 300L // 5-minute windows
+
+        // Check current window, previous window (-1), and next window (+1)
+        for (offset in -1..1) {
+            val testTime = currentMs + (offset * windowSeconds * 1000L)
+            val expectedTotp = generateTotp(jobId, testTime, windowSeconds)
+            if (expectedTotp == cleanOtp) {
+                Log.d("GTS_TECH", "Offline TOTP verification SUCCESS for job $jobId (window offset: $offset)")
+                return true
+            }
+        }
+
+        // Also check if matches cached job handover OTP if cached
+        val cachedJob = _uiState.value.assignedJobs.find { it.id.equals(jobId, true) || it.jobTicketNumber.equals(jobId, true) }
+        if (cachedJob?.handoverOtp?.isNotBlank() == true && cachedJob.handoverOtp == cleanOtp) {
+            Log.d("GTS_TECH", "Offline cached handover OTP verification SUCCESS for job $jobId")
+            return true
+        }
+
+        Log.w("GTS_TECH", "Offline TOTP verification failed for job $jobId with OTP $enteredOtp")
+        return false
     }
 
     override fun onCleared() {

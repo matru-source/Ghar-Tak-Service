@@ -245,9 +245,9 @@ class TechnicianAuthViewModel(
                     if (loc != null) {
                         return Pair(loc.latitude, loc.longitude)
                     }
-                } catch (_: SecurityException) {}
+                } catch (e: SecurityException) {}
             }
-        } catch (_: Throwable) {}
+        } catch (e: Throwable) {}
         return Pair(fallbackLat, fallbackLng)
     }
 
@@ -659,7 +659,7 @@ class TechnicianAuthViewModel(
             } else {
                 defaultMsg
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
             defaultMsg
         }
     }

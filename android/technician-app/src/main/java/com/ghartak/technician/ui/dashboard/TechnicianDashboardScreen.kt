@@ -48,6 +48,15 @@ import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Base64
+import java.io.ByteArrayOutputStream
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 import com.ghartak.technician.R
 import com.ghartak.technician.data.model.TechnicianJob
 import com.ghartak.technician.data.session.SessionManager
@@ -215,6 +224,7 @@ fun TechnicianDashboardScreen(
                     TechnicianProfileContent(
                         state = state,
                         onToggleDuty = { viewModel.toggleDutyStatus(context) },
+                        onUpdateAvatar = { viewModel.updateAvatar(it) },
                         onUpdatePersonalInfo = { name, phone, email, location, languages ->
                             viewModel.updatePersonalInfo(name, phone, email, location, languages)
                         },
@@ -739,6 +749,23 @@ fun TechnicianHomeScreenContent(
                                                 modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
                                             )
                                         }
+                                    }
+
+                                    // Server-synchronized TTL calculated from backend dispatchedAt timestamp
+                                    val ttlRemaining = TechnicianDashboardViewModel.calculateSirenRemainingSeconds(notif.dispatchedAt)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Surface(
+                                        color = if (ttlRemaining <= 15) Color(0xFFFEE2E2) else Color(0xFFFEF3C7),
+                                        shape = RoundedCornerShape(4.dp)
+                                    ) {
+                                        Text(
+                                            text = "⏱️ ${ttlRemaining}s TTL",
+                                            color = if (ttlRemaining <= 15) Color(0xFFDC2626) else Color(0xFFD97706),
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            maxLines = 1,
+                                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                                        )
                                     }
                                 }
 
@@ -1925,11 +1952,69 @@ private fun MonthlyChartBar(
 fun TechnicianProfileContent(
     state: DashboardUiState,
     onToggleDuty: () -> Unit,
+    onUpdateAvatar: (avatarUrl: String) -> Unit = {},
     onUpdatePersonalInfo: (name: String, phone: String, email: String, location: String, languages: String) -> Unit,
     onUpdateServiceDetails: (specialization: String, experience: String, license: String, serviceArea: String) -> Unit,
     onLogout: () -> Unit
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val sessionManager = remember { SessionManager(context) }
+    var isUploadingAvatar by remember { mutableStateOf(false) }
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            coroutineScope.launch {
+                isUploadingAvatar = true
+                try {
+                    val base64Image = withContext(Dispatchers.IO) {
+                        val inputStream = context.contentResolver.openInputStream(uri)
+                        val originalBitmap = BitmapFactory.decodeStream(inputStream)
+                        inputStream?.close()
+
+                        if (originalBitmap != null) {
+                            val maxDimension = 640
+                            val scale = (maxDimension.toFloat() / Math.max(originalBitmap.width, originalBitmap.height)).coerceAtMost(1f)
+                            val scaled = if (scale < 1f) {
+                                Bitmap.createScaledBitmap(
+                                    originalBitmap,
+                                    (originalBitmap.width * scale).toInt(),
+                                    (originalBitmap.height * scale).toInt(),
+                                    true
+                                )
+                            } else {
+                                originalBitmap
+                            }
+                            val outputStream = ByteArrayOutputStream()
+                            scaled.compress(Bitmap.CompressFormat.JPEG, 85, outputStream)
+                            val byteArray = outputStream.toByteArray()
+                            "data:image/jpeg;base64," + Base64.encodeToString(byteArray, Base64.NO_WRAP)
+                        } else null
+                    }
+
+                    if (base64Image != null) {
+                        val api = com.ghartak.technician.data.api.ApiClient.getService(context)
+                        val uploadRes = api.uploadPhoto(mapOf("image" to base64Image, "file" to base64Image))
+                        val uploadedUrl = uploadRes.body()?.data?.url
+                            ?: uploadRes.body()?.data?.cdnUrl
+                            ?: uploadRes.body()?.data?.relativeUrl
+                            ?: base64Image
+
+                        sessionManager.setProfileImageUri(uploadedUrl)
+                        onUpdateAvatar(uploadedUrl)
+                        Toast.makeText(context, "Profile selfie updated & verified!", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Upload failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                } finally {
+                    isUploadingAvatar = false
+                }
+            }
+        }
+    }
+
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showEditPersonalDialog by remember { mutableStateOf(false) }
     var showEditServiceDialog by remember { mutableStateOf(false) }
@@ -2219,22 +2304,80 @@ fun TechnicianProfileContent(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Technician Avatar with Online Indicator
-                            Box(modifier = Modifier.size(72.dp)) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.img_technician_rajesh),
-                                    contentDescription = "Technician Photo",
-                                    contentScale = ContentScale.Crop,
+                            val currentAvatar = state.profile?.avatarUrl?.takeIf { it.isNotBlank() }
+                                ?: sessionManager.getProfileImageUri().takeIf { it.isNotBlank() }
+
+                            // Dynamic Technician Avatar with Online Indicator & Selfie KYC Upload
+                            Box(
+                                modifier = Modifier
+                                    .size(72.dp)
+                                    .clickable { photoPickerLauncher.launch("image/*") }
+                            ) {
+                                if (!currentAvatar.isNullOrBlank()) {
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(currentAvatar)
+                                            .crossfade(true)
+                                            .build(),
+                                        contentDescription = "Technician Photo",
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(72.dp)
+                                            .clip(CircleShape)
+                                            .border(2.dp, Color(0xFFE2E8F0), CircleShape)
+                                    )
+                                } else {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(72.dp)
+                                            .clip(CircleShape)
+                                            .background(Brush.linearGradient(listOf(TechFlameOrange, Color(0xFFFFA000))))
+                                            .border(2.dp, Color(0xFFE2E8F0), CircleShape),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = state.profile?.fullName?.take(2)?.uppercase()?.ifBlank { "GT" } ?: "GT",
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Black,
+                                            fontSize = 24.sp
+                                        )
+                                    }
+                                }
+
+                                if (isUploadingAvatar) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier
+                                            .size(28.dp)
+                                            .align(Alignment.Center),
+                                        color = TechFlameOrange,
+                                        strokeWidth = 3.dp
+                                    )
+                                }
+
+                                // KYC Camera Badge
+                                Box(
                                     modifier = Modifier
-                                        .size(72.dp)
+                                        .size(22.dp)
                                         .clip(CircleShape)
-                                        .border(2.dp, Color(0xFFE2E8F0), CircleShape)
-                                )
+                                        .background(Color(0xFF1E293B))
+                                        .border(1.5.dp, Color.White, CircleShape)
+                                        .align(Alignment.TopEnd),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.CameraAlt,
+                                        contentDescription = "Change DP",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                }
+
+                                // Online Shift Status Dot
                                 Box(
                                     modifier = Modifier
                                         .size(16.dp)
                                         .clip(CircleShape)
-                                        .background(Color(0xFF2E7D32))
+                                        .background(if (state.isOnline) Color(0xFF2E7D32) else Color(0xFF9E9E9E))
                                         .border(2.dp, Color.White, CircleShape)
                                         .align(Alignment.BottomEnd)
                                 )

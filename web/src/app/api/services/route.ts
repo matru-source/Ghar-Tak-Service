@@ -430,17 +430,33 @@ export async function DELETE(request: NextRequest) {
         });
 
         if (existing) {
-          // Soft-delete by marking inactive so historical work orders preserve foreign key references
-          const deactivated = await prisma.serviceCatalog.update({
-            where: { id: existing.id },
-            data: { isActive: false },
+          // Check if any jobs reference this service
+          const jobCount = await prisma.job.count({
+            where: { serviceId: existing.id },
           });
+
+          if (jobCount === 0) {
+            // Hard delete from PostgreSQL if no historical jobs exist
+            await prisma.serviceCatalog.delete({
+              where: { id: existing.id },
+            });
+          } else {
+            // Soft-delete by marking inactive so historical work orders preserve foreign key references
+            await prisma.serviceCatalog.update({
+              where: { id: existing.id },
+              data: { isActive: false },
+            });
+          }
 
           // Also remove from dbStore
           const memIdx = dbStore.serviceCatalog.findIndex((s) => s.id === existing.id || s.code === existing.code);
           if (memIdx !== -1) dbStore.serviceCatalog.splice(memIdx, 1);
 
-          return apiSuccess(deactivated, `Service "${existing.title}" removed from catalog`, 200);
+          return apiSuccess(
+            { id: existing.id, title: existing.title, permanentlyDeleted: jobCount === 0 },
+            `Service "${existing.title}" ${jobCount === 0 ? 'permanently removed' : 'deactivated'} from catalog`,
+            200
+          );
         }
       } catch (prismaErr) {
         console.error('Prisma service delete error:', prismaErr);

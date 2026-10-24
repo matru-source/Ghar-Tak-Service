@@ -71,13 +71,16 @@ data class CreateJobRequest(
     @SerializedName("customerName") val customerName: String? = null,
     @SerializedName("customerPhone") val customerPhone: String? = null,
     @SerializedName("serviceId") val serviceId: String,
+    @SerializedName("serviceTitle") val serviceTitle: String? = null,
+    @SerializedName("basePriceInr") val basePriceInr: Double? = null,
     @SerializedName("technicianId") val technicianId: String? = null,
     @SerializedName("pincode") val pincode: String,
     @SerializedName("customerAddressText") val customerAddressText: String,
     @SerializedName("customerLatitude") val customerLatitude: Double? = null,
     @SerializedName("customerLongitude") val customerLongitude: Double? = null,
     @SerializedName("priority") val priority: String = "NORMAL",
-    @SerializedName("paymentMethod") val paymentMethod: String? = "UPI"
+    @SerializedName("paymentMethod") val paymentMethod: String? = "UPI",
+    @SerializedName("quoteToken") val quoteToken: String? = null
 )
 
 data class PastOrderItem(
@@ -146,4 +149,11 @@ data class ServiceItem(
     @SerializedName("isHighVoltageProtocol") val isHighVoltageProtocol: Boolean = false,
     @SerializedName("warrantyMonths") val warrantyMonths: Int = 12,
     @SerializedName("isPaused") val isPaused: Boolean = false
+)
+
+data class FileUploadResponse(
+    @SerializedName("url") val url: String,
+    @SerializedName("relativeUrl") val relativeUrl: String? = null,
+    @SerializedName("fileName") val fileName: String? = null,
+    @SerializedName("sizeBytes") val sizeBytes: Long? = null
 )

@@ -40,9 +40,29 @@ class DispatchAlertViewModel(
 
     private var countdownJob: Job? = null
 
-    fun startCountdown(context: Context, onTimeout: () -> Unit) {
+    fun startCountdown(context: Context, dispatchedAt: String? = null, onTimeout: () -> Unit) {
         countdownJob?.cancel()
-        _uiState.value = DispatchAlertUiState(remainingSeconds = 60, totalSeconds = 60, progress = 1.0f)
+        val initialSeconds = if (!dispatchedAt.isNullOrBlank()) {
+            try {
+                val epochMs = if (dispatchedAt.toLongOrNull() != null) {
+                    dispatchedAt.toLong()
+                } else {
+                    java.time.Instant.parse(dispatchedAt).toEpochMilli()
+                }
+                val elapsedSec = ((System.currentTimeMillis() - epochMs) / 1000L).toInt()
+                (60 - elapsedSec).coerceIn(0, 60)
+            } catch (e: Exception) {
+                60
+            }
+        } else {
+            60
+        }
+
+        _uiState.value = DispatchAlertUiState(
+            remainingSeconds = initialSeconds,
+            totalSeconds = 60,
+            progress = initialSeconds.toFloat() / 60.0f
+        )
 
         // Trigger initial alert vibration pulse
         triggerAlertVibration(context)
@@ -85,7 +105,8 @@ class DispatchAlertViewModel(
                         jobId = job.id,
                         request = DispatchActionRequest(
                             technicianId = techId,
-                            action = "ACCEPT"
+                            action = "ACCEPT",
+                            version = job.version
                         )
                     )
                 }
@@ -103,7 +124,7 @@ class DispatchAlertViewModel(
                         } else {
                             "Dispatch acceptance rejected. The work order may have been reassigned or expired."
                         }
-                    } catch (_: Exception) {
+                    } catch (e: Exception) {
                         "Dispatch acceptance failed on server. Please refresh your job queue."
                     }
                     _uiState.value = _uiState.value.copy(isAccepting = false, errorMessage = msg)

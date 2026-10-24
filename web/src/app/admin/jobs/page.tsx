@@ -60,8 +60,30 @@ export default function AdminJobsQueuePage() {
   }, []);
 
   const filteredJobs = jobs.filter((j) => {
-    if (statusFilter !== 'ALL' && j.status !== statusFilter) return false;
-    if (priorityFilter !== 'ALL' && j.priority !== priorityFilter) return false;
+    if (statusFilter !== 'ALL') {
+      const s = (j.status || '').toUpperCase();
+      if (statusFilter === 'WORK_COMPLETED' || statusFilter === 'COMPLETED') {
+        if (!['WORK_COMPLETED', 'SETTLED', 'COMPLETED', 'DONE'].includes(s)) return false;
+      } else if (statusFilter === 'IN_PROGRESS') {
+        if (!['IN_PROGRESS', 'SAFETY_CHECKED', 'ARRIVED', 'STARTED'].includes(s)) return false;
+      } else if (statusFilter === 'ASSIGNED') {
+        if (!['ASSIGNED', 'EN_ROUTE'].includes(s)) return false;
+      } else if (s !== statusFilter) {
+        return false;
+      }
+    }
+    if (priorityFilter !== 'ALL') {
+      const p = (j.priority || '').toUpperCase();
+      if (priorityFilter === 'EMERGENCY' || priorityFilter === 'EMERGENCY_SOS') {
+        if (!p.includes('EMERGENCY')) return false;
+      } else if (priorityFilter === 'HIGH' || priorityFilter === 'URGENT') {
+        if (!p.includes('HIGH') && !p.includes('URGENT')) return false;
+      } else if (priorityFilter === 'NORMAL' || priorityFilter === 'STANDARD') {
+        if (p.includes('EMERGENCY') || p.includes('HIGH') || p.includes('URGENT')) return false;
+      } else if (p !== priorityFilter) {
+        return false;
+      }
+    }
 
     if (search) {
       const q = search.toLowerCase();

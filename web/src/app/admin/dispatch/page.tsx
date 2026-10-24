@@ -414,10 +414,12 @@ export default function AdminDispatchPage() {
                     </div>
                   </div>
                   <button
-                    onClick={() => showToast(`Direct alert sent to ${tech.fullName}`)}
-                    className="px-2 py-1 rounded-lg bg-white border border-slate-200 text-[10px] font-bold text-purple-700 hover:bg-purple-50 shadow-2xs"
+                    onClick={() => showToast(`Direct dispatch nudge ping sent to ${tech.fullName}`)}
+                    className="px-2 py-1 rounded-lg bg-white border border-slate-200 text-[10px] font-bold text-purple-700 hover:bg-purple-50 shadow-2xs flex items-center gap-1 cursor-pointer"
+                    title="Send instant push notification / SMS nudge to technician"
                   >
-                    Alert
+                    <span>🔔</span>
+                    <span>Ping Tech</span>
                   </button>
                 </div>
               ))}

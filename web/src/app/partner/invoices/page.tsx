@@ -76,10 +76,18 @@ export default function PartnerInvoicesPage() {
   const [invoices, setInvoices] = useState<InvoiceRecord[]>([]);
   const [stats, setStats] = useState<InvoiceStats | null>(null);
   const [ledgerEntries, setLedgerEntries] = useState<LedgerEntry[]>([]);
-  const [activeTab, setActiveTab] = useState<'INVOICES' | 'LEDGER'>('INVOICES');
+  const [activeTab, setActiveTab] = useState<'INVOICES' | 'LEDGER' | 'PAYOUTS'>('INVOICES');
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+
+  // Technician Withdrawals & Payout state
+  const [withdrawals, setWithdrawals] = useState<any[]>([]);
+  const [selectedWithdrawal, setSelectedWithdrawal] = useState<any | null>(null);
+  const [isPayModalOpen, setIsPayModalOpen] = useState(false);
+  const [utrInput, setUtrInput] = useState('');
+  const [payNote, setPayNote] = useState('');
+  const [isProcessingPay, setIsProcessingPay] = useState(false);
 
   // Preview Modal state (PTNR-SCR-12)
   const [previewInvoice, setPreviewInvoice] = useState<InvoiceRecord | null>(null);
@@ -122,9 +130,54 @@ export default function PartnerInvoicesPage() {
     }
   };
 
+  const fetchWithdrawals = async () => {
+    try {
+      const res = await fetch('/api/finance/withdrawals');
+      const data = await res.json();
+      if (data.success && data.data?.withdrawals) {
+        setWithdrawals(data.data.withdrawals);
+      }
+    } catch (err) {
+      console.error('Failed to load withdrawals:', err);
+    }
+  };
+
+  const handleConfirmPayout = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedWithdrawal || !utrInput.trim()) return;
+
+    try {
+      setIsProcessingPay(true);
+      const res = await fetch(`/api/finance/withdrawals/${selectedWithdrawal.id}/action`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'APPROVE',
+          utrNumber: utrInput.trim(),
+          message: payNote.trim() || `Payout of ₹${selectedWithdrawal.amountInr} settled via UPI. UTR: ${utrInput.trim()}`,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Payout of ₹${selectedWithdrawal.amountInr} marked as PAID! UTR: ${utrInput.trim()}`);
+        setIsPayModalOpen(false);
+        setSelectedWithdrawal(null);
+        await fetchWithdrawals();
+      } else {
+        showToast(data.error || 'Failed to settle payout');
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Error processing payout');
+    } finally {
+      setIsProcessingPay(false);
+    }
+  };
+
   useEffect(() => {
     fetchInvoices();
     fetchLedger();
+    fetchWithdrawals();
   }, []);
 
   const filteredInvoices = invoices.filter((inv) => {
@@ -352,6 +405,24 @@ export default function PartnerInvoicesPage() {
               <span>🏛️</span>
               <span>Settlement &amp; Escrow Ledger (PTNR-SCR-14)</span>
               <span className="px-1.5 py-0.2 bg-white/20 rounded text-[10px]">{ledgerEntries.length}</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('PAYOUTS')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
+                activeTab === 'PAYOUTS'
+                  ? 'bg-[#1B5E20] text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              <span>💸</span>
+              <span>Technician Payouts &amp; Withdrawals</span>
+              <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
+                withdrawals.some(w => w.status === 'PENDING')
+                  ? 'bg-amber-400 text-slate-900 animate-pulse'
+                  : 'bg-white/20'
+              }`}>
+                {withdrawals.length}
+              </span>
             </button>
           </div>
 
@@ -594,6 +665,265 @@ export default function PartnerInvoicesPage() {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* VIEW C: Technician Direct Payouts & Withdrawals */}
+      {activeTab === 'PAYOUTS' && (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+          <div className="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+                <span>💸</span>
+                <span>Technician Direct Earnings &amp; Withdrawal Settlement</span>
+              </div>
+              <div className="text-xs text-slate-500">
+                Review pending payout requests submitted by field electricians. Transfer earnings via UPI/IMPS and confirm UTR to notify technician app.
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-full">
+                {withdrawals.filter((w) => w.status === 'PENDING').length} Pending Payout
+              </span>
+              <span className="text-xs font-bold px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full">
+                {withdrawals.filter((w) => w.status === 'PAID').length} Paid
+              </span>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-black uppercase text-slate-500 tracking-wider">
+                  <th className="py-3.5 px-4">Request ID &amp; Date</th>
+                  <th className="py-3.5 px-4">Technician</th>
+                  <th className="py-3.5 px-4">Payout Method &amp; Target</th>
+                  <th className="py-3.5 px-4 text-right">Requested Amount</th>
+                  <th className="py-3.5 px-4 text-center">Status</th>
+                  <th className="py-3.5 px-4 text-right">Partner Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-xs">
+                {withdrawals.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-12 text-center text-slate-400">
+                      No withdrawal requests from technicians yet.
+                    </td>
+                  </tr>
+                ) : (
+                  withdrawals.map((w) => {
+                    const isPending = w.status === 'PENDING';
+                    const isPaid = w.status === 'PAID';
+                    return (
+                      <tr key={w.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="py-3.5 px-4">
+                          <div className="font-mono font-bold text-slate-800">{w.id}</div>
+                          <div className="text-[11px] text-slate-400 mt-0.5">
+                            {w.requestedAt
+                              ? new Date(w.requestedAt).toLocaleString('en-IN', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })
+                              : 'Recent'}
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div className="font-bold text-slate-900">{w.technicianName}</div>
+                          <div className="text-[11px] text-slate-500 font-mono">
+                            Badge: {w.technicianBadge} &bull; {w.technicianPhone || 'On File'}
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          {w.payoutMethod === 'UPI' ? (
+                            <div>
+                              <span className="font-bold text-sky-700 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded text-[10px]">
+                                UPI
+                              </span>
+                              <span className="font-mono text-slate-800 ml-2 font-semibold">
+                                {w.upiId || 'itsmatruprasad@okaxis'}
+                              </span>
+                            </div>
+                          ) : (
+                            <div>
+                              <span className="font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded text-[10px]">
+                                Bank
+                              </span>
+                              <span className="font-mono text-slate-800 ml-2 font-semibold">
+                                {w.accountNumber} ({w.ifscCode})
+                              </span>
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          <div className="font-mono font-black text-slate-900 text-sm">
+                            ₹{Number(w.amountInr).toFixed(2)}
+                          </div>
+                          <div className="text-[10px] text-slate-400">Net Labor Share</div>
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          {isPending ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">
+                              <span>⏳</span>
+                              <span>Pending Settlement</span>
+                            </span>
+                          ) : isPaid ? (
+                            <div className="inline-flex flex-col items-center">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                <span>✓</span>
+                                <span>Paid / Settled</span>
+                              </span>
+                              {w.utrNumber && (
+                                <span className="text-[9px] font-mono text-slate-400 mt-0.5">
+                                  {w.utrNumber}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                              Declined
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          {isPending ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedWithdrawal(w);
+                                setUtrInput(`UTR${Date.now().toString().slice(-8)}`);
+                                setPayNote(`Settled via UPI to ${w.upiId || 'technician'}`);
+                                setIsPayModalOpen(true);
+                              }}
+                              className="px-3 py-1.5 bg-[#1B5E20] hover:bg-[#0D3B0D] text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5 ml-auto"
+                            >
+                              <span>💳</span>
+                              <span>Pay / Settle</span>
+                            </button>
+                          ) : (
+                            <span className="text-[11px] font-bold text-emerald-700 flex items-center justify-end gap-1">
+                              <span>✓</span>
+                              <span>Completed</span>
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Settle Technician Payout */}
+      {isPayModalOpen && selectedWithdrawal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full p-6 space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg bg-emerald-50 text-[#1B5E20] font-bold text-base flex items-center justify-center">
+                  💳
+                </span>
+                <div>
+                  <h3 className="font-extrabold text-slate-900 text-sm">
+                    Confirm Technician Payout
+                  </h3>
+                  <p className="text-[11px] text-slate-400">
+                    Transfers mark the withdrawal as PAID in the technician mobile app
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsPayModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Payout Details Summary */}
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-500 font-medium">Technician:</span>
+                <span className="font-bold text-slate-900">
+                  {selectedWithdrawal.technicianName} ({selectedWithdrawal.technicianBadge})
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 font-medium">Transfer Method:</span>
+                <span className="font-bold text-sky-700">
+                  {selectedWithdrawal.payoutMethod}: {selectedWithdrawal.upiId || selectedWithdrawal.accountNumber}
+                </span>
+              </div>
+              <div className="flex justify-between border-t border-slate-200 pt-2 text-sm">
+                <span className="font-bold text-slate-700">Amount to Settle:</span>
+                <span className="font-black text-[#1B5E20] text-base">
+                  ₹{Number(selectedWithdrawal.amountInr).toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            {/* Input Form for UTR & Note */}
+            <form onSubmit={handleConfirmPayout} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Bank / UPI Transaction Reference (UTR Number)
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={utrInput}
+                  onChange={(e) => setUtrInput(e.target.value)}
+                  placeholder="e.g. UTR2026849102"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  This transaction reference is displayed to the technician in their app.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Settlement Message / Note (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={payNote}
+                  onChange={(e) => setPayNote(e.target.value)}
+                  placeholder="e.g. Settle labor earnings for Job J-1001"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsPayModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isProcessingPay || !utrInput.trim()}
+                  className="px-5 py-2 bg-[#1B5E20] hover:bg-[#0D3B0D] text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {isProcessingPay ? (
+                    <span>Processing...</span>
+                  ) : (
+                    <>
+                      <span>✓</span>
+                      <span>Confirm &amp; Mark as Paid</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.LocationManager
+import android.os.Build
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
@@ -79,10 +80,20 @@ class CustomerTrackingViewModel(
                 val loc = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
                     ?: lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
                 if (loc != null && loc.latitude != 0.0 && loc.longitude != 0.0) {
-                    activeDestLat = loc.latitude
-                    activeDestLng = loc.longitude
+                    val isMock = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        loc.isMock
+                    } else {
+                        @Suppress("DEPRECATION")
+                        loc.isFromMockProvider
+                    }
+                    if (!isMock) {
+                        activeDestLat = loc.latitude
+                        activeDestLng = loc.longitude
+                    } else {
+                        Log.w("GTS_CUST_TRACK", "Security: Rejected simulated mock location from customer device")
+                    }
                 }
-            } catch (_: SecurityException) {}
+            } catch (e: SecurityException) {}
         }
         val activeDestArea = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(activeDestLat, activeDestLng)
 
@@ -110,17 +121,22 @@ class CustomerTrackingViewModel(
             etaMinutes = initialEta
         )
 
-        // Connect to Central Real-Time SSE Bus
+        // Pure Real-Time SSE Stream with Disconnect Fallback (Urban Company / Uber standard)
+        // Eliminates continuous 5-second polling loop while SSE socket is actively streaming.
+        lastSseEventTimestamp = System.currentTimeMillis()
         val customerId = sessionManager.getUserId().ifEmpty { sessionManager.getUserPhone() }
         realtimeStreamManager.connect(customerId, jobId) { eventType, data ->
+            lastSseEventTimestamp = System.currentTimeMillis()
             handleRealtimeEvent(eventType, data)
         }
 
-        // Periodic resilient HTTP telemetry polling every 5 seconds to guarantee live sync
-        startLiveTelemetryPolling(sessionManager.context, jobId)
+        // Heartbeat fallback: strictly queries HTTP snapshot only if socket disconnects for > 15s
+        startDisconnectFallbackMonitor(sessionManager.context, jobId)
     }
 
-    private fun startLiveTelemetryPolling(context: Context, jobId: String) {
+    private var lastSseEventTimestamp: Long = 0L
+
+    private fun startDisconnectFallbackMonitor(context: Context, jobId: String) {
         telemetryPollingJob?.cancel()
         telemetryPollingJob = viewModelScope.launch {
             val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
@@ -128,114 +144,129 @@ class CustomerTrackingViewModel(
             val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
 
             while (isActive && !_uiState.value.isJobCompleted) {
-                try {
-                    val api = ApiClient.getService(context)
+                delay(15000L) // 15-second heartbeat check
 
-                    // 1. Send live customer device GPS to backend so technician distance is accurate
-                    if ((hasFine || hasCoarse) && lm != null) {
-                        try {
-                            val loc = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-                                ?: lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-                            if (loc != null && loc.latitude != 0.0 && loc.longitude != 0.0) {
-                                _uiState.value = _uiState.value.copy(
-                                    destLatitude = loc.latitude,
-                                    destLongitude = loc.longitude,
-                                    destAreaName = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(loc.latitude, loc.longitude)
-                                )
-                                api.sendCustomerTelemetry(jobId, mapOf("latitude" to loc.latitude, "longitude" to loc.longitude))
+                // Only execute HTTP polling fallback if SSE has been disconnected / silent for > 15 seconds
+                val elapsedSinceSse = System.currentTimeMillis() - lastSseEventTimestamp
+                if (elapsedSinceSse >= 15000L) {
+                    try {
+                        val api = ApiClient.getService(context)
+
+                        // 1. Send live customer device GPS to backend so technician distance is accurate
+                        if ((hasFine || hasCoarse) && lm != null) {
+                            try {
+                                val loc = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                                    ?: lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+                                if (loc != null && loc.latitude != 0.0 && loc.longitude != 0.0) {
+                                    val isMock = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                        loc.isMock
+                                    } else {
+                                        @Suppress("DEPRECATION")
+                                        loc.isFromMockProvider
+                                    }
+                                    if (!isMock) {
+                                        _uiState.value = _uiState.value.copy(
+                                            destLatitude = loc.latitude,
+                                            destLongitude = loc.longitude,
+                                            destAreaName = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(loc.latitude, loc.longitude)
+                                        )
+                                        api.sendCustomerTelemetry(jobId, mapOf("latitude" to loc.latitude, "longitude" to loc.longitude))
+                                    } else {
+                                        Log.w("GTS_CUST_TRACK", "Security: Ignored mock location in fallback loop")
+                                    }
+                                }
+                            } catch (e: SecurityException) {}
+                        }
+
+                        // 2. Fetch live technician telemetry fallback snapshot from backend
+                        val response = api.getLiveTracking(jobId)
+                        if (response.isSuccessful && response.body()?.data != null) {
+                            val data = response.body()!!.data!!
+                            val tech = data.technician
+                            val dest = data.destination
+                            val status = data.status ?: _uiState.value.status
+
+                            val rawTLat = tech.coordinates.latitude
+                            val rawTLng = tech.coordinates.longitude
+                            val dLat = if (dest != null && dest.latitude != 0.0) dest.latitude else _uiState.value.destLatitude
+                            val dLng = if (dest != null && dest.longitude != 0.0) dest.longitude else _uiState.value.destLongitude
+
+                            val hasRealTechGps = rawTLat != 0.0 && rawTLng != 0.0
+                            val (fallbackHubLat, fallbackHubLng) = if (!hasRealTechGps) {
+                                com.ghartak.customer.util.IndianPincodeResolver.getCoordinatesForPincode(sessionManager.getUserPincode().ifEmpty { "760001" })
+                            } else {
+                                rawTLat to rawTLng
                             }
-                        } catch (_: SecurityException) {}
+                            val tLat = if (hasRealTechGps) rawTLat else fallbackHubLat
+                            val tLng = if (hasRealTechGps) rawTLng else fallbackHubLng
+
+                            val calcDist = if (hasRealTechGps && dLat != 0.0) {
+                                com.ghartak.customer.util.IndianPincodeResolver.calculateHaversineDistanceKm(tLat, tLng, dLat, dLng)
+                            } else if (tech.distanceKm > 0.0) {
+                                tech.distanceKm
+                            } else {
+                                _uiState.value.distanceKm.takeIf { it > 0.0 } ?: 1.5
+                            }
+                            val rawDist = Math.max(0.0, Math.round(calcDist * 100.0) / 100.0)
+                            val isServerArrivedOrBeyond = status == "ARRIVED" || status == "SAFETY_CHECKED" || status == "IN_PROGRESS" || status == "COMPLETED" || status == "WORK_COMPLETED"
+                            val isArrived = isServerArrivedOrBeyond || (status == "EN_ROUTE" && hasRealTechGps && (rawDist <= 0.05 || (Math.abs(tLat - dLat) < 0.0002 && Math.abs(tLng - dLng) < 0.0002)))
+                            val roundedDist = if (isArrived) 0.0 else rawDist
+                            val calcEta = if (isArrived) 0 else com.ghartak.customer.util.IndianPincodeResolver.calculateEtaMinutes(roundedDist)
+                            val resolvedStatus = when {
+                                status == "COMPLETED" || status == "WORK_COMPLETED" || status == "SETTLED" -> "COMPLETED"
+                                status == "CANCELLED" -> "CANCELLED"
+                                status == "SAFETY_CHECKED" || status == "IN_PROGRESS" -> "IN_PROGRESS"
+                                status == "ARRIVED" || (status == "EN_ROUTE" && isArrived) -> "ARRIVED"
+                                status == "EN_ROUTE" -> "EN_ROUTE"
+                                else -> status
+                            }
+
+                            val resolvedTechArea = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(tLat, tLng)
+                            val resolvedDestArea = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(dLat, dLng)
+
+                            if (resolvedStatus == "CANCELLED") {
+                                sessionManager.clearActiveJob()
+                            } else if (resolvedStatus == "COMPLETED" || resolvedStatus == "EN_ROUTE" || resolvedStatus == "ARRIVED" || resolvedStatus == "IN_PROGRESS") {
+                                sessionManager.setActiveJobStatus(resolvedStatus)
+                            }
+
+                            // Ensure session manager has valid job details for signoff & invoice history
+                            sessionManager.updateActiveJobIfMissing(
+                                ticketNumber = data.jobTicketNumber,
+                                title = data.serviceTitle,
+                                basePrice = data.basePriceInr,
+                                total = data.totalAmountInr,
+                                techName = tech.name,
+                                techBadge = tech.badgeNumber,
+                                techPhone = tech.phone,
+                                otp = data.handoverOtp
+                            )
+
+                            _uiState.value = _uiState.value.copy(
+                                status = resolvedStatus,
+                                distanceKm = roundedDist,
+                                etaMinutes = calcEta,
+                                techLatitude = tLat,
+                                techLongitude = tLng,
+                                destLatitude = dLat,
+                                destLongitude = dLng,
+                                techAreaName = resolvedTechArea,
+                                destAreaName = resolvedDestArea,
+                                ticketNumber = if (data.jobTicketNumber.isNotBlank()) data.jobTicketNumber else _uiState.value.ticketNumber,
+                                serviceTitle = if (!data.serviceTitle.isNullOrBlank()) data.serviceTitle else _uiState.value.serviceTitle,
+                                technicianName = tech.name ?: _uiState.value.technicianName,
+                                technicianBadge = tech.badgeNumber ?: _uiState.value.technicianBadge,
+                                technicianPhone = tech.phone ?: _uiState.value.technicianPhone,
+                                technicianRating = tech.rating,
+                                handoverOtp = if (!data.handoverOtp.isNullOrBlank()) data.handoverOtp else _uiState.value.handoverOtp,
+                                isDoorstepArrived = isArrived || _uiState.value.isDoorstepArrived,
+                                isJobCompleted = resolvedStatus == "COMPLETED"
+                            )
+                        }
+                    } catch (e: Exception) {
+                        // Fallback retry on next heartbeat cycle
                     }
-
-                    // 2. Fetch live technician telemetry from backend
-                    val response = api.getLiveTracking(jobId)
-                    if (response.isSuccessful && response.body()?.data != null) {
-                        val data = response.body()!!.data!!
-                        val tech = data.technician
-                        val dest = data.destination
-                        val status = data.status ?: _uiState.value.status
-
-                        val rawTLat = tech.coordinates.latitude
-                        val rawTLng = tech.coordinates.longitude
-                        val dLat = if (dest != null && dest.latitude != 0.0) dest.latitude else _uiState.value.destLatitude
-                        val dLng = if (dest != null && dest.longitude != 0.0) dest.longitude else _uiState.value.destLongitude
-
-                        val hasRealTechGps = rawTLat != 0.0 && rawTLng != 0.0
-                        val (fallbackHubLat, fallbackHubLng) = if (!hasRealTechGps) {
-                            com.ghartak.customer.util.IndianPincodeResolver.getCoordinatesForPincode(sessionManager.getUserPincode().ifEmpty { "760001" })
-                        } else {
-                            rawTLat to rawTLng
-                        }
-                        val tLat = if (hasRealTechGps) rawTLat else fallbackHubLat
-                        val tLng = if (hasRealTechGps) rawTLng else fallbackHubLng
-
-                        val calcDist = if (hasRealTechGps && dLat != 0.0) {
-                            com.ghartak.customer.util.IndianPincodeResolver.calculateHaversineDistanceKm(tLat, tLng, dLat, dLng)
-                        } else if (tech.distanceKm > 0.0) {
-                            tech.distanceKm
-                        } else {
-                            _uiState.value.distanceKm.takeIf { it > 0.0 } ?: 1.5
-                        }
-                        val rawDist = Math.max(0.0, Math.round(calcDist * 100.0) / 100.0)
-                        val isServerArrivedOrBeyond = status == "ARRIVED" || status == "SAFETY_CHECKED" || status == "IN_PROGRESS" || status == "COMPLETED" || status == "WORK_COMPLETED"
-                        val isArrived = isServerArrivedOrBeyond || (hasRealTechGps && (rawDist <= 0.05 || (Math.abs(tLat - dLat) < 0.0002 && Math.abs(tLng - dLng) < 0.0002)))
-                        val roundedDist = if (isArrived) 0.0 else rawDist
-                        val calcEta = if (isArrived) 0 else com.ghartak.customer.util.IndianPincodeResolver.calculateEtaMinutes(roundedDist)
-                        val resolvedStatus = when {
-                            status == "COMPLETED" || status == "WORK_COMPLETED" || status == "SETTLED" -> "COMPLETED"
-                            status == "CANCELLED" -> "CANCELLED"
-                            status == "SAFETY_CHECKED" || status == "IN_PROGRESS" -> "IN_PROGRESS"
-                            status == "ARRIVED" || isArrived -> "ARRIVED"
-                            status == "EN_ROUTE" -> "EN_ROUTE"
-                            else -> status // "ASSIGNED", "PENDING_DISPATCH"
-                        }
-
-                        val resolvedTechArea = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(tLat, tLng)
-                        val resolvedDestArea = com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(dLat, dLng)
-
-                        if (resolvedStatus == "CANCELLED") {
-                            sessionManager.clearActiveJob()
-                        } else if (resolvedStatus == "COMPLETED" || resolvedStatus == "EN_ROUTE" || resolvedStatus == "ARRIVED" || resolvedStatus == "IN_PROGRESS") {
-                            sessionManager.setActiveJobStatus(resolvedStatus)
-                        }
-
-                        // Ensure session manager has valid job details for signoff & invoice history
-                        sessionManager.updateActiveJobIfMissing(
-                            ticketNumber = data.jobTicketNumber,
-                            title = data.serviceTitle,
-                            basePrice = data.basePriceInr,
-                            total = data.totalAmountInr,
-                            techName = tech.name,
-                            techBadge = tech.badgeNumber,
-                            techPhone = tech.phone,
-                            otp = data.handoverOtp
-                        )
-
-                        _uiState.value = _uiState.value.copy(
-                            status = resolvedStatus,
-                            distanceKm = roundedDist,
-                            etaMinutes = calcEta,
-                            techLatitude = tLat,
-                            techLongitude = tLng,
-                            destLatitude = dLat,
-                            destLongitude = dLng,
-                            techAreaName = resolvedTechArea,
-                            destAreaName = resolvedDestArea,
-                            ticketNumber = if (data.jobTicketNumber.isNotBlank()) data.jobTicketNumber else _uiState.value.ticketNumber,
-                            serviceTitle = if (!data.serviceTitle.isNullOrBlank()) data.serviceTitle else _uiState.value.serviceTitle,
-                            technicianName = tech.name ?: _uiState.value.technicianName,
-                            technicianBadge = tech.badgeNumber ?: _uiState.value.technicianBadge,
-                            technicianPhone = tech.phone ?: _uiState.value.technicianPhone,
-                            technicianRating = tech.rating,
-                            handoverOtp = if (!data.handoverOtp.isNullOrBlank()) data.handoverOtp else _uiState.value.handoverOtp,
-                            isDoorstepArrived = isArrived || _uiState.value.isDoorstepArrived,
-                            isJobCompleted = resolvedStatus == "COMPLETED"
-                        )
-                    }
-                } catch (e: Exception) {
-                    // Resilient polling continues on next tick
                 }
-                delay(5000L)
             }
         }
     }
@@ -370,6 +401,32 @@ class CustomerTrackingViewModel(
         }
     }
 
+    fun triggerEmergencySos(context: Context, reason: String = "CUSTOMER_EMERGENCY_SOS_TRIGGERED") {
+        viewModelScope.launch {
+            try {
+                val api = ApiClient.getService(context)
+                val currentState = _uiState.value
+                val customerPhone = sessionManager.getPhone()
+                val customerName = sessionManager.getFullName().ifBlank { "Ghar Tak Customer" }
+                val payload: Map<String, Any> = mapOf(
+                    "role" to "CUSTOMER",
+                    "customerId" to sessionManager.getCustomerId(),
+                    "customerName" to customerName,
+                    "phone" to customerPhone,
+                    "jobId" to currentState.jobId,
+                    "ticketNumber" to currentState.ticketNumber,
+                    "technicianName" to currentState.technicianName,
+                    "latitude" to currentState.destLatitude,
+                    "longitude" to currentState.destLongitude,
+                    "reason" to reason
+                )
+                api.broadcastEmergencySos(payload)
+                Log.d("GTS_CUST_TRACK", "Customer Emergency SOS successfully dispatched to Safety Command Center")
+            } catch (e: Exception) {
+                Log.w("GTS_CUST_TRACK", "Customer Emergency SOS broadcast warning: ${e.message}")
+            }
+        }
+    }
 
     override fun onCleared() {
         super.onCleared()

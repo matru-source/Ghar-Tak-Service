@@ -106,4 +106,16 @@ interface TechnicianApiService {
     suspend fun uploadPhoto(
         @Body body: Map<String, String>
     ): Response<ApiResponse<FileUploadResponse>>
+
+    // In-Job Spare Parts & Material Addition
+    @POST("jobs/{id}/parts")
+    suspend fun addSparePart(
+        @Path("id") jobId: String,
+        @Body body: Map<String, Any>
+    ): Response<ApiResponse<Map<String, Any>>>
+
+    @GET("jobs/{id}/parts")
+    suspend fun getJobSpareParts(
+        @Path("id") jobId: String
+    ): Response<ApiResponse<Map<String, Any>>>
 }

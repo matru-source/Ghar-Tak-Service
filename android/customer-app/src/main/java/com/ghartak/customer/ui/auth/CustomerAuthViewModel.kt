@@ -709,7 +709,7 @@ class CustomerAuthViewModel(
             } else {
                 defaultMsg
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
             defaultMsg
         }
     }

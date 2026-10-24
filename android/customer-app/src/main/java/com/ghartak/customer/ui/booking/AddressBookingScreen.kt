@@ -71,8 +71,30 @@ fun AddressBookingScreen(
         val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
         val gps = lm?.isProviderEnabled(LocationManager.GPS_PROVIDER) == true || lm?.isProviderEnabled(LocationManager.NETWORK_PROVIDER) == true
         isUserLocationEnabled = granted && gps
+        viewModel.updateLocationStatus(granted, gps)
         if (isUserLocationEnabled) {
-            viewModel.loadLiveTechnicians(context, state.pincode)
+            viewModel.detectCurrentLocation(context, isInitial = false)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+        val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val gps = lm?.isProviderEnabled(LocationManager.GPS_PROVIDER) == true || lm?.isProviderEnabled(LocationManager.NETWORK_PROVIDER) == true
+        val hasPerm = hasFine || hasCoarse
+        isUserLocationEnabled = hasPerm && gps
+        viewModel.updateLocationStatus(hasPerm, gps)
+        if (hasPerm && gps) {
+            viewModel.detectCurrentLocation(context, isInitial = true)
+        } else if (!hasPerm) {
+            // Automatically prompt for mandatory location permission on screen open
+            customerPermLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
         }
     }
 
@@ -83,7 +105,12 @@ fun AddressBookingScreen(
                 val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
                 val hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
                 val gps = lm?.isProviderEnabled(LocationManager.GPS_PROVIDER) == true || lm?.isProviderEnabled(LocationManager.NETWORK_PROVIDER) == true
-                isUserLocationEnabled = (hasFine || hasCoarse) && gps
+                val hasPerm = hasFine || hasCoarse
+                isUserLocationEnabled = hasPerm && gps
+                viewModel.updateLocationStatus(hasPerm, gps)
+                if (hasPerm && gps && !state.isGpsActive) {
+                    viewModel.detectCurrentLocation(context, isInitial = true)
+                }
                 viewModel.startLiveTelemetryPolling(context)
             } else if (event == Lifecycle.Event.ON_PAUSE) {
                 viewModel.stopLiveTelemetryPolling()
@@ -105,7 +132,7 @@ fun AddressBookingScreen(
         while (isActive) {
             delay(5000L)
             if (state.pincode.length == 6 && state.nearbyTechnicians.isEmpty()) {
-                viewModel.loadLiveTechnicians(context, state.pincode)
+                viewModel.loadLiveTechnicians(context, state.pincode, state.userLat, state.userLng)
             }
         }
     }
@@ -254,6 +281,64 @@ fun AddressBookingScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            if (!isUserLocationEnabled) {
+                Surface(
+                    color = Color(0xFFFEF2F2),
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.5.dp, DangerRed.copy(alpha = 0.6f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOff,
+                                contentDescription = null,
+                                tint = DangerRed,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "GPS Location Access Required",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
+                                color = DangerRed
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Active GPS is mandatory. Ghar Tak requires your real-time location to automatically detect your City and District, and assign the nearest certified technician.",
+                            fontSize = 12.sp,
+                            color = TextDarkSecondary,
+                            lineHeight = 16.sp
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Button(
+                            onClick = {
+                                val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+                                val gps = lm?.isProviderEnabled(LocationManager.GPS_PROVIDER) == true || lm?.isProviderEnabled(LocationManager.NETWORK_PROVIDER) == true
+                                if (!gps) {
+                                    context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                                } else {
+                                    customerPermLauncher.launch(
+                                        arrayOf(
+                                            Manifest.permission.ACCESS_FINE_LOCATION,
+                                            Manifest.permission.ACCESS_COARSE_LOCATION
+                                        )
+                                    )
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = DangerRed),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                        ) {
+                            Icon(imageVector = Icons.Default.MyLocation, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("ENABLE GPS & PERMIT LOCATION", fontSize = 11.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
+                    }
+                }
+            }
+
             if (hasActiveJob) {
                 Surface(
                     color = Color(0xFFFEF3C7),
@@ -448,14 +533,34 @@ fun AddressBookingScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "SERVICE ADDRESS",
-                            color = TextDarkPrimary,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Column {
+                            Text(
+                                text = "SERVICE ADDRESS",
+                                color = TextDarkPrimary,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            if (state.isGpsActive) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(6.dp)
+                                            .clip(CircleShape)
+                                            .background(SuccessGreen)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "GPS Auto-Detected",
+                                        fontSize = 10.sp,
+                                        color = SuccessGreen,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+
                         Surface(
-                            onClick = { viewModel.detectCurrentLocation(context) },
+                            onClick = { viewModel.resetToGpsLocation(context) },
                             color = SapphireBlue800.copy(alpha = 0.08f),
                             shape = RoundedCornerShape(8.dp),
                             border = androidx.compose.foundation.BorderStroke(1.dp, SapphireBlue800.copy(alpha = 0.25f))
@@ -464,19 +569,34 @@ fun AddressBookingScreen(
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.LocationOn,
-                                    contentDescription = "Detect Location",
-                                    tint = SapphireBlue800,
-                                    modifier = Modifier.size(13.dp)
-                                )
-                                Spacer(modifier = Modifier.width(3.dp))
-                                Text(
-                                    text = "Use GPS",
-                                    color = SapphireBlue800,
-                                    fontSize = 10.5.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
+                                if (state.isDetectingLocation) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(12.dp),
+                                        strokeWidth = 1.5.dp,
+                                        color = SapphireBlue800
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "Detecting...",
+                                        color = SapphireBlue800,
+                                        fontSize = 10.5.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.MyLocation,
+                                        contentDescription = "Detect Location",
+                                        tint = SapphireBlue800,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text(
+                                        text = "Use Current GPS",
+                                        color = SapphireBlue800,
+                                        fontSize = 10.5.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
                         }
                     }
@@ -522,7 +642,7 @@ fun AddressBookingScreen(
                                 Icon(imageVector = Icons.Default.Verified, contentDescription = null, tint = SuccessGreen, modifier = Modifier.size(14.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "FULLY SERVICEABLE • ${state.hubName} (~${state.etaMinutes} min dispatch)",
+                                    text = "SERVICEABLE • ${state.hubName} (~${state.etaMinutes} min dispatch)",
                                     color = SuccessGreen,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
@@ -531,7 +651,43 @@ fun AddressBookingScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Dynamic City & District (Auto-filled by GPS / Pincode, fully customer-editable)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = state.city,
+                            onValueChange = { viewModel.onCityChanged(it) },
+                            label = { Text("City / Town") },
+                            placeholder = { Text("Mumbai") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = SapphireBlue800,
+                                unfocusedBorderColor = SurfaceBorder
+                            )
+                        )
+
+                        OutlinedTextField(
+                            value = state.district,
+                            onValueChange = { viewModel.onDistrictChanged(it) },
+                            label = { Text("District") },
+                            placeholder = { Text("Mumbai City") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = SapphireBlue800,
+                                unfocusedBorderColor = SurfaceBorder
+                            )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     // Flat / House No
                     OutlinedTextField(
@@ -550,7 +706,7 @@ fun AddressBookingScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // Street / Area
+                    // Street / Area (Dynamically auto-filled by GPS, customer editable)
                     OutlinedTextField(
                         value = state.streetName,
                         onValueChange = { viewModel.onStreetChanged(context, it) },
@@ -570,7 +726,7 @@ fun AddressBookingScreen(
                     // Landmark
                     OutlinedTextField(
                         value = state.landmark,
-                        onValueChange = { viewModel.onLandmarkChanged(it) },
+                        onValueChange = { viewModel.onLandmarkChanged(context, it) },
                         label = { Text("Landmark (Optional)") },
                         placeholder = { Text("Near Radio Club") },
                         singleLine = true,
@@ -839,34 +995,37 @@ fun AddressBookingScreen(
                                 else -> null
                             }
 
-                            TechnicianRapidoCard(
+                            TechnicianRadarCard(
                                 technician = tech,
-                                isSelected = state.selectedTechnicianId == tech.id,
-                                highlightBadge = highlightBadgeText,
-                                onSelect = { viewModel.selectTechnician(tech.id) }
+                                highlightBadge = highlightBadgeText
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                         }
 
-                        val selectedTech = state.selectedTechnician
-                        if (selectedTech != null) {
-                            Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = Color(0xFFEFF6FF),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBFDBFE)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
                             Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(horizontal = 4.dp)
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.CheckCircle,
+                                    imageVector = Icons.Default.VerifiedUser,
                                     contentDescription = null,
                                     tint = SapphireBlue800,
-                                    modifier = Modifier.size(13.dp)
+                                    modifier = Modifier.size(18.dp)
                                 )
-                                Spacer(modifier = Modifier.width(6.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "Selected: ${selectedTech.name} (${selectedTech.eta} • ${selectedTech.distance}) reserved upon payment.",
+                                    text = "Automated Blind Dispatch: The closest vetted professional from our certified fleet will be auto-dispatched to your doorstep upon confirmation.",
                                     fontSize = 11.sp,
-                                    color = TextDarkPrimary,
-                                    fontWeight = FontWeight.SemiBold
+                                    color = Color(0xFF1E40AF),
+                                    fontWeight = FontWeight.Medium,
+                                    lineHeight = 15.sp
                                 )
                             }
                         }
@@ -880,20 +1039,14 @@ fun AddressBookingScreen(
 }
 
 @Composable
-private fun TechnicianRapidoCard(
+private fun TechnicianRadarCard(
     technician: NearbyTechnician,
-    isSelected: Boolean,
-    highlightBadge: String? = null,
-    onSelect: () -> Unit
+    highlightBadge: String? = null
 ) {
     Surface(
-        onClick = onSelect,
         shape = RoundedCornerShape(12.dp),
-        color = if (isSelected) Color(0xFFEFF6FF) else Color(0xFFFAFAFA),
-        border = androidx.compose.foundation.BorderStroke(
-            if (isSelected) 1.5.dp else 1.dp,
-            if (isSelected) SapphireBlue800 else SurfaceBorder
-        ),
+        color = Color(0xFFFAFAFA),
+        border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -911,7 +1064,7 @@ private fun TechnicianRapidoCard(
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(CircleShape)
-                        .background(if (isSelected) SapphireBlue800 else Color(0xFF334155)),
+                        .background(Color(0xFF334155)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -996,18 +1149,15 @@ private fun TechnicianRapidoCard(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Right column: ETA pill & Distance + Selection Indicator
+            // Right column: ETA pill & Distance
             Column(
                 horizontalAlignment = Alignment.End,
                 modifier = Modifier.widthIn(min = 72.dp)
             ) {
                 Surface(
-                    color = if (isSelected) SapphireBlue800 else Color.White,
+                    color = Color.White,
                     shape = RoundedCornerShape(6.dp),
-                    border = androidx.compose.foundation.BorderStroke(
-                        1.dp,
-                        if (isSelected) SapphireBlue800 else SurfaceBorder
-                    )
+                    border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
@@ -1022,7 +1172,7 @@ private fun TechnicianRapidoCard(
                             text = technician.eta,
                             fontWeight = FontWeight.Bold,
                             fontSize = 11.sp,
-                            color = if (isSelected) Color.White else SapphireBlue800,
+                            color = SapphireBlue800,
                             maxLines = 1
                         )
                     }
@@ -1031,20 +1181,11 @@ private fun TechnicianRapidoCard(
                 Spacer(modifier = Modifier.height(3.dp))
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (isSelected) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = "Selected",
-                            tint = SapphireBlue800,
-                            modifier = Modifier.size(11.dp)
-                        )
-                        Spacer(modifier = Modifier.width(3.dp))
-                    }
                     Text(
                         text = technician.distance,
                         fontSize = 10.sp,
-                        color = if (isSelected) SapphireBlue800 else TextDarkMuted,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        color = TextDarkMuted,
+                        fontWeight = FontWeight.Medium,
                         maxLines = 1
                     )
                 }

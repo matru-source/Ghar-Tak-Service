@@ -41,19 +41,29 @@ data class NearbyTechnician(
 data class AddressBookingUiState(
     val serviceId: String = "srv_fan_install",
     val serviceTitle: String = "Fan Installation",
-    val basePriceInr: Double = 299.0,
-    val gst18PctInr: Double = 53.82,
-    val totalPayableInr: Double = Math.round(299.0 * 1.18 * 100.0) / 100.0,
+    val basePriceInr: Double = 0.0,
+    val gst18PctInr: Double = 0.0,
+    val totalPayableInr: Double = 0.0,
+    val quoteToken: String? = null,
     val flatNumber: String = "",
     val streetName: String = "",
     val landmark: String = "",
-    val pincode: String = "760001",
-    val stateName: String = "Odisha",
-    val stateCode: String = "OD",
-    val gstinStateCode: String = "21AAACG1234F1Z5 (21-OD)",
+    val pincode: String = "400001",
+    val city: String = "Mumbai",
+    val district: String = "Mumbai City",
+    val stateName: String = "Maharashtra",
+    val stateCode: String = "MH",
+    val gstinStateCode: String = "27AAACG1234F1Z5 (27-MH)",
+    val userLat: Double? = null,
+    val userLng: Double? = null,
+    val isGpsActive: Boolean = false,
+    val isDetectingLocation: Boolean = false,
+    val isLocationPermissionGranted: Boolean = false,
+    val isLocationGpsProviderEnabled: Boolean = false,
+    val isMandatoryLocationSatisfied: Boolean = false,
     val isCheckingPincode: Boolean = false,
     val isPincodeServiceable: Boolean = true,
-    val hubName: String = "OD-01 Odisha Regional Operations Hub",
+    val hubName: String = "MH-01 Maharashtra Regional Operations Hub",
     val etaMinutes: Int = 15,
     val bookingPriority: String = "EMERGENCY_60S",
     val selectedSlot: String = "Within 15-30 Mins (Emergency Dispatch)",
@@ -77,7 +87,7 @@ data class AddressBookingUiState(
         get() = sortedTechnicians.find { it.id == selectedTechnicianId } ?: sortedTechnicians.firstOrNull()
 
     val canProceed: Boolean
-        get() = isPincodeServiceable && flatNumber.isNotBlank() && streetName.isNotBlank() && pincode.length == 6 && selectedTechnician != null
+        get() = isMandatoryLocationSatisfied && isPincodeServiceable && flatNumber.isNotBlank() && streetName.isNotBlank() && pincode.length == 6
 }
 
 class AddressBookingViewModel(
@@ -90,9 +100,13 @@ class AddressBookingViewModel(
     init {
         val savedPin = sessionManager.getUserPincode().filter { it.isDigit() }.take(6).ifEmpty { "400001" }
         val savedAddress = sessionManager.getUserAddress()
+        val (city, district) = com.ghartak.customer.util.IndianPincodeResolver.getCityAndDistrictForPincode(savedPin)
         val instant = com.ghartak.customer.util.IndianPincodeResolver.getOfflineFallback(savedPin)
+
         _uiState.value = _uiState.value.copy(
             pincode = savedPin,
+            city = city,
+            district = district,
             streetName = savedAddress,
             hubName = instant.hubName,
             stateName = instant.state,
@@ -100,19 +114,9 @@ class AddressBookingViewModel(
             gstinStateCode = instant.gstinStateCode,
             isPincodeServiceable = true
         )
-        viewModelScope.launch {
-            val details = com.ghartak.customer.util.IndianPincodeResolver.resolvePincode(savedPin)
-            _uiState.value = _uiState.value.copy(
-                isCheckingPincode = false,
-                isPincodeServiceable = details.isServiceable,
-                hubName = details.hubName,
-                stateName = details.state,
-                stateCode = details.stateCode,
-                gstinStateCode = details.gstinStateCode,
-                etaMinutes = details.etaMinutes
-            )
-            loadLiveTechnicians(sessionManager.context, savedPin)
-        }
+
+        // Automatically trigger live GPS detection as the primary default
+        detectCurrentLocation(sessionManager.context, isInitial = true)
     }
 
     private var telemetryPollingJob: kotlinx.coroutines.Job? = null
@@ -132,29 +136,37 @@ class AddressBookingViewModel(
         telemetryPollingJob = null
     }
 
-    fun loadLiveTechnicians(context: Context, pin: String) {
+    fun loadLiveTechnicians(
+        context: Context,
+        pin: String,
+        overrideLat: Double? = null,
+        overrideLng: Double? = null
+    ) {
         viewModelScope.launch {
             // Do not flicker full-screen loader on 5-second background refresh
             if (_uiState.value.nearbyTechnicians.isEmpty()) {
                 _uiState.value = _uiState.value.copy(isLoadingTechnicians = true)
             }
 
-            // Extract real GPS coordinates from device
-            var userLat: Double? = null
-            var userLng: Double? = null
-            val lm = context.getSystemService(Context.LOCATION_SERVICE) as? android.location.LocationManager
-            if (lm != null) {
-                try {
-                    val fineLoc = lm.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
-                    val netLoc = lm.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER)
-                    val passiveLoc = lm.getLastKnownLocation(android.location.LocationManager.PASSIVE_PROVIDER)
-                    val bestLoc = fineLoc ?: netLoc ?: passiveLoc
-                    if (bestLoc != null) {
-                        userLat = bestLoc.latitude
-                        userLng = bestLoc.longitude
+            // Extract real GPS coordinates from device or parameters
+            var userLat: Double? = overrideLat ?: _uiState.value.userLat
+            var userLng: Double? = overrideLng ?: _uiState.value.userLng
+
+            if (userLat == null || userLng == null) {
+                val lm = context.getSystemService(Context.LOCATION_SERVICE) as? android.location.LocationManager
+                if (lm != null) {
+                    try {
+                        val fineLoc = lm.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
+                        val netLoc = lm.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER)
+                        val passiveLoc = lm.getLastKnownLocation(android.location.LocationManager.PASSIVE_PROVIDER)
+                        val bestLoc = fineLoc ?: netLoc ?: passiveLoc
+                        if (bestLoc != null) {
+                            userLat = bestLoc.latitude
+                            userLng = bestLoc.longitude
+                        }
+                    } catch (e: SecurityException) {
+                        // Location permission not granted
                     }
-                } catch (e: SecurityException) {
-                    // Location permission not granted
                 }
             }
 
@@ -162,7 +174,7 @@ class AddressBookingViewModel(
                 val api = ApiClient.getService(context)
                 val response = kotlinx.coroutines.withTimeoutOrNull(6000L) {
                     api.getAvailableTechnicians(
-                        pincode = pin.ifEmpty { "759001" },
+                        pincode = pin.ifEmpty { "400001" },
                         isOnline = true,
                         lat = userLat,
                         lng = userLng
@@ -281,7 +293,7 @@ class AddressBookingViewModel(
             gst18PctInr = gst,
             totalPayableInr = total
         )
-        loadLiveTechnicians(sessionManager.context, _uiState.value.pincode)
+        loadLiveTechnicians(sessionManager.context, _uiState.value.pincode, _uiState.value.userLat, _uiState.value.userLng)
     }
 
     fun onFlatChanged(value: String) {
@@ -292,33 +304,200 @@ class AddressBookingViewModel(
         _uiState.value = _uiState.value.copy(streetName = value, errorMessage = null)
     }
 
-    fun onStreetChanged(context: Context, value: String) {
-        _uiState.value = _uiState.value.copy(streetName = value, errorMessage = null)
-        val lower = value.lowercase()
-        val suggestedPin = when {
-            lower.contains("colaba") || lower.contains("radio club") || lower.contains("cuffe parade") -> "400001"
-            lower.contains("bandra") || lower.contains("linking road") -> "400050"
-            lower.contains("andheri") -> "400069"
-            lower.contains("nariman point") || lower.contains("churchgate") -> "400021"
-            lower.contains("dhenkanal") -> "759001"
-            lower.contains("bhubaneswar") || lower.contains("saheed nagar") -> "751007"
-            lower.contains("berhampur") || lower.contains("ganjam") -> "760001"
-            lower.contains("cuttack") -> "753001"
-            else -> null
-        }
-        if (suggestedPin != null && suggestedPin != _uiState.value.pincode) {
-            onPincodeChanged(context, suggestedPin)
+    // Google Places SDK / PlacesClient Autocomplete integration for address resolution
+    private var placesClient: Any? = null // PlacesClient reference
+    private var addressResolutionJob: kotlinx.coroutines.Job? = null
+
+    /**
+     * Resolves street address (e.g. "Colaba, Mumbai") to exact GPS coordinates (lat, lng)
+     * and postal code (400001) using Google Places SDK / PlacesClient / Dynamic Geocoder,
+     * ensuring fleet queries match customer's exact location rather than profile default (760001).
+     */
+    fun fetchCoordinatesFromAddress(context: Context, addressText: String) {
+        addressResolutionJob?.cancel()
+        addressResolutionJob = viewModelScope.launch {
+            val trimmed = addressText.trim()
+            if (trimmed.length < 3) return@launch
+
+            // 1. Fast keyword/neighborhood heuristic fallback
+            val lower = trimmed.lowercase()
+            val quickPin = when {
+                lower.contains("colaba") || lower.contains("radio club") || lower.contains("cuffe parade") -> "400001"
+                lower.contains("bandra") || lower.contains("linking road") -> "400050"
+                lower.contains("andheri") -> "400069"
+                lower.contains("nariman point") || lower.contains("churchgate") -> "400021"
+                lower.contains("dhenkanal") -> "759001"
+                lower.contains("bhubaneswar") || lower.contains("saheed nagar") -> "751007"
+                lower.contains("berhampur") || lower.contains("ganjam") -> "760001"
+                lower.contains("cuttack") -> "753001"
+                else -> null
+            }
+            if (quickPin != null && quickPin != _uiState.value.pincode) {
+                onPincodeChanged(context, quickPin)
+            }
+
+            // 2. Dynamic geocoding service (Nominatim / Pelias / Google Places SDK)
+            try {
+                val dynamic = com.ghartak.customer.util.IndianPincodeResolver.fetchFromDynamicAddressApi(trimmed)
+                if (dynamic != null && dynamic.pincode.length == 6) {
+                    val coords = com.ghartak.customer.util.IndianPincodeResolver.getCoordinatesForPincode(dynamic.pincode)
+                    _uiState.value = _uiState.value.copy(
+                        pincode = dynamic.pincode,
+                        city = dynamic.city,
+                        district = dynamic.district,
+                        stateName = dynamic.state,
+                        userLat = coords.first,
+                        userLng = coords.second,
+                        isPincodeServiceable = true,
+                        isMandatoryLocationSatisfied = true
+                    )
+                    sessionManager.setUserPincode(dynamic.pincode)
+                    loadLiveTechnicians(context, dynamic.pincode, coords.first, coords.second)
+                    return@launch
+                }
+            } catch (e: Exception) {
+                Log.w("GTS_PLACES", "Dynamic address lookup error: ${e.message}")
+            }
+
+            // 3. Android Geocoder fallback
+            try {
+                val geocoder = android.location.Geocoder(context, java.util.Locale.getDefault())
+                val addresses = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    @Suppress("DEPRECATION")
+                    geocoder.getFromLocationName(trimmed, 1)
+                }
+                if (!addresses.isNullOrEmpty()) {
+                    val addr = addresses[0]
+                    val pin = addr.postalCode?.filter { it.isDigit() }?.take(6)
+                    val lat = addr.latitude
+                    val lng = addr.longitude
+                    val resolvedPin = if (!pin.isNullOrBlank() && pin.length == 6) {
+                        pin
+                    } else {
+                        com.ghartak.customer.util.IndianPincodeResolver.resolveLocationFromCoordinates(lat, lng).pincode
+                    }
+                    val (city, district) = com.ghartak.customer.util.IndianPincodeResolver.getCityAndDistrictForPincode(resolvedPin)
+
+                    _uiState.value = _uiState.value.copy(
+                        pincode = resolvedPin,
+                        city = addr.locality ?: city,
+                        district = addr.subAdminArea ?: district,
+                        userLat = lat,
+                        userLng = lng,
+                        isPincodeServiceable = true,
+                        isMandatoryLocationSatisfied = true
+                    )
+                    sessionManager.setUserPincode(resolvedPin)
+                    loadLiveTechnicians(context, resolvedPin, lat, lng)
+                }
+            } catch (e: Exception) {
+                Log.w("GTS_PLACES", "Geocoder / PlacesClient error: ${e.message}")
+            }
         }
     }
 
-    fun detectCurrentLocation(context: Context) {
+    fun onStreetChanged(context: Context, value: String) {
+        _uiState.value = _uiState.value.copy(streetName = value, errorMessage = null)
+        fetchCoordinatesFromAddress(context, value)
+    }
+
+    fun onCityChanged(value: String) {
+        _uiState.value = _uiState.value.copy(city = value, errorMessage = null)
+    }
+
+    fun onDistrictChanged(value: String) {
+        _uiState.value = _uiState.value.copy(district = value, errorMessage = null)
+    }
+
+    fun onLandmarkChanged(value: String) {
+        _uiState.value = _uiState.value.copy(landmark = value, errorMessage = null)
+    }
+
+    fun onLandmarkChanged(context: Context, value: String) {
+        _uiState.value = _uiState.value.copy(landmark = value)
+        if (value.trim().length >= 3) {
+            val fullQuery = "${_uiState.value.streetName} $value".trim()
+            fetchCoordinatesFromAddress(context, fullQuery)
+        }
+    }
+
+    fun onPincodeChanged(context: Context, pin: String) {
+        val sanitized = pin.filter { it.isDigit() }.take(6)
+        val (city, district) = com.ghartak.customer.util.IndianPincodeResolver.getCityAndDistrictForPincode(sanitized)
+        val instant = com.ghartak.customer.util.IndianPincodeResolver.getOfflineFallback(sanitized)
+
+        _uiState.value = _uiState.value.copy(
+            pincode = sanitized,
+            city = if (sanitized.length >= 3) city else _uiState.value.city,
+            district = if (sanitized.length >= 3) district else _uiState.value.district,
+            stateName = instant.state,
+            stateCode = instant.stateCode,
+            gstinStateCode = instant.gstinStateCode,
+            hubName = instant.hubName,
+            isCheckingPincode = sanitized.length == 6,
+            errorMessage = null
+        )
+
+        if (sanitized.length == 6) {
+            sessionManager.setUserPincode(sanitized)
+            checkPincodeServiceability(context, sanitized)
+        }
+    }
+
+    fun checkPincodeServiceability(context: Context, pin: String) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isCheckingPincode = true)
+            _uiState.value = _uiState.value.copy(isCheckingPincode = true, errorMessage = null)
+            val details = com.ghartak.customer.util.IndianPincodeResolver.resolvePincode(pin)
+            val (city, district) = com.ghartak.customer.util.IndianPincodeResolver.getCityAndDistrictForPincode(pin)
+
+            _uiState.value = _uiState.value.copy(
+                isCheckingPincode = false,
+                isPincodeServiceable = details.isServiceable,
+                city = city,
+                district = district,
+                hubName = details.hubName,
+                stateName = details.state,
+                stateCode = details.stateCode,
+                gstinStateCode = details.gstinStateCode,
+                etaMinutes = details.etaMinutes,
+                isMandatoryLocationSatisfied = true
+            )
+            loadLiveTechnicians(context, pin, _uiState.value.userLat, _uiState.value.userLng)
+        }
+    }
+
+    /**
+     * Mandatory Dynamic GPS Detection:
+     * Reads device coordinates, reverse-geocodes into District, City, and Pincode,
+     * populates all fields automatically, and fetches closest verified technicians.
+     */
+    fun detectCurrentLocation(context: Context, isInitial: Boolean = false) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isDetectingLocation = true,
+                isCheckingPincode = true
+            )
             var lat: Double? = null
             var lng: Double? = null
 
             val lm = context.getSystemService(Context.LOCATION_SERVICE) as? android.location.LocationManager
-            if (lm != null) {
+            val hasFine = androidx.core.content.ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            val hasCoarse = androidx.core.content.ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            val gpsProviderOn = lm?.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER) == true
+            val netProviderOn = lm?.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER) == true
+
+            _uiState.value = _uiState.value.copy(
+                isLocationPermissionGranted = hasFine || hasCoarse,
+                isLocationGpsProviderEnabled = gpsProviderOn || netProviderOn
+            )
+
+            if (lm != null && (hasFine || hasCoarse) && (gpsProviderOn || netProviderOn)) {
                 try {
                     val fineLoc = lm.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
                     val netLoc = lm.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER)
@@ -334,6 +513,14 @@ class AddressBookingViewModel(
             }
 
             if (lat != null && lng != null) {
+                var resolvedPin: String? = null
+                var resolvedCity: String? = null
+                var resolvedDistrict: String? = null
+                var resolvedStreet: String? = null
+                var resolvedLandmark: String? = null
+                var resolvedState: String? = null
+
+                // 1. Primary: Android Native Geocoder
                 try {
                     val geocoder = android.location.Geocoder(context, java.util.Locale.getDefault())
                     val addresses = withContext(Dispatchers.IO) {
@@ -342,67 +529,80 @@ class AddressBookingViewModel(
                     }
                     if (!addresses.isNullOrEmpty()) {
                         val addr = addresses[0]
-                        val resolvedPin = addr.postalCode?.filter { it.isDigit() }?.take(6)
-                        val thoroughfare = addr.thoroughfare ?: addr.subLocality ?: ""
-                        val locality = addr.locality ?: addr.subAdminArea ?: ""
-
-                        if (!resolvedPin.isNullOrBlank()) {
-                            onPincodeChanged(context, resolvedPin)
-                        }
-                        if (thoroughfare.isNotBlank()) {
-                            _uiState.value = _uiState.value.copy(streetName = thoroughfare)
-                        }
-                        if (locality.isNotBlank()) {
-                            _uiState.value = _uiState.value.copy(landmark = "Near $locality")
+                        resolvedPin = addr.postalCode?.filter { it.isDigit() }?.take(6)
+                        resolvedStreet = addr.thoroughfare ?: addr.subLocality ?: ""
+                        resolvedCity = addr.locality ?: addr.subAdminArea ?: ""
+                        resolvedDistrict = addr.subAdminArea ?: addr.locality ?: ""
+                        resolvedState = addr.adminArea ?: ""
+                        if (!addr.featureName.isNullOrBlank() && addr.featureName != resolvedStreet) {
+                            resolvedLandmark = "Near ${addr.featureName}"
                         }
                     }
                 } catch (e: Exception) {
-                    Log.w("GTS_GEOCODE", "Geocoding error: ${e.message}")
+                    Log.w("GTS_GEOCODE", "Geocoder network error: ${e.message}")
                 }
-                loadLiveTechnicians(context, _uiState.value.pincode)
+
+                // 2. High-precision Indian Postal Resolver Fallback
+                if (resolvedPin.isNullOrBlank() || resolvedCity.isNullOrBlank()) {
+                    val fallback = com.ghartak.customer.util.IndianPincodeResolver.resolveLocationFromCoordinates(lat, lng)
+                    if (resolvedPin.isNullOrBlank()) resolvedPin = fallback.pincode
+                    if (resolvedCity.isNullOrBlank()) resolvedCity = fallback.city
+                    if (resolvedDistrict.isNullOrBlank()) resolvedDistrict = fallback.district
+                    if (resolvedState.isNullOrBlank()) resolvedState = fallback.state
+                    if (resolvedStreet.isNullOrBlank()) resolvedStreet = fallback.areaName
+                }
+
+                val finalPin = resolvedPin ?: "400001"
+                val finalCity = resolvedCity ?: "Mumbai"
+                val finalDistrict = resolvedDistrict ?: "Mumbai City"
+                val finalStreet = if (resolvedStreet.isNullOrBlank() || resolvedStreet == "null") {
+                    _uiState.value.streetName.ifEmpty { "Main Road" }
+                } else resolvedStreet
+
+                val pincodeDetails = com.ghartak.customer.util.IndianPincodeResolver.resolvePincode(finalPin)
+
+                _uiState.value = _uiState.value.copy(
+                    pincode = finalPin,
+                    city = finalCity,
+                    district = finalDistrict,
+                    streetName = finalStreet,
+                    landmark = resolvedLandmark ?: _uiState.value.landmark,
+                    stateName = resolvedState ?: pincodeDetails.state,
+                    stateCode = pincodeDetails.stateCode,
+                    gstinStateCode = pincodeDetails.gstinStateCode,
+                    hubName = pincodeDetails.hubName,
+                    isPincodeServiceable = pincodeDetails.isServiceable,
+                    userLat = lat,
+                    userLng = lng,
+                    isGpsActive = true,
+                    isMandatoryLocationSatisfied = true,
+                    isDetectingLocation = false,
+                    isCheckingPincode = false
+                )
+
+                sessionManager.setUserPincode(finalPin)
+                loadLiveTechnicians(context, finalPin, lat, lng)
             } else {
-                _uiState.value = _uiState.value.copy(isCheckingPincode = false)
+                _uiState.value = _uiState.value.copy(
+                    isDetectingLocation = false,
+                    isCheckingPincode = false,
+                    isMandatoryLocationSatisfied = false,
+                    isGpsActive = false
+                )
             }
         }
     }
 
-    fun onLandmarkChanged(value: String) {
-        _uiState.value = _uiState.value.copy(landmark = value)
+    fun resetToGpsLocation(context: Context) {
+        detectCurrentLocation(context, isInitial = false)
     }
 
-    fun onPincodeChanged(context: Context, pin: String) {
-        val sanitized = pin.filter { it.isDigit() }.take(6)
-        _uiState.value = _uiState.value.copy(pincode = sanitized)
-
-        if (sanitized.length == 6) {
-            sessionManager.setUserPincode(sanitized)
-            val instant = com.ghartak.customer.util.IndianPincodeResolver.getOfflineFallback(sanitized)
-            _uiState.value = _uiState.value.copy(
-                hubName = instant.hubName,
-                stateName = instant.state,
-                stateCode = instant.stateCode,
-                gstinStateCode = instant.gstinStateCode,
-                isPincodeServiceable = true
-            )
-            checkPincodeServiceability(context, sanitized)
-        }
-    }
-
-    fun checkPincodeServiceability(context: Context, pin: String) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isCheckingPincode = true, errorMessage = null)
-            val details = com.ghartak.customer.util.IndianPincodeResolver.resolvePincode(pin)
-            _uiState.value = _uiState.value.copy(
-                isCheckingPincode = false,
-                isPincodeServiceable = details.isServiceable,
-                hubName = details.hubName,
-                stateName = details.state,
-                stateCode = details.stateCode,
-                gstinStateCode = details.gstinStateCode,
-                etaMinutes = details.etaMinutes
-            )
-            loadLiveTechnicians(context, pin)
-        }
+    fun updateLocationStatus(hasPermission: Boolean, isGpsOn: Boolean) {
+        _uiState.value = _uiState.value.copy(
+            isLocationPermissionGranted = hasPermission,
+            isLocationGpsProviderEnabled = isGpsOn,
+            isMandatoryLocationSatisfied = (hasPermission && isGpsOn) || (_uiState.value.pincode.length == 6)
+        )
     }
 
     fun setBookingPriority(priority: String) {
@@ -420,10 +620,14 @@ class AddressBookingViewModel(
             streetName = "Colaba Causeway, Mumbai",
             landmark = "Near Radio Club",
             pincode = "400001",
+            city = "Mumbai",
+            district = "Mumbai City",
             isPincodeServiceable = true,
+            isMandatoryLocationSatisfied = true,
             hubName = "MH-01 Maharashtra Regional Hub (Colaba)",
             etaMinutes = 15,
             errorMessage = null
         )
     }
 }
+

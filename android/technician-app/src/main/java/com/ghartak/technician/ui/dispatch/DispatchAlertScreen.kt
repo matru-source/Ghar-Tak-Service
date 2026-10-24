@@ -91,7 +91,7 @@ fun DispatchAlertScreen(
     }
 
     LaunchedEffect(job.id) {
-        viewModel.startCountdown(context) {
+        viewModel.startCountdown(context, job.dispatchedAt) {
             // Auto timeout triggers rejection
             viewModel.rejectDispatch(context, job.id, "TIMEOUT_EXPIRED_60S", onDeclined)
         }

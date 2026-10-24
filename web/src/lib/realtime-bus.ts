@@ -16,8 +16,12 @@ export type RealtimeEventType =
   | 'PAYOUT_TRANSFERRED'
   | 'EMERGENCY_SOS'
   | 'EMERGENCY_SOS_TRIGGERED'
+  | 'CUSTOMER_EMERGENCY_SOS_TRIGGERED'
   | 'JOB_CANCELLED'
-  | 'JOB_FEEDBACK_SUBMITTED';
+  | 'JOB_FEEDBACK_SUBMITTED'
+  | 'DEAD_MILEAGE_CREDITED'
+  | 'MATERIAL_ADDED'
+  | 'PART_ADDED';
 
 export interface RealtimeEventPayload {
   type: RealtimeEventType;

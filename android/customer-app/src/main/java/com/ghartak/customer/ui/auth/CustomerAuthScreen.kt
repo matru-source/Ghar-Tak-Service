@@ -568,7 +568,7 @@ fun CustomerAuthScreen(
                             onClick = {
                                 try {
                                     googleSignInClient.signOut()
-                                } catch (_: Exception) {}
+                                } catch (e: Exception) {}
                                 googleLauncher.launch(googleSignInClient.signInIntent)
                             },
                             shape = RoundedCornerShape(12.dp),

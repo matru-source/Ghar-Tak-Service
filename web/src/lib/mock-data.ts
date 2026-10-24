@@ -105,9 +105,11 @@ export interface ElectriCareStore {
     email: string;
     fullName: string;
     role: 'SUPER_ADMIN' | 'PARTNER' | 'TECHNICIAN' | 'CUSTOMER';
+    avatarUrl?: string | null;
     isVerified: boolean;
     isActive: boolean;
     createdAt: string;
+    passwordHash?: string;
   }>;
   partner: PartnerRecord;
   partners: PartnerRecord[];
@@ -132,6 +134,8 @@ export interface ElectriCareStore {
     badgeNumber: string;
     fullName: string;
     phone: string;
+    email?: string;
+    avatarUrl?: string | null;
     rating: number;
     totalJobsCompleted: number;
     isOnline: boolean;
@@ -143,11 +147,16 @@ export interface ElectriCareStore {
     insulatedGlovesVerified?: boolean;
     safetyKitSerial?: string;
     trade?: string;
+    specialization?: string;
+    experience?: string;
+    license?: string;
+    serviceArea?: string;
     aadharNumberMasked?: string;
     panDocUrl?: string;
     kycRejectionReason?: string;
     kycVerifiedAt?: string;
     kycNotes?: string;
+    passwordHash?: string;
   }>;
   customers: Array<{
     id: string;
