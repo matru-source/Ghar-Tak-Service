@@ -24,11 +24,10 @@ class GharTakCustomerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Ghar Tak - Premium Electrical Services',
+      title: 'Ghar Tak',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       home: const SplashScreen(),
     );
   }
 }
-

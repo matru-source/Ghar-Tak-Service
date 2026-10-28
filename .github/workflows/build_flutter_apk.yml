@@ -42,10 +42,8 @@ jobs:
         run: |
           set -e -o pipefail
           cd flutter_apps/customer_app
-          cp pubspec.yaml pubspec.yaml.bak
-          flutter create . --platforms=android --org=com.ghartak.customer --project-name=customer_app --overwrite
-          cp pubspec.yaml.bak pubspec.yaml
           echo "sdk.dir=/usr/local/lib/android/sdk" > android/local.properties
+          chmod +x android/gradlew || true
           flutter pub get
           flutter build apk --debug 2>&1 | tee /tmp/flutter_customer.log || {
             echo "## ❌ Flutter Customer Build Failure" >> $GITHUB_STEP_SUMMARY
@@ -60,10 +58,8 @@ jobs:
         run: |
           set -e -o pipefail
           cd flutter_apps/technician_app
-          cp pubspec.yaml pubspec.yaml.bak
-          flutter create . --platforms=android --org=com.ghartak.technician --project-name=technician_app --overwrite
-          cp pubspec.yaml.bak pubspec.yaml
           echo "sdk.dir=/usr/local/lib/android/sdk" > android/local.properties
+          chmod +x android/gradlew || true
           flutter pub get
           flutter build apk --debug 2>&1 | tee /tmp/flutter_technician.log || {
             echo "## ❌ Flutter Technician Build Failure" >> $GITHUB_STEP_SUMMARY
@@ -72,7 +68,7 @@ jobs:
             echo '```' >> $GITHUB_STEP_SUMMARY
             exit 1
           }
-          mv build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/GharTak-Technician.apk
+          mv build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/GharTak-Partner.apk
 
       - name: Upload Build Logs on Failure
         if: failure()
@@ -82,16 +78,16 @@ jobs:
           path: /tmp/flutter_*.log
           if-no-files-found: ignore
 
-      - name: Upload Flutter Customer APK Artifact
+      - name: Upload Ghar Tak Customer APK
         uses: actions/upload-artifact@v4
         with:
-          name: flutter-customer-app-debug-apk
-          path: flutter_apps/customer_app/build/app/outputs/flutter-apk/*.apk
+          name: GharTak-Customer-APK
+          path: flutter_apps/customer_app/build/app/outputs/flutter-apk/GharTak-Customer.apk
           if-no-files-found: error
 
-      - name: Upload Flutter Technician APK Artifact
+      - name: Upload Ghar Tak Partner Technician APK
         uses: actions/upload-artifact@v4
         with:
-          name: flutter-technician-app-debug-apk
-          path: flutter_apps/technician_app/build/app/outputs/flutter-apk/*.apk
+          name: GharTak-Partner-APK
+          path: flutter_apps/technician_app/build/app/outputs/flutter-apk/GharTak-Partner.apk
           if-no-files-found: error

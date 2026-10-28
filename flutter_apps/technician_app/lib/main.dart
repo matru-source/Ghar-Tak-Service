@@ -11,7 +11,7 @@ void main() async {
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
+      statusBarIconBrightness: Brightness.light,
     ),
   );
 
@@ -24,11 +24,10 @@ class GharTakTechnicianApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Ghar Tak Partner - Field Technician Console',
+      title: 'Ghar Tak Partner',
       debugShowCheckedModeBanner: false,
       theme: TechTheme.lightTheme,
       home: const TechSplashScreen(),
     );
   }
 }
-
