@@ -101,3 +101,4 @@ class _TechSplashScreenState extends State<TechSplashScreen> {
     );
   }
 }
+

@@ -8,7 +8,9 @@ class TechAuthService {
     required String badgeNumber,
   }) async {
     return await ApiClient.post('/auth/otp/send', {
+      'identifier': phone,
       'phone': phone,
+      'purpose': 'LOGIN',
       'role': 'TECHNICIAN',
       'badgeNumber': badgeNumber,
     });
@@ -20,8 +22,11 @@ class TechAuthService {
     required String badgeNumber,
   }) async {
     final res = await ApiClient.post('/auth/otp/verify', {
+      'identifier': phone,
       'phone': phone,
       'code': otp,
+      'otp': otp,
+      'purpose': 'LOGIN',
       'role': 'TECHNICIAN',
       'badgeNumber': badgeNumber,
     });

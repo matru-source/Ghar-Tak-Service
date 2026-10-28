@@ -59,3 +59,4 @@ class SessionManager {
     await _prefs?.remove(AppConstants.keyIsOnline);
   }
 }
+

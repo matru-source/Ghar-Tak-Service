@@ -41,7 +41,7 @@ class _SafetyChecklistScreenState extends State<SafetyChecklistScreen> {
       jobId: widget.job.id,
       glovesConfirmed: _glovesConfirmed,
       mcbSwitchConfirmed: _mcbSwitchConfirmed,
-      photoUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800',
+      photoUrl: 'https://uploads.ghartak.in/evidence/safety_${widget.job.id}.jpg',
     );
 
     setState(() => _isSubmitting = false);
@@ -259,3 +259,4 @@ class _SafetyChecklistScreenState extends State<SafetyChecklistScreen> {
     );
   }
 }
+

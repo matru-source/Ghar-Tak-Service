@@ -161,3 +161,4 @@ class SafetyItemTile extends StatelessWidget {
     );
   }
 }
+

@@ -312,3 +312,4 @@ class _TechAuthScreenState extends State<TechAuthScreen> {
     );
   }
 }
+

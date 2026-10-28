@@ -50,3 +50,4 @@ class TelemetryService {
     _telemetryTimer = null;
   }
 }
+

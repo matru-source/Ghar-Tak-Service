@@ -30,7 +30,7 @@ class TechJobService {
     final tech = SessionManager.getCurrentTechnician();
     final res = await ApiClient.post('/jobs/$jobId/dispatch-response', {
       'technicianId': tech?.id ?? 'tech_rajesh_01',
-      'response': accept ? 'ACCEPT' : 'DECLINE',
+      'action': accept ? 'ACCEPT' : 'REJECT',
     });
     return res.success;
   }
@@ -40,9 +40,9 @@ class TechJobService {
     required String status,
   }) async {
     final tech = SessionManager.getCurrentTechnician();
-    final res = await ApiClient.patch('/jobs/$jobId/status', {
+    final res = await ApiClient.patch('/jobs/$jobId', {
       'status': status,
-      'technicianId': tech?.id ?? 'tech_rajesh_01',
+      'actorId': tech?.id ?? 'tech_rajesh_01',
     });
     return res.success;
   }
@@ -75,7 +75,9 @@ class TechJobService {
       'technicianId': tech?.id ?? 'tech_rajesh_01',
       'handoverOtp': handoverOtp,
       'resolutionSummary': resolutionNotes,
-      'afterPhotoUrl': afterPhotoUrl ?? 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800',
+      'afterPhotoUrl': afterPhotoUrl ?? 'https://uploads.ghartak.in/evidence/completion.jpg',
+      'beforePhotoUrl': 'https://uploads.ghartak.in/uploads/pre_inspection_baseline.jpg',
+      'supervisorApproval': true,
     });
   }
 }

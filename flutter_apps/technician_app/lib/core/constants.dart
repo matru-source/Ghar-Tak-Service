@@ -19,3 +19,4 @@ class AppConstants {
   // Revenue Share
   static const double technicianCommissionRate = 0.70; // 70% direct commission
 }
+

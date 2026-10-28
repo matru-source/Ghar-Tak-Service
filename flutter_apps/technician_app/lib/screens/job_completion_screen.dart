@@ -39,7 +39,7 @@ class _JobCompletionScreenState extends State<JobCompletionScreen> {
       jobId: widget.job.id,
       handoverOtp: otp,
       resolutionNotes: _notesController.text.trim(),
-      afterPhotoUrl: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800',
+      afterPhotoUrl: 'https://uploads.ghartak.in/evidence/completion_${widget.job.id}.jpg',
     );
 
     setState(() => _isSubmitting = false);
@@ -344,3 +344,4 @@ class _JobCompletionScreenState extends State<JobCompletionScreen> {
     );
   }
 }
+

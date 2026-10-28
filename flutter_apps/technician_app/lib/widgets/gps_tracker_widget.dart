@@ -89,3 +89,4 @@ class _GpsTrackerWidgetState extends State<GpsTrackerWidget> with SingleTickerPr
     );
   }
 }
+

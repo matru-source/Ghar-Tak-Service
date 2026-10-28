@@ -32,3 +32,4 @@ class AudioService {
     _hapticLoop = null;
   }
 }
+

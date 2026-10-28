@@ -527,3 +527,4 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
     }
   }
 }
+
