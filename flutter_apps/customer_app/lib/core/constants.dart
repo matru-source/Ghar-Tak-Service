@@ -2,10 +2,11 @@ class AppConstants {
   static const String appName = 'Ghar Tak';
   static const String appTagline = 'Fast • Safe • Transparent Doorstep Services';
   
-  // Base API configuration (Supports Emulator, Real Device & Production)
-  static const String defaultBaseUrl = 'http://10.0.2.2:3000/api';
+  // Base API configuration (Live Cloud Vercel Production)
+  static const String defaultBaseUrl = 'https://ghar-tak-service.vercel.app/api';
   static const String localWebBaseUrl = 'http://localhost:3000/api';
-  static const String productionBaseUrl = 'https://gts-api.saralgroups.com/api';
+  static const String emulatorBaseUrl = 'http://10.0.2.2:3000/api';
+  static const String productionBaseUrl = 'https://ghar-tak-service.vercel.app/api';
 
   // Storage Keys
   static const String keyAuthToken = 'gts_customer_jwt_token';

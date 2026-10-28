@@ -2,10 +2,9 @@ class AppConstants {
   static const String appName = 'Ghar Tak Partner';
   static const String appTagline = 'Field Technician & Electrical Safety Console';
 
-  // API Configuration
-  // 10.0.2.2 is standard Android emulator host mapping to localhost
-  static const String defaultBaseUrl = 'http://10.0.2.2:3000/api';
-  static const String fallbackLocalUrl = 'http://localhost:3000/api';
+  // API Configuration (Live Cloud Vercel Production)
+  static const String defaultBaseUrl = 'https://ghar-tak-service.vercel.app/api';
+  static const String fallbackLocalUrl = 'http://10.0.2.2:3000/api';
 
   // Storage Keys
   static const String keyAuthToken = 'tech_auth_token';
