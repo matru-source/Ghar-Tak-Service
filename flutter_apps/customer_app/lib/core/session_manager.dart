@@ -58,8 +58,8 @@ class SessionManager {
     await _prefs?.remove(AppConstants.keyUserJson);
   }
 
-  static Future<void> clearSession() async {
-    await logout();
-  }
+  // Compatibility aliases
+  static Future<void> saveUser(UserModel user) => saveCurrentUser(user);
+  static Future<void> saveToken(String token) => saveAuthToken(token);
+  static Future<void> clearSession() => logout();
 }
-

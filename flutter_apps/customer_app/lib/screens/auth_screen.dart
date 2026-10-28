@@ -80,9 +80,8 @@ class _AuthScreenState extends State<AuthScreen> {
 
     setState(() => _isLoading = false);
 
-    if (res.success && res.user != null) {
-      await SessionManager.saveUser(res.user!);
-      await SessionManager.saveToken(res.token ?? 'session_customer_${DateTime.now().millisecondsSinceEpoch}');
+    if (res.success && res.data != null) {
+      await SessionManager.saveUser(res.data!);
       if (mounted) {
         Navigator.pushReplacement(
           context,

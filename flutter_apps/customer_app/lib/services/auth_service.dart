@@ -61,5 +61,20 @@ class AuthService {
       statusCode: regRes.statusCode,
     );
   }
-}
 
+  static Future<ApiResponse<UserModel>> verifyOtp({
+    required String identifier,
+    required String otp,
+    String? name,
+    String? address,
+    String? pincode,
+  }) async {
+    return await verifyOtpAndLogin(
+      identifier: identifier,
+      code: otp,
+      fullName: name,
+      address: address,
+      pincode: pincode,
+    );
+  }
+}
