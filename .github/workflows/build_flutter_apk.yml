@@ -41,78 +41,56 @@ jobs:
       - name: Build Flutter Customer App APK
         run: |
           set -e -o pipefail
-          echo "=== 1. Generating clean Android scaffolding in /tmp ==="
-          rm -rf /tmp/scaffold_cust
-          flutter create --platforms=android --org=com.ghartak.customer --project-name=customer_app /tmp/scaffold_cust
-
-          echo "=== 2. Copying Android scaffolding to customer_app ==="
-          rm -rf flutter_apps/customer_app/android
-          cp -r /tmp/scaffold_cust/android flutter_apps/customer_app/android
-
-          echo "=== 3. Injecting GTS Branding, Icons & App Label ==="
-          # Copy official high-res GTS mipmaps
-          cp -r android/customer-app/src/main/res/mipmap-* flutter_apps/customer_app/android/app/src/main/res/
-
-          # Update AndroidManifest.xml with Ghar Tak app title
-          sed -i 's/android:label="customer_app"/android:label="Ghar Tak"/g' flutter_apps/customer_app/android/app/src/main/AndroidManifest.xml
-          sed -i 's/android:label="[^\"]*"/android:label="Ghar Tak"/g' flutter_apps/customer_app/android/app/src/main/AndroidManifest.xml
-
-          # Ensure Android SDK path in local.properties
-          echo "sdk.dir=/usr/local/lib/android/sdk" >> flutter_apps/customer_app/android/local.properties
-
-          echo "=== 4. Compiling Ghar Tak Customer Flutter APK ==="
           cd flutter_apps/customer_app
+
+          echo "=== 1. Backing up real Customer App Dart code and pubspec ==="
+          rm -rf /tmp/cust_lib_backup /tmp/cust_pubspec_backup
+          cp -r lib /tmp/cust_lib_backup
+          cp pubspec.yaml /tmp/cust_pubspec_backup
+
+          echo "=== 2. Generating standard Android scaffolding ==="
+          flutter create . --platforms=android --org=com.ghartak.customer --project-name=customer_app --overwrite
+
+          echo "=== 3. Restoring real Ghar Tak Customer code ==="
+          rm -rf lib pubspec.yaml
+          cp -r /tmp/cust_lib_backup lib
+          cp /tmp/cust_pubspec_backup pubspec.yaml
+
+          echo "=== 4. Injecting GTS Icons and App Name ==="
+          cp -r ../../android/customer-app/src/main/res/mipmap-* android/app/src/main/res/
+          sed -i 's/android:label="customer_app"/android:label="Ghar Tak"/g' android/app/src/main/AndroidManifest.xml
+
+          echo "=== 5. Compiling Ghar Tak Customer Flutter APK ==="
           flutter pub get
-          flutter build apk --debug 2>&1 | tee /tmp/flutter_customer.log || {
-            echo "## ❌ Flutter Customer Build Failure" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            tail -n 120 /tmp/flutter_customer.log >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            exit 1
-          }
+          flutter build apk --debug
           cp build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/GharTak-Customer.apk
 
       - name: Build Flutter Technician App APK
         run: |
           set -e -o pipefail
-          echo "=== 1. Generating clean Android scaffolding in /tmp ==="
-          rm -rf /tmp/scaffold_tech
-          flutter create --platforms=android --org=com.ghartak.technician --project-name=technician_app /tmp/scaffold_tech
-
-          echo "=== 2. Copying Android scaffolding to technician_app ==="
-          rm -rf flutter_apps/technician_app/android
-          cp -r /tmp/scaffold_tech/android flutter_apps/technician_app/android
-
-          echo "=== 3. Injecting GTS Branding, Icons & App Label ==="
-          # Copy official high-res GTS mipmaps
-          cp -r android/technician-app/src/main/res/mipmap-* flutter_apps/technician_app/android/app/src/main/res/
-
-          # Update AndroidManifest.xml with Ghar Tak Partner app title
-          sed -i 's/android:label="technician_app"/android:label="Ghar Tak Partner"/g' flutter_apps/technician_app/android/app/src/main/AndroidManifest.xml
-          sed -i 's/android:label="[^\"]*"/android:label="Ghar Tak Partner"/g' flutter_apps/technician_app/android/app/src/main/AndroidManifest.xml
-
-          # Ensure Android SDK path in local.properties
-          echo "sdk.dir=/usr/local/lib/android/sdk" >> flutter_apps/technician_app/android/local.properties
-
-          echo "=== 4. Compiling Ghar Tak Partner Technician Flutter APK ==="
           cd flutter_apps/technician_app
-          flutter pub get
-          flutter build apk --debug 2>&1 | tee /tmp/flutter_technician.log || {
-            echo "## ❌ Flutter Technician Build Failure" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            tail -n 120 /tmp/flutter_technician.log >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            exit 1
-          }
-          cp build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/GharTak-Partner.apk
 
-      - name: Upload Build Logs on Failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: flutter-failure-logs
-          path: /tmp/flutter_*.log
-          if-no-files-found: ignore
+          echo "=== 1. Backing up real Technician App Dart code and pubspec ==="
+          rm -rf /tmp/tech_lib_backup /tmp/tech_pubspec_backup
+          cp -r lib /tmp/tech_lib_backup
+          cp pubspec.yaml /tmp/tech_pubspec_backup
+
+          echo "=== 2. Generating standard Android scaffolding ==="
+          flutter create . --platforms=android --org=com.ghartak.technician --project-name=technician_app --overwrite
+
+          echo "=== 3. Restoring real Ghar Tak Partner code ==="
+          rm -rf lib pubspec.yaml
+          cp -r /tmp/tech_lib_backup lib
+          cp /tmp/tech_pubspec_backup pubspec.yaml
+
+          echo "=== 4. Injecting GTS Icons and App Name ==="
+          cp -r ../../android/technician-app/src/main/res/mipmap-* android/app/src/main/res/
+          sed -i 's/android:label="technician_app"/android:label="Ghar Tak Partner"/g' android/app/src/main/AndroidManifest.xml
+
+          echo "=== 5. Compiling Ghar Tak Partner Technician Flutter APK ==="
+          flutter pub get
+          flutter build apk --debug
+          cp build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/GharTak-Partner.apk
 
       - name: Upload Ghar Tak Customer APK
         uses: actions/upload-artifact@v4
