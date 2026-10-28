@@ -11,9 +11,6 @@ jobs:
   build-flutter-apps:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
-
     env:
       ANDROID_HOME: /usr/local/lib/android/sdk
       ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
@@ -67,10 +64,10 @@ jobs:
           echo "=== 5. Compiling Ghar Tak Customer Flutter APK ==="
           flutter pub get
           flutter build apk --debug 2>&1 | tee /tmp/flutter_customer.log || {
-            echo "::error::Flutter customer build failed! Inspecting log..."
-            while IFS= read -r line; do
+            echo "::error::Flutter customer build failed! Grepping errors:"
+            grep -i -C 3 -E "error|exception|failure" /tmp/flutter_customer.log | head -n 40 | while IFS= read -r line; do
               echo "::error title=CustomerBuild::$line"
-            done < <(tail -n 50 /tmp/flutter_customer.log)
+            done
             exit 1
           }
           cp build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/GharTak-Customer.apk
@@ -101,25 +98,13 @@ jobs:
           echo "=== 5. Compiling Ghar Tak Partner Technician Flutter APK ==="
           flutter pub get
           flutter build apk --debug 2>&1 | tee /tmp/flutter_technician.log || {
-            echo "::error::Flutter technician build failed! Inspecting log..."
-            while IFS= read -r line; do
+            echo "::error::Flutter technician build failed! Grepping errors:"
+            grep -i -C 3 -E "error|exception|failure" /tmp/flutter_technician.log | head -n 40 | while IFS= read -r line; do
               echo "::error title=TechnicianBuild::$line"
-            done < <(tail -n 50 /tmp/flutter_technician.log)
+            done
             exit 1
           }
           cp build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/GharTak-Partner.apk
-
-      - name: Push Build Failure Log to Branch
-        if: failure()
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -B build-logs
-          mkdir -p logs
-          cp /tmp/flutter_*.log logs/ || true
-          git add logs/
-          git commit -m "chore: save build failure logs [skip ci]" || true
-          git push origin build-logs -f || true
 
       - name: Upload Ghar Tak Customer APK
         uses: actions/upload-artifact@v4
