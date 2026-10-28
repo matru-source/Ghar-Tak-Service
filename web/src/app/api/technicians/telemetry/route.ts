@@ -343,9 +343,9 @@ export async function GET(request: NextRequest) {
         },
         technician: {
           id: tech?.id || job.technicianId,
-          badgeNumber: tech?.badgeNumber || (job as any).technicianBadge || 'GTS-TECH-101',
+          badgeNumber: tech?.badgeNumber || (job as any).technicianBadge || 'TECH-FIELD',
           name: tech?.fullName || job.technicianName,
-          phone: tech?.phone || '9876543210',
+          phone: tech?.phone || '',
           rating: tech?.rating || 5.0,
           coordinates: { latitude: techLat, longitude: techLng },
           area: techArea,

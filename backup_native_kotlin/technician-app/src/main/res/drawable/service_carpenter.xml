@@ -1,0 +1,30 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Rounded Background Pill -->
+    <path
+        android:fillColor="#FEF3C7"
+        android:pathData="M16,0 L80,0 A16,16 0 0,1 96,16 L96,80 A16,16 0 0,1 80,96 L16,96 A16,16 0 0,1 0,80 L0,16 A16,16 0 0,1 16,0 Z" />
+    <!-- Wood Plank Background Element -->
+    <path
+        android:fillColor="#FDE68A"
+        android:pathData="M20,62 L76,62 C78,62 80,64 80,66 L80,78 C80,80 78,82 76,82 L20,82 C18,82 16,80 16,78 L16,66 C16,64 18,62 20,62 Z" />
+    <!-- Hammer Head -->
+    <path
+        android:fillColor="#475569"
+        android:pathData="M38,20 L66,32 L61,42 L33,30 Z" />
+    <!-- Hammer Claw -->
+    <path
+        android:fillColor="#334155"
+        android:pathData="M33,30 C29,32 26,38 28,42 L32,38 C31,35 34,32 37,31 Z" />
+    <!-- Wooden Handle -->
+    <path
+        android:fillColor="#B45309"
+        android:pathData="M49,36 L72,70 C73,72 72,75 70,76 L66,79 C64,80 61,79 60,77 L37,43 Z" />
+    <!-- Handle Grip Detail -->
+    <path
+        android:fillColor="#D97706"
+        android:pathData="M56,54 L64,66 L62,68 L54,56 Z" />
+</vector>

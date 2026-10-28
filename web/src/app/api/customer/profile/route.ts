@@ -61,9 +61,9 @@ export async function GET(request: NextRequest) {
         customer = {
           id: `cust_${user.id}`,
           userId: user.id,
-          fullName: user.fullName || 'Admin User',
-          phone: user.phone || '+919876543210',
-          email: user.email || 'admin@ghartak.in',
+          fullName: user.fullName || 'Ghar Tak User',
+          phone: user.phone || '',
+          email: user.email || '',
           defaultAddressLine: 'HQ Command Center, Colaba',
           defaultPincode: '400001',
           defaultLatitude: 18.922,

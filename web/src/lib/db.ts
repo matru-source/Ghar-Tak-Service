@@ -2071,16 +2071,20 @@ export const db = {
             (j) => j.id === mapped.id || j.jobTicketNumber === mapped.jobTicketNumber
           );
           const serialized = serializeJob(mapped);
-          if (memIdx !== -1) dbStore.jobs[memIdx] = { ...dbStore.jobs[memIdx], ...serialized };
-          else dbStore.jobs.unshift(serialized);
-          return serialized;
+          if (memIdx !== -1) {
+            dbStore.jobs[memIdx] = { ...dbStore.jobs[memIdx], ...serialized };
+            return dbStore.jobs[memIdx];
+          } else {
+            dbStore.jobs.unshift(serialized);
+            return dbStore.jobs[0];
+          }
         }
       } catch (err) {
         console.warn('[DB] Prisma findOrRecoverJob lookup error:', err);
       }
     }
 
-    let job = dbStore.jobs.find(
+    const memIdx = dbStore.jobs.findIndex(
       (j) =>
         j.id === cleanId ||
         j.id === cleanTicket ||
@@ -2089,11 +2093,22 @@ export const db = {
         j.jobTicketNumber === `#${cleanTicket}`
     );
 
-    if (!job) {
+    if (memIdx === -1) {
       throw new Error(`Work order '${jobId}' not found in database.`);
     }
 
-    return serializeJob(job);
+    const job: any = dbStore.jobs[memIdx];
+    if (job.totalAmountInr === undefined && job.invoice?.totalAmount) {
+      job.totalAmountInr = job.invoice.totalAmount;
+    }
+    if (!job.customerName && (job.customer?.user?.fullName || job.customer?.fullName)) {
+      job.customerName = job.customer?.user?.fullName || job.customer?.fullName;
+    }
+    if (!job.technicianName && (job.technician?.user?.fullName || job.technician?.fullName)) {
+      job.technicianName = job.technician?.user?.fullName || job.technician?.fullName;
+    }
+
+    return job;
   },
 
   async respondToDispatch(
@@ -3038,6 +3053,39 @@ export const db = {
       dbStore.invoices.push(invoice);
     }
 
+    // Ensure memory store job is directly updated
+    const storeJobIdx = dbStore.jobs.findIndex((j) => j.id === job.id || j.jobTicketNumber === job.jobTicketNumber);
+    if (storeJobIdx !== -1) {
+      dbStore.jobs[storeJobIdx].status = 'WORK_COMPLETED';
+      dbStore.jobs[storeJobIdx].completedAt = now;
+      if (data.afterPhotoUrl) dbStore.jobs[storeJobIdx].afterPhotoUrl = data.afterPhotoUrl;
+      if (data.customerRating) dbStore.jobs[storeJobIdx].customerRating = data.customerRating;
+      if (data.customerFeedback) dbStore.jobs[storeJobIdx].customerFeedback = data.customerFeedback;
+    }
+
+    // Add 70% technician payout ledger entry into dbStore.ledgerEntries for immediate wallet reflection
+    const jobTotalAmount = Number(job.totalAmountInr || invoice.totalAmount || 1250);
+    const techPayoutAmount = Math.round(jobTotalAmount * 0.7);
+    const existingLedger = dbStore.ledgerEntries.find(
+      (e) => e.jobTicketNumber === job.jobTicketNumber && e.ledgerType === 'TECHNICIAN_PAYOUT'
+    );
+    if (!existingLedger && job.technicianId) {
+      dbStore.ledgerEntries.push({
+        id: `led_${Date.now()}_tech`,
+        transactionReference: `TXN-TECH-70-${Date.now()}`,
+        invoiceId: invoice.id,
+        jobTicketNumber: job.jobTicketNumber,
+        partnerId: job.partnerId,
+        technicianId: job.technicianId,
+        ledgerType: 'TECHNICIAN_PAYOUT' as any,
+        entryDirection: 'CREDIT' as any,
+        amountInr: techPayoutAmount,
+        runningBalanceInr: techPayoutAmount,
+        narrative: `70% Commission Payout for Work Order #${job.jobTicketNumber}`,
+        createdAt: now,
+      });
+    }
+
     // Persist to Prisma if database is connected
     if (await isDatabaseConnected()) {
       try {
@@ -3843,10 +3891,19 @@ export const db = {
     }
 
     const payouts = dbStore.ledgerEntries.filter(
-      (e) => e.technicianId === tech.id && e.ledgerType === 'TECHNICIAN_PAYOUT'
+      (e) => (e.technicianId === tech.id || e.technicianId === tech.badgeNumber) && e.ledgerType === 'TECHNICIAN_PAYOUT'
     );
 
-    const totalLifetimeEarnedInr = payouts.reduce((sum, p) => sum + p.amountInr, 0);
+    let totalLifetimeEarnedInr = payouts.reduce((sum, p) => sum + p.amountInr, 0);
+
+    if (totalLifetimeEarnedInr === 0) {
+      const completedJobs = dbStore.jobs.filter(
+        (j: any) =>
+          (j.technicianId === tech.id || j.technicianId === tech.badgeNumber || j.technicianName === tech.fullName) &&
+          (j.status === 'WORK_COMPLETED' || j.status === 'COMPLETED' || j.status === 'SETTLED')
+      );
+      totalLifetimeEarnedInr = completedJobs.reduce((sum: number, j: any) => sum + Math.round((Number(j.totalAmountInr) || 1250) * 0.7), 0);
+    }
 
     const pendingOrPaidWithdrawals = (dbStore.withdrawals || []).filter(
       (w) => (w.technicianId === tech.id || w.technicianBadge === tech.badgeNumber) && (w.status === 'PENDING' || w.status === 'PAID')

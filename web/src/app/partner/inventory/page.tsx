@@ -16,6 +16,7 @@ import {
   Plus,
   Check,
 } from '@/components/ui/icons';
+import { getActivePartnerId } from '@/lib/partner-session';
 
 interface PartnerInventoryItem {
   id: string;
@@ -64,7 +65,8 @@ export default function PartnerWarehouseInventoryPage() {
   const fetchInventory = async () => {
     try {
       setRefreshing(true);
-      const res = await fetch('/api/partner/inventory?partnerId=ptnr_mah_01');
+      const partnerId = getActivePartnerId();
+      const res = await fetch(`/api/partner/inventory?partnerId=${encodeURIComponent(partnerId)}`);
       if (!res.ok) throw new Error('Failed to load inventory');
       const json = await res.json();
       if (json.success && json.data) {

@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
+import { dbStore } from '@/lib/mock-data';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const partnerId = searchParams.get('partnerId') || 'ptnr_mah_01';
+    const token = extractBearerToken(request);
+    const payload = token ? await verifyAccessToken(token) : null;
+    const partnerId = searchParams.get('partnerId') || payload?.partnerId || (dbStore.partners?.[0]?.id) || dbStore.partner?.id || 'partner_hub';
     const ledgerType = searchParams.get('ledgerType') || undefined;
     const search = searchParams.get('search') || undefined;
 

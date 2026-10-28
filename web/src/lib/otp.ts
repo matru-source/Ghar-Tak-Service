@@ -206,19 +206,7 @@ export function verifyOtp(
     };
   }
 
-  // 2. Production Security Gate: Disable static mock OTP entirely in production.
-  // In development, only allow if ALLOW_DEV_OTP_BYPASS is explicitly 'true' and NODE_ENV !== 'production'.
-  const isProduction = process.env.NODE_ENV === 'production';
-  const isDevBypassAllowed = !isProduction && process.env.ALLOW_DEV_OTP_BYPASS === 'true';
-
-  if (isDevBypassAllowed && (codeTrimmed === '123456' || codeTrimmed === '999999')) {
-    otpStore.delete(key);
-    otpStore.delete(`${cleanId}:GENERAL`);
-    persistOtps(otpStore);
-    tracker.failedAttempts = 0;
-    return { valid: true };
-  }
-
+  // 2. Production Security Gate: Cryptographic token validation only. Static bypass is disabled.
   // 3. Attempt sync from persistent store for multi-worker support
   let record = otpStore.get(key) || otpStore.get(`${cleanId}:GENERAL`);
   if (!record) {

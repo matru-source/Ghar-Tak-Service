@@ -1,0 +1,21 @@
+class AppConstants {
+  static const String appName = 'Ghar Tak Partner';
+  static const String appTagline = 'Field Technician & Electrical Safety Console';
+
+  // API Configuration
+  // 10.0.2.2 is standard Android emulator host mapping to localhost
+  static const String defaultBaseUrl = 'http://10.0.2.2:3000/api';
+  static const String fallbackLocalUrl = 'http://localhost:3000/api';
+
+  // Storage Keys
+  static const String keyAuthToken = 'tech_auth_token';
+  static const String keyTechnicianJson = 'tech_profile_json';
+  static const String keyIsOnline = 'tech_is_online';
+  static const String keyCustomBaseUrl = 'tech_custom_base_url';
+
+  // Dispatch siren timeout in seconds
+  static const int dispatchSirenTimeoutSeconds = 60;
+
+  // Revenue Share
+  static const double technicianCommissionRate = 0.70; // 70% direct commission
+}

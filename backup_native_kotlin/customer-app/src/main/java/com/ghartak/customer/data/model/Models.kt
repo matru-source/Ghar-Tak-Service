@@ -1,0 +1,159 @@
+package com.ghartak.customer.data.model
+
+import com.google.gson.annotations.SerializedName
+
+/**
+ * Standard API Response envelope matching backend apiSuccess / apiError
+ */
+data class ApiResponse<T>(
+    @SerializedName("success") val success: Boolean,
+    @SerializedName("message") val message: String?,
+    @SerializedName("data") val data: T?,
+    @SerializedName("error") val error: String? = null,
+    @SerializedName("timestamp") val timestamp: String? = null
+)
+
+/**
+ * User & Authentication Session
+ */
+data class UserProfile(
+    @SerializedName("id") val id: String,
+    @SerializedName("phone") val phone: String,
+    @SerializedName("fullName") val fullName: String,
+    @SerializedName("email") val email: String? = null,
+    @SerializedName("role") val role: String
+)
+
+data class LoginResponse(
+    @SerializedName("token") val token: String,
+    @SerializedName("tokenType") val tokenType: String = "Bearer",
+    @SerializedName("user") val user: UserProfile
+)
+
+data class OtpSendRequest(
+    @SerializedName("phone") val phone: String,
+    @SerializedName("role") val role: String = "CUSTOMER"
+)
+
+data class OtpVerifyRequest(
+    @SerializedName("phone") val phone: String,
+    @SerializedName("otp") val otp: String,
+    @SerializedName("fullName") val fullName: String? = null,
+    @SerializedName("role") val role: String = "CUSTOMER"
+)
+
+/**
+ * Work Order / Job Entity
+ */
+data class Job(
+    @SerializedName("id") val id: String,
+    @SerializedName("jobTicketNumber") val jobTicketNumber: String,
+    @SerializedName("serviceTitle") val serviceTitle: String,
+    @SerializedName("pincode") val pincode: String,
+    @SerializedName("customerAddressText") val customerAddressText: String,
+    @SerializedName("status") val status: String,
+    @SerializedName("priority") val priority: String = "NORMAL",
+    @SerializedName("totalAmountInr") val totalAmountInr: Double,
+    @SerializedName("scheduledAt") val scheduledAt: String? = null,
+    @SerializedName("technicianId") val technicianId: String? = null,
+    @SerializedName("technicianName") val technicianName: String? = null,
+    @SerializedName("handoverOtp") val handoverOtp: String? = null,
+    @SerializedName("createdAt") val createdAt: String? = null
+)
+
+data class JobsListResponse(
+    @SerializedName("jobs") val jobs: List<Job> = emptyList(),
+    @SerializedName("counts") val counts: Map<String, Any>? = null
+)
+
+data class CreateJobRequest(
+    @SerializedName("customerId") val customerId: String? = null,
+    @SerializedName("customerName") val customerName: String? = null,
+    @SerializedName("customerPhone") val customerPhone: String? = null,
+    @SerializedName("serviceId") val serviceId: String,
+    @SerializedName("serviceTitle") val serviceTitle: String? = null,
+    @SerializedName("basePriceInr") val basePriceInr: Double? = null,
+    @SerializedName("technicianId") val technicianId: String? = null,
+    @SerializedName("pincode") val pincode: String,
+    @SerializedName("customerAddressText") val customerAddressText: String,
+    @SerializedName("customerLatitude") val customerLatitude: Double? = null,
+    @SerializedName("customerLongitude") val customerLongitude: Double? = null,
+    @SerializedName("priority") val priority: String = "NORMAL",
+    @SerializedName("paymentMethod") val paymentMethod: String? = "UPI",
+    @SerializedName("quoteToken") val quoteToken: String? = null
+)
+
+data class PastOrderItem(
+    val ticketNumber: String,
+    val invoiceNumber: String,
+    val serviceTitle: String,
+    val dateText: String,
+    val technicianName: String,
+    val amountInr: Double,
+    val taxableAmount: Double,
+    val cgstAmount: Double,
+    val sgstAmount: Double,
+    val status: String = "COMPLETED"
+)
+
+/**
+ * Live GPS Tracking Telemetry for Customer Map
+ */
+data class LiveTrackingResponse(
+    @SerializedName("jobId") val jobId: String? = null,
+    @SerializedName("jobTicketNumber") val jobTicketNumber: String,
+    @SerializedName("status") val status: String,
+    @SerializedName("handoverOtp") val handoverOtp: String? = null,
+    @SerializedName("serviceTitle") val serviceTitle: String? = null,
+    @SerializedName("basePriceInr") val basePriceInr: Double? = null,
+    @SerializedName("totalAmountInr") val totalAmountInr: Double? = null,
+    @SerializedName("destination") val destination: DestinationCoordinates? = null,
+    @SerializedName("technician") val technician: TechnicianTrackingInfo
+)
+
+data class DestinationCoordinates(
+    @SerializedName("latitude") val latitude: Double,
+    @SerializedName("longitude") val longitude: Double,
+    @SerializedName("address") val address: String? = null
+)
+
+data class TechnicianTrackingInfo(
+    @SerializedName("id") val id: String,
+    @SerializedName("badgeNumber") val badgeNumber: String? = null,
+    @SerializedName("name") val name: String,
+    @SerializedName("phone") val phone: String,
+    @SerializedName("rating") val rating: Double,
+    @SerializedName("coordinates") val coordinates: Coordinates,
+    @SerializedName("distanceKm") val distanceKm: Double,
+    @SerializedName("etaMinutes") val etaMinutes: Int,
+    @SerializedName("isOnline") val isOnline: Boolean
+)
+
+data class Coordinates(
+    @SerializedName("latitude") val latitude: Double,
+    @SerializedName("longitude") val longitude: Double
+)
+
+/**
+ * Service Catalog Offering
+ */
+data class ServiceItem(
+    @SerializedName("id") val id: String,
+    @SerializedName("code") val code: String,
+    @SerializedName("title") val title: String,
+    @SerializedName("description") val description: String,
+    @SerializedName("category") val category: String,
+    @SerializedName("priceInr") val priceInr: Double,
+    @SerializedName("durationMinutes") val durationMinutes: Int,
+    @SerializedName("rating") val rating: Double = 4.9,
+    @SerializedName("isHighVoltageProtocol") val isHighVoltageProtocol: Boolean = false,
+    @SerializedName("warrantyMonths") val warrantyMonths: Int = 12,
+    @SerializedName("isPaused") val isPaused: Boolean = false
+)
+
+data class FileUploadResponse(
+    @SerializedName("url") val url: String,
+    @SerializedName("relativeUrl") val relativeUrl: String? = null,
+    @SerializedName("fileName") val fileName: String? = null,
+    @SerializedName("sizeBytes") val sizeBytes: Long? = null
+)

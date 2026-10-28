@@ -5,7 +5,9 @@ import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const partnerId = searchParams.get('partnerId') || 'ptnr_mah_01';
+    const token = extractBearerToken(request);
+    const payload = token ? await verifyAccessToken(token) : null;
+    const partnerId = searchParams.get('partnerId') || payload?.partnerId || 'partner_hub';
 
     const profile = await db.getPartnerProfile(partnerId);
 
@@ -44,7 +46,7 @@ export async function PATCH(request: NextRequest) {
       ifscCode,
     } = body;
 
-    const targetPartnerId = partnerId || payload.partnerId || 'ptnr_mah_01';
+    const targetPartnerId = partnerId || payload.partnerId || 'partner_hub';
 
     const updatedPartner = await db.updatePartnerProfile(targetPartnerId, {
       ...(directorName ? { directorName } : {}),

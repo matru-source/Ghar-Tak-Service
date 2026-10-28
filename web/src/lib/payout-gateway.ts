@@ -77,7 +77,7 @@ export class PayoutGatewayService {
               vpa: { address: resolvedVpa },
               contact: {
                 name: req.recipientName || 'Certified Technician',
-                contact: req.phone || '9876543210',
+                contact: req.phone || '',
                 type: 'vendor',
               },
             },

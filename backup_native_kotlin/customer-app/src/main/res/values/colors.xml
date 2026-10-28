@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand Palette for Customer App (as per gts.drawio.pdf #0D47A1) -->
+    <color name="customer_primary">#0D47A1</color>
+    <color name="customer_primary_dark">#082D6A</color>
+    <color name="customer_accent">#FFA000</color>
+    <color name="customer_emerald">#1B5E20</color>
+    <color name="background_light">#F8FAFC</color>
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#64748B</color>
+</resources>

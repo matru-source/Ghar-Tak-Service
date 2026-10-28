@@ -39,7 +39,8 @@ interface WithdrawalItem {
 
 export default function PartnerAppFinancePage() {
   const router = useRouter();
-  const [partnerBalance, setPartnerBalance] = useState(63000);
+  const [partnerBalance, setPartnerBalance] = useState(0);
+  const [partnerProfile, setPartnerProfile] = useState<{ bankName?: string; bankAccountNumber?: string; ifscCode?: string; entityName?: string } | null>(null);
   const [isSettlementModalOpen, setIsSettlementModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [utrSuccess, setUtrSuccess] = useState<string | null>(null);
@@ -74,18 +75,42 @@ export default function PartnerAppFinancePage() {
     }
   };
 
+  const fetchFinanceData = async () => {
+    try {
+      const [ledgerRes, profileRes] = await Promise.all([
+        fetch('/api/partner/ledger'),
+        fetch('/api/partner/profile'),
+      ]);
+      const ledgerJson = await ledgerRes.json();
+      const profileJson = await profileRes.json();
+
+      if (ledgerJson.success && ledgerJson.totalPartnerCommissionInr !== undefined) {
+        setPartnerBalance(ledgerJson.totalPartnerCommissionInr);
+      } else if (ledgerJson.success && ledgerJson.data?.summary?.partnerCommissionTotalInr !== undefined) {
+        setPartnerBalance(ledgerJson.data.summary.partnerCommissionTotalInr);
+      }
+      if (profileJson.success && profileJson.partner) {
+        setPartnerProfile(profileJson.partner);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     fetchWithdrawals();
+    fetchFinanceData();
   }, []);
 
   const handleInstantSettlement = () => {
     setIsProcessing(true);
     setTimeout(() => {
       const utr = `NEFT${Date.now().toString().slice(-8)}`;
+      const settledAmount = partnerBalance;
       setPartnerBalance(0);
       setIsProcessing(false);
       setUtrSuccess(utr);
-      showToast('✓ ₹63,000 settled to Axis Bank account!');
+      showToast(`✓ ₹${settledAmount.toLocaleString('en-IN')} settled to ${partnerProfile?.bankName || 'bank'} account!`);
     }, 1200);
   };
 
@@ -378,10 +403,10 @@ export default function PartnerAppFinancePage() {
             </div>
             <div className="min-w-0">
               <span className="font-extrabold text-xs text-slate-900 block truncate">
-                Axis Bank Corporate A/c
+                {partnerProfile?.bankName || 'Corporate Settlement Account'}
               </span>
               <span className="text-[11px] text-slate-500 block">
-                A/C #918020048192012 • IFSC UTIB0000123
+                {partnerProfile?.bankAccountNumber ? `A/C #${partnerProfile.bankAccountNumber} • IFSC ${partnerProfile.ifscCode || ''}` : 'Verified Settlement A/C'}
               </span>
             </div>
           </div>
