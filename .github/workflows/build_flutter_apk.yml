@@ -58,11 +58,16 @@ jobs:
 
           echo "=== 4. Injecting GTS Icons and App Name ==="
           cp -r ../../android/customer-app/src/main/res/mipmap-* android/app/src/main/res/
+          cp ../../android/customer-app/src/main/res/drawable/ic_launcher_background.xml android/app/src/main/res/drawable/ || true
           sed -i 's/android:label="customer_app"/android:label="Ghar Tak"/g' android/app/src/main/AndroidManifest.xml
 
           echo "=== 5. Compiling Ghar Tak Customer Flutter APK ==="
           flutter pub get
-          flutter build apk --debug
+          flutter build apk --debug 2>&1 | tee /tmp/flutter_customer.log || {
+            echo "## ❌ Customer Build Error Output:" >> $GITHUB_STEP_SUMMARY
+            tail -n 100 /tmp/flutter_customer.log >> $GITHUB_STEP_SUMMARY
+            exit 1
+          }
           cp build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/GharTak-Customer.apk
 
       - name: Build Flutter Technician App APK
@@ -85,12 +90,25 @@ jobs:
 
           echo "=== 4. Injecting GTS Icons and App Name ==="
           cp -r ../../android/technician-app/src/main/res/mipmap-* android/app/src/main/res/
+          cp ../../android/technician-app/src/main/res/drawable/ic_launcher_background.xml android/app/src/main/res/drawable/ || true
           sed -i 's/android:label="technician_app"/android:label="Ghar Tak Partner"/g' android/app/src/main/AndroidManifest.xml
 
           echo "=== 5. Compiling Ghar Tak Partner Technician Flutter APK ==="
           flutter pub get
-          flutter build apk --debug
+          flutter build apk --debug 2>&1 | tee /tmp/flutter_technician.log || {
+            echo "## ❌ Technician Build Error Output:" >> $GITHUB_STEP_SUMMARY
+            tail -n 100 /tmp/flutter_technician.log >> $GITHUB_STEP_SUMMARY
+            exit 1
+          }
           cp build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/GharTak-Partner.apk
+
+      - name: Upload Build Logs on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-build-failure-logs
+          path: /tmp/flutter_*.log
+          if-no-files-found: ignore
 
       - name: Upload Ghar Tak Customer APK
         uses: actions/upload-artifact@v4
