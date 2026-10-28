@@ -54,6 +54,7 @@ jobs:
             echo '```' >> $GITHUB_STEP_SUMMARY
             exit 1
           }
+          mv build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/GharTak-Customer.apk
 
       - name: Build Flutter Technician App APK
         run: |
@@ -71,6 +72,7 @@ jobs:
             echo '```' >> $GITHUB_STEP_SUMMARY
             exit 1
           }
+          mv build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/GharTak-Technician.apk
 
       - name: Upload Build Logs on Failure
         if: failure()
