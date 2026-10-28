@@ -256,7 +256,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // Logout Action
             CustomButton(
-              title: 'Sign Out Account',
+              text: 'Sign Out Account',
               backgroundColor: AppTheme.signalCrimson,
               onPressed: _handleLogout,
             ),

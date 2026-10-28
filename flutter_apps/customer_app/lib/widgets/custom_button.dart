@@ -12,14 +12,15 @@ class CustomButton extends StatelessWidget {
 
   const CustomButton({
     super.key,
-    required this.text,
+    String? text,
+    String? title,
     required this.onPressed,
     this.isLoading = false,
     this.backgroundColor,
     this.textColor,
     this.icon,
     this.height = 54,
-  });
+  }) : text = text ?? title ?? '';
 
   @override
   Widget build(BuildContext context) {
@@ -50,16 +51,15 @@ class CustomButton extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (icon != null) ...[
-                    Icon(icon, size: 20, color: textColor ?? Colors.white),
+                    Icon(icon, size: 20),
                     const SizedBox(width: 8),
                   ],
                   Text(
                     text,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: textColor ?? Colors.white,
-                      letterSpacing: 0.2,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ],
@@ -68,4 +68,3 @@ class CustomButton extends StatelessWidget {
     );
   }
 }
-

@@ -11,6 +11,10 @@ jobs:
   build-flutter-apps:
     runs-on: ubuntu-latest
 
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
@@ -29,26 +33,52 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Print Flutter Environment
-        run: flutter doctor -v
+      - name: Accept Android SDK Licenses & Doctor
+        run: |
+          yes | flutter doctor --android-licenses || true
+          flutter doctor -v
 
       - name: Build Flutter Customer App APK
         run: |
+          set -e -o pipefail
           cd flutter_apps/customer_app
           cp pubspec.yaml pubspec.yaml.bak
-          flutter create . --platforms=android --org=com.ghartak.customer --project-name=customer_app
+          flutter create . --platforms=android --org=com.ghartak.customer --project-name=customer_app --overwrite
           cp pubspec.yaml.bak pubspec.yaml
+          echo "sdk.dir=/usr/local/lib/android/sdk" > android/local.properties
           flutter pub get
-          flutter build apk --debug
+          flutter build apk --debug 2>&1 | tee /tmp/flutter_customer.log || {
+            echo "## ❌ Flutter Customer Build Failure" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -n 120 /tmp/flutter_customer.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            exit 1
+          }
 
       - name: Build Flutter Technician App APK
         run: |
+          set -e -o pipefail
           cd flutter_apps/technician_app
           cp pubspec.yaml pubspec.yaml.bak
-          flutter create . --platforms=android --org=com.ghartak.technician --project-name=technician_app
+          flutter create . --platforms=android --org=com.ghartak.technician --project-name=technician_app --overwrite
           cp pubspec.yaml.bak pubspec.yaml
+          echo "sdk.dir=/usr/local/lib/android/sdk" > android/local.properties
           flutter pub get
-          flutter build apk --debug
+          flutter build apk --debug 2>&1 | tee /tmp/flutter_technician.log || {
+            echo "## ❌ Flutter Technician Build Failure" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -n 120 /tmp/flutter_technician.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            exit 1
+          }
+
+      - name: Upload Build Logs on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-failure-logs
+          path: /tmp/flutter_*.log
+          if-no-files-found: ignore
 
       - name: Upload Flutter Customer APK Artifact
         uses: actions/upload-artifact@v4

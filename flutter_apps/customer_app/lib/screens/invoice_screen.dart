@@ -242,7 +242,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                         ),
                         const SizedBox(height: 14),
                         CustomButton(
-                          title: 'Submit Review',
+                          text: 'Submit Review',
                           onPressed: () {
                             setState(() => _feedbackSubmitted = true);
                             ScaffoldMessenger.of(context).showSnackBar(
