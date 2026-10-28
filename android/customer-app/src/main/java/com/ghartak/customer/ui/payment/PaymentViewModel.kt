@@ -105,6 +105,14 @@ class PaymentViewModel(
         onSuccess: (jobId: String) -> Unit
     ) {
         viewModelScope.launch {
+            if (!sessionManager.isLoggedIn() || sessionManager.getAuthToken().isNullOrBlank()) {
+                _uiState.value = _uiState.value.copy(
+                    isProcessing = false,
+                    errorMessage = "Authentication Required: Please verify your mobile number with OTP before confirming your booking."
+                )
+                return@launch
+            }
+
             if (sessionManager.hasActiveJob()) {
                 val rawTicket = sessionManager.getActiveJobTicketNumber().ifBlank { sessionManager.getActiveJobId().takeLast(6).uppercase() }.ifBlank { "J-1001" }
                 val formattedTicket = if (rawTicket.startsWith("#")) rawTicket else "#$rawTicket"
@@ -116,6 +124,7 @@ class PaymentViewModel(
             }
 
             _uiState.value = _uiState.value.copy(isProcessing = true, errorMessage = null)
+
 
             // If UPI Intent chosen, simulate/trigger NPCI deep link
             if (_uiState.value.selectedPaymentMethod.startsWith("UPI")) {

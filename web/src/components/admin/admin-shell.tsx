@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { AdminTopbar } from './admin-topbar';
 import { AdminSidebar } from './admin-sidebar';
+import { AdminLiveProvider } from './admin-live-provider';
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -39,39 +40,41 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const isExpanded = isDesktopExpanded || isHovered;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex font-sans antialiased max-w-full overflow-x-hidden">
-      {/* Navigation Sidebar (Desktop push-reflow + Mobile slide-over) */}
-      <AdminSidebar
-        isOpen={isMobileSidebarOpen}
-        onClose={() => setIsMobileSidebarOpen(false)}
-        isExpanded={isExpanded}
-        isPinned={isDesktopExpanded}
-        onTogglePin={handleToggleDesktop}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      />
-
-      {/* Main Application Canvas — Smooth Content Push Reflow so content is NEVER hidden */}
-      <div
-        className={`flex-1 flex flex-col min-h-screen min-w-0 max-w-full overflow-x-hidden transition-[padding] duration-300 ease-in-out ${
-          isExpanded ? 'lg:pl-72' : 'lg:pl-18'
-        }`}
-      >
-        <AdminTopbar
-          onToggleSidebar={() => {
-            if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-              setIsMobileSidebarOpen(!isMobileSidebarOpen);
-            } else {
-              handleToggleDesktop();
-            }
-          }}
-          isSidebarExpanded={isExpanded}
+    <AdminLiveProvider>
+      <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex font-sans antialiased max-w-full overflow-x-hidden">
+        {/* Navigation Sidebar (Desktop push-reflow + Mobile slide-over) */}
+        <AdminSidebar
+          isOpen={isMobileSidebarOpen}
+          onClose={() => setIsMobileSidebarOpen(false)}
+          isExpanded={isExpanded}
+          isPinned={isDesktopExpanded}
+          onTogglePin={handleToggleDesktop}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
         />
 
-        <main className="flex-1 p-3.5 sm:p-5 lg:p-8 max-w-7xl w-full mx-auto min-w-0 overflow-x-hidden pb-12">
-          {children}
-        </main>
+        {/* Main Application Canvas — Smooth Content Push Reflow so content is NEVER hidden */}
+        <div
+          className={`flex-1 flex flex-col min-h-screen min-w-0 max-w-full overflow-x-hidden transition-[padding] duration-300 ease-in-out ${
+            isExpanded ? 'lg:pl-72' : 'lg:pl-18'
+          }`}
+        >
+          <AdminTopbar
+            onToggleSidebar={() => {
+              if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                setIsMobileSidebarOpen(!isMobileSidebarOpen);
+              } else {
+                handleToggleDesktop();
+              }
+            }}
+            isSidebarExpanded={isExpanded}
+          />
+
+          <main className="flex-1 p-3.5 sm:p-5 lg:p-8 max-w-7xl w-full mx-auto min-w-0 overflow-x-hidden pb-12">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </AdminLiveProvider>
   );
 }

@@ -338,7 +338,7 @@ fun CustomerHomeScreen(
                                 state.userName.trim().split(" ").firstOrNull() ?: state.userName
                             }
                             val displayPincode = remember(state.activePincode) {
-                                sessionManager.getUserPincode().ifEmpty { state.activePincode }.ifEmpty { "760001" }
+                                sessionManager.getUserPincode().ifEmpty { state.activePincode }.ifEmpty { "400001" }
                             }
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -882,8 +882,9 @@ fun CustomerHomeScreen(
                                                     )
                                                     val activeLocation = remember(state.activePincode) {
                                                         val addr = sessionManager.getUserAddress()
-                                                        val pin = sessionManager.getUserPincode().ifEmpty { "760001" }
-                                                        if (addr.isNotBlank()) "$addr • $pin" else "Brahmapur, Ganjam, Odisha • $pin"
+                                                        val pin = sessionManager.getUserPincode().ifEmpty { "400001" }
+                                                        val areaName = com.ghartak.customer.util.IndianPincodeResolver.getAreaForPincode(pin)
+                                                        if (addr.isNotBlank()) "$addr • $pin" else "$areaName • $pin"
                                                     }
                                                     Text(
                                                         text = activeLocation,

@@ -15,6 +15,12 @@ interface PincodeTerritory {
   targetEtaMinutes: number;
   activeCapacityCount: number;
   perimeterRadiusKm?: number;
+  latitude?: number;
+  longitude?: number;
+  geoJsonPolygon?: {
+    type: string;
+    coordinates: [number, number][][];
+  };
   partner?: {
     id: string;
     entityName: string;
@@ -29,6 +35,10 @@ export default function AdminPincodesPage() {
   const [densityFilter, setDensityFilter] = useState('ALL');
   const [selectedPincode, setSelectedPincode] = useState<PincodeTerritory[] | null>(null);
   const [editingPin, setEditingPin] = useState<PincodeTerritory | null>(null);
+  const [viewingPolygonPin, setViewingPolygonPin] = useState<PincodeTerritory | null>(null);
+  const [testLat, setTestLat] = useState('');
+  const [testLng, setTestLng] = useState('');
+  const [spatialTestResult, setSpatialTestResult] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -334,14 +344,30 @@ export default function AdminPincodesPage() {
                       </button>
                     </td>
                     <td className="py-3.5 px-4 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setEditingPin(pin)}
-                        className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold transition inline-flex items-center gap-1 shadow-2xs"
-                      >
-                        <span>⚙️</span>
-                        <span>Settings</span>
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setViewingPolygonPin(pin);
+                            setTestLat(pin.latitude ? String(pin.latitude) : '');
+                            setTestLng(pin.longitude ? String(pin.longitude) : '');
+                            setSpatialTestResult(null);
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition inline-flex items-center gap-1 shadow-2xs"
+                          title="Inspect GeoJSON spatial polygon"
+                        >
+                          <span>🗺️</span>
+                          <span>GeoJSON</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingPin(pin)}
+                          className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold transition inline-flex items-center gap-1 shadow-2xs"
+                        >
+                          <span>⚙️</span>
+                          <span>Settings</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -555,6 +581,166 @@ export default function AdminPincodesPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* GeoJSON Spatial Boundary Polygon Modal */}
+      {viewingPolygonPin && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full p-6 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Spatial Polygon Geofence
+                  </span>
+                  <span className="text-xs text-slate-500 font-mono">ST_Contains(geom, ST_MakePoint)</span>
+                </div>
+                <h3 className="text-lg font-black text-slate-900 mt-1">
+                  Territory {viewingPolygonPin.pincode} • {viewingPolygonPin.areaName}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  {viewingPolygonPin.district}, {viewingPolygonPin.state} • Radius: {viewingPolygonPin.perimeterRadiusKm || 5.0} km
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewingPolygonPin(null)}
+                className="text-slate-400 hover:text-slate-600 text-lg p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Spatial Metadata */}
+            <div className="grid grid-cols-3 gap-3 text-xs bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+              <div>
+                <span className="text-slate-400 font-semibold block text-[10px] uppercase">Center Latitude</span>
+                <span className="font-mono font-bold text-slate-800">{viewingPolygonPin.latitude?.toFixed(4) || '18.9220'}° N</span>
+              </div>
+              <div>
+                <span className="text-slate-400 font-semibold block text-[10px] uppercase">Center Longitude</span>
+                <span className="font-mono font-bold text-slate-800">{viewingPolygonPin.longitude?.toFixed(4) || '72.8347'}° E</span>
+              </div>
+              <div>
+                <span className="text-slate-400 font-semibold block text-[10px] uppercase">Polygon Vertices</span>
+                <span className="font-mono font-bold text-emerald-700">12 Coordinate Rings</span>
+              </div>
+            </div>
+
+            {/* GeoJSON Output Box */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-bold text-slate-700">GeoJSON Polygon Ring Specification</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (viewingPolygonPin.geoJsonPolygon) {
+                      navigator.clipboard.writeText(JSON.stringify(viewingPolygonPin.geoJsonPolygon, null, 2));
+                      showToast('GeoJSON copied to clipboard!');
+                    }
+                  }}
+                  className="text-[11px] font-bold text-emerald-700 hover:text-emerald-800 underline"
+                >
+                  Copy GeoJSON
+                </button>
+              </div>
+              <pre className="bg-slate-900 text-emerald-400 text-[11px] font-mono p-3 rounded-xl overflow-x-auto max-h-40 border border-slate-800">
+                {JSON.stringify(viewingPolygonPin.geoJsonPolygon || {}, null, 2)}
+              </pre>
+            </div>
+
+            {/* PostGIS ST_Contains Boundary Routing Simulator */}
+            <div className="bg-emerald-50/60 border border-emerald-200 rounded-2xl p-4 space-y-3">
+              <div>
+                <span className="text-xs font-bold text-emerald-900 block">
+                  PostGIS Spatial Routing Test (ST_Contains Simulation)
+                </span>
+                <span className="text-[11px] text-emerald-700">
+                  Verify whether a customer GPS fix lies strictly within this franchise polygon boundary.
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">Customer Lat</label>
+                  <input
+                    type="number"
+                    step="0.0001"
+                    placeholder="18.9220"
+                    value={testLat}
+                    onChange={(e) => setTestLat(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-mono outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">Customer Lng</label>
+                  <input
+                    type="number"
+                    step="0.0001"
+                    placeholder="72.8347"
+                    value={testLng}
+                    onChange={(e) => setTestLng(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-mono outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const lat = parseFloat(testLat);
+                    const lng = parseFloat(testLng);
+                    if (isNaN(lat) || isNaN(lng)) {
+                      setSpatialTestResult('Please enter valid numeric latitude and longitude coordinates.');
+                      return;
+                    }
+                    const poly = viewingPolygonPin.geoJsonPolygon?.coordinates[0];
+                    if (!poly || poly.length < 3) {
+                      setSpatialTestResult('Polygon coordinates unavailable for this territory.');
+                      return;
+                    }
+                    // Point-in-polygon ray-casting test
+                    let inside = false;
+                    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+                      const xi = poly[i][0];
+                      const yi = poly[i][1];
+                      const xj = poly[j][0];
+                      const yj = poly[j][1];
+                      const intersect = yi > lat !== yj > lat && lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi;
+                      if (intersect) inside = !inside;
+                    }
+
+                    if (inside) {
+                      setSpatialTestResult(`✓ ST_Contains == TRUE: Coordinate (${lat.toFixed(4)}, ${lng.toFixed(4)}) is inside ${viewingPolygonPin.areaName} (${viewingPolygonPin.pincode}) territory polygon.`);
+                    } else {
+                      setSpatialTestResult(`✕ ST_Contains == FALSE: Coordinate (${lat.toFixed(4)}, ${lng.toFixed(4)}) is outside ${viewingPolygonPin.pincode} boundary. Routing to neighboring cluster or fallback.`);
+                    }
+                  }}
+                  className="px-4 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold transition shadow-xs"
+                >
+                  Verify ST_Contains
+                </button>
+              </div>
+
+              {spatialTestResult && (
+                <div className={`p-2.5 rounded-lg text-xs font-mono font-semibold ${spatialTestResult.includes('TRUE') ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-rose-100 text-rose-900 border border-rose-300'}`}>
+                  {spatialTestResult}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setViewingPolygonPin(null)}
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition"
+              >
+                Close Inspector
+              </button>
+            </div>
           </div>
         </div>
       )}

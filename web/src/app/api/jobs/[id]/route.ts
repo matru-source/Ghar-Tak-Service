@@ -101,13 +101,23 @@ export async function PATCH(
         ? 'WORK_COMPLETED'
         : status;
 
-    // Issue 32 Safety Interlock: Prohibit transitioning to IN_PROGRESS unless safetyGlovesConfirmed and safetyMcbSwitchConfirmed are true
+    // Issue 28: State machine guard prohibiting direct transition to IN_PROGRESS unless safety verified
     if (canonicalStatus === 'IN_PROGRESS') {
-      if (!currentJob.safetyGlovesConfirmed || !currentJob.safetyMcbSwitchConfirmed) {
-        return apiError(
-          `Safety Interlock Engaged: Cannot transition work order '${currentJob.jobTicketNumber}' to IN_PROGRESS directly. Safety interlocks unverified: 1000V Insulated Gloves (${currentJob.safetyGlovesConfirmed ? 'VERIFIED' : 'PENDING'}) and MCB Power Isolation (${currentJob.safetyMcbSwitchConfirmed ? 'VERIFIED' : 'PENDING'}). Complete /api/jobs/${id}/verify-safety first.`,
-          422
-        );
+      const isElectric = db.isElectricJob(currentJob);
+      if (isElectric) {
+        if (!currentJob.safetyGlovesConfirmed || !currentJob.safetyMcbSwitchConfirmed) {
+          return apiError(
+            `Safety Interlock Engaged: Cannot transition work order '${currentJob.jobTicketNumber}' to IN_PROGRESS directly. Safety interlocks unverified: 1000V Insulated Gloves (${currentJob.safetyGlovesConfirmed ? 'VERIFIED' : 'PENDING'}) and MCB Power Isolation (${currentJob.safetyMcbSwitchConfirmed ? 'VERIFIED' : 'PENDING'}). Complete /api/jobs/${id}/verify-safety first.`,
+            422
+          );
+        }
+      } else {
+        if (currentJob.status !== 'SAFETY_CHECKED' && !(currentJob as any).categorySafetyConfirmed && !(currentJob as any).beforePhotoUrl) {
+          return apiError(
+            `Safety Interlock Engaged: Cannot transition work order '${currentJob.jobTicketNumber}' to IN_PROGRESS directly. Category-specific safety inspection unverified for ${currentJob.serviceTitle}. Complete /api/jobs/${id}/verify-safety first.`,
+            422
+          );
+        }
       }
     }
 

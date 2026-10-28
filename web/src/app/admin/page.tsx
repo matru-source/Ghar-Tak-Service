@@ -40,6 +40,13 @@ export default async function AdminDashboardPage() {
 
         {/* Global Action Triggers */}
         <div className="flex items-center gap-2.5">
+          <Link
+            href="/admin/safety"
+            className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+          >
+            <span>🛡️</span>
+            <span>Safety Queue</span>
+          </Link>
           <form action="/api/jobs/escalations/sweep" method="POST">
             <button
               type="submit"

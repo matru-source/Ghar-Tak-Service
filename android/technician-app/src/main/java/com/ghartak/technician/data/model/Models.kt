@@ -150,6 +150,18 @@ data class WithdrawalListResponse(
     @SerializedName("count") val count: Int
 )
 
+data class WithdrawalRequestPayload(
+    @SerializedName("technicianId") val technicianId: String,
+    @SerializedName("amountInr") val amountInr: Double,
+    @SerializedName("payoutMethod") val payoutMethod: String = "UPI",
+    @SerializedName("upiId") val upiId: String? = null
+) {
+    val isValid: Boolean get() = amountInr >= MIN_WITHDRAWAL_THRESHOLD_INR && technicianId.isNotBlank()
+    companion object {
+        const val MIN_WITHDRAWAL_THRESHOLD_INR: Double = 500.0
+    }
+}
+
 data class EmergencySosRequest(
     @SerializedName("technicianId") val technicianId: String,
     @SerializedName("technicianName") val technicianName: String? = null,

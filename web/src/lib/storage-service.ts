@@ -74,8 +74,9 @@ export class CloudStorageService {
     const fileKey = `${category}/${timestamp}_${randomHex}_${sanitizedName}`;
 
     // Target API endpoint for streaming multipart or base64 upload
+    const cdnBase = (process.env.NEXT_PUBLIC_CDN_URL || 'https://uploads.ghartak.in').replace(/\/$/, '');
     const uploadUrl = `/api/integrations/storage/upload?key=${encodeURIComponent(fileKey)}`;
-    const downloadUrl = `/uploads/${fileKey}`;
+    const downloadUrl = `${cdnBase}/uploads/${fileKey}`;
 
     return {
       fileKey,
@@ -116,7 +117,8 @@ export class CloudStorageService {
     fs.writeFileSync(destinationPath, buffer);
 
     const isPrivate = category === 'kyc-documents';
-    const publicUrl = `/uploads/${category}/${fileNameOnDisk}`;
+    const cdnBase = (process.env.NEXT_PUBLIC_CDN_URL || 'https://uploads.ghartak.in').replace(/\/$/, '');
+    const publicUrl = `${cdnBase}/uploads/${category}/${fileNameOnDisk}`;
 
     const record: StoredFileRecord = {
       fileKey,

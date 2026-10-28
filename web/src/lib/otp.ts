@@ -2,7 +2,9 @@
 // Ghar Tak Services (GTS) - Enterprise Cryptographic OTP Verification Engine
 // Zero client-side bypasses. Cryptographically secure random tokens.
 // Single-use token burning to prevent replay attacks.
-// Resilient multi-worker & restart-proof persistence via temp storage & global store.
+// Strict production enforcement: Mock OTP disabled in production.
+// Rate limiting: Max 3 tries per 15-minute window with automated lockout.
+// Multi-worker & restart-proof persistence via temp storage & global store.
 // ==============================================================================
 
 import crypto from 'crypto';
@@ -18,8 +20,22 @@ interface OtpRecord {
   attempts: number;
 }
 
+interface RateLimitTracker {
+  requestTimestamps: number[];
+  failedAttempts: number;
+  lockedUntil: number;
+}
+
+export interface OtpVerificationResult {
+  valid: boolean;
+  reason?: string;
+  isLocked?: boolean;
+}
+
 const OTP_TTL_MS = 5 * 60 * 1000; // 5 minutes validity
-const MAX_ATTEMPTS = 5;
+const MAX_VERIFY_ATTEMPTS = 3; // Maximum 3 verification attempts per OTP
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15-minute window
+const MAX_SEND_PER_WINDOW = 3; // Maximum 3 OTP send requests per 15-minute window
 const OTP_STORAGE_FILE = path.join(os.tmpdir(), 'ghartak_active_otps.json');
 
 /**
@@ -65,11 +81,31 @@ function persistOtps(store: Map<string, OtpRecord>) {
 // Preserve store across Next.js dev server hot module reloading and serverless invocations
 const globalForOtp = globalThis as unknown as {
   __gharTakOtpStore?: Map<string, OtpRecord>;
+  __gharTakOtpRateLimitStore?: Map<string, RateLimitTracker>;
 };
 
 const otpStore: Map<string, OtpRecord> =
   globalForOtp.__gharTakOtpStore || loadPersistedOtps();
 globalForOtp.__gharTakOtpStore = otpStore;
+
+if (!globalForOtp.__gharTakOtpRateLimitStore) {
+  globalForOtp.__gharTakOtpRateLimitStore = new Map<string, RateLimitTracker>();
+}
+const rateLimitStore: Map<string, RateLimitTracker> = globalForOtp.__gharTakOtpRateLimitStore;
+
+function getRateLimitTracker(identifier: string): RateLimitTracker {
+  const cleanId = normalizeIdentifier(identifier);
+  let tracker = rateLimitStore.get(cleanId);
+  if (!tracker) {
+    tracker = {
+      requestTimestamps: [],
+      failedAttempts: 0,
+      lockedUntil: 0,
+    };
+    rateLimitStore.set(cleanId, tracker);
+  }
+  return tracker;
+}
 
 /**
  * Normalizes an identifier (email to trimmed lowercase, phone to E.164 +91 format).
@@ -95,17 +131,36 @@ export function normalizePhoneNumber(rawPhone: string): string {
 }
 
 /**
- * Generates a cryptographically secure 6-digit dynamic OTP.
+ * Generates a cryptographically secure 6-digit dynamic OTP with 15-min rate limiting.
  */
 export function generateAndStoreOtp(
   identifier: string,
   purpose: 'RESET_PASSWORD' | 'REGISTER' | 'LOGIN' | 'GENERAL' = 'GENERAL'
 ): { code: string; expiresAt: Date } {
   const cleanId = normalizeIdentifier(identifier);
+  const now = Date.now();
+  const tracker = getRateLimitTracker(cleanId);
+
+  // Check if account is temporarily locked out
+  if (now < tracker.lockedUntil) {
+    const remainingMin = Math.ceil((tracker.lockedUntil - now) / 60000);
+    throw new Error(
+      `Account temporarily locked due to excessive failed attempts. Please try again in ${remainingMin} minute${remainingMin > 1 ? 's' : ''}.`
+    );
+  }
+
+  // Rate limit check: max 3 requests per 15 minutes window
+  tracker.requestTimestamps = tracker.requestTimestamps.filter((ts) => now - ts < RATE_LIMIT_WINDOW_MS);
+  if (tracker.requestTimestamps.length >= MAX_SEND_PER_WINDOW) {
+    throw new Error(
+      `Rate limit exceeded for ${cleanId}. Maximum 3 verification codes allowed per 15-minute window.`
+    );
+  }
+  tracker.requestTimestamps.push(now);
 
   // Cryptographically secure 6-digit number [100000, 999999]
   const code = crypto.randomInt(100000, 1000000).toString();
-  const expiresAtMs = Date.now() + OTP_TTL_MS;
+  const expiresAtMs = now + OTP_TTL_MS;
 
   const key = `${cleanId}:${purpose}`;
   const record: OtpRecord = {
@@ -127,28 +182,44 @@ export function generateAndStoreOtp(
 
 /**
  * Validates a submitted OTP against the cryptographically stored challenge.
- * Enforces TTL, attempt limits, cross-worker syncing, and burns the OTP immediately on success.
+ * Enforces TTL, strict 3-attempt limit, 15-minute lockout, and burns token on success.
+ * Completely disables mock OTP bypass in production.
  */
 export function verifyOtp(
   identifier: string,
   submittedCode: string,
   purpose: 'RESET_PASSWORD' | 'REGISTER' | 'LOGIN' | 'GENERAL' = 'GENERAL'
-): { valid: boolean; reason?: string } {
+): OtpVerificationResult {
   const codeTrimmed = submittedCode.trim();
   const cleanId = normalizeIdentifier(identifier);
   const key = `${cleanId}:${purpose}`;
+  const now = Date.now();
+  const tracker = getRateLimitTracker(cleanId);
 
-  // Development/staging test OTP bypass for automated tests & emulator demos.
-  // Strictly blocked in production to enforce real cryptographic OTP delivery.
-  const isDevBypassAllowed = process.env.NODE_ENV !== 'production' && process.env.ALLOW_DEV_OTP_BYPASS !== 'false';
+  // 1. Check if identifier is currently locked out
+  if (now < tracker.lockedUntil) {
+    const remainingMin = Math.ceil((tracker.lockedUntil - now) / 60000);
+    return {
+      valid: false,
+      isLocked: true,
+      reason: `Account temporarily locked due to excessive failed attempts. Please try again in ${remainingMin} minute${remainingMin > 1 ? 's' : ''}.`,
+    };
+  }
+
+  // 2. Production Security Gate: Disable static mock OTP entirely in production.
+  // In development, only allow if ALLOW_DEV_OTP_BYPASS is explicitly 'true' and NODE_ENV !== 'production'.
+  const isProduction = process.env.NODE_ENV === 'production';
+  const isDevBypassAllowed = !isProduction && process.env.ALLOW_DEV_OTP_BYPASS === 'true';
+
   if (isDevBypassAllowed && (codeTrimmed === '123456' || codeTrimmed === '999999')) {
     otpStore.delete(key);
     otpStore.delete(`${cleanId}:GENERAL`);
     persistOtps(otpStore);
+    tracker.failedAttempts = 0;
     return { valid: true };
   }
 
-  // If not found in local memory, attempt sync from persistent store for multi-worker support
+  // 3. Attempt sync from persistent store for multi-worker support
   let record = otpStore.get(key) || otpStore.get(`${cleanId}:GENERAL`);
   if (!record) {
     const refreshed = loadPersistedOtps();
@@ -165,8 +236,8 @@ export function verifyOtp(
     };
   }
 
-  // Check TTL expiration
-  if (Date.now() > record.expiresAt) {
+  // 4. Check TTL expiration
+  if (now > record.expiresAt) {
     otpStore.delete(key);
     otpStore.delete(`${cleanId}:GENERAL`);
     persistOtps(otpStore);
@@ -176,27 +247,38 @@ export function verifyOtp(
     };
   }
 
-  // Check rate-limiting / brute force protection
-  record.attempts += 1;
-  if (record.attempts > MAX_ATTEMPTS) {
-    otpStore.delete(key);
-    otpStore.delete(`${cleanId}:GENERAL`);
-    persistOtps(otpStore);
-    return {
-      valid: false,
-      reason: 'Too many incorrect attempts. For security, this code has been invalidated. Please request a new code.',
-    };
-  }
-
-  // Constant-time comparison to prevent timing attacks
+  // 5. Constant-time comparison to prevent timing attacks
   const expectedBuffer = Buffer.from(record.code);
-  const submittedBuffer = Buffer.from(submittedCode.trim());
+  const submittedBuffer = Buffer.from(codeTrimmed);
 
-  if (expectedBuffer.length !== submittedBuffer.length || !crypto.timingSafeEqual(expectedBuffer, submittedBuffer)) {
+  const isMatch =
+    expectedBuffer.length === submittedBuffer.length &&
+    crypto.timingSafeEqual(expectedBuffer, submittedBuffer);
+
+  if (!isMatch) {
+    record.attempts += 1;
+    tracker.failedAttempts += 1;
+
+    if (record.attempts >= MAX_VERIFY_ATTEMPTS || tracker.failedAttempts >= MAX_VERIFY_ATTEMPTS) {
+      otpStore.delete(key);
+      otpStore.delete(`${cleanId}:GENERAL`);
+      persistOtps(otpStore);
+      tracker.lockedUntil = now + RATE_LIMIT_WINDOW_MS;
+
+      return {
+        valid: false,
+        isLocked: true,
+        reason:
+          'Too many incorrect attempts (3). For your security, this verification code has been invalidated and the account is locked for 15 minutes.',
+      };
+    }
+
     persistOtps(otpStore);
+    const remaining = MAX_VERIFY_ATTEMPTS - record.attempts;
     return {
       valid: false,
-      reason: `Incorrect verification code. ${MAX_ATTEMPTS - record.attempts} attempts remaining.`,
+      isLocked: false,
+      reason: `Incorrect verification code. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`,
     };
   }
 
@@ -204,5 +286,6 @@ export function verifyOtp(
   otpStore.delete(key);
   otpStore.delete(`${cleanId}:GENERAL`);
   persistOtps(otpStore);
+  tracker.failedAttempts = 0;
   return { valid: true };
 }

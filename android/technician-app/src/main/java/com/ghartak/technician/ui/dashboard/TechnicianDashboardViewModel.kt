@@ -229,9 +229,13 @@ class TechnicianDashboardViewModel(
         bankName: String? = null
     ) {
         if (_uiState.value.isWithdrawing) return
-        if (amount <= 0.0 || amount > _uiState.value.availableWithdrawalInr) {
+        val minThreshold = 500.0
+        if (amount < minThreshold || amount > _uiState.value.availableWithdrawalInr) {
             _uiState.value = _uiState.value.copy(
-                errorMessage = "Amount must be between ₹1 and ₹${"%,.0f".format(_uiState.value.availableWithdrawalInr)}"
+                errorMessage = if (amount < minThreshold)
+                    "Minimum withdrawal amount is ₹500.00 (Banking Regulation Interlock)."
+                else
+                    "Amount exceeds available balance of ₹${"%,.0f".format(_uiState.value.availableWithdrawalInr)}"
             )
             return
         }
@@ -610,7 +614,7 @@ class TechnicianDashboardViewModel(
 
         _uiState.value = _uiState.value.copy(
             assignedJobs = updatedJobs,
-            selectedJob = completedJob?.copy(status = "COMPLETED"),
+            selectedJob = completedJob?.copy(status = "WORK_COMPLETED"),
             todayEarningsInr = sessionManager.getTodayEarnings().takeIf { it > 0.0 } ?: (_uiState.value.todayEarningsInr + (if (creditEarnings) finalPayout else 0.0)),
             weekEarningsInr = sessionManager.getWeekEarnings().takeIf { it > 0.0 } ?: (_uiState.value.weekEarningsInr + (if (creditEarnings) finalPayout else 0.0)),
             monthEarningsInr = sessionTotalEarned,
@@ -857,7 +861,7 @@ class TechnicianDashboardViewModel(
                     // Merge active jobs, keeping local status changes if more advanced
                     val mergedActiveJobs = (serverActiveJobs + _uiState.value.assignedJobs)
                         .distinctBy { it.id.trim().lowercase().removePrefix("job_") }
-                        .filter { it.status != "COMPLETED" && it.status != "CANCELLED" }
+                        .filter { it.status != "WORK_COMPLETED" && it.status != "COMPLETED" && it.status != "SETTLED" && it.status != "CANCELLED" }
 
                     // 2. Extract inbound dispatch jobs awaiting acceptance/rejection
                     val activeInbound = rawJobs.mapNotNull { raw ->
@@ -1025,9 +1029,7 @@ class TechnicianDashboardViewModel(
                     priority = details?.optString("priority", "STANDARD") ?: "STANDARD",
                     totalAmountInr = totalAmount,
                     safetyGlovesConfirmed = false,
-                    handoverOtp = details?.optString("handoverOtp")?.takeIf { it.isNotEmpty() }
-                        ?: data.optString("handoverOtp").takeIf { it.isNotEmpty() }
-                        ?: ""
+                    handoverOtp = "" // Issue 36: Strictly confidential to customer app and SMS
                 )
 
                 cacheIncomingJob(inboundJob)
@@ -1169,24 +1171,34 @@ class TechnicianDashboardViewModel(
     )
 
     /**
-     * In-Job Spare Parts & Material Addition: Allows field technician to add parts or materials
-     * mid-service, which updates the server invoice and broadcasts revision to customer.
+     * In-Job Spare Parts & Material Addition: Allows field technician to propose parts or materials
+     * mid-service, requiring mandatory damaged component photo proof and pre-negotiated MRP validation.
+     * Transitions work to WAITING_CUSTOMER_APPROVAL until customer digitally approves the estimate.
      */
-    fun addPart(jobId: String, name: String, price: Double, quantity: Int = 1) {
+    fun addPart(
+        jobId: String,
+        name: String,
+        price: Double,
+        quantity: Int = 1,
+        sku: String? = null,
+        damagedComponentPhotoUrl: String = "https://uploads.ghartak.in/uploads/damaged_component_proof.jpg"
+    ) {
         viewModelScope.launch {
             try {
                 val api = ApiClient.getService(sessionManager.context)
-                api.addSparePart(
-                    jobId,
-                    mapOf(
-                        "partName" to name,
-                        "unitPriceInr" to price,
-                        "quantity" to quantity,
-                        "technicianId" to sessionManager.getTechnicianId()
-                    )
+                val body = mutableMapOf<String, Any>(
+                    "partName" to name,
+                    "unitPriceInr" to price,
+                    "quantity" to quantity,
+                    "damagedComponentPhotoUrl" to damagedComponentPhotoUrl,
+                    "technicianId" to sessionManager.getTechnicianId()
                 )
+                if (!sku.isNullOrBlank()) {
+                    body["sku"] = sku
+                }
+                api.addSparePart(jobId, body)
                 pollBackendAssignedJobs(sessionManager.context)
-                Log.d("GTS_TECH", "In-job spare part '$name' added to ticket $jobId")
+                Log.d("GTS_TECH", "In-job spare part '$name' (SKU: $sku) submitted for customer quote approval on ticket $jobId")
             } catch (e: Exception) {
                 Log.w("GTS_TECH", "Failed to add spare part: ${e.message}")
             }
@@ -1197,8 +1209,15 @@ class TechnicianDashboardViewModel(
         pollBackendAssignedJobs(context)
     }
 
-    fun addMaterial(jobId: String, materialName: String, unitPriceInr: Double, quantity: Int = 1) {
-        addPart(jobId, materialName, unitPriceInr, quantity)
+    fun addMaterial(
+        jobId: String,
+        materialName: String,
+        unitPriceInr: Double,
+        quantity: Int = 1,
+        sku: String? = null,
+        damagedComponentPhotoUrl: String = "https://uploads.ghartak.in/uploads/damaged_component_proof.jpg"
+    ) {
+        addPart(jobId, materialName, unitPriceInr, quantity, sku, damagedComponentPhotoUrl)
     }
 
     // =========================================================================

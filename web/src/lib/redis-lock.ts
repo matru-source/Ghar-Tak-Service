@@ -1,8 +1,11 @@
 // ==============================================================================
 // Redis Distributed Lock for Atomic Work Order Acceptance (Urban Company / Uber standard)
 // Ensures that under 60-second broadcast dispatch, only the first atomic tap
-// claims the work order via: SET lock:job:<id> <technicianId> NX EX 10
+// claims the work order via Redlock: SET lock:job:<id> <technicianId> NX EX 10
+// With atomic Lua unlock script to ensure only the holder can release.
 // ==============================================================================
+
+import { getRedisClient } from './redis-client';
 
 interface MemoryLockEntry {
   holder: string;
@@ -11,6 +14,15 @@ interface MemoryLockEntry {
 
 // In-process atomic lock store fallback when external Redis cluster is not active
 const memoryLockStore = new Map<string, MemoryLockEntry>();
+
+// Redlock atomic release script (Lua)
+const LUA_UNLOCK_SCRIPT = `
+if redis.call("get", KEYS[1]) == ARGV[1] then
+  return redis.call("del", KEYS[1])
+else
+  return 0
+end
+`;
 
 /**
  * Acquire distributed lock for job siren acceptance.
@@ -24,34 +36,28 @@ export async function acquireJobLock(
   const lockKey = `lock:job:${jobId}`;
   const now = Date.now();
 
-  // If REDIS_URL is configured, attempt Redis command SET lock:job:<id> <techId> NX EX <ttl>
-  if (process.env.REDIS_URL) {
+  const redis = getRedisClient();
+  if (redis) {
     try {
-      // Dynamic import to prevent crashing if redis module is optional in local dev
-      // standard Redis client: redis.set(lockKey, technicianId, 'NX', 'EX', ttlSeconds)
-      // @ts-ignore
-      const { createClient } = await import('redis').catch(() => ({ createClient: null as any }));
-      if (createClient) {
-        const client = createClient({ url: process.env.REDIS_URL });
-        await client.connect();
-        const acquired = await client.set(lockKey, technicianId, { NX: true, EX: ttlSeconds });
-        const currentHolder = acquired ? technicianId : await client.get(lockKey);
-        await client.disconnect().catch(() => {});
-        return {
-          success: acquired === 'OK',
-          holder: currentHolder || undefined,
-          key: lockKey,
-        };
+      // ioredis atomic call: set(key, val, 'EX', ttl, 'NX')
+      const result = await redis.set(lockKey, technicianId, 'EX', ttlSeconds, 'NX');
+      if (result === 'OK') {
+        return { success: true, holder: technicianId, key: lockKey };
       }
-    } catch (redisErr) {
-      console.warn(`[RedisLock] Redis connection warning, using memory fallback:`, redisErr);
+      const currentHolder = await redis.get(lockKey);
+      return {
+        success: currentHolder === technicianId,
+        holder: currentHolder || undefined,
+        key: lockKey,
+      };
+    } catch (redisErr: any) {
+      console.warn(`[RedisLock] Redis command error, falling back to memory:`, redisErr.message);
     }
   }
 
   // Atomic in-memory lock engine with strict TTL check
   const existing = memoryLockStore.get(lockKey);
   if (existing && existing.expiresAt > now) {
-    // Lock is actively held by someone else or current technician
     if (existing.holder === technicianId) {
       return { success: true, holder: technicianId, key: lockKey };
     }
@@ -68,25 +74,16 @@ export async function acquireJobLock(
 }
 
 /**
- * Releases distributed lock if held by the given technician.
+ * Releases distributed lock if held by the given technician using atomic Lua script.
  */
 export async function releaseJobLock(jobId: string, technicianId: string): Promise<boolean> {
   const lockKey = `lock:job:${jobId}`;
 
-  if (process.env.REDIS_URL) {
+  const redis = getRedisClient();
+  if (redis) {
     try {
-      // @ts-ignore
-      const { createClient } = await import('redis').catch(() => ({ createClient: null as any }));
-      if (createClient) {
-        const client = createClient({ url: process.env.REDIS_URL });
-        await client.connect();
-        const holder = await client.get(lockKey);
-        if (holder === technicianId) {
-          await client.del(lockKey);
-        }
-        await client.disconnect().catch(() => {});
-        return true;
-      }
+      const res = await redis.eval(LUA_UNLOCK_SCRIPT, 1, lockKey, technicianId);
+      return res === 1;
     } catch (_) {}
   }
 

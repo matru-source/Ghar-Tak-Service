@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BrandMark } from '@/components/ui/brand-logo';
+import { useAdminLive } from './admin-live-provider';
 
 interface AdminTopbarProps {
   onToggleSidebar?: () => void;
@@ -10,6 +11,7 @@ interface AdminTopbarProps {
 }
 
 export function AdminTopbar({ onToggleSidebar, isSidebarExpanded = false }: AdminTopbarProps) {
+  const { status: realtimeStatus } = useAdminLive();
   const [currentTime, setCurrentTime] = useState<string>('');
   const [escalatedCount, setEscalatedCount] = useState<number>(0);
 
@@ -72,10 +74,32 @@ export function AdminTopbar({ onToggleSidebar, isSidebarExpanded = false }: Admi
 
       {/* Right Telemetry Controls */}
       <div className="flex items-center gap-3 lg:gap-5">
-        {/* Live System Health Pill */}
-        <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-semibold">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>System Healthy</span>
+        {/* Live Event Bus Health Pill */}
+        <div
+          className={`hidden sm:flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] font-semibold transition-colors ${
+            realtimeStatus === 'CONNECTED'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : realtimeStatus === 'CONNECTING'
+              ? 'bg-amber-50 border-amber-200 text-amber-800'
+              : 'bg-rose-50 border-rose-200 text-rose-800'
+          }`}
+        >
+          <span
+            className={`w-2 h-2 rounded-full ${
+              realtimeStatus === 'CONNECTED'
+                ? 'bg-emerald-500 animate-pulse'
+                : realtimeStatus === 'CONNECTING'
+                ? 'bg-amber-500 animate-ping'
+                : 'bg-rose-500'
+            }`}
+          ></span>
+          <span>
+            {realtimeStatus === 'CONNECTED'
+              ? 'Live Bus Online'
+              : realtimeStatus === 'CONNECTING'
+              ? 'Reconnecting Bus...'
+              : 'Bus Disconnected'}
+          </span>
           <span className="text-slate-300">|</span>
           <span className="text-slate-600 font-mono text-[10px]">{currentTime || '05:30 PM IST'}</span>
         </div>

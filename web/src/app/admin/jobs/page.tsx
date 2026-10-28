@@ -62,8 +62,12 @@ export default function AdminJobsQueuePage() {
   const filteredJobs = jobs.filter((j) => {
     if (statusFilter !== 'ALL') {
       const s = (j.status || '').toUpperCase();
-      if (statusFilter === 'WORK_COMPLETED' || statusFilter === 'COMPLETED') {
+      if (statusFilter === 'ACTIVE') {
+        if (!['PENDING_DISPATCH', 'ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'SAFETY_CHECKED'].includes(s)) return false;
+      } else if (statusFilter === 'WORK_COMPLETED' || statusFilter === 'COMPLETED') {
         if (!['WORK_COMPLETED', 'SETTLED', 'COMPLETED', 'DONE'].includes(s)) return false;
+      } else if (statusFilter === 'CANCELLED') {
+        if (s !== 'CANCELLED') return false;
       } else if (statusFilter === 'IN_PROGRESS') {
         if (!['IN_PROGRESS', 'SAFETY_CHECKED', 'ARRIVED', 'STARTED'].includes(s)) return false;
       } else if (statusFilter === 'ASSIGNED') {
@@ -103,6 +107,8 @@ export default function AdminJobsQueuePage() {
   const totalRevenue = jobs.reduce((sum, j) => sum + (j.totalAmountInr || 0), 0);
   const completedJobsCount = jobs.filter((j) => j.status === 'WORK_COMPLETED' || j.status === 'SETTLED').length;
   const inProgressCount = jobs.filter((j) => ['IN_PROGRESS', 'SAFETY_CHECKED', 'EN_ROUTE', 'ARRIVED'].includes(j.status)).length;
+  const activeJobsCount = jobs.filter((j) => ['PENDING_DISPATCH', 'ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'SAFETY_CHECKED'].includes(j.status)).length;
+  const cancelledJobsCount = jobs.filter((j) => j.status === 'CANCELLED').length;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -181,6 +187,41 @@ export default function AdminJobsQueuePage() {
       {/* Filters & Search */}
       <div className="bg-white p-4 rounded-2xl border border-slate-200 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
         <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+            <button
+              onClick={() => setStatusFilter('ALL')}
+              className={`px-3 py-1.5 rounded-lg transition ${
+                statusFilter === 'ALL' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              All ({jobs.length})
+            </button>
+            <button
+              onClick={() => setStatusFilter('ACTIVE')}
+              className={`px-3 py-1.5 rounded-lg transition ${
+                statusFilter === 'ACTIVE' ? 'bg-white text-blue-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Active ({activeJobsCount})
+            </button>
+            <button
+              onClick={() => setStatusFilter('WORK_COMPLETED')}
+              className={`px-3 py-1.5 rounded-lg transition ${
+                statusFilter === 'WORK_COMPLETED' ? 'bg-white text-emerald-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Completed ({completedJobsCount})
+            </button>
+            <button
+              onClick={() => setStatusFilter('CANCELLED')}
+              className={`px-3 py-1.5 rounded-lg transition ${
+                statusFilter === 'CANCELLED' ? 'bg-white text-rose-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Cancelled ({cancelledJobsCount})
+            </button>
+          </div>
+
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}

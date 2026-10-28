@@ -18,14 +18,29 @@ export interface NavSection {
   items: NavItem[];
 }
 
-const PARTNER_NAVIGATION: NavSection[] = [
+export const PARTNER_NAV_ITEMS = [
+  { label: 'Live Dispatch', href: '/partner/dispatch', icon: '⚡' },
+  { label: 'Job History', href: '/partner/jobs', icon: '📋' },
+  { label: 'Capacity & Pincodes', href: '/partner/capacity', icon: '📍' },
+  { label: 'SLA Escalations', href: '/partner/escalations', icon: '🚨' },
+  { label: 'Parts Inventory', href: '/partner/inventory', icon: '📦' },
+  { label: 'Technician Fleet', href: '/partner/fleet', icon: '👷' },
+  { label: 'Service Catalog', href: '/partner/services', icon: '🛠️' },
+  { label: 'Finance & Payouts', href: '/partner/invoices', icon: '🧾' },
+];
+
+export const PARTNER_NAVIGATION: NavSection[] = [
   {
     title: 'OPERATIONS CORE',
     items: [
       { name: 'Dashboard', href: '/partner', icon: '📊' },
-      { name: 'Service Catalog', href: '/partner/services', icon: '🛠️', badge: 'Live', badgeColor: 'bg-blue-600' },
-      { name: 'Manage Technicians', href: '/partner/fleet', icon: '👷' },
-      { name: 'Job Management', href: '/partner/dispatch', icon: '⚡', badge: 'Dispatch', badgeColor: 'bg-emerald-700' },
+      { name: 'Live Dispatch', href: '/partner/dispatch', icon: '⚡', badge: 'Live', badgeColor: 'bg-emerald-700' },
+      { name: 'Job History', href: '/partner/jobs', icon: '📋' },
+      { name: 'Capacity & Pincodes', href: '/partner/capacity', icon: '📍' },
+      { name: 'SLA Escalations', href: '/partner/escalations', icon: '🚨', badge: 'SLA', badgeColor: 'bg-rose-600' },
+      { name: 'Parts Inventory', href: '/partner/inventory', icon: '📦' },
+      { name: 'Technician Fleet', href: '/partner/fleet', icon: '👷' },
+      { name: 'Service Catalog', href: '/partner/services', icon: '🛠️' },
     ],
   },
   {
@@ -163,7 +178,7 @@ export function PartnerSidebar({
               {section.items.map((item) => {
                 const isActive =
                   pathname === item.href ||
-                  (item.href === '/partner/dispatch' && (pathname === '/partner/dispatch' || pathname.startsWith('/partner/jobs')));
+                  (item.href !== '/partner' && pathname.startsWith(item.href));
                 return (
                   <div key={item.href} className="relative group/navitem">
                     <Link

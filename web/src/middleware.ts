@@ -36,7 +36,10 @@ export function middleware(request: NextRequest) {
     }
 
     // Root routing: If not authenticated, present the dedicated Admin Login portal; if authenticated, present /admin
-    const authToken = request.cookies.get('gts_auth_token')?.value;
+    const authToken =
+      request.cookies.get('gts_token')?.value ||
+      request.cookies.get('gts_auth_token')?.value ||
+      request.cookies.get('token')?.value;
     const userRole = request.cookies.get('gts_user_role')?.value;
     if (pathname === '/') {
       const url = request.nextUrl.clone();
@@ -44,7 +47,7 @@ export function middleware(request: NextRequest) {
       return NextResponse.rewrite(url);
     }
 
-    // Allow direct clean URLs like /dispatch, /jobs, /invoices on the admin subdomain
+    // Allow direct clean URLs like /dispatch, /jobs, /invoices, /disputes, /safety on the admin subdomain
     const adminRoutes = [
       'dispatch',
       'jobs',
@@ -60,6 +63,8 @@ export function middleware(request: NextRequest) {
       'audit',
       'settings',
       'commissions',
+      'disputes',
+      'safety',
       'login',
     ];
     const firstSegment = pathname.split('/')[1];
@@ -70,6 +75,18 @@ export function middleware(request: NextRequest) {
     }
 
     return NextResponse.next();
+  }
+
+  // Handle common partner alias redirects across all hosts
+  if (pathname === '/partner/technicians') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/partner/fleet';
+    return NextResponse.rewrite(url);
+  }
+  if (pathname === '/partner/finance') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/partner/invoices';
+    return NextResponse.rewrite(url);
   }
 
   // 3. Regional Partner Portal Routing (partner.localhost:3000, partner.*, or Port 3002)
@@ -83,7 +100,10 @@ export function middleware(request: NextRequest) {
     }
 
     // Root routing: If not authenticated, present the dedicated Partner Login portal; if authenticated, present /partner
-    const authToken = request.cookies.get('gts_auth_token')?.value;
+    const authToken =
+      request.cookies.get('gts_token')?.value ||
+      request.cookies.get('gts_auth_token')?.value ||
+      request.cookies.get('token')?.value;
     const userRole = request.cookies.get('gts_user_role')?.value;
     if (pathname === '/') {
       const url = request.nextUrl.clone();
@@ -91,14 +111,18 @@ export function middleware(request: NextRequest) {
       return NextResponse.rewrite(url);
     }
 
-    // Allow direct clean URLs like /dispatch, /fleet, /capacity, /jobs on the partner subdomain
+    // Allow direct clean URLs like /dispatch, /fleet, /capacity, /jobs, /inventory, /services on the partner subdomain
     const partnerRoutes = [
       'dispatch',
       'jobs',
       'escalations',
       'fleet',
+      'technicians',
       'capacity',
       'invoices',
+      'finance',
+      'inventory',
+      'services',
       'profile',
       'support',
       'login',
@@ -106,7 +130,13 @@ export function middleware(request: NextRequest) {
     const firstSegment = pathname.split('/')[1];
     if (partnerRoutes.includes(firstSegment)) {
       const url = request.nextUrl.clone();
-      url.pathname = `/partner${pathname}`;
+      if (firstSegment === 'technicians') {
+        url.pathname = `/partner/fleet`;
+      } else if (firstSegment === 'finance') {
+        url.pathname = `/partner/invoices`;
+      } else {
+        url.pathname = `/partner${pathname}`;
+      }
       return NextResponse.rewrite(url);
     }
 

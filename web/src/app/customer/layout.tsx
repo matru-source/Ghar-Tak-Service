@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Zap, ShieldCheck } from '@/components/ui/icons';
 import { BrandLogo, BrandMark } from '@/components/ui/brand-logo';
+import { useRealtimeEvents, playSyntheticAlert } from '@/lib/use-realtime-events';
 
 export default function CustomerLayout({
   children,
@@ -28,10 +29,18 @@ export default function CustomerLayout({
   }, []);
 
   const [customerPersona, setCustomerPersona] = useState({
+    id: '',
     name: 'Customer',
     phone: '',
     pincode: '400001',
   });
+
+  const [activeOrderAlert, setActiveOrderAlert] = useState<{
+    jobId: string;
+    ticketNumber?: string;
+    title: string;
+    message: string;
+  } | null>(null);
 
   // Customer session initialization in localStorage
   useEffect(() => {
@@ -41,6 +50,7 @@ export default function CustomerLayout({
         try {
           const parsed = JSON.parse(existing);
           setCustomerPersona({
+            id: parsed.id || parsed.customerId || '',
             name: parsed.fullName || parsed.name || 'Valued Customer',
             phone: parsed.phone || '',
             pincode: parsed.defaultPincode || parsed.pincode || '400001',
@@ -49,6 +59,51 @@ export default function CustomerLayout({
       }
     }
   }, []);
+
+  // Global Customer Real-Time SSE Listener
+  const handleCustomerEvent = useCallback(
+    (event: any) => {
+      if (event.type === 'TECH_DISPATCHED' || event.type === 'TECH_ACCEPTED') {
+        playSyntheticAlert('chime');
+        setActiveOrderAlert({
+          jobId: event.jobId,
+          ticketNumber: event.ticketNumber,
+          title: '👷 Field Technician Dispatched',
+          message: `${event.details?.technicianName || 'A technician'} is en route to your location.`,
+        });
+      } else if (event.type === 'TECH_ARRIVED') {
+        playSyntheticAlert('chime');
+        setActiveOrderAlert({
+          jobId: event.jobId,
+          ticketNumber: event.ticketNumber,
+          title: '📍 Technician At Your Doorstep',
+          message: 'Your technician has arrived. Share your 4-digit Handover OTP to begin.',
+        });
+      } else if (event.type === 'SAFETY_INTERLOCK_VERIFIED') {
+        setActiveOrderAlert({
+          jobId: event.jobId,
+          ticketNumber: event.ticketNumber,
+          title: '🛡️ Safety Protocol Passed',
+          message: '1000V Insulated Gloves and Main MCB Isolation confirmed safe.',
+        });
+      } else if (event.type === 'JOB_COMPLETED') {
+        playSyntheticAlert('chime');
+        setActiveOrderAlert({
+          jobId: event.jobId,
+          ticketNumber: event.ticketNumber,
+          title: '✅ Work Completed & Verified',
+          message: 'Your electrical service is complete. Tap to view your GST tax invoice & rate.',
+        });
+      }
+    },
+    []
+  );
+
+  useRealtimeEvents({
+    role: 'CUSTOMER',
+    customerId: customerPersona.id || undefined,
+    onEvent: handleCustomerEvent,
+  });
 
   return (
     <div className="min-h-screen bg-slate-100/90 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
@@ -153,7 +208,40 @@ export default function CustomerLayout({
           </div>
 
           {/* Child Page Content */}
-          <div className="flex-1 flex flex-col bg-white overflow-y-auto">
+          <div className="flex-1 flex flex-col bg-white overflow-y-auto relative">
+            {/* Real-time Out-of-Track Alert Banner */}
+            {activeOrderAlert && pathname !== '/customer/track' && (
+              <div className="mx-3.5 mt-3 p-3 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white shadow-lg border border-blue-400/30 flex items-center justify-between gap-2.5 animate-in slide-in-from-top-2 z-30">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0 text-sm">
+                    ⚡
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[12px] font-extrabold truncate tracking-tight">
+                      {activeOrderAlert.title}
+                    </div>
+                    <div className="text-[11px] text-blue-100 truncate">
+                      {activeOrderAlert.message}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Link
+                    href={`/customer/track?jobId=${encodeURIComponent(activeOrderAlert.jobId)}`}
+                    className="px-2.5 py-1.5 rounded-xl bg-white text-blue-700 font-extrabold text-[11px] shadow-xs hover:bg-blue-50 transition-colors"
+                  >
+                    Track Live
+                  </Link>
+                  <button
+                    onClick={() => setActiveOrderAlert(null)}
+                    className="text-blue-200 hover:text-white p-1 text-xs"
+                    title="Dismiss"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            )}
             {children}
           </div>
 

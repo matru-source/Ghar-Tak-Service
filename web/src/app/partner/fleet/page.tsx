@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BrandMark } from '@/components/ui/brand-logo';
 import { getActivePartnerId } from '@/lib/partner-session';
+import { getAuthToken } from '@/lib/api-client';
 
 interface Technician {
   id: string;
@@ -56,6 +57,7 @@ export default function PartnerFleetPage() {
   const [kycActionLoading, setKycActionLoading] = useState(false);
   const [kycReason, setKycReason] = useState('');
   const [glovesChecked, setGlovesChecked] = useState(true);
+  const [breadcrumbs, setBreadcrumbs] = useState<any[]>([]);
 
   // Toast notification
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -86,12 +88,29 @@ export default function PartnerFleetPage() {
     fetchFleet();
   }, []);
 
+  useEffect(() => {
+    if (dossierTech) {
+      fetch(`/api/technicians/${dossierTech.id}/breadcrumbs`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.success && Array.isArray(d.data?.breadcrumbs)) {
+            setBreadcrumbs(d.data.breadcrumbs);
+          } else {
+            setBreadcrumbs([]);
+          }
+        })
+        .catch(() => setBreadcrumbs([]));
+    } else {
+      setBreadcrumbs([]);
+    }
+  }, [dossierTech]);
+
   // Shift toggle action
   const handleToggleShift = async (tech: Technician) => {
     const newStatus = !tech.isOnline;
     setUpdatingTechId(tech.id);
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('gts_token') : null;
+      const token = getAuthToken();
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -126,7 +145,7 @@ export default function PartnerFleetPage() {
   const handleReassignPincode = async (tech: Technician, newPincode: string) => {
     setUpdatingTechId(tech.id);
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('gts_token') : null;
+      const token = getAuthToken();
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -160,7 +179,7 @@ export default function PartnerFleetPage() {
     if (!kycReviewTech) return;
     setKycActionLoading(true);
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('gts_token') : null;
+      const token = getAuthToken();
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -186,6 +205,35 @@ export default function PartnerFleetPage() {
       }
     } catch (err) {
       console.error('Failed to submit KYC decision:', err);
+    } finally {
+      setKycActionLoading(false);
+    }
+  };
+
+  // Instant DigiLocker / Surepass Automated Verification (Issue 46)
+  const handleInstantDigilockerVerify = async () => {
+    if (!kycReviewTech) return;
+    setKycActionLoading(true);
+    try {
+      const token = getAuthToken();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch('/api/partner/fleet/kyc/instant-verify', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ technicianId: kycReviewTech.id }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`✓ Instant DigiLocker Verification Passed! ${kycReviewTech.fullName} activated.`);
+        setKycReviewTech(null);
+        fetchFleet();
+      } else {
+        showToast(`✗ Verification Alert: ${data.message || data.error || 'Failed'}`);
+      }
+    } catch (err: any) {
+      showToast(`Error: ${err.message || 'DigiLocker service error'}`);
     } finally {
       setKycActionLoading(false);
     }
@@ -849,6 +897,57 @@ export default function PartnerFleetPage() {
               </div>
             </div>
 
+            {/* Live Fleet Breadcrumb Polyline Route (Issue 24) */}
+            <div className="p-4 bg-slate-900 text-white rounded-2xl border border-slate-800 text-xs space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="font-bold text-white">Live Breadcrumb Route Trail (Redis List)</span>
+                </div>
+                <span className="text-[10px] bg-slate-800 text-emerald-400 px-2.5 py-0.5 rounded-full font-mono border border-slate-700">
+                  {breadcrumbs.length} Points Logged
+                </span>
+              </div>
+
+              {breadcrumbs.length > 0 ? (
+                <div className="space-y-2">
+                  <div className="h-20 bg-slate-950/80 rounded-xl border border-slate-800 p-2 flex items-center justify-center relative overflow-hidden">
+                    <svg className="w-full h-full" viewBox="0 0 300 60">
+                      <polyline
+                        points={breadcrumbs.length > 1
+                          ? breadcrumbs.map((_, i) => `${20 + i * (260 / Math.max(1, breadcrumbs.length - 1))},${30 + ((i % 3) - 1) * 12}`).join(' ')
+                          : "20,30 280,30"}
+                        fill="none"
+                        stroke="#10B981"
+                        strokeWidth="2.5"
+                        strokeDasharray="4 2"
+                      />
+                      {breadcrumbs.slice(-6).map((pt, i) => (
+                        <circle
+                          key={i}
+                          cx={20 + i * (260 / Math.max(1, Math.min(6, breadcrumbs.length) - 1))}
+                          cy={30 + ((i % 3) - 1) * 12}
+                          r="4"
+                          fill={i === Math.min(6, breadcrumbs.length) - 1 ? "#34D399" : "#059669"}
+                        />
+                      ))}
+                    </svg>
+                    <span className="absolute bottom-1 right-2 text-[9px] text-slate-500 font-mono">
+                      GPS Breadcrumbs • tech:breadcrumbs:{dossierTech.id}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-400 font-mono">
+                    <div>Last Speed: {breadcrumbs[breadcrumbs.length - 1]?.speedKmh || 0} km/h</div>
+                    <div>Heading: {breadcrumbs[breadcrumbs.length - 1]?.heading || 0}°</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-slate-400 text-[11px] py-1 text-center">
+                  Stationary at hub. Historical GPS breadcrumb trail records every 5s during active jobs.
+                </div>
+              )}
+            </div>
+
             <div className="flex justify-end gap-2 pt-2">
               <button
                 onClick={() => setDossierTech(null)}
@@ -976,30 +1075,41 @@ export default function PartnerFleetPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setKycReviewTech(null)}
-                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
-              >
-                Cancel
-              </button>
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
               <button
                 type="button"
                 disabled={kycActionLoading}
-                onClick={() => handleKycDecision('REJECTED')}
-                className="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition cursor-pointer"
+                onClick={handleInstantDigilockerVerify}
+                className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-black transition shadow-sm cursor-pointer flex items-center gap-1.5"
               >
-                Reject Application ✗
+                <span>⚡ Instant DigiLocker OCR Verify</span>
               </button>
-              <button
-                type="button"
-                disabled={kycActionLoading}
-                onClick={() => handleKycDecision('VERIFIED')}
-                className="px-5 py-2.5 bg-[#1B5E20] hover:bg-[#0D3B0D] text-white rounded-xl text-xs font-bold transition shadow-md cursor-pointer flex items-center gap-1.5"
-              >
-                <span>Approve & Activate Technician ✓</span>
-              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setKycReviewTech(null)}
+                  className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={kycActionLoading}
+                  onClick={() => handleKycDecision('REJECTED')}
+                  className="px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition cursor-pointer"
+                >
+                  Reject ✗
+                </button>
+                <button
+                  type="button"
+                  disabled={kycActionLoading}
+                  onClick={() => handleKycDecision('VERIFIED')}
+                  className="px-4 py-2.5 bg-[#1B5E20] hover:bg-[#0D3B0D] text-white rounded-xl text-xs font-bold transition shadow-md cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>Manual Approve ✓</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

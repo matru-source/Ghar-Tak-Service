@@ -25,6 +25,7 @@ const ADMIN_NAVIGATION: NavSection[] = [
       { name: 'Dashboard', href: '/admin', icon: '⚡' },
       { name: 'Live Dispatch', href: '/admin/dispatch', icon: '🛰️', badge: 'Live', badgeColor: 'bg-emerald-500' },
       { name: 'Work Orders', href: '/admin/jobs', icon: '📋' },
+      { name: 'Safety Queue', href: '/admin/safety', icon: '🛡️', badge: 'Audit', badgeColor: 'bg-amber-500' },
       { name: 'Escalations', href: '/admin/escalations', icon: '🚨' },
     ],
   },
@@ -48,6 +49,7 @@ const ADMIN_NAVIGATION: NavSection[] = [
   {
     title: 'SUPPORT & SYSTEM',
     items: [
+      { name: 'Disputes & Ratings', href: '/admin/disputes', icon: '⚖️', badge: 'Dispute', badgeColor: 'bg-rose-500' },
       { name: 'Subscriptions', href: '/admin/subscriptions', icon: '🛡️' },
       { name: 'Support Tickets', href: '/admin/support', icon: '🎫' },
       { name: 'Audit Logs', href: '/admin/audit', icon: '📜' },

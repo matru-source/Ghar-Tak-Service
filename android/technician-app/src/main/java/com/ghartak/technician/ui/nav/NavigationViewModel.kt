@@ -327,32 +327,44 @@ class NavigationViewModel(
     }
 
     /* =========================================================================
-     * [TESTING FEATURE] One-Click Doorstep Arrival
-     * Directly adopts user's lat & lng for technician, bypasses the 5s scan,
-     * immediately updates UI to Arrived at Doorstep, and broadcasts instant
-     * ARRIVED status & telemetry to backend.
-     * Can be easily removed when testing is complete.
+     * Issue 19: Geofence Arrival Interlock (Urban Company / Uber standard)
+     * Enforce Haversine distance < 150m between technician GPS and customer
+     * destination coordinates before allowing arrival confirmation.
+     * Prevents premature arrival tapping from 10 km away.
      * ========================================================================= */
-    fun triggerOneClickDoorstepArrival(context: Context) {
-        if (!isTestingBypassEnabled) {
-            Log.d("GTS_NAV", "Testing bypass disabled; physical geofence required")
+    fun manualConfirmDoorstep(context: Context) {
+        val currLat = _uiState.value.currentLat
+        val currLng = _uiState.value.currentLng
+        val custLat = _uiState.value.customerLat
+        val custLng = _uiState.value.customerLng
+
+        val distanceKm = if (currLat != 0.0 && custLat != 0.0) {
+            IndianPincodeResolver.calculateHaversineDistanceKm(currLat, currLng, custLat, custLng)
+        } else {
+            _uiState.value.distanceRemainingKm
+        }
+        val distanceMeters = distanceKm * 1000.0
+
+        if (distanceMeters > 150.0) {
+            android.widget.Toast.makeText(
+                context,
+                "⚠️ Arrival Interlock Active: You are ${distanceMeters.toInt()}m away from customer destination. You must be within 150m geofence to mark arrived.",
+                android.widget.Toast.LENGTH_LONG
+            ).show()
+            Log.w("GTS_NAV", "Arrival interlock prevented premature arrival: ${distanceMeters.toInt()}m > 150m")
             return
         }
 
-        val custLat = _uiState.value.customerLat
-        val custLng = _uiState.value.customerLng
+        // Within 150m geofence: confirm doorstep arrival
         val custArea = _uiState.value.customerAreaName.ifEmpty { "Customer Doorstep" }
-
         _uiState.value = _uiState.value.copy(
-            currentLat = custLat,
-            currentLng = custLng,
             distanceRemainingKm = 0.0,
             etaMinutes = 0,
             speedKmh = 0.0,
             hasArrivedDoorstep = true,
             currentAreaName = custArea,
             currentManeuver = "ARRIVED AT USER'S DOORSTEP",
-            nextManeuver = "Doorstep Reached (0.0 km) • Ready for Customer Verification"
+            nextManeuver = "Doorstep Reached (Geofence Verified < 150m) • Ready for Customer Verification"
         )
 
         viewModelScope.launch {
@@ -360,13 +372,13 @@ class NavigationViewModel(
                 val api = ApiClient.getService(context)
                 val targetJob = _uiState.value.jobId
 
-                // 1. Send immediate telemetry with user coordinates & 0.0 km distance
+                // 1. Send immediate arrival telemetry
                 api.sendTelemetry(
                     TelemetryPingRequest(
                         technicianId = sessionManager.getTechnicianId(),
                         jobId = targetJob,
-                        latitude = custLat,
-                        longitude = custLng,
+                        latitude = currLat,
+                        longitude = currLng,
                         heading = _uiState.value.heading,
                         speedKmh = 0.0,
                         batteryLevelPct = getBatteryLevel(context),
@@ -379,13 +391,13 @@ class NavigationViewModel(
                     api.updateJobStatus(targetJob, mapOf("status" to "ARRIVED"))
                 }
             } catch (e: Throwable) {
-                Log.w("GTS_NAV", "One-click doorstep bypass warning: ${e.message}")
+                Log.w("GTS_NAV", "Doorstep arrival sync warning: ${e.message}")
             }
         }
     }
 
-    fun manualConfirmDoorstep(context: Context) {
-        triggerOneClickDoorstepArrival(context)
+    fun triggerOneClickDoorstepArrival(context: Context) {
+        manualConfirmDoorstep(context)
     }
 
     fun startForegroundService(context: Context) {

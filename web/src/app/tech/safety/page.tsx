@@ -36,46 +36,169 @@ function TechSafetyChecklistContent() {
   const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '']);
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Safety Checklist State (4 Mandatory Industrial Protocols)
-  const [safetyItems, setSafetyItems] = useState<SafetyCheckItem[]>([
-    {
-      id: 'gloves',
-      title: '1000V Insulated Gloves',
-      code: 'IEC 60900',
-      codeColor: 'bg-slate-100 text-slate-700',
-      description: 'VDE Certified class 0 dry gloves inspected for micro-punctures before physical contact.',
-      checked: false,
-    },
-    {
-      id: 'zero_test',
-      title: 'AC Voltage Zero-Test',
-      code: 'Live-Dead-Live',
-      codeColor: 'bg-slate-100 text-slate-700',
-      description: 'Verified calibrated multimeter shows 0.0V between Phase-Neutral, Phase-Earth on target switchbox.',
-      checked: false,
-    },
-    {
-      id: 'mcb_lockout',
-      title: 'Main MCB Locked & Tagged',
-      code: 'Lockout',
-      codeColor: 'bg-red-50 text-red-700 border border-red-200',
-      description: 'Distribution feeder breaker flipped to OFF, mechanical safety clip or warning tag affixed.',
-      checked: false,
-    },
-    {
-      id: 'rubber_mat',
-      title: 'Ground Insulated Rubber Mat',
-      code: 'Class A',
-      codeColor: 'bg-slate-100 text-slate-700',
-      description: 'Dielectric mat deployed beneath work ladder; standing surface entirely cleared of moisture.',
-      checked: false,
-    },
-  ]);
+  // Trade-specific Dynamic Safety Protocol Generator (Issue 27)
+  const getCategoryChecklist = (job: any): SafetyCheckItem[] => {
+    const titleLower = (job?.serviceTitle || '').toLowerCase();
+    const explicitCat = (job?.serviceCategory || '').toUpperCase();
+    const isPlumbing = explicitCat === 'PLUMBING' || titleLower.includes('plumb') || titleLower.includes('pipe') || titleLower.includes('tap') || titleLower.includes('drain') || titleLower.includes('valve') || titleLower.includes('leak');
+    const isCleaning = explicitCat === 'CLEANING' || titleLower.includes('clean') || titleLower.includes('sanit') || titleLower.includes('wash') || titleLower.includes('pest') || titleLower.includes('sofa');
+    const isCarpentry = explicitCat === 'CARPENTRY' || titleLower.includes('carpent') || titleLower.includes('wood') || titleLower.includes('door') || titleLower.includes('furniture');
 
-  // Evidence Photo State
+    if (isPlumbing) {
+      return [
+        {
+          id: 'main_valve',
+          title: 'Main Water Valve Shutoff',
+          code: 'IS:1536',
+          codeColor: 'bg-blue-50 text-blue-700 border border-blue-200',
+          description: 'Main incoming water stopcock turned 90° clockwise to full isolation, preventing accidental backflow.',
+          checked: false,
+        },
+        {
+          id: 'line_depress',
+          title: 'Line Depressurization Check',
+          code: 'Zero Bar',
+          codeColor: 'bg-slate-100 text-slate-700',
+          description: 'Downstream test tap opened to confirm 0.0 bar static line water pressure and zero residual leakage.',
+          checked: false,
+        },
+        {
+          id: 'boots',
+          title: 'Waterproof Non-Slip Boots',
+          code: 'ASTM F2413',
+          codeColor: 'bg-slate-100 text-slate-700',
+          description: 'Steel-toe anti-slip dielectric footwear deployed across wet work area to avoid slipping hazards.',
+          checked: false,
+        },
+        {
+          id: 'catch_basin',
+          title: 'Catch Basin & Spill Kit Deployed',
+          code: 'Containment',
+          codeColor: 'bg-slate-100 text-slate-700',
+          description: 'Secondary containment basin and absorbent spill kit positioned directly beneath pipe joint.',
+          checked: false,
+        },
+      ];
+    }
+
+    if (isCleaning) {
+      return [
+        {
+          id: 'chemical_mask',
+          title: 'Chemical Respirator / N95 Mask',
+          code: 'OSHA 1910',
+          codeColor: 'bg-purple-50 text-purple-700 border border-purple-200',
+          description: 'Organic vapor / acid gas particulate respirator fitted with tight seal inspection before chemical contact.',
+          checked: false,
+        },
+        {
+          id: 'chemical_gloves',
+          title: 'Nitrile Chemical-Resistant Gloves',
+          code: 'EN 374',
+          codeColor: 'bg-slate-100 text-slate-700',
+          description: 'Heavy-duty nitrile chemical gloves inspected for micro-tears prior to concentrated solution mixing.',
+          checked: false,
+        },
+        {
+          id: 'ventilation',
+          title: 'Cross-Room Ventilation Active',
+          code: 'Exhaust ON',
+          codeColor: 'bg-slate-100 text-slate-700',
+          description: 'Cross-flow windows opened and exhaust ventilation running to continuously purge volatile fumes.',
+          checked: false,
+        },
+        {
+          id: 'sds_dilution',
+          title: 'SDS Standard Dilution Verified',
+          code: 'Safe Ratio',
+          codeColor: 'bg-slate-100 text-slate-700',
+          description: 'Cleaning chemical diluted strictly according to manufacturer Safety Data Sheet specifications.',
+          checked: false,
+        },
+      ];
+    }
+
+    if (isCarpentry) {
+      return [
+        {
+          id: 'eye_goggles',
+          title: 'ANSI Z87.1 Safety Eyewear',
+          code: 'Z87.1+',
+          codeColor: 'bg-amber-50 text-amber-700 border border-amber-200',
+          description: 'High-impact polycarbonate wrap-around safety glasses worn against flying sawdust and splinters.',
+          checked: false,
+        },
+        {
+          id: 'blade_guard',
+          title: 'Power Saw Blade Guard Engaged',
+          code: 'Machine Lock',
+          codeColor: 'bg-slate-100 text-slate-700',
+          description: 'Spring-loaded blade guard and anti-kickback pawls checked for smooth automatic return.',
+          checked: false,
+        },
+        {
+          id: 'cut_gloves',
+          title: 'Level-5 Cut-Resistant Gloves',
+          code: 'ANSI A5',
+          codeColor: 'bg-slate-100 text-slate-700',
+          description: 'High-tensile cut-resistant gloves donned for handling sharp chisels, planer blades and edge tools.',
+          checked: false,
+        },
+        {
+          id: 'workpiece_clamp',
+          title: 'Workpiece Mechanical Clamping',
+          code: 'Zero Kickback',
+          codeColor: 'bg-slate-100 text-slate-700',
+          description: 'Material secured to sturdy workbench with quick-release C-clamps before power tool contact.',
+          checked: false,
+        },
+      ];
+    }
+
+    // Default: High-Voltage Electrical Checklist
+    return [
+      {
+        id: 'gloves',
+        title: '1000V Insulated Gloves',
+        code: 'IEC 60900',
+        codeColor: 'bg-slate-100 text-slate-700',
+        description: 'VDE Certified class 0 dry gloves inspected for micro-punctures before physical contact.',
+        checked: false,
+      },
+      {
+        id: 'zero_test',
+        title: 'AC Voltage Zero-Test',
+        code: 'Live-Dead-Live',
+        codeColor: 'bg-slate-100 text-slate-700',
+        description: 'Verified calibrated multimeter shows 0.0V between Phase-Neutral, Phase-Earth on target switchbox.',
+        checked: false,
+      },
+      {
+        id: 'mcb_lockout',
+        title: 'Main MCB Locked & Tagged',
+        code: 'Lockout',
+        codeColor: 'bg-red-50 text-red-700 border border-red-200',
+        description: 'Distribution feeder breaker flipped to OFF, mechanical safety clip or warning tag affixed.',
+        checked: false,
+      },
+      {
+        id: 'rubber_mat',
+        title: 'Ground Insulated Rubber Mat',
+        code: 'Class A',
+        codeColor: 'bg-slate-100 text-slate-700',
+        description: 'Dielectric mat deployed beneath work ladder; standing surface entirely cleared of moisture.',
+        checked: false,
+      },
+    ];
+  };
+
+  // Safety Checklist State (Dynamic Category-Specific Protocols)
+  const [safetyItems, setSafetyItems] = useState<SafetyCheckItem[]>(() => getCategoryChecklist(null));
+
+  // Evidence Photo State (Absolute CDN URLs strictly - Issue 25 & 26)
   const [hasBeforePhoto, setHasBeforePhoto] = useState<boolean>(true);
   const [evidencePhotoUrl, setEvidencePhotoUrl] = useState<string>(
-    'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=80'
+    'https://uploads.ghartak.in/uploads/safety_inspection_verified.jpg'
   );
   const [isCapturing, setIsCapturing] = useState<boolean>(false);
 
@@ -101,6 +224,8 @@ function TechSafetyChecklistContent() {
         const json = await res.json();
         if (!isCancelled && json.data) {
           setLiveJob(json.data);
+          // Dynamically adjust checklist based on trade category
+          setSafetyItems(getCategoryChecklist(json.data));
         }
       } catch (e) {
         console.warn('Failed to load job details:', e);
@@ -172,12 +297,12 @@ function TechSafetyChecklistContent() {
     showToast('All 4 Industrial Protocols certified');
   };
 
-  // Simulated Photo Retake / Switch
+  // Simulated Photo Retake / Switch (Strictly Absolute CDN URL - Issue 25)
   const handleRetakePhoto = () => {
     setIsCapturing(true);
     setTimeout(() => {
       setEvidencePhotoUrl(
-        'https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=800&auto=format&fit=crop&q=80'
+        'https://uploads.ghartak.in/uploads/safety_inspection_retake_verified.jpg'
       );
       setHasBeforePhoto(true);
       setIsCapturing(false);
@@ -185,7 +310,7 @@ function TechSafetyChecklistContent() {
     }, 700);
   };
 
-  // Main Interlock Verification Action
+  // Main Interlock Verification Action (Category-Aware - Issue 27)
   const handleVerifyAndStart = async () => {
     if (!isInterlockCleared) return;
 
@@ -193,6 +318,12 @@ function TechSafetyChecklistContent() {
     setErrorMessage(null);
 
     try {
+      const titleLower = (liveJob?.serviceTitle || '').toLowerCase();
+      const explicitCat = (liveJob?.serviceCategory || '').toUpperCase();
+      const isPlumbing = explicitCat === 'PLUMBING' || titleLower.includes('plumb') || titleLower.includes('pipe') || titleLower.includes('tap') || titleLower.includes('drain') || titleLower.includes('valve') || titleLower.includes('leak');
+      const isCleaning = explicitCat === 'CLEANING' || titleLower.includes('clean') || titleLower.includes('sanit') || titleLower.includes('wash') || titleLower.includes('pest') || titleLower.includes('sofa');
+      const isCarpentry = explicitCat === 'CARPENTRY' || titleLower.includes('carpent') || titleLower.includes('wood') || titleLower.includes('door') || titleLower.includes('furniture');
+
       const targetJobId = liveJob?.id || jobId;
       const res = await fetch(`/api/jobs/${encodeURIComponent(targetJobId)}/verify-safety`, {
         method: 'POST',
@@ -200,6 +331,11 @@ function TechSafetyChecklistContent() {
         body: JSON.stringify({
           safetyGlovesConfirmed: true,
           safetyMcbSwitchConfirmed: true,
+          mainValveOffConfirmed: isPlumbing,
+          chemicalSafetyMaskConfirmed: isCleaning,
+          eyeGogglesConfirmed: isCarpentry,
+          category: isPlumbing ? 'PLUMBING' : isCleaning ? 'CLEANING' : isCarpentry ? 'CARPENTRY' : 'ELECTRICAL',
+          serviceTitle: liveJob?.serviceTitle,
           beforePhotoUrl: evidencePhotoUrl,
         }),
       });

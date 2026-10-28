@@ -114,8 +114,12 @@ export default function TechEarningsPage() {
   const handleWithdrawSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const amountNum = Number(withdrawAmount);
-    if (!amountNum || amountNum <= 0 || amountNum > walletBalance) {
-      showToast('Please enter a valid amount within available balance');
+    if (!amountNum || amountNum < 500) {
+      showToast('Minimum withdrawal amount is ₹500.00');
+      return;
+    }
+    if (amountNum > walletBalance) {
+      showToast(`Cannot withdraw ₹${amountNum}. Available balance is ₹${walletBalance}`);
       return;
     }
 
@@ -646,14 +650,15 @@ export default function TechEarningsPage() {
                     <input
                       type="number"
                       max={walletBalance}
-                      min={100}
+                      min={500}
                       value={withdrawAmount}
                       onChange={(e) => setWithdrawAmount(e.target.value)}
+                      placeholder="Min ₹500"
                       className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-slate-300 font-black text-xl text-slate-900 focus:border-orange-500 outline-none"
                     />
                   </div>
                   <div className="flex justify-between text-[11px] text-slate-500 mt-1">
-                    <span>Available: ₹{walletBalance.toLocaleString('en-IN')}</span>
+                    <span>Min: <strong className="text-orange-600">₹500</strong> | Available: ₹{walletBalance.toLocaleString('en-IN')}</span>
                     <button
                       type="button"
                       onClick={() => setWithdrawAmount(String(walletBalance))}

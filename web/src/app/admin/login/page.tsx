@@ -34,9 +34,11 @@ export default function SuperAdminLoginPage() {
       const data = await res.json();
       if (data.success && data.data?.token) {
         // Set standard session cookie and localStorage
+        document.cookie = `gts_token=${data.data.token}; path=/; max-age=604800; SameSite=Lax`;
         document.cookie = `gts_auth_token=${data.data.token}; path=/; max-age=604800; SameSite=Lax`;
         document.cookie = `gts_user_role=SUPER_ADMIN; path=/; max-age=604800; SameSite=Lax`;
         localStorage.setItem('gts_token', data.data.token);
+        localStorage.setItem('gts_auth_token', data.data.token);
         localStorage.setItem('gts_user', JSON.stringify(data.data.user));
 
         showToast('✓ Authentication Successful. Establishing National Terminal Session...');

@@ -3,6 +3,8 @@ import { db } from '@/lib/db';
 import { dbStore } from '@/lib/mock-data';
 import { realtimeBus } from '@/lib/realtime-bus';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
+import { assertAuth } from '@/lib/auth-guard';
+
 
 export async function OPTIONS() {
   return corsOptionsResponse();
@@ -17,6 +19,8 @@ export async function GET(request: NextRequest) {
     const customerId = searchParams.get('customerId') || undefined;
     const status = searchParams.get('status') || undefined;
     const search = searchParams.get('search') || undefined;
+    const unassigned = searchParams.get('unassigned') === 'true' ? true : undefined;
+    const includeUnassigned = searchParams.get('includeUnassigned') === 'true' || (technicianId ? true : undefined);
 
     const jobs = await db.getJobs({
       pincode,
@@ -25,6 +29,8 @@ export async function GET(request: NextRequest) {
       customerId,
       status,
       search,
+      unassigned,
+      includeUnassigned,
     });
 
     // Compute telemetry counts for dashboard widgets
@@ -54,10 +60,47 @@ const jobCreationIdempotencyCache = new Map<string, { job: any; timestamp: numbe
 
 export async function POST(request: NextRequest) {
   try {
+    // Enforce Issue 2: Customer Authentication Gate (prohibit orphan guest bookings)
+    const auth = await assertAuth(request, ['CUSTOMER', 'SUPER_ADMIN']);
+    const body = await request.json();
+    let activeCustomerId: string | null = null;
+    let verifiedCustomerName = body.customerName;
+    let verifiedCustomerPhone = body.customerPhone;
+
+    if (auth.ok) {
+      activeCustomerId = auth.context.userId;
+      const user = await db.getUserById(auth.context.userId);
+      if (user) {
+        verifiedCustomerName = verifiedCustomerName || user.fullName;
+        verifiedCustomerPhone = verifiedCustomerPhone || user.phone;
+      }
+    } else {
+      // If token not provided in Authorization header, check if customerPhone belongs to an existing verified user
+      if (body.customerPhone) {
+        const existingUser = await db.getUserByPhone(body.customerPhone);
+        if (existingUser && existingUser.isVerified) {
+          activeCustomerId = existingUser.id;
+          verifiedCustomerName = verifiedCustomerName || existingUser.fullName;
+        }
+      }
+      if (!activeCustomerId && body.customerId) {
+        const userById = await db.getUserById(body.customerId);
+        if (userById && userById.isVerified) {
+          activeCustomerId = userById.id;
+        }
+      }
+    }
+
+    if (!activeCustomerId) {
+      return apiError(
+        'Authentication Required: Unauthenticated guest bookings are prohibited. Please log in with a verified mobile number before placing a booking.',
+        401
+      );
+    }
+
     const idempotencyKey =
       request.headers.get('x-idempotency-key') ||
       request.headers.get('idempotency-key');
-    const body = await request.json();
     const clientKey = idempotencyKey || body.idempotencyKey;
 
     if (clientKey && jobCreationIdempotencyCache.has(clientKey)) {
@@ -78,12 +121,20 @@ export async function POST(request: NextRequest) {
       serviceTitle,
       basePriceInr,
       pincode,
-      customerAddressText,
       customerLatitude,
       customerLongitude,
       priority,
       scheduledAt,
     } = body;
+
+    // Parameter aliasing for address contracts (Issue 3.1)
+    const rawAddress =
+      body.customerAddressText ||
+      body.addressText ||
+      body.address ||
+      body.customerAddress ||
+      '';
+    const customerAddressText = String(rawAddress).trim();
 
     if (!serviceId) {
       return apiError("'serviceId' is required", 400);
@@ -91,15 +142,24 @@ export async function POST(request: NextRequest) {
     if (!pincode || !/^\d{6}$/.test(pincode)) {
       return apiError("'pincode' must be a valid 6-digit Indian postal code", 400);
     }
-    if (!customerAddressText || customerAddressText.trim().length < 5) {
-      return apiError("'customerAddressText' must contain a detailed address", 400);
+    if (!customerAddressText || customerAddressText.length < 5) {
+      return apiError("'customerAddressText' (or 'addressText') must contain a detailed address (min 5 characters)", 400);
+    }
+
+    // Issue 7: Serviceable Pincode & Active Coverage Gate
+    const coverage = await db.getPincodeCoverage(pincode);
+    if (!coverage || !coverage.isActive) {
+      return apiError(
+        `OutOfService Pincode: Postal code '${pincode}' is not within an active licensed franchise territory.`,
+        400
+      );
     }
 
     // Check duplicate window (30-second rapid double-tap deduplication)
-    const phoneToMatch = customerPhone?.trim() || '';
+    const phoneToMatch = customerPhone?.trim() || verifiedCustomerPhone || '';
     const thirtySecondsAgo = Date.now() - 30_000;
     const recentDuplicate = dbStore.jobs.find((j) => {
-      const isSameCust = (customerId && j.customerId === customerId) || (phoneToMatch && j.customerPhone === phoneToMatch);
+      const isSameCust = (activeCustomerId && j.customerId === activeCustomerId) || (phoneToMatch && j.customerPhone === phoneToMatch);
       const isSameService = j.serviceId === serviceId;
       const isSamePin = j.pincode === pincode;
       const createdTime = new Date(j.scheduledAt).getTime();
@@ -117,13 +177,67 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate or use customerId
-    const activeCustomerId = customerId || `cust_${Date.now().toString(36)}`;
+
+    // Issue 8: Canonical Service Lookup from Database (Never trust client-supplied price)
+    let canonicalService: { id: string; title: string; basePriceInr: number; isEmergencySosEligible?: boolean } | null = null;
+    
+    if (await (await import('@/lib/db')).isDatabaseConnected()) {
+      try {
+        const { prisma } = await import('@/lib/prisma');
+        const dbService = await prisma.serviceCatalog.findFirst({
+          where: {
+            OR: [
+              { id: serviceId },
+              { code: serviceId },
+            ],
+            isActive: true,
+          },
+        });
+        if (dbService) {
+          canonicalService = {
+            id: dbService.id,
+            title: dbService.title,
+            basePriceInr: dbService.basePriceInr,
+            isEmergencySosEligible: dbService.isEmergencySosEligible,
+          };
+        }
+      } catch (err) {
+        console.warn('Prisma canonical service lookup fallback:', err);
+      }
+    }
+
+    if (!canonicalService) {
+      const memoryService = dbStore.serviceCatalog?.find(
+        (s) => s.id === serviceId || s.code === serviceId || s.title?.toLowerCase() === serviceTitle?.toLowerCase()
+      );
+      if (memoryService) {
+        canonicalService = {
+          id: memoryService.id,
+          title: memoryService.title,
+          basePriceInr: memoryService.basePriceInr,
+          isEmergencySosEligible: (memoryService as any).isEmergencySosEligible || false,
+        };
+      }
+    }
+
+    if (!canonicalService) {
+      return apiError(`Invalid or unrecognized serviceId '${serviceId}'. Service not found in catalog.`, 400);
+    }
+
+    // Issue 12: Deterministic Statutory Emergency & Night Surge Calculation
+    // Statutory 20% multiplier (1 + 0.20 = 1.20) for EMERGENCY_SOS_247 or Night Hours (20:00 - 06:00 IST)
+    const bookingTime = scheduledAt ? new Date(scheduledAt) : new Date();
+    const istHours = new Date(bookingTime.getTime() + 5.5 * 3600 * 1000).getUTCHours();
+    const isNightHours = istHours >= 20 || istHours < 6;
+    const isEmergencyPriority = priority === 'EMERGENCY_SOS_247';
+    const emergencyMultiplier = (isEmergencyPriority || isNightHours) ? 0.20 : 0.0;
+    const surgeFactor = 1.0 + emergencyMultiplier;
 
     // AMC Membership Benefits: Check if customer has active ZEX-SHIELD AMC subscription
     // Automatically sets base labor fee to ₹0.00 for active AMC subscription holders
     let hasActiveSubscription = false;
-    let baseLaborFee = typeof basePriceInr === 'number' ? basePriceInr : undefined;
+    let baseLaborFee = Number((canonicalService.basePriceInr * surgeFactor).toFixed(2));
+
     if (activeCustomerId || customerPhone) {
       if (await (await import('@/lib/db')).isDatabaseConnected()) {
         try {
@@ -150,11 +264,12 @@ export async function POST(request: NextRequest) {
 
     const newJob = await db.createJob({
       customerId: activeCustomerId,
-      customerName: customerName || undefined,
-      customerPhone: customerPhone || undefined,
+      customerName: verifiedCustomerName || undefined,
+      customerPhone: verifiedCustomerPhone || undefined,
+
       technicianId: technicianId || undefined,
-      serviceId,
-      serviceTitle: serviceTitle || undefined,
+      serviceId: canonicalService.id,
+      serviceTitle: canonicalService.title,
       basePriceInr: baseLaborFee,
       pincode,
       customerAddressText: customerAddressText.trim(),
@@ -217,7 +332,29 @@ export async function POST(request: NextRequest) {
           pincode: newJob.pincode,
           customerLatitude: newJob.customerLatitude,
           customerLongitude: newJob.customerLongitude,
-          handoverOtp: newJob.handoverOtp,
+        },
+      });
+    } else {
+      // Geo-Pincode Broadcast Model: Broadcast unassigned work orders to nearby technician fleet
+      realtimeBus.publish({
+        type: 'TECH_BROADCAST',
+        jobId: newJob.id,
+        ticketNumber: newJob.jobTicketNumber,
+        partnerId: newJob.partnerId,
+        pincode: newJob.pincode,
+        status: 'PENDING_DISPATCH',
+        details: {
+          broadcastTimerSeconds: 60,
+          acceptanceTimerSeconds: 60,
+          payoutShareInr: Math.round(newJob.totalAmountInr * 0.7),
+          serviceTitle: newJob.serviceTitle,
+          totalAmountInr: newJob.totalAmountInr,
+          customerName: newJob.customerName,
+          customerPhone: newJob.customerPhone,
+          customerAddress: newJob.customerAddressText,
+          pincode: newJob.pincode,
+          customerLatitude: newJob.customerLatitude,
+          customerLongitude: newJob.customerLongitude,
         },
       });
     }

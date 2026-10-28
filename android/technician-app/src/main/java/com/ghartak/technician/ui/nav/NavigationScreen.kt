@@ -691,17 +691,34 @@ fun NavigationScreen(
                             }
                         }
 
+                        val isWithinGeofence = (state.distanceRemainingKm * 1000.0) <= 150.0
+                        val distMeters = (state.distanceRemainingKm * 1000.0).toInt()
+
                         Spacer(modifier = Modifier.height(10.dp))
                         OutlinedButton(
                             onClick = { viewModel.manualConfirmDoorstep(context) },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(8.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, SafetyGreen),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = SafetyGreen)
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                if (isWithinGeofence) SafetyGreen else Color(0xFFF59E0B)
+                            ),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = if (isWithinGeofence) SafetyGreen else Color(0xFFF59E0B)
+                            )
                         ) {
-                            Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(
+                                imageVector = if (isWithinGeofence) Icons.Default.CheckCircle else Icons.Default.Lock,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("I HAVE ARRIVED AT DOORSTEP", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                if (isWithinGeofence) "I HAVE ARRIVED AT DOORSTEP (VERIFIED < 150M)"
+                                else "GEOFENCE LOCKED (${distMeters}M AWAY • < 150M REQUIRED)",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }

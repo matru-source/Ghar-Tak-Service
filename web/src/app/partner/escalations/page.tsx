@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { getAuthToken } from '@/lib/api-client';
 import {
   AlertTriangle,
   Clock,
@@ -89,7 +90,7 @@ export default function PartnerEscalationsPage() {
       setIsReassigning(true);
       setErrorMessage('');
 
-      const token = typeof window !== 'undefined' ? localStorage.getItem('gts_token') : null;
+      const token = getAuthToken();
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 

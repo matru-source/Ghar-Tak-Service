@@ -1192,10 +1192,10 @@ fun TechnicianEarningsContent(
 
     val completedAmountDisplay = "₹${"%,.0f".format(totalEarningsDisplay)} earned"
 
-    val pendingJobsCount = state.assignedJobs.count { it.status != "COMPLETED" && it.status != "CANCELLED" }
+    val pendingJobsCount = state.assignedJobs.count { it.status != "WORK_COMPLETED" && it.status != "COMPLETED" && it.status != "SETTLED" && it.status != "CANCELLED" }
 
     val pendingAmountDisplay = if (pendingJobsCount > 0) {
-        val expected = state.assignedJobs.filter { it.status != "COMPLETED" && it.status != "CANCELLED" }.sumOf { it.totalAmountInr }
+        val expected = state.assignedJobs.filter { it.status != "WORK_COMPLETED" && it.status != "COMPLETED" && it.status != "SETTLED" && it.status != "CANCELLED" }.sumOf { it.totalAmountInr }
         "₹${"%,.0f".format(expected)} expected"
     } else {
         "₹0 expected"
@@ -3209,7 +3209,7 @@ fun TechnicianJobDetailsContent(
             }
 
             item {
-                val isCompleted = job.status == "COMPLETED"
+                val isCompleted = job.status == "WORK_COMPLETED" || job.status == "COMPLETED" || job.status == "SETTLED"
                 val isStarted = job.status == "STARTED" || job.status == "IN_PROGRESS"
 
                 if (isCompleted) {
@@ -4062,8 +4062,8 @@ fun WithdrawalRequestDialog(
 
                         Button(
                             onClick = {
-                                if (amountDouble <= 0.0) {
-                                    validationError = "Please enter an amount greater than ₹0."
+                                if (amountDouble < 500.0) {
+                                    validationError = "Minimum withdrawal is ₹500 (Banking regulatory requirement)."
                                     return@Button
                                 }
                                 if (amountDouble > availableInr) {

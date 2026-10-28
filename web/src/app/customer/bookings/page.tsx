@@ -97,6 +97,22 @@ export default function CustomerBookingsPage() {
           // ignore
         }
       }
+
+      // Restore pending booking draft if returning from login (Issue 3.2)
+      try {
+        const pending = sessionStorage.getItem('pending_booking_payload');
+        if (pending) {
+          const draft = JSON.parse(pending);
+          if (draft.serviceId) setSelectedServiceId(draft.serviceId);
+          if (draft.addressLine) setAddressLine(draft.addressLine);
+          if (draft.pincode) setPincode(draft.pincode);
+          if (draft.customerNotes) setCustomerNotes(draft.customerNotes);
+          if (draft.isEmergency !== undefined) setIsEmergency(draft.isEmergency);
+          if (draft.selectedSlot) setSelectedSlot(draft.selectedSlot);
+          sessionStorage.removeItem('pending_booking_payload');
+          setCurrentStep(3); // Advance straight to checkout step
+        }
+      } catch {}
     }
 
     const fetchCatalog = async () => {
@@ -144,6 +160,25 @@ export default function CustomerBookingsPage() {
     setErrorMsg(null);
     if (!mcbConfirmed) {
       setErrorMsg('Please confirm that the main MCB power switch can be safely turned off.');
+      return;
+    }
+
+    // Issue 3.2: Graceful unauthenticated guest interceptor
+    if (!customerSession.phone || !customerSession.id) {
+      try {
+        sessionStorage.setItem(
+          'pending_booking_payload',
+          JSON.stringify({
+            serviceId: selectedService.id,
+            addressLine,
+            pincode,
+            customerNotes,
+            isEmergency,
+            selectedSlot,
+          })
+        );
+      } catch {}
+      router.push(`/customer/login?returnUrl=${encodeURIComponent('/customer/bookings')}`);
       return;
     }
 

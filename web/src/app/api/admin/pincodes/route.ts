@@ -18,15 +18,28 @@ export async function GET(request: NextRequest) {
       search,
     });
 
-    const totalPincodes = pincodes.length;
-    const activeCount = pincodes.filter((p) => p.isActive).length;
-    const exclusiveCount = pincodes.filter((p) => p.isExclusive).length;
-    const highDensityCount = pincodes.filter((p) => p.density === 'URBAN_HIGH_DENSITY').length;
-    const totalCapacity = pincodes.reduce((sum, p) => sum + (p.activeCapacityCount || 0), 0);
+    const { getCoordinatesForPincode, generateTerritoryPolygon } = await import('@/lib/pincode-resolver');
+
+    const pincodesWithPolygons = pincodes.map((p) => {
+      const coords = getCoordinatesForPincode(p.pincode);
+      const polygon = generateTerritoryPolygon(coords.latitude, coords.longitude, (p as any).perimeterRadiusKm || 5.0);
+      return {
+        ...p,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        geoJsonPolygon: polygon,
+      };
+    });
+
+    const totalPincodes = pincodesWithPolygons.length;
+    const activeCount = pincodesWithPolygons.filter((p) => p.isActive).length;
+    const exclusiveCount = pincodesWithPolygons.filter((p) => p.isExclusive).length;
+    const highDensityCount = pincodesWithPolygons.filter((p) => p.density === 'URBAN_HIGH_DENSITY').length;
+    const totalCapacity = pincodesWithPolygons.reduce((sum, p) => sum + (p.activeCapacityCount || 0), 0);
 
     return apiSuccess(
       {
-        pincodes,
+        pincodes: pincodesWithPolygons,
         metrics: {
           totalPincodes,
           activeCount,
@@ -35,7 +48,7 @@ export async function GET(request: NextRequest) {
           totalCapacity,
         },
       },
-      'Pincode coverage territories retrieved successfully'
+      'Pincode coverage territories retrieved successfully with GeoJSON spatial polygons'
     );
   } catch (error) {
     return apiError(

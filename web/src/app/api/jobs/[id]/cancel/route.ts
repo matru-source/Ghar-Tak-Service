@@ -33,50 +33,25 @@ export async function POST(
     }
 
     let deadMileageCompensationInr = 0;
+    let payoutResult: any = null;
 
-    // Dead Mileage Compensation: If cancelled while technician was EN_ROUTE or ARRIVED, credit ₹99 compensation
+    // Dead Mileage Compensation (Issue 43): If cancelled while technician was EN_ROUTE or ARRIVED, credit ₹99 via instant UPI payout
     if ((existingJob.status === 'EN_ROUTE' || existingJob.status === 'ARRIVED') && existingJob.technicianId) {
       deadMileageCompensationInr = 99.0;
       try {
-        const { prisma } = await import('@/lib/prisma');
-        const liveTech = await prisma.technician.findFirst({
-          where: {
-            OR: [
-              { id: existingJob.technicianId },
-              { badgeNumber: existingJob.technicianId },
-            ],
-          },
+        const { payoutGateway } = await import('@/lib/payout-gateway');
+        payoutResult = await payoutGateway.dispatchInstantUpiPayout({
+          recipientId: existingJob.technicianId,
+          recipientName: existingJob.technicianName,
+          phone: (existingJob as any).technicianPhone,
+          amountInr: deadMileageCompensationInr,
+          referenceId: `TXN-DEAD-MILEAGE-${Date.now()}`,
+          narration: `Dead Mileage Compensation #${existingJob.jobTicketNumber}`,
+          jobTicketNumber: existingJob.jobTicketNumber,
+          partnerId: existingJob.partnerId,
         });
-        if (liveTech) {
-          await prisma.ledgerEntry.create({
-            data: {
-              transactionReference: `TXN-DEAD-MILEAGE-${Date.now()}`,
-              partnerId: existingJob.partnerId,
-              technicianId: liveTech.id,
-              ledgerType: 'TECHNICIAN_PAYOUT',
-              entryDirection: 'CREDIT',
-              amountInr: deadMileageCompensationInr,
-              runningBalanceInr: deadMileageCompensationInr,
-              narrative: `Dead Mileage Compensation for order #${existingJob.jobTicketNumber} cancelled mid-transit`,
-            },
-          });
-
-          // Issue 43: Instant Live UPI Payout via RazorpayX / Cashfree Payouts Gateway
-          const payoutGateway = {
-            provider: 'razorpayx_payouts',
-            payoutGateway: 'razorpayx',
-            mode: 'UPI_IMPS',
-            vpa: (liveTech as any)?.upiId || `${(liveTech as any)?.phone || liveTech.badgeNumber}@upi`,
-            amountInr: deadMileageCompensationInr,
-            referenceId: `PO-DM-${Date.now()}`,
-            payoutStatus: 'PROCESSED_INSTANT_UPI',
-            utrNumber: `UTR${Date.now()}`,
-            dispatchedAt: new Date().toISOString(),
-          };
-          console.log(`[Payout] Instant RazorpayX UPI dead mileage payout dispatched: ₹${deadMileageCompensationInr} to ${payoutGateway.vpa} (UTR: ${payoutGateway.utrNumber})`);
-        }
       } catch (err) {
-        console.warn('[Cancel] Failed to write dead mileage ledger entry:', err);
+        console.warn('[Cancel] Failed to dispatch instant UPI dead mileage payout:', err);
       }
     }
 
@@ -107,7 +82,8 @@ export async function POST(
         technicianId: existingJob?.technicianId,
         details: {
           amountInr: deadMileageCompensationInr,
-          message: `Customer cancelled order #${job.jobTicketNumber}. ₹${deadMileageCompensationInr} fuel compensation credited to your wallet.`,
+          payout: payoutResult,
+          message: `Customer cancelled order #${job.jobTicketNumber}. ₹${deadMileageCompensationInr} fuel compensation transferred via instant UPI (UTR: ${payoutResult?.utrNumber || 'N/A'}).`,
         },
       });
     }
@@ -121,15 +97,16 @@ export async function POST(
       status: 'CANCELLED',
       details: {
         reason,
+        payout: payoutResult,
         message: 'Job cancelled by user',
       },
     });
 
     const successMessage = deadMileageCompensationInr > 0
-      ? `Booking cancelled. ₹${deadMileageCompensationInr.toFixed(2)} dead mileage fuel compensation credited to specialist wallet.`
+      ? `Booking cancelled. ₹${deadMileageCompensationInr.toFixed(2)} dead mileage compensation transferred to technician's UPI (UTR: ${payoutResult?.utrNumber || 'N/A'}).`
       : 'Booking cancelled successfully';
 
-    return apiSuccess({ ...job, deadMileageCompensationInr }, successMessage);
+    return apiSuccess({ ...job, deadMileageCompensationInr, payout: payoutResult }, successMessage);
   } catch (error) {
     return apiError('Failed to cancel job', 400, error instanceof Error ? error.message : String(error));
   }

@@ -105,7 +105,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { jobId, status, technicianId, technicianName, version } = body;
+    const { jobId, status, technicianId, technicianName, version, action, resetSla } = body;
 
     if (!jobId) {
       return NextResponse.json({ success: false, error: 'jobId is required' }, { status: 400 });
@@ -150,9 +150,58 @@ export async function PATCH(req: NextRequest) {
     }
 
     let updatedJob: any = currentJob;
+    const isReassignment = action === 'REASSIGN' || resetSla === true || (currentJob.status === 'ESCALATED_SLA' && (!technicianId || status === 'PENDING_DISPATCH'));
 
-    // Execute reassignment in live database if a technician is being assigned
-    if (technicianId) {
+    if (isReassignment) {
+      // --------------------------------------------------------------------------
+      // Issue 16: Automated SLA Reset on Manual / Emergency Reassignment
+      // Reset status to PENDING_DISPATCH, clear technician, reset SLA to now + 15m
+      // and broadcast JOB_REASSIGNED on the realtime bus
+      // --------------------------------------------------------------------------
+      const now = new Date();
+      const newSlaExpiry = new Date(now.getTime() + 15 * 60 * 1000); // 15-min SLA window
+
+      updatedJob.status = 'PENDING_DISPATCH';
+      updatedJob.slaExpiryAt = newSlaExpiry.toISOString();
+      updatedJob.technicianId = technicianId || null;
+      updatedJob.technicianName = technicianName || null;
+
+      try {
+        const { isDatabaseConnected } = await import('@/lib/db');
+        const { prisma } = await import('@/lib/prisma');
+        if (await isDatabaseConnected()) {
+          await prisma.job.updateMany({
+            where: { OR: [{ id: currentJob.id }, { jobTicketNumber: currentJob.jobTicketNumber }] },
+            data: {
+              status: 'PENDING_DISPATCH',
+              technicianId: technicianId || null,
+              slaExpiryAt: newSlaExpiry,
+            },
+          });
+        }
+      } catch (dbErr) {
+        console.warn('[PartnerDispatch] DB reassign update warning:', dbErr);
+      }
+
+      realtimeBus.publish({
+        type: 'JOB_REASSIGNED',
+        jobId: updatedJob.id,
+        ticketNumber: updatedJob.jobTicketNumber,
+        partnerId: updatedJob.partnerId,
+        customerId: updatedJob.customerId,
+        pincode: updatedJob.pincode,
+        status: 'PENDING_DISPATCH',
+        details: {
+          action: 'REASSIGN',
+          message: 'Work order reassigned to standby fleet. SLA timer reset to 15 minutes.',
+          slaExpiryAt: newSlaExpiry.toISOString(),
+          previousTechnicianId: currentJob.technicianId,
+          previousStatus: currentJob.status,
+          reassignedAt: now.toISOString(),
+        },
+      });
+    } else if (technicianId) {
+      // Execute reassignment in live database if a technician is being assigned
       try {
         const reassignResult = await db.reassignJobProximity(currentJob.id, {
           targetTechnicianId: technicianId,
@@ -179,10 +228,17 @@ export async function PATCH(req: NextRequest) {
     // Also sync in-memory store for fallback parity
     const memIdx = dbStore.jobs.findIndex((j) => j.id === currentJob.id || j.jobTicketNumber === currentJob.jobTicketNumber);
     if (memIdx !== -1) {
-      if (status) dbStore.jobs[memIdx].status = status as any;
-      if (technicianId) {
-        dbStore.jobs[memIdx].technicianId = technicianId;
-        dbStore.jobs[memIdx].technicianName = technicianName || updatedJob.technicianName || 'Assigned Technician';
+      if (isReassignment) {
+        dbStore.jobs[memIdx].status = 'PENDING_DISPATCH';
+        dbStore.jobs[memIdx].slaExpiryAt = updatedJob.slaExpiryAt;
+        dbStore.jobs[memIdx].technicianId = updatedJob.technicianId;
+        dbStore.jobs[memIdx].technicianName = updatedJob.technicianName;
+      } else {
+        if (status) dbStore.jobs[memIdx].status = status as any;
+        if (technicianId) {
+          dbStore.jobs[memIdx].technicianId = technicianId;
+          dbStore.jobs[memIdx].technicianName = technicianName || updatedJob.technicianName || 'Assigned Technician';
+        }
       }
       (dbStore.jobs[memIdx] as any).version = nextVersion;
     }
@@ -190,13 +246,15 @@ export async function PATCH(req: NextRequest) {
     await db.recordWormAuditLog({
       actorId,
       actorRole,
-      action: 'TERRITORY_DISPATCH_UPDATED',
+      action: isReassignment ? 'SLA_REASSIGNMENT_TRIGGERED' : 'TERRITORY_DISPATCH_UPDATED',
       resourceType: 'JOB_ORDER',
       resourceId: updatedJob.jobTicketNumber,
-      payloadSummary: `Territory Hub updated ${updatedJob.jobTicketNumber}: status=${updatedJob.status}, tech=${updatedJob.technicianName || technicianName}`,
+      payloadSummary: isReassignment
+        ? `Partner hub triggered SLA reassignment for ${updatedJob.jobTicketNumber}: SLA reset to 15m (expiry: ${updatedJob.slaExpiryAt})`
+        : `Territory Hub updated ${updatedJob.jobTicketNumber}: status=${updatedJob.status}, tech=${updatedJob.technicianName || technicianName}`,
     });
 
-    if (technicianId) {
+    if (technicianId && !isReassignment) {
       realtimeBus.publish({
         type: 'TECH_DISPATCHED',
         jobId: updatedJob.id,
@@ -222,7 +280,9 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({
       success: true,
       job: updatedJob,
-      message: `Job ${updatedJob.jobTicketNumber} dispatch state updated`,
+      message: isReassignment
+        ? `Job ${updatedJob.jobTicketNumber} reassigned to standby fleet. SLA window reset to 15 minutes.`
+        : `Job ${updatedJob.jobTicketNumber} dispatch state updated`,
     });
   } catch (error: any) {
     return NextResponse.json(

@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useRealtimeEvents, playSyntheticAlert, triggerHapticAlert } from '@/lib/use-realtime-events';
 import {
   Zap,
   ShieldCheck,
@@ -223,9 +224,73 @@ export default function TechnicianDashboardPage() {
     };
 
     fetchLiveTechData();
-    const interval = setInterval(fetchLiveTechData, 10000);
+    // 60-second fallback watchdog (replaces 10s tight polling; events arrive instantly over SSE)
+    const interval = setInterval(fetchLiveTechData, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  // Instant Full-Duplex Real-Time SSE Listener
+  const handleTechEvent = useCallback(
+    (event: any) => {
+      if (
+        event.type === 'TECH_DISPATCHED' ||
+        event.type === 'TECH_BROADCAST' ||
+        (event.type === 'JOB_CREATED' && isOnline)
+      ) {
+        // Immediate Inbound Dispatch Siren & Physical Device Vibration
+        playSyntheticAlert('siren');
+        triggerHapticAlert([600, 200, 600, 200, 900]);
+
+        if (event.jobId) {
+          const serviceTitle = event.details?.serviceTitle || 'Emergency Electrical Service';
+          const totalInr = event.details?.totalAmountInr || 1250;
+          const payoutShare = event.details?.payoutShareInr || Math.round(totalInr * 0.7);
+
+          setUrgentJob({
+            id: event.jobId,
+            ticketNumber: event.ticketNumber?.startsWith('#')
+              ? event.ticketNumber
+              : `#${event.ticketNumber || 'J-1001'}`,
+            title: serviceTitle,
+            customerName: event.details?.customerName || 'Customer',
+            customerAddress: event.details?.customerAddress || 'Customer Address on File',
+            pincode: event.pincode || event.details?.pincode || selectedPincode,
+            distanceKm: 1.2,
+            travelMinutes: 10,
+            techCutInr: payoutShare,
+            totalInr: totalInr,
+            timerSeconds: event.details?.acceptanceTimerSeconds || 60,
+            customerPhone: event.details?.customerPhone || '+919876543213',
+            instructions: 'Mandatory 1000V Insulated Gloves & MCB Isolation Protocol',
+            scopeItems: [
+              `${serviceTitle} Comprehensive Service`,
+              'Phase/Neutral Insulation Test (230V)',
+              '1000V Insulated Gloves Protocol Mandatory',
+            ],
+          });
+          setModalTimerSeconds(event.details?.acceptanceTimerSeconds || 60);
+          setIsDispatchModalOpen(true);
+          setShowInboundPush(true);
+        }
+      } else if (event.type === 'JOB_CANCELLED') {
+        if (urgentJob?.id === event.jobId) {
+          setIsDispatchModalOpen(false);
+          setShowInboundPush(false);
+          showToast('⚠️ Customer cancelled job or reassigned.');
+        }
+      } else if (event.type === 'PAYOUT_TRANSFERRED') {
+        playSyntheticAlert('chime');
+        showToast(`💰 Payout of ₹${event.details?.amountInr || 875} transferred to your linked wallet!`);
+      }
+    },
+    [isOnline, selectedPincode, urgentJob?.id]
+  );
+
+  const { status: techBusStatus } = useRealtimeEvents({
+    role: 'TECHNICIAN',
+    technicianId,
+    onEvent: handleTechEvent,
+  });
 
   // 60-Second Acceptance Countdown Timer (Step 37: TASK-037)
   useEffect(() => {
@@ -433,7 +498,11 @@ export default function TechnicianDashboardPage() {
                   }`}
                 ></span>
                 <span className={isOnline ? 'text-emerald-700 font-semibold' : 'text-slate-500'}>
-                  {isOnline ? 'Online • Ready for Calls' : 'Offline • Duty Paused'}
+                  {isOnline
+                    ? techBusStatus === 'CONNECTED'
+                      ? 'Online • Live Dispatch Ready'
+                      : 'Online • Connecting Bus...'
+                    : 'Offline • Duty Paused'}
                 </span>
               </div>
             </div>

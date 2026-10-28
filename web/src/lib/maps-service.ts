@@ -4,6 +4,7 @@
 // ==============================================================================
 
 import { calculateHaversineDistanceKm } from './db';
+import { getRoadDistanceAndEta } from './routing-engine';
 import {
   getCoordinatesForPincode,
   getAreaForPincode,
@@ -94,39 +95,29 @@ export class GoogleMapsService {
   }
 
   /**
-   * Distance Matrix: Computes road distance, transit duration & traffic index
+   * Distance Matrix: Computes actual road driving distance, transit duration & traffic index
+   * Uses OSRM / Google Distance Matrix with Indian Urban Road Circuity model fallback
    */
   static async getDistanceMatrix(
     origin: { latitude: number; longitude: number; label?: string },
     destination: { latitude: number; longitude: number; label?: string }
   ): Promise<DistanceMatrixResult> {
-    const rawHaversine = calculateHaversineDistanceKm(
+    const route = await getRoadDistanceAndEta(
       origin.latitude,
       origin.longitude,
       destination.latitude,
       destination.longitude
     );
 
-    // Urban road tortuosity factor (~1.20x direct line distance in city roads)
-    const roadDistanceKm = Math.round(rawHaversine * 1.20 * 100) / 100;
-
-    // Calculate transit duration: transit time + 3 mins dispatch overhead
-    const baseMinutes = (roadDistanceKm / MAPS_CONFIG.urbanAvgSpeedKmH) * 60;
-    const durationMinutes = Math.max(3, Math.round(baseMinutes + 3));
-
-    // Determine traffic status based on transit time
-    const trafficStatus: 'NORMAL' | 'MODERATE_CONGESTION' | 'HEAVY_TRAFFIC' =
-      durationMinutes > 30 ? 'HEAVY_TRAFFIC' : durationMinutes > 18 ? 'MODERATE_CONGESTION' : 'NORMAL';
-
     return {
       origin,
       destination,
-      distanceKm: roadDistanceKm,
-      distanceFormatted: `${roadDistanceKm} km`,
-      durationMinutes,
-      durationFormatted: `${durationMinutes} mins`,
-      trafficStatus,
-      recommendedRoute: `via Direct Arterial Corridor (${roadDistanceKm} km)`,
+      distanceKm: route.distanceKm,
+      distanceFormatted: `${route.distanceKm} km`,
+      durationMinutes: route.durationMinutes,
+      durationFormatted: `${route.durationMinutes} mins`,
+      trafficStatus: route.trafficStatus,
+      recommendedRoute: `via Direct Arterial Corridor (${route.distanceKm} km, ${route.provider})`,
     };
   }
 

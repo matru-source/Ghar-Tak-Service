@@ -27,7 +27,8 @@ export async function POST(request: NextRequest) {
     const verification = verifyOtp(rawIdentifier, otp, purpose);
 
     if (!verification.valid) {
-      return apiError(verification.reason || 'Invalid verification code', 401);
+      const statusCode = verification.isLocked ? 429 : 401;
+      return apiError(verification.reason || 'Invalid verification code', statusCode);
     }
 
     if (verifyOnly) {

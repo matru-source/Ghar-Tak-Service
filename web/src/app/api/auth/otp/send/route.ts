@@ -11,8 +11,9 @@ export async function OPTIONS() {
 
 /**
  * POST /api/auth/otp/send
- * Dispatches dynamic cryptographic OTP via Brevo (Email) or SMS Gateway (Mobile).
- * Strictly server-side execution: API keys are never exposed to client devices.
+ * Dispatches dynamic cryptographic OTP via Brevo (Email) or SMS Gateway Failover Chain (Mobile).
+ * Enforces strict rate limits (max 3 tries per 15 min) and automated lockout.
+ * Zero mock OTP exposure in production.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -25,6 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     const isEmail = rawIdentifier.includes('@');
+    const isProduction = process.env.NODE_ENV === 'production';
 
     if (isEmail) {
       const email = rawIdentifier.toLowerCase();
@@ -33,7 +35,7 @@ export async function POST(request: NextRequest) {
         return apiError('Please enter a valid email address', 400);
       }
 
-      // If resetting password, verify account exists first (prevents spamming arbitrary emails)
+      // If resetting password, verify account exists first
       if (purpose === 'RESET_PASSWORD') {
         const existingUser = await db.getUserByIdentifier(email);
         if (!existingUser) {
@@ -44,15 +46,28 @@ export async function POST(request: NextRequest) {
       const existingUser = await db.getUserByIdentifier(email);
       const recipientName = existingUser?.fullName || body.name || 'Valued User';
 
-      const { code, expiresAt } = generateAndStoreOtp(email, purpose);
-      console.log(`[OTP_DISPATCH] Purpose: ${purpose}, Email: ${email}, OTP: ${code}`);
+      // Rate-limited cryptographic token generation (throws on rate limit / lockout)
+      let code: string;
+      let expiresAt: Date;
+      try {
+        const otpData = generateAndStoreOtp(email, purpose);
+        code = otpData.code;
+        expiresAt = otpData.expiresAt;
+      } catch (rateErr) {
+        return apiError(rateErr instanceof Error ? rateErr.message : String(rateErr), 429);
+      }
+
+      console.log(`[OTP_DISPATCH] Purpose: ${purpose}, Email: ${email}`);
 
       // Dispatch transactional email via Brevo API
       const emailResult = await sendOtpEmail(email, recipientName, code, purpose);
 
       if (!emailResult.success) {
         if (!process.env.BREVO_API_KEY) {
-          console.warn(`[OTP_FALLBACK] BREVO_API_KEY not configured on server. Verification OTP for ${email} is: ${code}`);
+          if (isProduction) {
+            return apiError('Email delivery service is unconfigured. Contact security administrator.', 503);
+          }
+          console.warn(`[OTP_FALLBACK_DEV] BREVO_API_KEY not configured. Dev code: ${code}`);
           return apiSuccess(
             {
               identifier: email,
@@ -60,7 +75,7 @@ export async function POST(request: NextRequest) {
               expiresAt: expiresAt.toISOString(),
               devOtp: code,
             },
-            `Verification code: ${code} (Email service pending server configuration)`,
+            `Verification code generated (Dev Sandbox Mode)`,
             200
           );
         }
@@ -91,25 +106,39 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      const { code, expiresAt } = generateAndStoreOtp(cleanPhone, purpose);
-
-      let smsRecord = null;
+      // Rate-limited cryptographic token generation
+      let code: string;
+      let expiresAt: Date;
       try {
-        smsRecord = await SmsGateway.sendSms(cleanPhone, 'AUTH_LOGIN_OTP', { otp: code });
-      } catch (smsErr) {
-        console.warn(`[SMS_DISPATCH_WARNING] Could not dispatch SMS:`, smsErr);
+        const otpData = generateAndStoreOtp(cleanPhone, purpose);
+        code = otpData.code;
+        expiresAt = otpData.expiresAt;
+      } catch (rateErr) {
+        return apiError(rateErr instanceof Error ? rateErr.message : String(rateErr), 429);
       }
 
-      return apiSuccess(
-        {
-          identifier: cleanPhone,
-          deliveryChannel: 'SMS',
-          expiresAt: expiresAt.toISOString(),
-          smsDeliveryStatus: smsRecord?.deliveryStatus || 'QUEUED',
-        },
-        `Security verification code sent via SMS to ${cleanPhone}.`,
-        200
-      );
+      // Dispatch via SMS failover chain (Twilio -> Msg91 -> AWS SNS)
+      try {
+        const smsRecord = await SmsGateway.sendSms(cleanPhone, 'AUTH_LOGIN_OTP', { otp: code });
+        return apiSuccess(
+          {
+            identifier: cleanPhone,
+            deliveryChannel: 'SMS',
+            provider: smsRecord.provider,
+            expiresAt: expiresAt.toISOString(),
+            smsDeliveryStatus: smsRecord.deliveryStatus,
+          },
+          `Security verification code sent via SMS to ${cleanPhone}.`,
+          200
+        );
+      } catch (smsErr) {
+        const errMessage = smsErr instanceof Error ? smsErr.message : String(smsErr);
+        if (errMessage.includes('Rate limit')) {
+          return apiError(errMessage, 429);
+        }
+        console.error(`[SMS_DISPATCH_FAILURE] ${errMessage}`);
+        return apiError(errMessage, 503);
+      }
     }
   } catch (error) {
     return apiError('Failed to process verification code request', 500, error instanceof Error ? error.message : String(error));

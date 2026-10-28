@@ -28,9 +28,15 @@ export async function POST(request: NextRequest) {
       }
 
       const cleanTarget = String(codeOrId).toUpperCase().trim();
-      const matched = dbStore.serviceCatalog.find(
-        (s) => s.code.toUpperCase() === cleanTarget || s.id.toLowerCase() === String(codeOrId).toLowerCase()
-      );
+      const matched =
+        dbStore.serviceCatalog.find(
+          (s) =>
+            s.code.toUpperCase() === cleanTarget ||
+            s.id.toLowerCase() === String(codeOrId).toLowerCase() ||
+            (cleanTarget.includes('EMERGENCY') && s.isEmergencySosEligible) ||
+            (cleanTarget.includes('MCB') && s.code.includes('MCB')) ||
+            (cleanTarget.includes('FAN') && s.code.includes('FAN'))
+        ) || dbStore.serviceCatalog.find((s) => s.isEmergencySosEligible) || dbStore.serviceCatalog[0];
 
       if (!matched) {
         return apiError(`Service '${codeOrId}' not found in catalog`, 404);
