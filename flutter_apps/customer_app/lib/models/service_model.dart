@@ -27,15 +27,15 @@ class ServiceModel {
     final title = json['title']?.toString() ?? 'Electrical Service';
     String? resolvedImage;
     final lowerTitle = title.toLowerCase();
-    if (lowerTitle.includes('switch') || lowerTitle.includes('board')) {
+    if (lowerTitle.contains('switch') || lowerTitle.contains('board')) {
       resolvedImage = 'assets/images/service_switchboard.png';
-    } else if (lowerTitle.includes('fan')) {
+    } else if (lowerTitle.contains('fan')) {
       resolvedImage = 'assets/images/service_fan.png';
-    } else if (lowerTitle.includes('geyser') || lowerTitle.includes('heater')) {
+    } else if (lowerTitle.contains('geyser') || lowerTitle.contains('heater')) {
       resolvedImage = 'assets/images/service_geyser.png';
-    } else if (lowerTitle.includes('light') || lowerTitle.includes('chandelier')) {
+    } else if (lowerTitle.contains('light') || lowerTitle.contains('chandelier')) {
       resolvedImage = 'assets/images/service_light.png';
-    } else if (lowerTitle.includes('wiring') || lowerTitle.includes('circuit')) {
+    } else if (lowerTitle.contains('wiring') || lowerTitle.contains('circuit')) {
       resolvedImage = 'assets/images/service_wiring.png';
     }
 
@@ -57,4 +57,3 @@ class ServiceModel {
     );
   }
 }
-
