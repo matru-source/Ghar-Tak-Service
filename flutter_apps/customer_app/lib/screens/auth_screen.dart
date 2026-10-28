@@ -310,7 +310,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     if (_errorMessage != null)
                       Container(
                         padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.bottom(16),
+                        margin: const EdgeInsets.only(bottom: 16),
                         decoration: BoxDecoration(
                           color: AppTheme.signalCrimsonBg,
                           borderRadius: BorderRadius.circular(10),

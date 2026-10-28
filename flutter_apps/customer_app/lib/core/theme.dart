@@ -27,6 +27,8 @@ class AppTheme {
   static const Color signalEmeraldBg = Color(0xFFD1FAE5);
   static const Color signalCrimson = Color(0xFFDC2626);
   static const Color signalCrimsonBg = Color(0xFFFEE2E2);
+  static const Color signalCobalt = Color(0xFF2563EB);
+  static const Color signalCobaltBg = Color(0xFFDBEAFE);
 
   static LinearGradient gtsHeaderGradient() {
     return const LinearGradient(
