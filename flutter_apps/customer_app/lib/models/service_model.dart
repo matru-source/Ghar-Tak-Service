@@ -72,17 +72,3 @@ class ServiceModel {
     );
   }
 }
-
-extension ServiceListExtensions on List<ServiceModel> {
-  List<ServiceModel> filterServices(String category, String query) {
-    return where((service) {
-      final matchesCategory = category == 'All' ||
-          service.category.toLowerCase().contains(category.toLowerCase()) ||
-          service.categoryId.toLowerCase().contains(category.toLowerCase());
-      final matchesQuery = query.isEmpty ||
-          service.title.toLowerCase().contains(query.toLowerCase()) ||
-          (service.description?.toLowerCase().contains(query.toLowerCase()) ?? false);
-      return matchesCategory && matchesQuery;
-    }).toList();
-  }
-}
