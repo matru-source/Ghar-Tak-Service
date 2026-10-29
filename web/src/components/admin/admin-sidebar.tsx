@@ -25,8 +25,6 @@ const ADMIN_NAVIGATION: NavSection[] = [
       { name: 'Dashboard', href: '/admin', icon: '⚡' },
       { name: 'Live Dispatch', href: '/admin/dispatch', icon: '🛰️', badge: 'Live', badgeColor: 'bg-emerald-500' },
       { name: 'Work Orders', href: '/admin/jobs', icon: '📋' },
-      { name: 'Safety Queue', href: '/admin/safety', icon: '🛡️', badge: 'Audit', badgeColor: 'bg-amber-500' },
-      { name: 'Escalations', href: '/admin/escalations', icon: '🚨' },
     ],
   },
   {
@@ -51,7 +49,6 @@ const ADMIN_NAVIGATION: NavSection[] = [
     items: [
       { name: 'Disputes & Ratings', href: '/admin/disputes', icon: '⚖️', badge: 'Dispute', badgeColor: 'bg-rose-500' },
       { name: 'Subscriptions', href: '/admin/subscriptions', icon: '🛡️' },
-      { name: 'Support Tickets', href: '/admin/support', icon: '🎫' },
       { name: 'Audit Logs', href: '/admin/audit', icon: '📜' },
       { name: 'Settings', href: '/admin/settings', icon: '⚙️' },
     ],
@@ -150,12 +147,8 @@ export function AdminSidebar({
                     ADMIN CRM
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium whitespace-nowrap">
+                <div className="text-[11px] text-slate-500 font-medium whitespace-nowrap">
                   <span>Operations Console</span>
-                  <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 ml-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    v2.4
-                  </span>
                 </div>
               </div>
             ) : (

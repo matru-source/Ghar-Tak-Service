@@ -49,51 +49,19 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Top Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+      <div className="pb-6 border-b border-slate-200">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-              National Operations Command
-            </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200">
-              INDIA HUB 01
-            </span>
-          </div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+            National Operations Command
+          </h1>
           <p className="text-slate-500 text-xs mt-1">
             Real-time cross-state dispatch telemetry, 30-min SLA health monitoring & double-entry treasury reconciliation
           </p>
         </div>
-
-        {/* Global Action Triggers */}
-        <div className="flex items-center gap-2.5">
-          <Link
-            href="/admin/safety"
-            className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
-          >
-            <span>🛡️</span>
-            <span>Safety Queue</span>
-          </Link>
-          <form action="/api/jobs/escalations/sweep" method="POST">
-            <button
-              type="submit"
-              className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
-            >
-              <span>🔄</span>
-              <span>Run SLA Sweep</span>
-            </button>
-          </form>
-          <Link
-            href="/admin/escalations"
-            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-red-900/20"
-          >
-            <span>🚨</span>
-            <span>Emergency SOS Desk ({escalatedCount})</span>
-          </Link>
-        </div>
       </div>
 
       {/* Macro National KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Active Jobs */}
         <div className="bg-white border border-slate-200 rounded-2xl p-5 relative overflow-hidden shadow-xs hover:shadow-md transition-shadow">
           <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Active Work Orders</div>
@@ -116,18 +84,7 @@ export default async function AdminDashboardPage() {
           <div className="absolute top-3 right-3 text-2xl opacity-20">👷</div>
         </div>
 
-        {/* Card 3: SLA Breach Health */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 relative overflow-hidden shadow-xs hover:shadow-md transition-shadow">
-          <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">SLA Breach Rate</div>
-          <div className="mt-2 text-2xl font-black text-rose-600 flex items-baseline gap-2">
-            {escalatedCount}
-            <span className="text-xs font-medium text-slate-400">Escalated</span>
-          </div>
-          <div className="mt-1 text-[11px] text-slate-400">Sub-30m target: 96.8%</div>
-          <div className="absolute top-3 right-3 text-2xl opacity-20">⏱️</div>
-        </div>
-
-        {/* Card 4: Gross GMV Processed */}
+        {/* Card 3: Gross GMV Processed */}
         <div className="bg-white border border-slate-200 rounded-2xl p-5 relative overflow-hidden shadow-xs hover:shadow-md transition-shadow">
           <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Gross Billings (GMV)</div>
           <div className="mt-2 text-2xl font-black text-slate-900">
@@ -137,7 +94,7 @@ export default async function AdminDashboardPage() {
           <div className="absolute top-3 right-3 text-2xl opacity-20">💰</div>
         </div>
 
-        {/* Card 5: Statutory GST Reserve */}
+        {/* Card 4: Statutory GST Reserve */}
         <div className="bg-white border border-slate-200 rounded-2xl p-5 relative overflow-hidden shadow-xs hover:shadow-md transition-shadow">
           <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">18% GST Escrow</div>
           <div className="mt-2 text-2xl font-black text-blue-600">

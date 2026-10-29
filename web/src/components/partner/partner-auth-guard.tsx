@@ -72,3 +72,4 @@ export function PartnerAuthGuard({ children }: PartnerAuthGuardProps) {
 
   return <div className="partner-shell-authorized">{children}</div>;
 }
+
