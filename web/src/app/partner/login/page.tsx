@@ -137,7 +137,7 @@ export default function RegionalPartnerLoginPage() {
               required
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              placeholder="maharashtra.ops@electricare.in"
+              placeholder="maharashtra.ops@ghartak.in"
               className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
             />
           </div>

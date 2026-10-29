@@ -1,5 +1,5 @@
 // ==============================================================================
-// ElectriCare Database Abstraction Layer (Graceful Dual Engine)
+// Ghar Tak Service Database Abstraction Layer (Graceful Dual Engine)
 // Connects to live PostgreSQL via Prisma Client when available;
 // seamlessly falls back to high-fidelity seed store for instant local dev & testing.
 // ==============================================================================
@@ -3569,7 +3569,7 @@ export const db = {
       entryDirection: 'DEBIT' as const,
       amountInr: split.platformFeeInr,
       runningBalanceInr: split.platformFeeInr,
-      narrative: `ElectriCare Platform Fee (${split.platformPct}% on base ₹${split.baseAmountInr})`,
+      narrative: `Ghar Tak Service Platform Fee (${split.platformPct}% on base ₹${split.baseAmountInr})`,
       createdAt: now,
     };
 
@@ -3691,7 +3691,7 @@ export const db = {
             entryDirection: 'DEBIT' as const,
             amountInr: platform,
             runningBalanceInr: platform,
-            narrative: `ElectriCare Platform Fee (${config.platformRevenueSharePct}% on base ₹${base})`,
+            narrative: `Ghar Tak Service Platform Fee (${config.platformRevenueSharePct}% on base ₹${base})`,
             createdAt: inv.createdAt,
           },
           {
@@ -4648,7 +4648,7 @@ export const db = {
       userId: `usr_cust_${Date.now().toString(36)}`,
       fullName: data.fullName,
       phone: data.phone,
-      email: data.email || `${data.fullName.toLowerCase().replace(/\s+/g, '.')}@electricare.in`,
+      email: data.email || `${data.fullName.toLowerCase().replace(/\s+/g, '.')}@ghartak.in`,
       defaultAddressLine: data.defaultAddressLine,
       defaultPincode: data.defaultPincode,
       defaultLatitude: data.defaultLatitude || 18.9067,

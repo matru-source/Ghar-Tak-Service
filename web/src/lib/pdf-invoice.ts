@@ -89,7 +89,7 @@ export function generateGstTaxInvoicePdf(data: InvoicePdfData): Buffer {
 
   // 1. Header Box
   drawRect(40, 740, 515, 65, 0.85, 0.97);
-  addTextBold('GHAR TAK ELECTRICARE SERVICES PRIVATE LIMITED', 55, 785, 14, 0.1);
+  addTextBold('GHAR TAK GHAR_TAK SERVICES PRIVATE LIMITED', 55, 785, 14, 0.1);
   addText('Govt. Recognized Electrical Services Platform • CIN: U74999MH2024PTC123456', 55, 770, '/F1', 8, 0.4);
   addText(`GSTIN: ${gstin} | State: ${state} (Code ${stateCode})`, 55, 755, '/F1', 8, 0.3);
 
@@ -185,7 +185,7 @@ export function generateGstTaxInvoicePdf(data: InvoicePdfData): Buffer {
   addText('1. This invoice is issued pursuant to Rule 46 of the Central Goods and Services Tax Rules, 2017.', 40, 315, '/F1', 7.5, 0.4);
   addText('2. All electrical work carries a 30-day service warranty against workmanship defects.', 40, 302, '/F1', 7.5, 0.4);
   addText('3. Digital signature is cryptographically authenticated. No physical signature required.', 40, 289, '/F1', 7.5, 0.4);
-  addText('4. Ghar Tak ElectriCare Customer Care: support@ghartak.in | Toll-Free: 1800-GHARTAK', 40, 276, '/F1', 7.5, 0.4);
+  addText('4. Ghar Tak Ghar Tak Service Customer Care: support@ghartak.in | Toll-Free: 1800-GHARTAK', 40, 276, '/F1', 7.5, 0.4);
 
   // Assemble Complete PDF Content
   const contentStream = streamCommands.join('\n');

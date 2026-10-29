@@ -808,7 +808,7 @@ export default function CustomerDashboardPage() {
         </div>
       </section>
 
-      {/* 6. ELECTRICARE SHIELD™ TRUST & SAFETY CARD */}
+      {/* 6. GHAR_TAK SHIELD™ TRUST & SAFETY CARD */}
       <section className="px-4 pt-2 pb-4">
         <div className="w-full rounded-2xl bg-slate-50 border border-slate-200 p-4 shadow-2xs">
           <div className="flex items-center gap-2.5 mb-2.5">
@@ -816,7 +816,7 @@ export default function CustomerDashboardPage() {
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div className="flex flex-col">
-              <h4 className="font-bold text-xs text-slate-900">ElectriCare Shield™</h4>
+              <h4 className="font-bold text-xs text-slate-900">Ghar Tak Service Shield™</h4>
               <p className="text-[10px] text-slate-500">Uncompromising safety & compliance guarantee</p>
             </div>
           </div>
@@ -1095,7 +1095,7 @@ export default function CustomerDashboardPage() {
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                <h3 className="font-bold text-sm text-slate-900">ElectriCare Safety Standard</h3>
+                <h3 className="font-bold text-sm text-slate-900">Ghar Tak Service Safety Standard</h3>
               </div>
               <button
                 onClick={() => setShowSafetyChecklistModal(false)}
@@ -1107,7 +1107,7 @@ export default function CustomerDashboardPage() {
 
             <div className="py-4 space-y-3 text-xs text-slate-700">
               <p className="font-medium text-slate-600">
-                Every technician dispatched under ElectriCare undergoes strict statutory compliance checks:
+                Every technician dispatched under Ghar Tak Service undergoes strict statutory compliance checks:
               </p>
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
                 <div className="flex items-start gap-2">

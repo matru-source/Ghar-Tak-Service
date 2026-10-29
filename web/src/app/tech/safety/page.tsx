@@ -560,7 +560,7 @@ function TechSafetyChecklistContent() {
           <div className="p-3 rounded-xl bg-red-50 text-red-900 border border-red-200 flex items-start gap-2.5">
             <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
             <div className="text-xs leading-relaxed">
-              <span className="font-extrabold text-red-800">ElectriCare Shield Safety Policy: </span>
+              <span className="font-extrabold text-red-800">Ghar Tak Service Shield Safety Policy: </span>
               Live telemetry audits safety checkpoints. Bypassing mandatory PPE or MCB lockout triggers instant job abort & partner suspension.
             </div>
           </div>

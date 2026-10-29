@@ -1,5 +1,5 @@
 // ==============================================================================
-// ElectriCare Unified Payment Gateway Integration Adapter (TASK-012)
+// Ghar Tak Service Unified Payment Gateway Integration Adapter (TASK-012)
 // Supports Razorpay, Cashfree & NPCI Direct UPI Intent with HMAC-SHA256 Webhooks
 // ==============================================================================
 
@@ -128,7 +128,7 @@ export class PaymentGateway {
    */
   static generateUpiIntentUrl(amountInr: number, ticketNumber: string, invoiceId: string): string {
     const encodedMerchant = encodeURIComponent(PAYMENT_GATEWAY_CONFIG.merchantName);
-    const note = encodeURIComponent(`ElectriCare Service ${ticketNumber}`);
+    const note = encodeURIComponent(`Ghar Tak Service Service ${ticketNumber}`);
     return `upi://pay?pa=${PAYMENT_GATEWAY_CONFIG.upiVpa}&pn=${encodedMerchant}&am=${amountInr.toFixed(2)}&cu=INR&tr=${invoiceId}&tn=${note}`;
   }
 

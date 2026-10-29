@@ -1,5 +1,5 @@
 // ==============================================================================
-// ElectriCare Cloud Object Storage Service (AWS S3 / GCS / Local Vault)
+// Ghar Tak Service Cloud Object Storage Service (AWS S3 / GCS / Local Vault)
 // Handles secure KYC docs, Before/After photos, and GST PDF invoices (TASK-011)
 // ==============================================================================
 

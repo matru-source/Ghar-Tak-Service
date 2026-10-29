@@ -149,7 +149,7 @@ export default function ClientUATWalkthroughPage() {
             <div className="hidden sm:block h-8 w-px bg-slate-200"></div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-black text-base sm:text-lg text-slate-900 tracking-tight">ElectriCare Platform</span>
+                <span className="font-black text-base sm:text-lg text-slate-900 tracking-tight">Ghar Tak Service Platform</span>
                 <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                   UAT Sign-off Portal
                 </span>
@@ -195,7 +195,7 @@ export default function ClientUATWalkthroughPage() {
             </h1>
 
             <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
-              ElectriCare has completed the proposed single-developer sequential development plan across all 45 master tasks. 
+              Ghar Tak Service has completed the proposed single-developer sequential development plan across all 45 master tasks. 
               The platform encompasses 53 verified screens across Super Admin Web, Regional Partner Web/Mobile, Field Technician Mobile, and Customer Mobile apps.
             </p>
 
@@ -330,7 +330,7 @@ export default function ClientUATWalkthroughPage() {
                   </div>
                   <div className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <span><strong>Double-Entry Ledger:</strong> 70% Technician + 15% Partner Franchise + 15% ElectriCare take-rate reconciliation.</span>
+                    <span><strong>Double-Entry Ledger:</strong> 70% Technician + 15% Partner Franchise + 15% Ghar Tak Service take-rate reconciliation.</span>
                   </div>
                 </div>
               </div>

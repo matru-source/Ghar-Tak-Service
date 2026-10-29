@@ -1006,7 +1006,7 @@ export default function CustomerLiveTrackingPage() {
             <div className="flex items-center gap-1.5 text-emerald-700">
               <BrandMark size="xs" variant="default" badge={false} className="shrink-0" />
               <ShieldCheck className="w-4 h-4" />
-              <span className="text-[11px] font-bold">1 Year GTS ElectriCare Warranty</span>
+              <span className="text-[11px] font-bold">1 Year GTS Ghar Tak Service Warranty</span>
             </div>
             <Link
               href="/customer/history"

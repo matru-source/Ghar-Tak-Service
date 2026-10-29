@@ -184,7 +184,7 @@ export default function CustomerLayout({
             {!isFullWidth && (
               <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 text-white text-[10px]">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span className="text-[10px] tracking-tight font-normal text-slate-300">ElectriCare 5G</span>
+                <span className="text-[10px] tracking-tight font-normal text-slate-300">Ghar Tak Service 5G</span>
               </div>
             )}
 

@@ -488,7 +488,7 @@ export default function TechnicianDashboardPage() {
                   GTS Tech Pro
                 </span>
                 <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-orange-100 text-orange-800 border border-orange-200/60">
-                  ElectriCare
+                  Ghar Tak Service
                 </span>
               </div>
               <div className="flex items-center gap-1.5 text-[11px] text-slate-500">

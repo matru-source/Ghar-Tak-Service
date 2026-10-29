@@ -222,7 +222,7 @@ export default function PartnerSupportPage() {
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1 max-w-2xl">
-            Submit escalation tickets, track dispatch resolution workflows, and communicate directly with ElectriCare Central Engineering Operations HQ.
+            Submit escalation tickets, track dispatch resolution workflows, and communicate directly with Ghar Tak Service Central Engineering Operations HQ.
           </p>
         </div>
 
