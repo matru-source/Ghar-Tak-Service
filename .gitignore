@@ -25,6 +25,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 *.log
+*.zip
+deploy_stage/
 .DS_Store
 Thumbs.db
 scratch/

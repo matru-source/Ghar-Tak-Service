@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "prisma generate && next build",
-    "postinstall": "prisma generate",
+    "dev": "cd web && npx next dev",
+    "build": "cd web && npx prisma generate && npx next build",
+    "postinstall": "cd web && npx prisma generate",
     "start": "node app.js",
     "android:build": "cmd /c \"cd /d android && build_apks.bat\"",
     "android:clean": "cmd /c \"cd /d android && gradlew.bat clean\"",

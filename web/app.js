@@ -37,14 +37,15 @@ if (!process.env.DATABASE_URL) {
     'postgresql://neondb_owner:npg_Z6Jd4cYxbyGk@52.76.212.156:5432/neondb?sslmode=require&options=endpoint%3Dep-long-salad-b3w1konb';
 }
 if (!process.env.JWT_SECRET) {
-  process.env.JWT_SECRET = 'electricare_super_secret_jwt_key_2026_enterprise_production';
+  process.env.JWT_SECRET = 'gts_ghartak_service_super_secret_jwt_key_2026_enterprise_production';
 }
 
 const next = require('next');
 const dev = false;
 const hostname = '0.0.0.0';
 const port = process.env.PORT || 3000;
-const app = next({ dev, hostname, port, dir: __dirname });
+const nextDir = fs.existsSync(path.join(__dirname, '.next')) ? __dirname : (fs.existsSync(path.join(__dirname, 'web', '.next')) ? path.join(__dirname, 'web') : __dirname);
+const app = next({ dev, hostname, port, dir: nextDir });
 const handle = app.getRequestHandler();
 
 app
