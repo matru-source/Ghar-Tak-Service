@@ -1,16 +1,33 @@
 import React from 'react';
 import Link from 'next/link';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { BrandMark } from '@/components/ui/brand-logo';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboardPage() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('gts_token')?.value || cookieStore.get('token')?.value;
+  if (!token) {
+    redirect('/admin/login');
+  }
+
   let jobs: any[] = [];
   let pincodes: any[] = [];
   let technicians: any[] = [];
   let escalations: any = { counts: { totalEscalated: 0 } };
-  let ledgers: any = { telemetry: { totalCustomerInflowInr: 0, totalGstReserveInr: 0 } };
+  let ledgers: any = {
+    telemetry: {
+      totalCustomerInflowInr: 0,
+      totalGstReserveInr: 0,
+      totalTechnicianPayoutsInr: 0,
+      totalPartnerCommissionInr: 0,
+      totalPlatformFeeInr: 0,
+      totalAllocatedDebits: 0,
+    },
+  };
 
   try {
     jobs = (await db.getJobs()) || [];
@@ -230,7 +247,7 @@ export default async function AdminDashboardPage() {
               <div>
                 <div className="flex justify-between text-xs font-semibold mb-1">
                   <span className="text-slate-600">Technicians Net Payout (70%)</span>
-                  <span className="text-emerald-700 font-bold">₹{ledgers.telemetry.totalTechnicianPayoutsInr}</span>
+                  <span className="text-emerald-700 font-bold">₹{ledgers?.telemetry?.totalTechnicianPayoutsInr ?? 0}</span>
                 </div>
                 <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                   <div className="bg-emerald-600 h-full rounded-full" style={{ width: '70%' }}></div>
@@ -240,7 +257,7 @@ export default async function AdminDashboardPage() {
               <div>
                 <div className="flex justify-between text-xs font-semibold mb-1">
                   <span className="text-slate-600">Partner Regional Share (15%)</span>
-                  <span className="text-blue-700 font-bold">₹{ledgers.telemetry.totalPartnerCommissionInr}</span>
+                  <span className="text-blue-700 font-bold">₹{ledgers?.telemetry?.totalPartnerCommissionInr ?? 0}</span>
                 </div>
                 <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                   <div className="bg-blue-600 h-full rounded-full" style={{ width: '15%' }}></div>
@@ -250,7 +267,7 @@ export default async function AdminDashboardPage() {
               <div>
                 <div className="flex justify-between text-xs font-semibold mb-1">
                   <span className="text-slate-600">Ghar Tak Service Platform Fee (15%)</span>
-                  <span className="text-purple-700 font-bold">₹{ledgers.telemetry.totalPlatformFeeInr}</span>
+                  <span className="text-purple-700 font-bold">₹{ledgers?.telemetry?.totalPlatformFeeInr ?? 0}</span>
                 </div>
                 <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                   <div className="bg-purple-600 h-full rounded-full" style={{ width: '15%' }}></div>
@@ -261,7 +278,7 @@ export default async function AdminDashboardPage() {
             <div className="pt-3 border-t border-slate-100 text-[11px] text-slate-500 flex justify-between">
               <span>Total Disbursed:</span>
               <span className="font-bold text-slate-900">
-                ₹{ledgers.telemetry.totalAllocatedDebits} (10 Double-Entry Rows)
+                ₹{ledgers?.telemetry?.totalAllocatedDebits ?? 0} (10 Double-Entry Rows)
               </span>
             </div>
           </div>
