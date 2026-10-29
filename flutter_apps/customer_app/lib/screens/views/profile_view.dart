@@ -258,7 +258,7 @@ class _ProfileViewState extends State<ProfileView> {
                       ),
                     ],
                   ),
-                  alignment: Alignment.Center,
+                  alignment: Alignment.center,
                   child: Text(
                     _getInitials(name),
                     style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),

@@ -317,7 +317,7 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
                       border: Border.all(color: AppTheme.sapphireBlue),
                     ),
                     child: Text(
-                      _job.handoverOtp.isNotEmpty ? _job.handoverOtp : '4928',
+                      (_job.handoverOtp != null && _job.handoverOtp!.isNotEmpty) ? _job.handoverOtp! : '4928',
                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppTheme.sapphireBlue, letterSpacing: 2),
                     ),
                   ),
