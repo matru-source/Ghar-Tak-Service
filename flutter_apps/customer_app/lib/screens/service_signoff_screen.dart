@@ -428,3 +428,4 @@ class SignaturePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant SignaturePainter oldDelegate) => true;
 }
+

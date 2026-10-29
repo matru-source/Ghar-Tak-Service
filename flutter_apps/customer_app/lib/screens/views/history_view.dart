@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/api_client.dart';
 import '../../core/session_manager.dart';
 import '../../core/theme.dart';
 import '../../models/past_order_model.dart';
@@ -28,13 +29,49 @@ class _HistoryViewState extends State<HistoryView> {
     _loadPastOrders();
   }
 
-  void _loadPastOrders() {
+  Future<void> _loadPastOrders() async {
     setState(() => _isLoading = true);
-    final list = SessionManager.getPastOrders();
-    setState(() {
-      _orders = list;
-      _isLoading = false;
-    });
+    final localOrders = SessionManager.getPastOrders();
+    final user = SessionManager.getCurrentUser();
+
+    if (user != null) {
+      try {
+        final res = await ApiClient.get('/jobs?customerId=${user.id}');
+        if (res.success && res.data != null) {
+          final serverJobs = res.data['jobs'] is List ? res.data['jobs'] as List : [];
+          for (final j in serverJobs) {
+            final ticket = j['jobTicketNumber']?.toString() ?? 'J-1001';
+            final status = j['status']?.toString() ?? 'COMPLETED';
+            if (status == 'WORK_COMPLETED' || status == 'COMPLETED' || status == 'CANCELLED') {
+              if (!localOrders.any((o) => o.ticketNumber.toLowerCase() == ticket.toLowerCase())) {
+                final total = (j['totalAmountInr'] as num?)?.toDouble() ?? 299.0;
+                final taxable = total / 1.18;
+                final gst = total - taxable;
+                localOrders.add(PastOrderItem(
+                  ticketNumber: ticket,
+                  invoiceNumber: j['invoiceNumber']?.toString() ?? 'INV-2026-${ticket.replaceAll(RegExp(r'\D'), '')}',
+                  serviceTitle: j['serviceTitle']?.toString() ?? 'Doorstep Service',
+                  dateText: j['createdAt']?.toString().length >= 10 ? j['createdAt'].toString().substring(0, 10) : 'Today',
+                  technicianName: j['technicianName']?.toString() ?? 'Rajesh Kumar (GTS Certified)',
+                  amountInr: total,
+                  taxableAmount: taxable,
+                  cgstAmount: gst / 2,
+                  sgstAmount: gst / 2,
+                  status: status == 'CANCELLED' ? 'CANCELLED' : 'COMPLETED',
+                ));
+              }
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (mounted) {
+      setState(() {
+        _orders = localOrders;
+        _isLoading = false;
+      });
+    }
   }
 
   List<PastOrderItem> get _filteredOrders {
@@ -392,3 +429,4 @@ class _HistoryViewState extends State<HistoryView> {
     );
   }
 }
+

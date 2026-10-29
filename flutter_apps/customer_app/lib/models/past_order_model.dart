@@ -49,3 +49,4 @@ class PastOrderItem {
     status: json['status'] ?? 'COMPLETED',
   );
 }
+

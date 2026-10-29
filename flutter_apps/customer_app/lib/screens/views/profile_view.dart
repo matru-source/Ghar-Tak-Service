@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/api_client.dart';
 import '../../core/session_manager.dart';
 import '../../core/theme.dart';
 import '../../models/user_model.dart';
@@ -30,14 +31,35 @@ class _ProfileViewState extends State<ProfileView> {
     _loadProfile();
   }
 
-  void _loadProfile() {
+  Future<void> _loadProfile() async {
+    final user = SessionManager.getCurrentUser();
     setState(() {
-      _user = SessionManager.getCurrentUser();
+      _user = user;
       _amcTier = SessionManager.getAmcTier();
       _amcExpiry = SessionManager.getAmcExpiry();
       _secondaryAddress = SessionManager.getSecondaryAddress();
       _secondaryLabel = SessionManager.getSecondaryLabel() ?? 'Work / Office';
     });
+
+    if (user != null) {
+      try {
+        final res = await ApiClient.get('/subscriptions?customerId=${user.id}');
+        if (res.success && res.data != null && mounted) {
+          final data = res.data;
+          final hasActive = data['hasActiveSubscription'] == true;
+          final activeSub = data['activeSubscription'];
+          if (hasActive && activeSub is Map) {
+            final tier = activeSub['tierName']?.toString() ?? 'ZEX-SHIELD AMC PLATINUM';
+            final exp = activeSub['expiryDate']?.toString().substring(0, 10) ?? '31 Dec 2026';
+            await SessionManager.setAmcSubscription(true, tier, exp);
+            setState(() {
+              _amcTier = tier;
+              _amcExpiry = exp;
+            });
+          }
+        }
+      } catch (_) {}
+    }
   }
 
   void _showEditProfileDialog() {
@@ -487,3 +509,4 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 }
+
