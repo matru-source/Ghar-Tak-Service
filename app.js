@@ -56,7 +56,27 @@ const next = require('next');
 const dev = false;
 const hostname = '0.0.0.0';
 const port = process.env.PORT || 3000;
-const nextDir = fs.existsSync(path.join(__dirname, '.next')) ? __dirname : (fs.existsSync(path.join(__dirname, 'web', '.next')) ? path.join(__dirname, 'web') : __dirname);
+
+// Determine newest .next build directory (handles both root and /web deployments)
+let nextDir = __dirname;
+const rootNext = path.join(__dirname, '.next');
+const webNext = path.join(__dirname, 'web', '.next');
+
+if (fs.existsSync(rootNext) && fs.existsSync(webNext)) {
+  try {
+    const rootTime = fs.statSync(rootNext).mtimeMs;
+    const webTime = fs.statSync(webNext).mtimeMs;
+    nextDir = webTime > rootTime ? path.join(__dirname, 'web') : __dirname;
+  } catch {
+    nextDir = __dirname;
+  }
+} else if (fs.existsSync(webNext)) {
+  nextDir = path.join(__dirname, 'web');
+} else {
+  nextDir = __dirname;
+}
+
+console.log(`[Plesk] Serving Next.js application from: ${nextDir}`);
 const app = next({ dev, hostname, port, dir: nextDir });
 const handle = app.getRequestHandler();
 
