@@ -3,7 +3,7 @@ import '../core/theme.dart';
 import '../models/tech_job_model.dart';
 import '../services/tech_job_service.dart';
 import '../services/upload_service.dart';
-import 'wallet_screen.dart';
+import 'tech_dashboard_screen.dart';
 
 class JobCompletionScreen extends StatefulWidget {
   final TechJobModel job;
@@ -115,12 +115,13 @@ class _JobCompletionScreenState extends State<JobCompletionScreen> {
               ),
               onPressed: () {
                 Navigator.pop(ctx); // Close dialog
-                Navigator.pushReplacement(
+                Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(builder: (_) => const WalletScreen()),
+                  MaterialPageRoute(builder: (_) => const TechDashboardScreen()),
+                  (route) => false,
                 );
               },
-              child: const Text('VIEW EARNINGS IN WALLET', style: TextStyle(fontWeight: FontWeight.w800)),
+              child: const Text('RETURN TO DASHBOARD', style: TextStyle(fontWeight: FontWeight.w800)),
             ),
           ],
         ),

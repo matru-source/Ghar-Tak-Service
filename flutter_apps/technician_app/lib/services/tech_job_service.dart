@@ -3,11 +3,16 @@ import '../core/session_manager.dart';
 import '../models/tech_job_model.dart';
 
 class TechJobService {
-  static Future<List<TechJobModel>> getAssignedJobs() async {
+  static Future<List<TechJobModel>> getAssignedJobs({String? status}) async {
     final tech = SessionManager.getCurrentTechnician();
     final techId = tech?.id ?? 'tech_rajesh_01';
 
-    final res = await ApiClient.get('/jobs?technicianId=$techId');
+    String endpoint = '/jobs?technicianId=$techId';
+    if (status != null && status.isNotEmpty && status != 'All') {
+      endpoint += '&status=$status';
+    }
+
+    final res = await ApiClient.get(endpoint);
     if (res.success && res.data != null) {
       final list = (res.data is List) ? res.data : (res.data['jobs'] as List? ?? []);
       return list.map<TechJobModel>((j) => TechJobModel.fromJson(j as Map<String, dynamic>)).toList();
@@ -26,11 +31,13 @@ class TechJobService {
   static Future<bool> respondToDispatch({
     required String jobId,
     required bool accept,
+    String? reason,
   }) async {
     final tech = SessionManager.getCurrentTechnician();
     final res = await ApiClient.post('/jobs/$jobId/dispatch-response', {
       'technicianId': tech?.id ?? 'tech_rajesh_01',
       'action': accept ? 'ACCEPT' : 'REJECT',
+      'reason': reason ?? (accept ? 'Technician accepted dispatch' : 'Technician unavailable'),
     });
     return res.success;
   }
@@ -47,11 +54,31 @@ class TechJobService {
     return res.success;
   }
 
+  static Future<bool> updateCustomerTelemetry({
+    required String jobId,
+    required double lat,
+    required double lng,
+    String? status,
+    int? etaMinutes,
+  }) async {
+    final tech = SessionManager.getCurrentTechnician();
+    final res = await ApiClient.post('/jobs/$jobId/customer-telemetry', {
+      'technicianId': tech?.id ?? 'tech_rajesh_01',
+      'latitude': lat,
+      'longitude': lng,
+      if (status != null) 'status': status,
+      if (etaMinutes != null) 'etaMinutes': etaMinutes,
+      'timestamp': DateTime.now().toIso8601String(),
+    });
+    return res.success;
+  }
+
   static Future<ApiResponse<dynamic>> verifySafetyChecklist({
     required String jobId,
     required bool glovesConfirmed,
     required bool mcbSwitchConfirmed,
     required String photoUrl,
+    String multimeterReading = '0.00V',
   }) async {
     final tech = SessionManager.getCurrentTechnician();
     return await ApiClient.post('/jobs/$jobId/verify-safety', {
@@ -60,7 +87,7 @@ class TechJobService {
       'safetyMcbSwitchConfirmed': mcbSwitchConfirmed,
       'photoUrl': photoUrl,
       'dielectricRating': '1000V_TESTED',
-      'multimeterReading': '0.00V',
+      'multimeterReading': multimeterReading,
     });
   }
 
@@ -79,5 +106,26 @@ class TechJobService {
       'beforePhotoUrl': 'https://uploads.ghartak.in/uploads/pre_inspection_baseline.jpg',
       'supervisorApproval': true,
     });
+  }
+
+  static Future<bool> triggerEmergencySos({
+    required String jobId,
+    required String reason,
+    double? lat,
+    double? lng,
+  }) async {
+    final tech = SessionManager.getCurrentTechnician();
+    final res = await ApiClient.post('/emergency-sos', {
+      'jobId': jobId,
+      'role': 'TECHNICIAN',
+      'triggeredBy': 'TECHNICIAN',
+      'technicianId': tech?.id ?? 'tech_rajesh_01',
+      'technicianName': tech?.fullName ?? 'Field Technician',
+      'phone': tech?.phone ?? '+919999000000',
+      'reason': reason,
+      'latitude': lat ?? 18.9220,
+      'longitude': lng ?? 72.8347,
+    });
+    return res.success;
   }
 }
