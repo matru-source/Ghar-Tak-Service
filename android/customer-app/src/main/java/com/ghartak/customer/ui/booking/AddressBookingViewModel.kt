@@ -87,7 +87,7 @@ data class AddressBookingUiState(
         get() = sortedTechnicians.find { it.id == selectedTechnicianId } ?: sortedTechnicians.firstOrNull()
 
     val canProceed: Boolean
-        get() = isMandatoryLocationSatisfied && isPincodeServiceable && flatNumber.isNotBlank() && streetName.isNotBlank() && pincode.length == 6
+        get() = isMandatoryLocationSatisfied && isPincodeServiceable && flatNumber.isNotBlank() && streetName.isNotBlank() && pincode.length == 6 && (nearbyTechnicians.isNotEmpty() || isLoadingTechnicians)
 }
 
 class AddressBookingViewModel(
@@ -229,32 +229,37 @@ class AddressBookingViewModel(
                             val resolvedSelected = if (sorted.any { it.id == currentSelected }) currentSelected else sorted.first().id
                             _uiState.value = _uiState.value.copy(
                                 nearbyTechnicians = sorted,
-                                selectedTechnicianId = resolvedSelected
+                                selectedTechnicianId = resolvedSelected,
+                                isPincodeServiceable = true
                             )
                             Log.d("GTS_TECH_FETCH", "Successfully loaded ${sorted.size} live technicians for pin $pin. Closest: ${sorted.first().name} (${sorted.first().distance})")
                         } else {
                             _uiState.value = _uiState.value.copy(
                                 nearbyTechnicians = emptyList(),
-                                selectedTechnicianId = ""
+                                selectedTechnicianId = "",
+                                isPincodeServiceable = false
                             )
                         }
                     } else {
                         _uiState.value = _uiState.value.copy(
                             nearbyTechnicians = emptyList(),
-                            selectedTechnicianId = ""
+                            selectedTechnicianId = "",
+                            isPincodeServiceable = false
                         )
                     }
                 } else {
                     _uiState.value = _uiState.value.copy(
                         nearbyTechnicians = emptyList(),
-                        selectedTechnicianId = ""
+                        selectedTechnicianId = "",
+                        isPincodeServiceable = false
                     )
                 }
             } catch (e: Exception) {
                 Log.w("GTS_TECH_FETCH", "Technician live fetch result: ${e.message}")
                 _uiState.value = _uiState.value.copy(
                     nearbyTechnicians = emptyList(),
-                    selectedTechnicianId = ""
+                    selectedTechnicianId = "",
+                    isPincodeServiceable = false
                 )
             } finally {
                 _uiState.value = _uiState.value.copy(isLoadingTechnicians = false)

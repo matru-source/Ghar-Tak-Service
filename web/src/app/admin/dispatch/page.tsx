@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { BrandLogo, BrandMark } from '@/components/ui/brand-logo';
+import { useRealtimeEvents } from '@/lib/use-realtime-events';
 
 interface DispatchJob {
   id: string;
@@ -39,7 +40,13 @@ export default function AdminDispatchPage() {
   const [technicians, setTechnicians] = useState<TechnicianLive[]>([]);
   const [loading, setLoading] = useState(true);
   const [regionFilter, setRegionFilter] = useState('ALL');
-  const [statusFilter, setStatusFilter] = useState('ACTIVE');
+  const [availableRegions, setAvailableRegions] = useState<{ id: string; name: string; prefixes: string[] }[]>([
+    { id: 'MUMBAI', name: 'Maharashtra / Mumbai (400xxx)', prefixes: ['400', '401', '410'] },
+    { id: 'ODISHA', name: 'Odisha / Berhampur & Dhenkanal (759xxx, 760xxx)', prefixes: ['759', '760', '751', '752', '753'] },
+    { id: 'BENGALURU', name: 'Karnataka / Bengaluru (560xxx)', prefixes: ['560', '561', '562'] },
+    { id: 'DELHI', name: 'Delhi NCR (110xxx)', prefixes: ['110', '111', '121', '122'] },
+  ]);
+  const [statusFilter, setStatusFilter] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedJob, setSelectedJob] = useState<DispatchJob | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -53,9 +60,10 @@ export default function AdminDispatchPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [jobsRes, techsRes] = await Promise.all([
+      const [jobsRes, techsRes, pincodesRes] = await Promise.all([
         fetch('/api/jobs'),
         fetch('/api/technicians'),
+        fetch('/api/admin/pincodes').catch(() => null),
       ]);
       const jobsData = await jobsRes.json();
       const techsData = await techsRes.json();
@@ -66,6 +74,36 @@ export default function AdminDispatchPage() {
       if (techsData.success && techsData.data?.technicians) {
         setTechnicians(techsData.data.technicians);
       }
+
+      // Dynamic Region Filter (Issue 47): Discover all Tier-2 hubs like Odisha (759001, 760001)
+      if (pincodesRes) {
+        try {
+          const pinData = await pincodesRes.json();
+          if (pinData.success && Array.isArray(pinData.data?.pincodes)) {
+            const stateMap = new Map<string, Set<string>>();
+            pinData.data.pincodes.forEach((p: any) => {
+              const stateName = (p.state || 'OTHER').toUpperCase();
+              if (!stateMap.has(stateName)) stateMap.set(stateName, new Set());
+              if (p.pincode && p.pincode.length >= 3) {
+                stateMap.get(stateName)!.add(p.pincode.slice(0, 3));
+              }
+            });
+            const dynamicList: { id: string; name: string; prefixes: string[] }[] = [];
+            stateMap.forEach((pfxSet, sName) => {
+              const pfxArray = Array.from(pfxSet);
+              dynamicList.push({
+                id: sName,
+                name: `${sName} (${pfxArray.map((p) => p + 'xxx').join(', ')})`,
+                prefixes: pfxArray,
+              });
+            });
+            if (dynamicList.length > 0) {
+              setAvailableRegions(dynamicList);
+            }
+          }
+        } catch (_) {}
+      }
+
       setLastRefreshed(new Date().toLocaleTimeString('en-IN'));
     } catch {
       showToast('Error loading live dispatch telemetry');
@@ -74,24 +112,85 @@ export default function AdminDispatchPage() {
     }
   };
 
+  const handleDispatchEvent = useCallback((event: any) => {
+    if (event.type === 'TECH_LOCATION_UPDATE' && event.location) {
+      // Ingest live GPS telemetry ping and smoothly update technician coordinates
+      setTechnicians((prev) =>
+        prev.map((t) => {
+          if (
+            (event.technicianId && t.id === event.technicianId) ||
+            (event.details?.technicianName && t.fullName === event.details.technicianName)
+          ) {
+            return {
+              ...t,
+              currentLatitude: event.location.latitude,
+              currentLongitude: event.location.longitude,
+              isOnline: true,
+            };
+          }
+          return t;
+        })
+      );
+
+      // If associated with a job, update status
+      if (event.jobId && event.status) {
+        setJobs((prev) =>
+          prev.map((j) =>
+            j.id === event.jobId || j.jobTicketNumber === event.ticketNumber
+              ? { ...j, status: event.status }
+              : j
+          )
+        );
+      }
+    } else if (
+      event.type === 'JOB_CREATED' ||
+      event.type === 'TECH_DISPATCHED' ||
+      event.type === 'TECH_ACCEPTED' ||
+      event.type === 'TECH_ARRIVED' ||
+      event.type === 'JOB_COMPLETED' ||
+      event.type === 'EMERGENCY_SOS'
+    ) {
+      // Refresh telemetry table and map
+      fetchData();
+    }
+  }, []);
+
+  const { status: dispatchBusStatus } = useRealtimeEvents({
+    role: 'SUPER_ADMIN',
+    onEvent: handleDispatchEvent,
+  });
+
   useEffect(() => {
     fetchData();
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, []);
 
+  const totalJobsCount = jobs.length;
+  const activeJobsCount = jobs.filter((j) => ['PENDING_DISPATCH', 'ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'SAFETY_CHECKED'].includes(j.status)).length;
+  const completedJobsCount = jobs.filter((j) => ['WORK_COMPLETED', 'SETTLED', 'COMPLETED', 'DONE'].includes(j.status)).length;
+  const cancelledJobsCount = jobs.filter((j) => j.status === 'CANCELLED').length;
+
   const filteredJobs = jobs.filter((job) => {
     if (statusFilter === 'ACTIVE') {
       const activeStatuses = ['PENDING_DISPATCH', 'ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'SAFETY_CHECKED'];
       if (!activeStatuses.includes(job.status)) return false;
+    } else if (statusFilter === 'COMPLETED') {
+      if (!['WORK_COMPLETED', 'SETTLED', 'COMPLETED', 'DONE'].includes(job.status)) return false;
+    } else if (statusFilter === 'CANCELLED') {
+      if (job.status !== 'CANCELLED') return false;
     } else if (statusFilter !== 'ALL' && job.status !== statusFilter) {
       return false;
     }
 
     if (regionFilter !== 'ALL') {
-      if (regionFilter === 'MUMBAI' && !job.pincode.startsWith('400')) return false;
-      if (regionFilter === 'BENGALURU' && !job.pincode.startsWith('560')) return false;
-      if (regionFilter === 'DELHI' && !job.pincode.startsWith('110')) return false;
+      const activeReg = availableRegions.find((r) => r.id === regionFilter);
+      if (activeReg) {
+        const matchesPfx = activeReg.prefixes.some((pfx) => job.pincode?.startsWith(pfx));
+        if (!matchesPfx) return false;
+      } else if (regionFilter === 'ODISHA') {
+        if (!job.pincode.startsWith('759') && !job.pincode.startsWith('760') && !job.pincode.startsWith('751')) return false;
+      }
     }
 
     if (searchQuery) {
@@ -197,28 +296,36 @@ export default function AdminDispatchPage() {
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
             <button
-              onClick={() => setStatusFilter('ACTIVE')}
-              className={`px-3 py-1.5 rounded-lg transition ${
-                statusFilter === 'ACTIVE' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Active Live
-            </button>
-            <button
-              onClick={() => setStatusFilter('PENDING_DISPATCH')}
-              className={`px-3 py-1.5 rounded-lg transition ${
-                statusFilter === 'PENDING_DISPATCH' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Unassigned
-            </button>
-            <button
               onClick={() => setStatusFilter('ALL')}
               className={`px-3 py-1.5 rounded-lg transition ${
                 statusFilter === 'ALL' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              All Records
+              All ({totalJobsCount})
+            </button>
+            <button
+              onClick={() => setStatusFilter('ACTIVE')}
+              className={`px-3 py-1.5 rounded-lg transition ${
+                statusFilter === 'ACTIVE' ? 'bg-white text-blue-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Active ({activeJobsCount})
+            </button>
+            <button
+              onClick={() => setStatusFilter('COMPLETED')}
+              className={`px-3 py-1.5 rounded-lg transition ${
+                statusFilter === 'COMPLETED' ? 'bg-white text-emerald-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Completed ({completedJobsCount})
+            </button>
+            <button
+              onClick={() => setStatusFilter('CANCELLED')}
+              className={`px-3 py-1.5 rounded-lg transition ${
+                statusFilter === 'CANCELLED' ? 'bg-white text-rose-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Cancelled ({cancelledJobsCount})
             </button>
           </div>
 
@@ -227,10 +334,12 @@ export default function AdminDispatchPage() {
             onChange={(e) => setRegionFilter(e.target.value)}
             className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
-            <option value="ALL">All Hubs (India)</option>
-            <option value="MUMBAI">Mumbai (MH-01)</option>
-            <option value="BENGALURU">Bengaluru (KA-01)</option>
-            <option value="DELHI">Delhi NCR (DL-01)</option>
+            <option value="ALL">All Hubs & Territories (India)</option>
+            {availableRegions.map((region) => (
+              <option key={region.id} value={region.id}>
+                {region.name}
+              </option>
+            ))}
           </select>
         </div>
 

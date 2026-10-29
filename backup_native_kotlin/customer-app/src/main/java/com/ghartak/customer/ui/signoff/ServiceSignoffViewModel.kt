@@ -1,0 +1,207 @@
+package com.ghartak.customer.ui.signoff
+
+import android.content.Context
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.ghartak.customer.data.api.ApiClient
+import com.ghartak.customer.data.session.SessionManager
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+
+data class ServiceSignoffUiState(
+    val jobId: String = "",
+    val ticketNumber: String = "",
+    val serviceTitle: String = "Doorstep Service",
+    val technicianName: String = "Certified Professional",
+    val technicianBadge: String = "",
+    val stateCode: String = "OD",
+    val invoiceNumber: String = "",
+    val invoiceDate: String = java.text.SimpleDateFormat("d MMM, yyyy", java.util.Locale.ENGLISH).format(java.util.Date()),
+    val hsnSacCode: String = "998713",
+    val gstin: String = "21AAACG1234F1Z5 (21-OD)",
+    val basePriceInr: Double = 299.0,
+    val cgstInr: Double = 26.91,
+    val sgstInr: Double = 26.91,
+    val totalAmountInr: Double = Math.round(299.0 * 1.18 * 100.0) / 100.0,
+    val rating: Int = 5,
+    val reviewText: String = "Specialist arrived on time, used professional safety gear, and completed the service cleanly. Inspection verified at 100%.",
+    val selectedTags: Set<String> = setOf("Punctual", "Spotless Cleanup", "Expert Service"),
+    val isWorkRestoredConfirmed: Boolean = true,
+    val isSafetyChecklistConfirmed: Boolean = true,
+    val isDownloadingInvoice: Boolean = false,
+    val downloadSuccessMessage: String? = null,
+    val isSubmitted: Boolean = false
+)
+
+class ServiceSignoffViewModel(
+    private val sessionManager: SessionManager
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(ServiceSignoffUiState())
+    val uiState: StateFlow<ServiceSignoffUiState> = _uiState.asStateFlow()
+
+    fun initSignoff(
+        jobId: String,
+        technicianName: String? = null,
+        technicianBadge: String? = null,
+        stateCode: String? = null,
+        gstin: String? = null,
+        serviceTitle: String? = null,
+        basePrice: Double? = null,
+        cgst: Double? = null,
+        sgst: Double? = null,
+        total: Double? = null,
+        ticketNumber: String? = null
+    ) {
+        val resolvedTitle = if (!serviceTitle.isNullOrBlank()) serviceTitle else sessionManager.getActiveJobTitle().ifBlank { "Doorstep Service" }
+        val rawBase = if (basePrice != null && basePrice > 0.0) basePrice else sessionManager.getActiveJobBasePrice()
+        val resolvedBase = if (rawBase > 0.0) rawBase else 299.0
+        val resolvedCgst = cgst ?: (resolvedBase * 0.09)
+        val resolvedSgst = sgst ?: (resolvedBase * 0.09)
+        val resolvedTotal = total?.takeIf { it > 0.0 } ?: (resolvedBase + resolvedCgst + resolvedSgst)
+        val resolvedTech = if (!technicianName.isNullOrBlank()) technicianName else sessionManager.getActiveJobTechnicianName().ifBlank { "Certified Professional" }
+        val resolvedBadge = if (!technicianBadge.isNullOrBlank()) technicianBadge else sessionManager.getActiveJobTechnicianBadge().ifBlank { "GTS-TECH-101" }
+        val resolvedState = if (!stateCode.isNullOrBlank()) stateCode else sessionManager.getActiveJobStateCode()
+        val resolvedGstin = if (!gstin.isNullOrBlank()) gstin else sessionManager.getActiveJobGstin().ifBlank {
+            when (resolvedState) {
+                "MH" -> "27AAACG1234F1Z5 (27-MH)"
+                "DL" -> "07AAACG1234F1Z5 (07-DL)"
+                "KA" -> "29AAACG1234F1Z5 (29-KA)"
+                "WB" -> "19AAACG1234F1Z5 (19-WB)"
+                "TS" -> "36AAACG1234F1Z5 (36-TS)"
+                else -> "21AAACG1234F1Z5 (21-OD)"
+            }
+        }
+        val rawTicket = if (!ticketNumber.isNullOrBlank()) ticketNumber else sessionManager.getActiveJobTicketNumber()
+        val resolvedTicket = if (rawTicket.isNotBlank()) rawTicket else "GTS-${System.currentTimeMillis().toString().takeLast(6)}"
+
+        val techFirstName = resolvedTech.trim().split(" ").firstOrNull() ?: "Specialist"
+        val currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+        val invoiceNum = if (resolvedTicket.startsWith("GTS")) {
+            resolvedTicket.replace("GTS", "INV-$currentYear")
+        } else {
+            "INV-$currentYear-${resolvedTicket.removePrefix("#")}"
+        }
+        val liveInvoiceDate = java.text.SimpleDateFormat("d MMM, yyyy", java.util.Locale.ENGLISH).format(java.util.Date())
+        val defaultReview = "$techFirstName arrived on time, used professional safety gear, and completed the $resolvedTitle cleanly. Service quality verified at 100%."
+        val resolvedSac = com.ghartak.customer.util.PdfInvoiceGenerator.resolveSacCode(resolvedTitle)
+
+        _uiState.value = _uiState.value.copy(
+            jobId = jobId,
+            technicianName = resolvedTech,
+            technicianBadge = resolvedBadge,
+            stateCode = resolvedState,
+            gstin = resolvedGstin,
+            serviceTitle = resolvedTitle,
+            basePriceInr = resolvedBase,
+            cgstInr = resolvedCgst,
+            sgstInr = resolvedSgst,
+            totalAmountInr = resolvedTotal,
+            ticketNumber = resolvedTicket,
+            invoiceNumber = invoiceNum,
+            invoiceDate = liveInvoiceDate,
+            hsnSacCode = resolvedSac,
+            reviewText = defaultReview
+        )
+    }
+
+    fun onRatingChanged(stars: Int) {
+        _uiState.value = _uiState.value.copy(rating = stars)
+    }
+
+    fun onReviewTextChanged(text: String) {
+        _uiState.value = _uiState.value.copy(reviewText = text)
+    }
+
+    fun toggleTag(tag: String) {
+        val current = _uiState.value.selectedTags.toMutableSet()
+        if (current.contains(tag)) {
+            current.remove(tag)
+        } else {
+            current.add(tag)
+        }
+        _uiState.value = _uiState.value.copy(selectedTags = current)
+    }
+
+    fun toggleWorkRestored(confirmed: Boolean) {
+        _uiState.value = _uiState.value.copy(isWorkRestoredConfirmed = confirmed)
+    }
+
+    fun toggleSafetyChecklist(confirmed: Boolean) {
+        _uiState.value = _uiState.value.copy(isSafetyChecklistConfirmed = confirmed)
+    }
+
+    fun downloadGstInvoicePdf(context: Context) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isDownloadingInvoice = true, downloadSuccessMessage = null)
+            val state = _uiState.value
+            val data = com.ghartak.customer.util.PdfInvoiceGenerator.InvoiceData(
+                invoiceNumber = state.invoiceNumber,
+                ticketNumber = state.ticketNumber,
+                serviceTitle = state.serviceTitle,
+                customerName = sessionManager.getUserName(),
+                customerPhone = sessionManager.getUserPhone(),
+                customerAddress = sessionManager.getUserAddress(),
+                technicianName = "${state.technicianName} (${state.technicianBadge})",
+                gstin = state.gstin,
+                taxableCharges = state.basePriceInr,
+                cgstAmount = state.cgstInr,
+                sgstAmount = state.sgstInr,
+                totalAmount = state.totalAmountInr
+            )
+            com.ghartak.customer.util.PdfInvoiceGenerator.generateAndSaveGstInvoice(context, data)
+            _uiState.value = _uiState.value.copy(
+                isDownloadingInvoice = false,
+                downloadSuccessMessage = "Tax Invoice ${state.invoiceNumber}.pdf saved to Downloads folder."
+            )
+        }
+    }
+
+    fun submitFeedbackAndSignoff(onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            val state = _uiState.value
+            try {
+                // 1. Submit dynamic rating & review to backend database
+                if (state.jobId.isNotBlank()) {
+                    try {
+                        val api = ApiClient.getService(sessionManager.context)
+                        api.submitJobFeedback(
+                            jobId = state.jobId,
+                            body = mapOf(
+                                "rating" to state.rating,
+                                "feedback" to state.reviewText
+                            )
+                        )
+                    } catch (netErr: Exception) {
+                        netErr.printStackTrace()
+                    }
+                }
+
+                // 2. Save completed invoice record locally for customer history
+                sessionManager.addCompletedOrder(
+                    com.ghartak.customer.data.model.PastOrderItem(
+                        ticketNumber = state.ticketNumber,
+                        invoiceNumber = state.invoiceNumber,
+                        serviceTitle = state.serviceTitle,
+                        dateText = java.text.SimpleDateFormat("MMM dd, yyyy • hh:mm a", java.util.Locale.ENGLISH).format(java.util.Date()),
+                        technicianName = "${state.technicianName} (${state.technicianBadge})",
+                        amountInr = state.totalAmountInr,
+                        taxableAmount = state.basePriceInr,
+                        cgstAmount = state.cgstInr,
+                        sgstAmount = state.sgstInr,
+                        status = "COMPLETED"
+                    )
+                )
+                sessionManager.clearActiveJob()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            delay(600)
+            _uiState.value = _uiState.value.copy(isSubmitted = true)
+            onSuccess()
+        }
+    }
+}

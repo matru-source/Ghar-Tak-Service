@@ -1,5 +1,5 @@
 // ==============================================================================
-// ElectriCare Role-Based Access Control (RBAC) Guard Utility
+// Ghar Tak Service Role-Based Access Control (RBAC) Guard Utility
 // Used across API routes and server handlers to protect multi-tenant operations.
 // ==============================================================================
 

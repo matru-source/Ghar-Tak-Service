@@ -1,0 +1,126 @@
+name: Build Flutter Cross-Platform APKs
+
+on:
+  push:
+    branches: [ main, master, flutter-cross-platform ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-flutter-apps:
+    runs-on: ubuntu-latest
+
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Set up Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Accept Android SDK Licenses & Doctor
+        run: |
+          yes | flutter doctor --android-licenses || true
+          flutter doctor -v
+
+      - name: Configure Keystore Fingerprint
+        run: |
+          mkdir -p ~/.android
+          cp android/debug.keystore ~/.android/debug.keystore
+
+      - name: Build Flutter Customer App APK
+        run: |
+          set -e -o pipefail
+          cd flutter_apps/customer_app
+
+          echo "=== 1. Backing up real Customer App Dart code and pubspec ==="
+          rm -rf /tmp/cust_lib_backup /tmp/cust_pubspec_backup
+          cp -r lib /tmp/cust_lib_backup
+          cp pubspec.yaml /tmp/cust_pubspec_backup
+
+          echo "=== 2. Generating standard Android scaffolding ==="
+          flutter create . --platforms=android --org=com.ghartak.customer --project-name=customer_app --overwrite
+
+          echo "=== 3. Restoring real Ghar Tak Customer code ==="
+          rm -rf lib pubspec.yaml
+          cp -r /tmp/cust_lib_backup lib
+          cp /tmp/cust_pubspec_backup pubspec.yaml
+
+          echo "=== 4. Injecting GTS Icons and App Name ==="
+          cp -r ../../android/customer-app/src/main/res/mipmap-* android/app/src/main/res/
+          cp ../../android/customer-app/src/main/res/drawable/ic_launcher_background.xml android/app/src/main/res/drawable/ || true
+          sed -i 's/android:label="customer_app"/android:label="Ghar Tak Service"/g' android/app/src/main/AndroidManifest.xml
+
+          echo "=== 5. Compiling Ghar Tak Customer Flutter APK ==="
+          flutter pub get
+          flutter build apk --debug 2>&1 | tee /tmp/flutter_customer.log || {
+            echo "::error::Flutter customer build failed! Grepping errors:"
+            grep -i -C 3 -E "error|exception|failure" /tmp/flutter_customer.log | head -n 40 | while IFS= read -r line; do
+              echo "::error title=CustomerBuild::$line"
+            done
+            exit 1
+          }
+          cp build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/GharTak-Service.apk
+
+      - name: Build Flutter Technician App APK
+        run: |
+          set -e -o pipefail
+          cd flutter_apps/technician_app
+
+          echo "=== 1. Backing up real Technician App Dart code and pubspec ==="
+          rm -rf /tmp/tech_lib_backup /tmp/tech_pubspec_backup
+          cp -r lib /tmp/tech_lib_backup
+          cp pubspec.yaml /tmp/tech_pubspec_backup
+
+          echo "=== 2. Generating standard Android scaffolding ==="
+          flutter create . --platforms=android --org=com.ghartak.technician --project-name=technician_app --overwrite
+
+          echo "=== 3. Restoring real Ghar Tak Technician code ==="
+          rm -rf lib pubspec.yaml
+          cp -r /tmp/tech_lib_backup lib
+          cp /tmp/tech_pubspec_backup pubspec.yaml
+
+          echo "=== 4. Injecting GTS Icons and App Name ==="
+          cp -r ../../android/technician-app/src/main/res/mipmap-* android/app/src/main/res/
+          cp ../../android/technician-app/src/main/res/drawable/ic_launcher_background.xml android/app/src/main/res/drawable/ || true
+          sed -i 's/android:label="technician_app"/android:label="Ghar Tak Technician"/g' android/app/src/main/AndroidManifest.xml
+
+          echo "=== 5. Compiling Ghar Tak Technician Flutter APK ==="
+          flutter pub get
+          flutter build apk --debug 2>&1 | tee /tmp/flutter_technician.log || {
+            echo "::error::Flutter technician build failed! Grepping errors:"
+            grep -i -C 3 -E "error|exception|failure" /tmp/flutter_technician.log | head -n 40 | while IFS= read -r line; do
+              echo "::error title=TechnicianBuild::$line"
+            done
+            exit 1
+          }
+          cp build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/GharTak-Technician.apk
+
+      - name: Upload Ghar Tak Service Customer APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: GharTak-Service-APK
+          path: flutter_apps/customer_app/build/app/outputs/flutter-apk/GharTak-Service.apk
+          if-no-files-found: error
+
+      - name: Upload Ghar Tak Technician APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: GharTak-Technician-APK
+          path: flutter_apps/technician_app/build/app/outputs/flutter-apk/GharTak-Technician.apk
+          if-no-files-found: error

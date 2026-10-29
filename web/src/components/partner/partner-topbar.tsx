@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Zap } from '@/components/ui/icons';
+import { BrandMark } from '@/components/ui/brand-logo';
 
 interface PartnerTopbarProps {
   onToggleSidebar?: () => void;
@@ -32,7 +32,7 @@ export function PartnerTopbar({ onToggleSidebar, isSidebarExpanded = false }: Pa
 
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full max-w-full items-center justify-between bg-[#1B5E20] text-white px-3 sm:px-6 lg:px-8 shadow-md">
-      {/* Brand Title: ElectricCare | Partner Portal */}
+      {/* Brand Title: Ghar Tak Service | Partner Portal */}
       <div className="flex items-center gap-2 sm:gap-4 lg:gap-5">
         {onToggleSidebar && (
           <button
@@ -49,11 +49,9 @@ export function PartnerTopbar({ onToggleSidebar, isSidebarExpanded = false }: Pa
         )}
 
         <Link href="/partner" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center border border-white/20 group-hover:bg-white/25 transition-colors shrink-0">
-            <Zap className="h-5 w-5 text-amber-300" />
-          </div>
+          <BrandMark size="sm" />
           <div className="flex items-baseline gap-1.5 truncate">
-            <span className="font-black text-base sm:text-lg tracking-tight text-white">ElectricCare</span>
+            <span className="font-black text-base sm:text-lg tracking-tight text-white">GTS Ghar Tak Service</span>
             <span className="hidden sm:inline text-emerald-200/80 text-xs font-semibold">| Partner Portal</span>
           </div>
         </Link>

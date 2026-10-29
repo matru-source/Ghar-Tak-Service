@@ -22,7 +22,7 @@ export async function GET(
 
     if (!coverage || !coverage.isActive) {
       return apiError(
-        `Pincode ${pincode} is currently not within active ElectriCare territory coverage. Expansion planned soon!`,
+        `Pincode ${pincode} is currently not within active Ghar Tak Service territory coverage. Expansion planned soon!`,
         404
       );
     }

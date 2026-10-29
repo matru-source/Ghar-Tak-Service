@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { verifyOtp, normalizePhoneNumber } from '@/lib/otp';
+import { verifyOtpAsync, normalizePhoneNumber } from '@/lib/otp';
 import { signAccessToken } from '@/lib/jwt';
 import { db } from '@/lib/db';
 import { dbStore } from '@/lib/mock-data';
@@ -24,10 +24,11 @@ export async function POST(request: NextRequest) {
       return apiError('Identifier (email or phone) and verification code are required', 400);
     }
 
-    const verification = verifyOtp(rawIdentifier, otp, purpose);
+    const verification = await verifyOtpAsync(rawIdentifier, otp, purpose);
 
     if (!verification.valid) {
-      return apiError(verification.reason || 'Invalid verification code', 401);
+      const statusCode = verification.isLocked ? 429 : 401;
+      return apiError(verification.reason || 'Invalid verification code', statusCode);
     }
 
     if (verifyOnly) {

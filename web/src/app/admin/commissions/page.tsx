@@ -110,7 +110,7 @@ export default function AdminCommissionsPage() {
           </div>
           <h1 className="text-2xl font-black text-slate-900 mt-1">Global Commission Configuration</h1>
           <p className="text-sm text-slate-500">
-            Define multi-tenant revenue split between ElectriCare Platform, Regional Franchises, and Field Technicians.
+            Define multi-tenant revenue split between Ghar Tak Service Platform, Regional Franchises, and Field Technicians.
           </p>
         </div>
 
@@ -168,7 +168,7 @@ export default function AdminCommissionsPage() {
           {/* Platform Share Slider */}
           <div className="space-y-2 bg-slate-50 p-4 rounded-2xl border border-slate-200">
             <div className="flex justify-between items-center text-xs">
-              <span className="font-bold text-blue-700">ElectriCare Platform Fee</span>
+              <span className="font-bold text-blue-700">Ghar Tak Service Platform Fee</span>
               <span className="font-mono text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
                 {platformPct.toFixed(1)}%
               </span>
@@ -307,7 +307,7 @@ export default function AdminCommissionsPage() {
                 <div className="flex justify-between text-slate-700">
                   <span className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-blue-500" />
-                    <span>ElectriCare Platform Fee ({platformPct}%)</span>
+                    <span>Ghar Tak Service Platform Fee ({platformPct}%)</span>
                   </span>
                   <span className="font-mono text-blue-600 font-bold">₹{simPlatform.toFixed(2)}</span>
                 </div>

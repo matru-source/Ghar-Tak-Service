@@ -1,6 +1,8 @@
 // ==============================================================================
-// ElectriCare Unified SMS & OTP Gateway Integration Adapter (TASK-010)
-// Supports Fast2SMS, MSG91, Twilio & Mock Sandbox with TRAI DLT Compliant Templates
+// Ghar Tak Services (GTS) - Enterprise Unified SMS & OTP Gateway Integration
+// Enforces Industry-Grade Gateway Failover Chain: Twilio -> MSG91 -> AWS SNS
+// Strict Rate Limits: Max 3 tries per 15-minute window
+// Zero Mock Fallback in Production
 // ==============================================================================
 
 import { normalizePhoneNumber } from './otp';
@@ -12,16 +14,19 @@ export type SmsTemplateType =
   | 'SLA_BREACH_ALERT'
   | 'INVOICE_ISSUED';
 
+export type SmsProvider = 'TWILIO' | 'MSG91' | 'AWS_SNS' | 'FAST2SMS' | 'MOCK_SANDBOX';
+
 export interface SmsMessageRecord {
   id: string;
   recipientPhone: string;
   templateType: SmsTemplateType;
   messageText: string;
-  provider: 'MOCK_SANDBOX' | 'FAST2SMS' | 'MSG91' | 'TWILIO';
+  provider: SmsProvider;
   deliveryStatus: 'DELIVERED' | 'QUEUED' | 'FAILED';
   dltTemplateId?: string;
   latencyMs: number;
   timestamp: string;
+  failoverAttempts?: string[];
 }
 
 // In-memory audit trail of dispatched SMS messages
@@ -31,11 +36,10 @@ const smsAuditLog: SmsMessageRecord[] = [];
 const rateLimitStore = new Map<string, number[]>();
 
 export const SMS_GATEWAY_CONFIG = {
-  provider: (process.env.SMS_PROVIDER || 'MOCK_SANDBOX') as 'MOCK_SANDBOX' | 'FAST2SMS' | 'MSG91' | 'TWILIO',
+  defaultProvider: (process.env.SMS_PROVIDER || 'TWILIO') as SmsProvider,
   senderId: process.env.SMS_SENDER_ID || 'GHARTAK',
-  apiKey: process.env.SMS_API_KEY || '',
-  maxPerWindow: 5,
-  windowMs: 10 * 60 * 1000, // 10 minutes
+  maxPerWindow: 3, // Industry standard: Max 3 tries per 15-minute window
+  windowMs: 15 * 60 * 1000, // 15 minutes
 };
 
 export const DLT_TEMPLATES = {
@@ -81,6 +85,10 @@ export class SmsGateway {
     return { allowed: true, remaining: SMS_GATEWAY_CONFIG.maxPerWindow - recent.length };
   }
 
+  /**
+   * Dispatches SMS using the resilient failover chain:
+   * Twilio -> MSG91 -> AWS SNS -> Fast2SMS -> [Sandbox in non-production only]
+   */
   static async sendSms(
     recipientPhone: string,
     templateType: SmsTemplateType,
@@ -88,9 +96,10 @@ export class SmsGateway {
   ): Promise<SmsMessageRecord> {
     const cleanPhone = normalizePhoneNumber(recipientPhone);
 
+    // 1. Enforce strict rate limit (Max 3 tries / 15 minutes)
     const rateCheck = this.checkRateLimit(cleanPhone);
     if (!rateCheck.allowed) {
-      throw new Error(`Rate limit exceeded for ${cleanPhone}. Maximum 5 SMS per 10-minute window.`);
+      throw new Error(`Rate limit exceeded for ${cleanPhone}. Maximum 3 SMS requests per 15-minute window.`);
     }
 
     const templateMeta = DLT_TEMPLATES[templateType];
@@ -100,36 +109,16 @@ export class SmsGateway {
 
     const messageText = (templateMeta.format as any)(params);
     const start = Date.now();
-    let deliveryStatus: 'DELIVERED' | 'QUEUED' | 'FAILED' = 'DELIVERED';
+    const failoverAttempts: string[] = [];
+    let successfulProvider: SmsProvider | null = null;
+    let deliveryStatus: 'DELIVERED' | 'QUEUED' | 'FAILED' = 'FAILED';
 
-    // 1. Live Fast2SMS Indian SMS Route (Direct OTP Delivery)
-    if (SMS_GATEWAY_CONFIG.provider === 'FAST2SMS' && process.env.FAST2SMS_API_KEY) {
-      try {
-        const rawNumbers = cleanPhone.replace('+91', '').trim();
-        const fast2SmsRes = await fetch('https://www.fast2sms.com/dev/bulkV2', {
-          method: 'POST',
-          headers: {
-            authorization: process.env.FAST2SMS_API_KEY,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            route: 'otp',
-            variables_values: String(params.otp || ''),
-            numbers: rawNumbers,
-          }),
-        });
-        const json = await fast2SmsRes.json();
-        deliveryStatus = json.return ? 'DELIVERED' : 'FAILED';
-      } catch {
-        deliveryStatus = 'FAILED';
-      }
-    } else if (
-      SMS_GATEWAY_CONFIG.provider === 'TWILIO' &&
+    // Provider 1: Twilio REST API
+    if (
       process.env.TWILIO_ACCOUNT_SID &&
       process.env.TWILIO_AUTH_TOKEN &&
       process.env.TWILIO_PHONE_NUMBER
     ) {
-      // 2. Live Twilio International SMS Route
       try {
         const auth = Buffer.from(
           `${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`
@@ -148,13 +137,145 @@ export class SmsGateway {
           },
           body: bodyParams.toString(),
         });
-        deliveryStatus = twilioRes.ok ? 'DELIVERED' : 'FAILED';
-      } catch {
-        deliveryStatus = 'FAILED';
+
+        if (twilioRes.ok) {
+          successfulProvider = 'TWILIO';
+          deliveryStatus = 'DELIVERED';
+        } else {
+          const errText = await twilioRes.text();
+          failoverAttempts.push(`Twilio HTTP ${twilioRes.status}: ${errText.substring(0, 100)}`);
+          console.warn(`[SMS_GATEWAY] Twilio dispatch failed. Initiating failover to MSG91...`);
+        }
+      } catch (twErr) {
+        failoverAttempts.push(`Twilio network error: ${twErr instanceof Error ? twErr.message : String(twErr)}`);
+        console.warn(`[SMS_GATEWAY] Twilio network failure. Failing over to MSG91...`);
       }
     } else {
-      // 3. Fallback Sandbox Mode
-      await new Promise((resolve) => setTimeout(resolve, 30));
+      failoverAttempts.push('Twilio credentials not configured');
+    }
+
+    // Provider 2: MSG91 OTP / SMS API (Failover target 1)
+    if (!successfulProvider && process.env.MSG91_AUTH_KEY) {
+      try {
+        const rawPhone = cleanPhone.replace('+', '');
+        const msg91Url = 'https://control.msg91.com/api/v5/otp';
+        const msg91Res = await fetch(msg91Url, {
+          method: 'POST',
+          headers: {
+            authkey: process.env.MSG91_AUTH_KEY,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            template_id: process.env.MSG91_TEMPLATE_ID || templateMeta.dltId,
+            mobile: rawPhone,
+            otp: params.otp || '',
+          }),
+        });
+
+        if (msg91Res.ok) {
+          const json = await msg91Res.json();
+          if (json.type === 'success') {
+            successfulProvider = 'MSG91';
+            deliveryStatus = 'DELIVERED';
+          } else {
+            failoverAttempts.push(`MSG91 API error: ${json.message || JSON.stringify(json)}`);
+            console.warn(`[SMS_GATEWAY] MSG91 rejected dispatch. Initiating failover to AWS SNS...`);
+          }
+        } else {
+          failoverAttempts.push(`MSG91 HTTP ${msg91Res.status}`);
+          console.warn(`[SMS_GATEWAY] MSG91 HTTP failure. Failing over to AWS SNS...`);
+        }
+      } catch (msgErr) {
+        failoverAttempts.push(`MSG91 network error: ${msgErr instanceof Error ? msgErr.message : String(msgErr)}`);
+        console.warn(`[SMS_GATEWAY] MSG91 network failure. Failing over to AWS SNS...`);
+      }
+    } else if (!successfulProvider) {
+      failoverAttempts.push('MSG91 credentials not configured');
+    }
+
+    // Provider 3: AWS SNS (Failover target 2)
+    if (!successfulProvider && (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_REGION)) {
+      try {
+        // Direct AWS SNS REST invocation or webhook adapter
+        const snsEndpoint = process.env.AWS_SNS_REST_ENDPOINT;
+        if (snsEndpoint) {
+          const snsRes = await fetch(snsEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              PhoneNumber: cleanPhone,
+              Message: messageText,
+              MessageAttributes: {
+                'AWS.SNS.SMS.SMSType': {
+                  DataType: 'String',
+                  StringValue: 'Transactional',
+                },
+              },
+            }),
+          });
+          if (snsRes.ok) {
+            successfulProvider = 'AWS_SNS';
+            deliveryStatus = 'DELIVERED';
+          } else {
+            failoverAttempts.push(`AWS SNS HTTP ${snsRes.status}`);
+          }
+        } else {
+          failoverAttempts.push('AWS SNS direct endpoint not configured');
+        }
+      } catch (awsErr) {
+        failoverAttempts.push(`AWS SNS error: ${awsErr instanceof Error ? awsErr.message : String(awsErr)}`);
+      }
+    } else if (!successfulProvider) {
+      failoverAttempts.push('AWS SNS credentials not configured');
+    }
+
+    // Provider 4: Fast2SMS (Direct Indian Gateway Backup)
+    if (!successfulProvider && process.env.FAST2SMS_API_KEY) {
+      try {
+        const rawNumbers = cleanPhone.replace('+91', '').trim();
+        const fast2SmsRes = await fetch('https://www.fast2sms.com/dev/bulkV2', {
+          method: 'POST',
+          headers: {
+            authorization: process.env.FAST2SMS_API_KEY,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            route: 'otp',
+            variables_values: String(params.otp || ''),
+            numbers: rawNumbers,
+          }),
+        });
+        const json = await fast2SmsRes.json();
+        if (json.return) {
+          successfulProvider = 'FAST2SMS';
+          deliveryStatus = 'DELIVERED';
+        } else {
+          failoverAttempts.push(`Fast2SMS error: ${json.message || JSON.stringify(json)}`);
+        }
+      } catch (fErr) {
+        failoverAttempts.push(`Fast2SMS error: ${fErr instanceof Error ? fErr.message : String(fErr)}`);
+      }
+    }
+
+    // Production Security Gate: Zero Mock Fallback in Production
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    if (!successfulProvider) {
+      if (
+        process.env.ALLOW_SANDBOX_OTP === 'true' ||
+        process.env.SMS_PROVIDER === 'mock' ||
+        process.env.SMS_PROVIDER === 'MOCK_SANDBOX' ||
+        !isProduction
+      ) {
+        // Development Sandbox Mode or Explicit Sandbox Test Mode
+        successfulProvider = 'MOCK_SANDBOX';
+        deliveryStatus = 'DELIVERED';
+        console.log(`[SMS_SANDBOX] Dispatched OTP to ${cleanPhone} via Mock Sandbox: "${messageText}"`);
+      } else {
+        const failMsg = `All SMS providers failed in failover chain (Twilio -> Msg91 -> AWS SNS). Attempts: ${failoverAttempts.join('; ')}`;
+        console.error(`[CRITICAL_AUTH_FAILURE] ${failMsg}`);
+        throw new Error('SMS delivery failed across all redundant gateways. Configure TWILIO_ACCOUNT_SID or set ALLOW_SANDBOX_OTP=true.');
+      }
     }
 
     const latencyMs = Date.now() - start;
@@ -164,11 +285,12 @@ export class SmsGateway {
       recipientPhone: cleanPhone,
       templateType,
       messageText,
-      provider: SMS_GATEWAY_CONFIG.provider,
+      provider: successfulProvider,
       deliveryStatus,
       dltTemplateId: templateMeta.dltId,
       latencyMs,
       timestamp: new Date().toISOString(),
+      failoverAttempts: failoverAttempts.length > 0 ? failoverAttempts : undefined,
     };
 
     smsAuditLog.unshift(record);
@@ -186,7 +308,7 @@ export class SmsGateway {
       total > 0 ? Math.round(smsAuditLog.reduce((sum, s) => sum + s.latencyMs, 0) / total) : 0;
 
     return {
-      activeProvider: SMS_GATEWAY_CONFIG.provider,
+      activeProvider: SMS_GATEWAY_CONFIG.defaultProvider,
       senderId: SMS_GATEWAY_CONFIG.senderId,
       totalDispatched: total,
       deliveredCount: delivered,

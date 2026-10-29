@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Zap,
@@ -26,6 +26,7 @@ import {
   Navigation,
 } from '@/components/ui/icons';
 import { getActivePartnerId } from '@/lib/partner-session';
+import { useRealtimeEvents, playSyntheticAlert } from '@/lib/use-realtime-events';
 
 interface JobItem {
   id: string;
@@ -96,144 +97,175 @@ export default function PartnerDashboardPage() {
     }>
   >([]);
 
-  // Connect to live API endpoints on mount
+  // Connect to live API endpoints and keep state synced
+  const syncBackendData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const rawPartner = getActivePartnerId();
+      let activePartnerUuid = rawPartner;
+
+      // 1. Resolve active partner UUID dynamically from /api/partner/profile
+      try {
+        const profRes = await fetch(`/api/partner/profile?partnerId=${encodeURIComponent(rawPartner)}`).then((r) => r.json());
+        if (profRes?.success && profRes.partner) {
+          activePartnerUuid = profRes.partner.id || rawPartner;
+          setPartnerInfo({
+            id: profRes.partner.id,
+            entityName: profRes.partner.entityName || 'Maharashtra Operations Hub',
+            stateLicensed: profRes.partner.stateLicensed || 'Maharashtra',
+          });
+          if (typeof window !== 'undefined' && profRes.partner.id) {
+            localStorage.setItem('partnerId', profRes.partner.id);
+            localStorage.setItem('gts_partner_id', profRes.partner.id);
+          }
+        }
+      } catch (err) {
+        console.warn('Partner profile resolution error:', err);
+      }
+
+      // 2. Fetch live data with resolved active partner UUID
+      const [jobsRes, fleetRes, invRes, escRes] = await Promise.all([
+        fetch(`/api/jobs?partnerId=${encodeURIComponent(activePartnerUuid)}`).then((r) => r.json()).catch(() => null),
+        fetch(`/api/partner/fleet?partnerId=${encodeURIComponent(activePartnerUuid)}`).then((r) => r.json()).catch(() => null),
+        fetch(`/api/partner/invoices?partnerId=${encodeURIComponent(activePartnerUuid)}`).then((r) => r.json()).catch(() => null),
+        fetch(`/api/partner/escalations?partnerId=${encodeURIComponent(activePartnerUuid)}`).then((r) => r.json()).catch(() => null),
+      ]);
+
+      if (jobsRes?.success || fleetRes?.success || invRes?.success) {
+        setApiConnected(true);
+      }
+
+      // 3. Process Live Jobs
+      let mappedJobs: JobItem[] = [];
+      if (jobsRes?.success && Array.isArray(jobsRes.data?.jobs)) {
+        mappedJobs = jobsRes.data.jobs.map((j: any) => {
+          let normalizedStatus: JobItem['status'] = 'PENDING';
+          const s = (j.status || '').toUpperCase();
+          if (s === 'WORK_COMPLETED' || s === 'SETTLED' || s === 'COMPLETED' || s === 'DONE') {
+            normalizedStatus = 'DONE';
+          } else if (s === 'EN_ROUTE') {
+            normalizedStatus = 'EN_ROUTE';
+          } else if (s === 'IN_PROGRESS' || s === 'STARTED' || s === 'SAFETY_CHECKED' || s === 'ARRIVED') {
+            normalizedStatus = 'STARTED';
+          } else if (s === 'ESCALATED_SLA' || s === 'ESCALATED') {
+            normalizedStatus = 'ESCALATED';
+          }
+
+          const rawAmt = j.totalAmountInr || j.invoice?.totalAmount || j.basePriceInr || 1250;
+
+          return {
+            id: j.id,
+            jobTicketNumber: j.jobTicketNumber?.startsWith('#') ? j.jobTicketNumber : `#${j.jobTicketNumber || 'J-1001'}`,
+            customerName: j.customerName || j.customer?.fullName || 'Customer',
+            customerPhone: j.customerPhone || j.customer?.phone || '',
+            customerAddressText: j.customerAddressText || 'Address on file',
+            technicianName: j.technicianName
+              ? `${j.technicianName} (${normalizedStatus === 'DONE' ? 'Completed' : normalizedStatus === 'STARTED' ? 'In Progress' : 'Assigned'})`
+              : 'Unassigned',
+            technicianStatusLabel: j.technicianName || 'Unassigned',
+            serviceTitle: j.serviceTitle || j.service?.title || 'Electrical Repair Service',
+            status: normalizedStatus,
+            rawStatus: j.status,
+            amountInr: typeof rawAmt === 'number' ? rawAmt : 1250,
+            pincode: j.pincode || '400001',
+            dateStr: j.scheduledAt
+              ? new Date(j.scheduledAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+              : 'Today',
+          };
+        });
+
+        setJobs(mappedJobs);
+      }
+
+      // 4. Compute real KPIs directly from live database queries
+      const totalLiveJobs = jobsRes?.data?.counts?.total ?? mappedJobs.length ?? 0;
+      const totalLiveTechs = fleetRes?.stats?.totalFleet ?? (fleetRes?.technicians?.length ?? 0);
+      const liveOnlineTechs = fleetRes?.stats?.onlineCount ?? (fleetRes?.technicians?.filter((t: any) => t.isOnline).length ?? 0);
+
+      const livePaidRevenue =
+        invRes?.stats?.paidSettledAmountInr ??
+        mappedJobs.filter((j) => j.status === 'DONE').reduce((acc, j) => acc + j.amountInr, 0);
+
+      const formattedRevText =
+        livePaidRevenue >= 100000
+          ? `₹${(livePaidRevenue / 100000).toFixed(1)}L`
+          : livePaidRevenue > 0
+            ? `₹${livePaidRevenue.toLocaleString('en-IN')}`
+            : '₹0';
+
+      const liveEscalated =
+        jobsRes?.data?.counts?.escalatedSla ??
+        escRes?.counts?.totalEscalated ??
+        mappedJobs.filter((j) => j.status === 'ESCALATED' || j.rawStatus === 'ESCALATED_SLA').length;
+
+      setKpiStats({
+        totalJobs: totalLiveJobs,
+        totalJobsTrend: `${totalLiveJobs} live orders`,
+        activeTechnicians: totalLiveTechs,
+        onlineNow: liveOnlineTechs,
+        revenueText: formattedRevText,
+        revenueTrend: livePaidRevenue > 0 ? 'Live settled' : 'Live PostgreSQL',
+        escalatedJobs: liveEscalated,
+      });
+
+      // 5. Populate Available Standby Technicians
+      if (fleetRes?.technicians && Array.isArray(fleetRes.technicians) && fleetRes.technicians.length > 0) {
+        const mappedTechs = fleetRes.technicians.map((t: any) => ({
+          id: t.id,
+          name: t.fullName,
+          badge: t.badgeNumber || 'TECH-1025',
+          rating: t.rating || 4.9,
+          distance: '1.1 km',
+          pincode: t.assignedPincode || '400001',
+          status: t.isOnline ? 'Online' : 'Offline',
+        }));
+        setAvailableTechnicians(mappedTechs);
+      }
+    } catch (err) {
+      console.warn('Live API sync error:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     setCurrentDateStr(
       new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
     );
-
-    async function syncBackendData() {
-      try {
-        setLoading(true);
-        const rawPartner = getActivePartnerId();
-        let activePartnerUuid = rawPartner;
-
-        // 1. Resolve active partner UUID dynamically from /api/partner/profile
-        try {
-          const profRes = await fetch(`/api/partner/profile?partnerId=${encodeURIComponent(rawPartner)}`).then((r) => r.json());
-          if (profRes?.success && profRes.partner) {
-            activePartnerUuid = profRes.partner.id || rawPartner;
-            setPartnerInfo({
-              id: profRes.partner.id,
-              entityName: profRes.partner.entityName || 'Maharashtra Operations Hub',
-              stateLicensed: profRes.partner.stateLicensed || 'Maharashtra',
-            });
-            if (typeof window !== 'undefined' && profRes.partner.id) {
-              localStorage.setItem('partnerId', profRes.partner.id);
-              localStorage.setItem('gts_partner_id', profRes.partner.id);
-            }
-          }
-        } catch (err) {
-          console.warn('Partner profile resolution error:', err);
-        }
-
-        // 2. Fetch live data with resolved active partner UUID
-        const [jobsRes, fleetRes, invRes, escRes] = await Promise.all([
-          fetch(`/api/jobs?partnerId=${encodeURIComponent(activePartnerUuid)}`).then((r) => r.json()).catch(() => null),
-          fetch(`/api/partner/fleet?partnerId=${encodeURIComponent(activePartnerUuid)}`).then((r) => r.json()).catch(() => null),
-          fetch(`/api/partner/invoices?partnerId=${encodeURIComponent(activePartnerUuid)}`).then((r) => r.json()).catch(() => null),
-          fetch(`/api/partner/escalations?partnerId=${encodeURIComponent(activePartnerUuid)}`).then((r) => r.json()).catch(() => null),
-        ]);
-
-        if (jobsRes?.success || fleetRes?.success || invRes?.success) {
-          setApiConnected(true);
-        }
-
-        // 3. Process Live Jobs
-        let mappedJobs: JobItem[] = [];
-        if (jobsRes?.success && Array.isArray(jobsRes.data?.jobs)) {
-          mappedJobs = jobsRes.data.jobs.map((j: any) => {
-            let normalizedStatus: JobItem['status'] = 'PENDING';
-            const s = (j.status || '').toUpperCase();
-            if (s === 'WORK_COMPLETED' || s === 'SETTLED' || s === 'COMPLETED' || s === 'DONE') {
-              normalizedStatus = 'DONE';
-            } else if (s === 'EN_ROUTE') {
-              normalizedStatus = 'EN_ROUTE';
-            } else if (s === 'IN_PROGRESS' || s === 'STARTED' || s === 'SAFETY_CHECKED' || s === 'ARRIVED') {
-              normalizedStatus = 'STARTED';
-            } else if (s === 'ESCALATED_SLA' || s === 'ESCALATED') {
-              normalizedStatus = 'ESCALATED';
-            }
-
-            const rawAmt = j.totalAmountInr || j.invoice?.totalAmount || j.basePriceInr || 1250;
-
-            return {
-              id: j.id,
-              jobTicketNumber: j.jobTicketNumber?.startsWith('#') ? j.jobTicketNumber : `#${j.jobTicketNumber || 'J-1001'}`,
-              customerName: j.customerName || j.customer?.fullName || 'Customer',
-              customerPhone: j.customerPhone || j.customer?.phone || '',
-              customerAddressText: j.customerAddressText || 'Address on file',
-              technicianName: j.technicianName
-                ? `${j.technicianName} (${normalizedStatus === 'DONE' ? 'Completed' : normalizedStatus === 'STARTED' ? 'In Progress' : 'Assigned'})`
-                : 'Unassigned',
-              technicianStatusLabel: j.technicianName || 'Unassigned',
-              serviceTitle: j.serviceTitle || j.service?.title || 'Electrical Repair Service',
-              status: normalizedStatus,
-              rawStatus: j.status,
-              amountInr: typeof rawAmt === 'number' ? rawAmt : 1250,
-              pincode: j.pincode || '400001',
-              dateStr: j.scheduledAt
-                ? new Date(j.scheduledAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-                : 'Today',
-            };
-          });
-
-          setJobs(mappedJobs);
-        }
-
-        // 4. Compute real KPIs directly from live database queries
-        const totalLiveJobs = jobsRes?.data?.counts?.total ?? mappedJobs.length ?? 0;
-        const totalLiveTechs = fleetRes?.stats?.totalFleet ?? (fleetRes?.technicians?.length ?? 0);
-        const liveOnlineTechs = fleetRes?.stats?.onlineCount ?? (fleetRes?.technicians?.filter((t: any) => t.isOnline).length ?? 0);
-
-        const livePaidRevenue =
-          invRes?.stats?.paidSettledAmountInr ??
-          mappedJobs.filter((j) => j.status === 'DONE').reduce((acc, j) => acc + j.amountInr, 0);
-
-        const formattedRevText =
-          livePaidRevenue >= 100000
-            ? `₹${(livePaidRevenue / 100000).toFixed(1)}L`
-            : livePaidRevenue > 0
-              ? `₹${livePaidRevenue.toLocaleString('en-IN')}`
-              : '₹0';
-
-        const liveEscalated =
-          jobsRes?.data?.counts?.escalatedSla ??
-          escRes?.counts?.totalEscalated ??
-          mappedJobs.filter((j) => j.status === 'ESCALATED' || j.rawStatus === 'ESCALATED_SLA').length;
-
-        setKpiStats({
-          totalJobs: totalLiveJobs,
-          totalJobsTrend: `${totalLiveJobs} live orders`,
-          activeTechnicians: totalLiveTechs,
-          onlineNow: liveOnlineTechs,
-          revenueText: formattedRevText,
-          revenueTrend: livePaidRevenue > 0 ? 'Live settled' : 'Live PostgreSQL',
-          escalatedJobs: liveEscalated,
-        });
-
-        // 5. Populate Available Standby Technicians
-        if (fleetRes?.technicians && Array.isArray(fleetRes.technicians) && fleetRes.technicians.length > 0) {
-          const mappedTechs = fleetRes.technicians.map((t: any) => ({
-            id: t.id,
-            name: t.fullName,
-            badge: t.badgeNumber || 'TECH-1025',
-            rating: t.rating || 4.9,
-            distance: '1.1 km',
-            pincode: t.assignedPincode || '400001',
-            status: t.isOnline ? 'Online' : 'Offline',
-          }));
-          setAvailableTechnicians(mappedTechs);
-        }
-      } catch (err) {
-        console.warn('Live API sync error:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
     syncBackendData();
-  }, []);
+  }, [syncBackendData]);
+
+  // Real-time Event Subscription for Regional Partner CRM
+  const handlePartnerEvent = useCallback(
+    (event: any) => {
+      if (event.type === 'JOB_CREATED' || event.type === 'TECH_DISPATCHED' || event.type === 'TECH_BROADCAST') {
+        playSyntheticAlert('chime');
+        showToast(`⚡ New Dispatch: ${event.ticketNumber || event.jobId} in Pincode ${event.pincode || ''}`);
+        syncBackendData();
+      } else if (event.type === 'JOB_COMPLETED') {
+        playSyntheticAlert('chime');
+        showToast(`✅ Order Completed & Reconciled: ${event.ticketNumber || event.jobId}`);
+        syncBackendData();
+      } else if (event.type === 'EMERGENCY_SOS' || event.type === 'CUSTOMER_EMERGENCY_SOS_TRIGGERED') {
+        playSyntheticAlert('sos');
+        showToast(`🚨 URGENT: SOS Alert on Job ${event.ticketNumber || event.jobId}!`);
+        syncBackendData();
+      } else if (
+        event.type === 'TECH_ACCEPTED' ||
+        event.type === 'TECH_ARRIVED' ||
+        event.type === 'SAFETY_INTERLOCK_VERIFIED'
+      ) {
+        syncBackendData();
+      }
+    },
+    [syncBackendData]
+  );
+
+  const { status: partnerBusStatus } = useRealtimeEvents({
+    role: 'PARTNER',
+    partnerId: partnerInfo.id,
+    onEvent: handlePartnerEvent,
+  });
 
   // Handle manual assignment connected to live API
   const handleAssignTechnician = async (tech: { id: string; name: string }) => {
@@ -310,10 +342,34 @@ export default function PartnerDashboardPage() {
           </p>
         </div>
 
-        {/* Date Badge with Calendar Icon */}
-        <div className="flex items-center gap-2 self-start sm:self-auto bg-white border border-slate-200 px-3.5 py-1.5 rounded-xl shadow-2xs text-xs font-bold text-slate-700">
-          <Calendar className="h-4 w-4 text-red-500" />
-          <span>{currentDateStr}</span>
+        {/* Live SSE Status & Date Badge */}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <div
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-colors ${
+              partnerBusStatus === 'CONNECTED'
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                : partnerBusStatus === 'CONNECTING'
+                ? 'bg-amber-50 border-amber-200 text-amber-800'
+                : 'bg-rose-50 border-rose-200 text-rose-800'
+            }`}
+            title="Real-Time Event Stream Connection"
+          >
+            <span
+              className={`w-2 h-2 rounded-full ${
+                partnerBusStatus === 'CONNECTED'
+                  ? 'bg-emerald-500 animate-pulse'
+                  : partnerBusStatus === 'CONNECTING'
+                  ? 'bg-amber-500 animate-ping'
+                  : 'bg-rose-500'
+              }`}
+            ></span>
+            <span>{partnerBusStatus === 'CONNECTED' ? 'Live Sync' : 'Connecting...'}</span>
+          </div>
+
+          <div className="flex items-center gap-2 bg-white border border-slate-200 px-3.5 py-1.5 rounded-xl shadow-2xs text-xs font-bold text-slate-700">
+            <Calendar className="h-4 w-4 text-red-500" />
+            <span>{currentDateStr}</span>
+          </div>
         </div>
       </div>
 

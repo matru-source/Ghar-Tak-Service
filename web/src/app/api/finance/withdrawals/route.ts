@@ -46,8 +46,18 @@ export async function POST(request: NextRequest) {
       bankName,
     } = body;
 
-    if (!technicianId || !amountInr || amountInr <= 0) {
-      return apiError('technicianId and valid amountInr (> 0) are required', 400);
+    const MIN_WITHDRAWAL_THRESHOLD_INR = 500;
+    const requestedAmount = Number(amountInr);
+
+    if (!technicianId || isNaN(requestedAmount) || requestedAmount <= 0) {
+      return apiError('technicianId and valid numeric amountInr are required', 400);
+    }
+
+    if (requestedAmount < MIN_WITHDRAWAL_THRESHOLD_INR) {
+      return apiError(
+        `Banking Regulation Interlock: Minimum withdrawal threshold is ₹${MIN_WITHDRAWAL_THRESHOLD_INR}.00. Requested: ₹${requestedAmount.toFixed(2)}. Micro-transactions below ₹${MIN_WITHDRAWAL_THRESHOLD_INR} are blocked to prevent gateway fee depletion.`,
+        400
+      );
     }
 
     if (!payoutMethod || (payoutMethod !== 'UPI' && payoutMethod !== 'BANK_ACCOUNT')) {

@@ -40,10 +40,12 @@ export default function RegionalPartnerLoginPage() {
 
       const data = await res.json();
       if (data.success && data.data?.token) {
+        document.cookie = `gts_token=${data.data.token}; path=/; max-age=604800; SameSite=Lax`;
         document.cookie = `gts_auth_token=${data.data.token}; path=/; max-age=604800; SameSite=Lax`;
         document.cookie = `gts_user_role=PARTNER; path=/; max-age=604800; SameSite=Lax`;
         document.cookie = `gts_partner_hub=${selectedHub}; path=/; max-age=604800; SameSite=Lax`;
         localStorage.setItem('gts_token', data.data.token);
+        localStorage.setItem('gts_auth_token', data.data.token);
         localStorage.setItem('gts_user', JSON.stringify(data.data.user));
         localStorage.setItem('gts_hub', selectedHub);
 
@@ -135,7 +137,7 @@ export default function RegionalPartnerLoginPage() {
               required
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              placeholder="maharashtra.ops@electricare.in"
+              placeholder="maharashtra.ops@ghartak.in"
               className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
             />
           </div>

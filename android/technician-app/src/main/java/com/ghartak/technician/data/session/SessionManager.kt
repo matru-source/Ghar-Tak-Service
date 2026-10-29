@@ -34,7 +34,7 @@ class SessionManager(val context: Context) {
         private const val KEY_PROFILE_IMAGE_URI = "key_profile_image_uri"
         private const val KEY_SCHEMA_VERSION = "key_schema_version"
         private const val KEY_CUSTOM_BASE_URL = "key_custom_base_url"
-        const val DEFAULT_BASE_URL = "https://ghartak-api.onrender.com/api/"
+        val DEFAULT_BASE_URL: String = com.ghartak.technician.BuildConfig.BASE_URL
     }
 
     init {
@@ -358,12 +358,17 @@ class SessionManager(val context: Context) {
                     )
                 )
             }
-            // Deduplicate by ID and eliminate redundant temporary items
+            // Deduplicate by ID and eliminate redundant temporary items and micro-drafts below min threshold
             val distinct = list.distinctBy { it.id }
             val serverSyncedIds = distinct.filter { it.id.contains("_") && it.id.length > 18 }.map { it.amountInr to it.payoutMethod }.toSet()
-            distinct.filterNot { item ->
-                item.requestedAt == "Just now" && serverSyncedIds.contains(item.amountInr to item.payoutMethod) && !item.id.contains("_")
+            val valid = distinct.filterNot { item ->
+                (item.requestedAt == "Just now" && serverSyncedIds.contains(item.amountInr to item.payoutMethod) && !item.id.contains("_")) ||
+                (item.status == "PENDING" && item.amountInr < 500.0)
             }
+            if (valid.size != list.size) {
+                saveAllWithdrawals(valid)
+            }
+            valid
         } catch (e: Exception) {
             emptyList()
         }
@@ -378,6 +383,10 @@ class SessionManager(val context: Context) {
 
     fun saveLocalWithdrawal(item: com.ghartak.technician.data.model.WithdrawalItem) {
         val currentTechId = getTechnicianId()
+        // Do not save micro-drafts below ₹500 minimum threshold
+        if (item.status == "PENDING" && item.amountInr < 500.0) {
+            return
+        }
         // Only save if item belongs to current technician
         if (currentTechId.isNotBlank() && item.technicianId.isNotBlank() && item.technicianId != currentTechId && item.technicianBadge != getBadgeNumber()) {
             return

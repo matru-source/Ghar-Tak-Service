@@ -267,7 +267,9 @@ class SafetyInterlockViewModel(
                     }
 
                     if (targetPhotoUrl.isNullOrBlank()) {
-                        targetPhotoUrl = "/uploads/safety_inspection_verified.jpg"
+                        targetPhotoUrl = "https://uploads.ghartak.in/uploads/safety_inspection_verified.jpg"
+                    } else if (targetPhotoUrl.startsWith("/")) {
+                        targetPhotoUrl = "https://uploads.ghartak.in$targetPhotoUrl"
                     }
 
                     api.verifySafety(

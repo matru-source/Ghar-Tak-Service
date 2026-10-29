@@ -1,7 +1,5 @@
 import { NextRequest } from 'next/server';
-import { db, isDatabaseConnected } from '@/lib/db';
-import { dbStore } from '@/lib/mock-data';
-import { realtimeBus } from '@/lib/realtime-bus';
+import { db } from '@/lib/db';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
 
 export const dynamic = 'force-dynamic';
@@ -11,7 +9,8 @@ export async function OPTIONS() {
 }
 
 /**
- * GET: Retrieve in-job spare parts and materials added to the work order
+ * GET: Retrieve in-job spare parts, pending quote awaiting customer approval,
+ * and the standardized verified partner inventory catalog (Issues 31 & 32).
  */
 export async function GET(
   request: NextRequest,
@@ -21,29 +20,36 @@ export async function GET(
     const { id } = await params;
     const job = await db.findOrRecoverJob(id);
     if (!job) {
-      return apiError(`Job '${id}' not found`, 404);
+      return apiError(`Work order '${id}' not found`, 404);
     }
 
     const parts = (job as any).parts || [];
-    const partsTotalInr = parts.reduce(
-      (sum: number, p: any) => sum + (Number(p.unitPriceInr) || 0) * (Number(p.quantity) || 1),
+    const pendingQuote = (job as any).pendingQuote || null;
+    const catalog = await db.getPartnerInventory(job.partnerId);
+
+    const approvedPartsTotalInr = parts.reduce(
+      (sum: number, p: any) => sum + (Number(p.subtotalInr) || (Number(p.unitPriceInr) * Number(p.quantity))),
       0
     );
-    const partsGstInr = Number((partsTotalInr * 0.18).toFixed(2));
-    const partsGrossInr = Number((partsTotalInr + partsGstInr).toFixed(2));
+    const approvedGstInr = Number((approvedPartsTotalInr * 0.18).toFixed(2));
+    const approvedGrossInr = Number((approvedPartsTotalInr + approvedGstInr).toFixed(2));
 
     return apiSuccess(
       {
         jobId: job.id,
         ticketNumber: job.jobTicketNumber,
+        status: job.status,
+        isPausedForApproval: job.status === 'WAITING_CUSTOMER_APPROVAL',
         partsCount: parts.length,
         parts,
-        partsTotalInr,
-        partsGstInr,
-        partsGrossInr,
+        pendingQuote,
+        catalog,
+        approvedPartsTotalInr,
+        approvedGstInr,
+        approvedGrossInr,
         jobTotalAmountInr: (job as any).totalAmountInr,
       },
-      `Retrieved ${parts.length} in-job spare parts`,
+      `Retrieved ${parts.length} approved parts and ${catalog.length} verified catalog items`,
       200
     );
   } catch (error) {
@@ -56,8 +62,8 @@ export async function GET(
 }
 
 /**
- * POST: Technician adds spare parts / materials mid-service with real-time customer approval notification
- * Automatically recalculates revised totalAmountInr (base labor + parts + 18% GST)
+ * POST: Technician proposes spare part from standardized catalog with mandatory damaged photo (Issues 31, 32, 34).
+ * Transitions job to WAITING_CUSTOMER_APPROVAL and pauses work until customer accepts.
  */
 export async function POST(
   request: NextRequest,
@@ -66,99 +72,67 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { partName, partNumber, unitPriceInr, quantity = 1, technicianId, approvalOtp } = body;
+    const {
+      sku,
+      partNumber,
+      partName,
+      unitPriceInr,
+      quantity = 1,
+      damagedComponentPhotoUrl,
+      photoUrl,
+      technicianId,
+    } = body;
 
-    if (!partName || typeof partName !== 'string' || !partName.trim()) {
-      return apiError("'partName' is required", 400);
+    const targetSku = (sku || partNumber || '').trim();
+    if (!targetSku) {
+      return apiError(
+        "Standardized Catalog Enforcement: Mandatory field 'sku' (e.g. 'SKU-MCB-63A-DP') is required.",
+        400
+      );
     }
-    const unitPrice = Number(unitPriceInr);
-    if (isNaN(unitPrice) || unitPrice < 0) {
-      return apiError("'unitPriceInr' must be a non-negative number", 400);
+
+    // Issue 34: Mandatory Damaged Component Photographic Evidence
+    const photo = (damagedComponentPhotoUrl || photoUrl || '').trim();
+    if (!photo) {
+      return apiError(
+        'Mandatory Photographic Evidence Required: Field technicians must upload clear photographic evidence of the damaged/burned component before submitting a spare parts estimate.',
+        422
+      );
     }
+
     const qty = Math.max(1, parseInt(String(quantity), 10) || 1);
 
-    const job = await db.findOrRecoverJob(id);
-    if (!job) {
-      return apiError(`Work order '${id}' not found`, 404);
-    }
-
-    const itemTotal = Number((unitPrice * qty).toFixed(2));
-    const itemGst = Number((itemTotal * 0.18).toFixed(2));
-    const itemGross = Number((itemTotal + itemGst).toFixed(2));
-
-    const newPart = {
-      id: `part_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`,
-      name: partName.trim(),
-      partNumber: partNumber?.trim() || `SKU-${Date.now().toString().slice(-6)}`,
-      unitPriceInr: unitPrice,
+    const result = await db.proposeJobPart(id, {
+      sku: targetSku,
       quantity: qty,
-      subtotalInr: itemTotal,
-      gstInr: itemGst,
-      totalInr: itemGross,
-      technicianId: technicianId || job.technicianId,
-      addedAt: new Date().toISOString(),
-      isApprovedByCustomer: true,
-    };
-
-    if (!(job as any).parts) {
-      (job as any).parts = [];
-    }
-    (job as any).parts.push(newPart);
-
-    // Revise overall job totalAmountInr
-    const previousTotal = Number((job as any).totalAmountInr || 299.0);
-    const revisedTotal = Number((previousTotal + itemGross).toFixed(2));
-    (job as any).totalAmountInr = revisedTotal;
-
-    // Persist to PostgreSQL if connected
-    if (await isDatabaseConnected()) {
-      try {
-        const { prisma } = await import('@/lib/prisma');
-        await prisma.job.updateMany({
-          where: {
-            OR: [{ id: job.id }, { jobTicketNumber: job.jobTicketNumber }],
-          },
-          data: {
-            updatedAt: new Date(),
-          },
-        });
-      } catch (_) {}
-    }
-
-    // Broadcast Real-time In-Job Material Addition Event to Customer and Dispatch Board
-    realtimeBus.publish({
-      type: 'MATERIAL_ADDED',
-      jobId: job.id,
-      ticketNumber: job.jobTicketNumber,
-      partnerId: job.partnerId,
-      technicianId: job.technicianId,
-      customerId: job.customerId,
-      status: job.status,
-      details: {
-        part: newPart,
-        addedCostInr: itemGross,
-        revisedJobTotalInr: revisedTotal,
-        message: `Technician added spare part "${partName}" (₹${itemGross} incl. GST). Invoice revised.`,
-      },
+      unitPriceInr: unitPriceInr !== undefined ? Number(unitPriceInr) : undefined,
+      damagedComponentPhotoUrl: photo,
+      technicianId,
     });
 
     return apiSuccess(
       {
-        jobId: job.id,
-        ticketNumber: job.jobTicketNumber,
-        addedPart: newPart,
-        previousTotalAmountInr: previousTotal,
-        revisedTotalAmountInr: revisedTotal,
-        parts: (job as any).parts,
+        jobId: result.job.id,
+        ticketNumber: result.job.jobTicketNumber,
+        status: result.job.status,
+        pendingQuote: result.part,
+        message: `Quote for '${result.part.name}' submitted. Work order transitioned to WAITING_CUSTOMER_APPROVAL. Awaiting customer in-app acceptance.`,
       },
-      `Spare part "${partName}" added to work order. Invoice revised to ₹${revisedTotal}.`,
+      `Quote submitted for customer approval. Work paused until quote is accepted.`,
       201
     );
-  } catch (error) {
+  } catch (error: any) {
+    const msg = error instanceof Error ? error.message : String(error);
+    const isValidationErr =
+      msg.includes('Standardized Catalog') ||
+      msg.includes('Price Cap') ||
+      msg.includes('Mandatory Photographic Evidence') ||
+      msg.includes('Insufficient Warehouse Inventory');
+
     return apiError(
-      'Failed to add spare part / material to job',
-      500,
-      error instanceof Error ? error.message : String(error)
+      msg,
+      isValidationErr ? 422 : 500,
+      msg
     );
   }
 }

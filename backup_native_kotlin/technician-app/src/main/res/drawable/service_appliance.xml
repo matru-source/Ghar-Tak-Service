@@ -1,0 +1,36 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Rounded Background Pill -->
+    <path
+        android:fillColor="#F0FDFA"
+        android:pathData="M16,0 L80,0 A16,16 0 0,1 96,16 L96,80 A16,16 0 0,1 80,96 L16,96 A16,16 0 0,1 0,80 L0,16 A16,16 0 0,1 16,0 Z" />
+    <!-- AC Unit Body -->
+    <path
+        android:fillColor="#0D9488"
+        android:pathData="M18,24 L78,24 C81,24 83,26 83,29 L83,52 C83,55 81,57 78,57 L18,57 C15,57 13,55 13,52 L13,29 C13,26 15,24 18,24 Z" />
+    <!-- AC Front Panel Grille -->
+    <path
+        android:fillColor="#14B8A6"
+        android:pathData="M17,46 L79,46 L79,53 L17,53 Z" />
+    <!-- Display Light Indicator -->
+    <path
+        android:fillColor="#5EEAD4"
+        android:pathData="M68,32 C69.7,32 71,33.3 71,35 C71,36.7 69.7,38 68,38 C66.3,38 65,36.7 65,35 C65,33.3 66.3,32 68,32 Z" />
+    <!-- Cold Airflow Wave 1 -->
+    <path
+        android:fillColor="#2DD4BF"
+        android:pathData="M24,64 C28,68 32,66 36,70 C40,74 44,72 48,76 L48,79 C42,75 38,77 34,73 C30,69 26,71 22,67 Z" />
+    <!-- Cold Airflow Wave 2 -->
+    <path
+        android:fillColor="#0F766E"
+        android:pathData="M52,64 C56,68 60,66 64,70 C68,74 72,72 76,76 L76,79 C70,75 66,77 62,73 C58,69 54,71 50,67 Z" />
+    <!-- Snowflake Symbol Center Bottom -->
+    <path
+        android:fillColor="#042F2E"
+        android:pathData="M48,75 L48,87 M42,81 L54,81 M44,77 L52,85 M44,85 L52,77"
+        android:strokeColor="#0F766E"
+        android:strokeWidth="1.8" />
+</vector>

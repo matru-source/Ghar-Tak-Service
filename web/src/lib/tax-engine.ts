@@ -1,5 +1,5 @@
 // ==============================================================================
-// ElectriCare 18% GST Tax Calculation Engine
+// Ghar Tak Service 18% GST Tax Calculation Engine
 // Complies with Indian Goods and Services Tax Act rules for Electrical Works
 // CGST 9.00% + SGST 9.00% = 18.00% Total Tax
 // ==============================================================================

@@ -56,7 +56,7 @@ export async function POST(
     }
 
     // --------------------------------------------------------------------------
-    // Issue 19: Redis Distributed Lock on Siren Acceptance (SET lock:job:<id> <techId> NX EX 10)
+    // Issue 13: Redis Distributed Lock & SQL Mutex on Siren Acceptance
     // Ensures that under 60s broadcast dispatch, only the first atomic tap succeeds
     // --------------------------------------------------------------------------
     if (action === 'ACCEPT') {
@@ -80,12 +80,30 @@ export async function POST(
           409
         );
       }
+
+      // Check if already claimed by a different technician
+      if (
+        existingJob.technicianId &&
+        existingJob.technicianId !== activeTechId &&
+        existingJob.status !== 'PENDING_DISPATCH'
+      ) {
+        await releaseJobLock(id, activeTechId);
+        return apiError(
+          `Conflict: Work order #${existingJob.jobTicketNumber} has already been claimed by ${existingJob.technicianName || 'another pro'}.`,
+          409
+        );
+      }
     }
 
     // Execute dispatch response or cascading dispatch
     const result = action === 'ACCEPT'
       ? await db.respondToDispatch(id, activeTechId, action, rejectionReason)
       : await cascadeDispatchToNextTechnician(id, activeTechId, rejectionReason);
+
+    if (result.outcome === 'CONFLICT_ALREADY_ACCEPTED') {
+      await releaseJobLock(id, activeTechId);
+      return apiError(result.message, 409);
+    }
 
     // Bump version for optimistic concurrency tracking
     if (result.job) {

@@ -407,7 +407,10 @@ export default function PartnerInvoicesPage() {
               <span className="px-1.5 py-0.2 bg-white/20 rounded text-[10px]">{ledgerEntries.length}</span>
             </button>
             <button
-              onClick={() => setActiveTab('PAYOUTS')}
+              onClick={() => {
+                setActiveTab('PAYOUTS');
+                fetchWithdrawals();
+              }}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
                 activeTab === 'PAYOUTS'
                   ? 'bg-[#1B5E20] text-white shadow-xs'
@@ -980,7 +983,7 @@ export default function PartnerInvoicesPage() {
               {/* Organization Header */}
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-slate-200">
                 <div>
-                  <div className="text-base font-black text-slate-900">ElectriCare Services India Pvt. Ltd.</div>
+                  <div className="text-base font-black text-slate-900">Ghar Tak Services (GTS) Pvt. Ltd.</div>
                   <div className="text-xs text-[#1B5E20] font-bold">Maharashtra Regional Operations Hub</div>
                   <div className="text-[11px] text-slate-500 mt-1">
                     Level 4, Technopolis Knowledge Park, Andheri East, Mumbai, MH - 400093

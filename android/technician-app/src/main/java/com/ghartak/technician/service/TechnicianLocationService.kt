@@ -21,6 +21,7 @@ class TechnicianLocationService : Service() {
     private var telemetryJob: Job? = null
     private var isRunning = false
     private var activeJobId: String? = null
+    private var wakeLock: android.os.PowerManager.WakeLock? = null
 
     private var activeLocationManager: android.location.LocationManager? = null
     private var activeLocationListener: android.location.LocationListener? = null
@@ -151,7 +152,7 @@ class TechnicianLocationService : Service() {
         } catch (e: Throwable) {
             Log.e("GTS_LOC_SVC", "Unhandled exception in onStartCommand: ${e.message}", e)
         }
-        return START_STICKY
+        return Service.START_STICKY
     }
 
     private fun startForegroundServiceInternal() {
@@ -173,6 +174,16 @@ class TechnicianLocationService : Service() {
                 startForeground(NOTIFICATION_ID, notification)
             }
             isRunning = true
+
+            // Issue 21: Acquire PARTIAL_WAKE_LOCK to prevent Android 14 / OEM Doze mode from killing GPS telemetry
+            try {
+                val pm = getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager
+                wakeLock = pm?.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "ghartak:tech_gps_tracking_wakelock")
+                wakeLock?.acquire()
+                Log.i("GTS_LOC_SVC", "PARTIAL_WAKE_LOCK acquired for continuous Android 14 background transit")
+            } catch (e: Throwable) {
+                Log.w("GTS_LOC_SVC", "Failed to acquire PARTIAL_WAKE_LOCK: ${e.message}")
+            }
         } catch (e: Throwable) {
             Log.w("GTS_LOC_SVC", "startForeground failed safely without crash: ${e.message}")
             stopSelf()
@@ -373,6 +384,34 @@ class TechnicianLocationService : Service() {
         }
         telemetryJob?.cancel()
         telemetryJob = null
+
+        // Issue 3: Explicitly notify backend that technician has gone off-duty
+        try {
+            val sessionManager = SessionManager(applicationContext)
+            val techId = sessionManager.getTechnicianId().ifBlank { sessionManager.getBadgeNumber() }
+            if (techId.isNotBlank()) {
+                val api = ApiClient.getService(applicationContext)
+                serviceScope.launch {
+                    try {
+                        api.sendTelemetry(
+                            TelemetryPingRequest(
+                                technicianId = techId,
+                                jobId = "duty_idle",
+                                latitude = 0.0,
+                                longitude = 0.0,
+                                isOnline = false,
+                                isGpsActive = false
+                            )
+                        )
+                    } catch (e: Throwable) {
+                        Log.w("GTS_LOC_SVC", "Offline ping exception: ${e.message}")
+                    }
+                }
+            }
+        } catch (e: Throwable) {
+            Log.w("GTS_LOC_SVC", "Could not dispatch offline status: ${e.message}")
+        }
+
         try {
             stopForeground(STOP_FOREGROUND_REMOVE)
         } catch (e: Throwable) {
@@ -380,6 +419,7 @@ class TechnicianLocationService : Service() {
         }
         stopSelf()
     }
+
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -401,7 +441,9 @@ class TechnicianLocationService : Service() {
             .setContentText(message)
             .setSmallIcon(android.R.drawable.ic_menu_mylocation)
             .setOngoing(true)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .build()
     }
 
@@ -422,6 +464,20 @@ class TechnicianLocationService : Service() {
             activeLocationListener?.let { activeLocationManager?.removeUpdates(it) }
             activeLocationListener = null
         } catch (e: Throwable) {}
+
+        // Release WakeLock safely when service stops
+        try {
+            wakeLock?.let {
+                if (it.isHeld) {
+                    it.release()
+                    Log.i("GTS_LOC_SVC", "PARTIAL_WAKE_LOCK released cleanly")
+                }
+            }
+            wakeLock = null
+        } catch (e: Throwable) {
+            Log.w("GTS_LOC_SVC", "Failed to release wakeLock: ${e.message}")
+        }
+
         telemetryJob?.cancel()
         serviceScope.cancel()
     }

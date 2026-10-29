@@ -8,7 +8,7 @@ export async function GET() {
 
   const healthData = {
     status: 'healthy',
-    service: 'ElectriCare Mission-Critical SaaS Platform',
+    service: 'Ghar Tak Service Mission-Critical SaaS Platform',
     version: '1.0.0',
     timestamp: new Date().toISOString(),
     uptimeSeconds: Math.floor(process.uptime()),

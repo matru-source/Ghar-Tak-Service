@@ -100,6 +100,14 @@ interface ActiveJob {
   };
 }
 
+interface PendingReviewJob {
+  id: string;
+  jobTicketNumber: string;
+  serviceTitle: string;
+  technicianName: string;
+  totalAmountInr: number;
+}
+
 interface ServiceItem {
   id: string;
   title: string;
@@ -145,6 +153,14 @@ export default function CustomerDashboardPage() {
   const [showSafetyChecklistModal, setShowSafetyChecklistModal] = useState(false);
   const [bookingCartModal, setBookingCartModal] = useState<ServiceItem | null>(null);
 
+  // Issue 38: Persistent Post-Completion Rating & Review State
+  const [pendingReviewJob, setPendingReviewJob] = useState<PendingReviewJob | null>(null);
+  const [selectedStars, setSelectedStars] = useState<number>(5);
+  const [reviewFeedback, setReviewFeedback] = useState<string>('');
+  const [reviewSubmitting, setReviewSubmitting] = useState<boolean>(false);
+  const [reviewSuccessMessage, setReviewSuccessMessage] = useState<string | null>(null);
+  const [selectedReviewTags, setSelectedReviewTags] = useState<string[]>(['Punctual & Swift', 'Neat Work']);
+
   // Load customer context and services
   useEffect(() => {
     // Read local session if present
@@ -181,6 +197,15 @@ export default function CustomerDashboardPage() {
         const profileData = await profileRes.json();
         if (profileData.success && profileData.data?.activeJob) {
           setActiveJob(profileData.data.activeJob);
+        }
+
+        // Issue 38: Recover completed job pending customer rating
+        if (profileData.success && profileData.data?.pendingReviewJob) {
+          const pJob = profileData.data.pendingReviewJob;
+          const isDismissed = typeof window !== 'undefined' && localStorage.getItem(`gts_review_dismissed_${pJob.id}`) === 'true';
+          if (!isDismissed) {
+            setPendingReviewJob(pJob);
+          }
         }
 
         // Fetch services
@@ -290,6 +315,52 @@ export default function CustomerDashboardPage() {
     setShowLocationModal(false);
   };
 
+  // Issue 38: Handle customer post-service feedback submission
+  const handleSubmitReview = async () => {
+    if (!pendingReviewJob) return;
+    setReviewSubmitting(true);
+    try {
+      const tagsPart = selectedReviewTags.length > 0 ? `[${selectedReviewTags.join(', ')}] ` : '';
+      const finalComment = (tagsPart + reviewFeedback).trim() || 'Service completed satisfactorily.';
+      const res = await fetch(`/api/jobs/${encodeURIComponent(pendingReviewJob.id)}/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rating: selectedStars,
+          feedback: finalComment,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setReviewSuccessMessage(`Thank you for rating ${selectedStars} stars! Your review helps maintain 5-star service excellence.`);
+        setTimeout(() => {
+          setPendingReviewJob(null);
+          setReviewSuccessMessage(null);
+        }, 2500);
+      }
+    } catch (_) {
+      // handled gracefully
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
+
+  const handleDismissReview = () => {
+    if (pendingReviewJob && typeof window !== 'undefined') {
+      localStorage.setItem(`gts_review_dismissed_${pendingReviewJob.id}`, 'true');
+    }
+    setPendingReviewJob(null);
+  };
+
+  const REVIEW_TAG_OPTIONS = [
+    'Punctual & Swift',
+    'Expert Diagnosis',
+    'Neat Work',
+    'Polite Specialist',
+    'Genuine Parts',
+    'Fair Pricing',
+  ];
+
   return (
     <div className="flex-1 flex flex-col bg-white text-slate-900 pb-20 select-none">
       {/* 1. TOP APP BAR (Figma Header) */}
@@ -396,6 +467,124 @@ export default function CustomerDashboardPage() {
           </button>
         </div>
       </section>
+
+      {/* Issue 38: PERSISTENT POST-SERVICE REVIEW BANNER (Prevents Rating Lockout) */}
+      {pendingReviewJob && (
+        <section className="px-4 py-2">
+          <div className="w-full bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl p-4 shadow-sm relative overflow-hidden animate-in fade-in">
+            <div className="flex items-start justify-between gap-2 pb-2 border-b border-amber-200">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold shadow-xs">
+                  <Star className="w-4 h-4 fill-current" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm text-amber-950">
+                    Rate Your Recent Service
+                  </h3>
+                  <p className="text-[11px] text-amber-800 font-medium">
+                    Work Order #{pendingReviewJob.jobTicketNumber} • {pendingReviewJob.serviceTitle}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleDismissReview}
+                className="text-amber-700 hover:text-amber-900 text-xs font-semibold px-2 py-0.5 rounded hover:bg-amber-100 transition-colors"
+                title="Remind me later"
+              >
+                Later
+              </button>
+            </div>
+
+            {reviewSuccessMessage ? (
+              <div className="py-4 text-center">
+                <p className="text-xs font-bold text-emerald-800">{reviewSuccessMessage}</p>
+              </div>
+            ) : (
+              <div className="mt-3 space-y-3">
+                <div className="text-center">
+                  <p className="text-xs font-semibold text-slate-700 mb-1.5">
+                    How was your experience with <strong>{pendingReviewJob.technicianName}</strong>?
+                  </p>
+                  {/* Interactive Star Rating */}
+                  <div className="flex items-center justify-center gap-2">
+                    {[1, 2, 3, 4, 5].map((starVal) => (
+                      <button
+                        key={starVal}
+                        type="button"
+                        onClick={() => setSelectedStars(starVal)}
+                        className="p-1 hover:scale-110 active:scale-95 transition-transform"
+                      >
+                        <Star
+                          className={`w-7 h-7 ${
+                            starVal <= selectedStars
+                              ? 'text-amber-500 fill-amber-500 drop-shadow-xs'
+                              : 'text-slate-300'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  <span className="text-[11px] font-extrabold text-amber-800 mt-1 block">
+                    {selectedStars === 5
+                      ? '⭐⭐⭐⭐⭐ Exceptional Service'
+                      : selectedStars === 4
+                      ? '⭐⭐⭐⭐ Very Good'
+                      : selectedStars === 3
+                      ? '⭐⭐⭐ Average Service'
+                      : selectedStars === 2
+                      ? '⭐⭐ Disappointed'
+                      : '⭐ Poor Service — Needs Escalation'}
+                  </span>
+                </div>
+
+                {/* Quality Tag Chips */}
+                <div className="flex flex-wrap gap-1.5 justify-center">
+                  {REVIEW_TAG_OPTIONS.map((tag) => {
+                    const isSelected = selectedReviewTags.includes(tag);
+                    return (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => {
+                          setSelectedReviewTags((prev) =>
+                            isSelected ? prev.filter((t) => t !== tag) : [...prev, tag]
+                          );
+                        }}
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${
+                          isSelected
+                            ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
+                            : 'bg-white text-slate-700 border-amber-200 hover:bg-amber-100/50'
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Feedback Input */}
+                <textarea
+                  value={reviewFeedback}
+                  onChange={(e) => setReviewFeedback(e.target.value)}
+                  placeholder="Share details about the technician's punctuality, workmanship, or conduct..."
+                  className="w-full text-xs p-2.5 rounded-xl border border-amber-200 bg-white/90 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none h-16"
+                />
+
+                {/* Submit Button */}
+                <button
+                  type="button"
+                  disabled={reviewSubmitting}
+                  onClick={handleSubmitReview}
+                  className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white font-extrabold text-xs shadow-xs transition-all disabled:opacity-50"
+                >
+                  {reviewSubmitting ? 'Submitting Review...' : `Submit ${selectedStars}-Star Review`}
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* 3. LIVE DISPATCH ACTIVITY TRACKER CARD (Job #J-1001) */}
       {activeJob && (
@@ -619,7 +808,7 @@ export default function CustomerDashboardPage() {
         </div>
       </section>
 
-      {/* 6. ELECTRICARE SHIELD™ TRUST & SAFETY CARD */}
+      {/* 6. GHAR_TAK SHIELD™ TRUST & SAFETY CARD */}
       <section className="px-4 pt-2 pb-4">
         <div className="w-full rounded-2xl bg-slate-50 border border-slate-200 p-4 shadow-2xs">
           <div className="flex items-center gap-2.5 mb-2.5">
@@ -627,7 +816,7 @@ export default function CustomerDashboardPage() {
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div className="flex flex-col">
-              <h4 className="font-bold text-xs text-slate-900">ElectriCare Shield™</h4>
+              <h4 className="font-bold text-xs text-slate-900">Ghar Tak Service Shield™</h4>
               <p className="text-[10px] text-slate-500">Uncompromising safety & compliance guarantee</p>
             </div>
           </div>
@@ -906,7 +1095,7 @@ export default function CustomerDashboardPage() {
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                <h3 className="font-bold text-sm text-slate-900">ElectriCare Safety Standard</h3>
+                <h3 className="font-bold text-sm text-slate-900">Ghar Tak Service Safety Standard</h3>
               </div>
               <button
                 onClick={() => setShowSafetyChecklistModal(false)}
@@ -918,7 +1107,7 @@ export default function CustomerDashboardPage() {
 
             <div className="py-4 space-y-3 text-xs text-slate-700">
               <p className="font-medium text-slate-600">
-                Every technician dispatched under ElectriCare undergoes strict statutory compliance checks:
+                Every technician dispatched under Ghar Tak Service undergoes strict statutory compliance checks:
               </p>
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
                 <div className="flex items-start gap-2">

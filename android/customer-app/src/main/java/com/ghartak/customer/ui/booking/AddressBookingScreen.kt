@@ -203,6 +203,8 @@ fun AddressBookingScreen(
                     ) {
                         if (hasActiveJob) {
                             Text(text = "ACTIVE JOB IN PROGRESS ($formattedTicket)", fontWeight = FontWeight.Bold, color = TextDarkMuted, fontSize = 12.sp)
+                        } else if (!state.isPincodeServiceable || (state.pincode.length == 6 && state.nearbyTechnicians.isEmpty() && !state.isLoadingTechnicians)) {
+                            Text(text = "OUT OF SERVICE AREA (${state.pincode})", fontWeight = FontWeight.Bold, color = TextDarkMuted, fontSize = 12.sp)
                         } else {
                             Text(text = "CONTINUE TO PAYMENT", fontWeight = FontWeight.Bold, color = Color.White)
                             Spacer(modifier = Modifier.width(6.dp))
@@ -614,22 +616,24 @@ fun AddressBookingScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp),
                         trailingIcon = {
-                            if (state.isCheckingPincode) {
+                            if (state.isCheckingPincode || state.isLoadingTechnicians) {
                                 CircularProgressIndicator(modifier = Modifier.size(18.dp), color = SapphireBlue800, strokeWidth = 2.dp)
-                            } else if (state.isPincodeServiceable) {
+                            } else if (state.isPincodeServiceable && state.nearbyTechnicians.isNotEmpty()) {
                                 Icon(imageVector = Icons.Default.CheckCircle, contentDescription = "Serviceable", tint = SuccessGreen)
+                            } else if (state.pincode.length == 6) {
+                                Icon(imageVector = Icons.Default.Cancel, contentDescription = "Unserviceable", tint = DangerRed)
                             }
                         },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = SapphireBlue800,
-                            unfocusedBorderColor = SurfaceBorder
+                            unfocusedBorderColor = if (!state.isPincodeServiceable && state.pincode.length == 6) DangerRed else SurfaceBorder
                         )
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Serviceability Result Pill
-                    if (state.isPincodeServiceable) {
+                    // Serviceability Result Pill / Real-Time Out-of-Service Red Banner (Issue 7)
+                    if (state.isPincodeServiceable && (state.nearbyTechnicians.isNotEmpty() || state.isLoadingTechnicians)) {
                         Surface(
                             color = SuccessGreen.copy(alpha = 0.1f),
                             shape = RoundedCornerShape(8.dp),
@@ -644,6 +648,27 @@ fun AddressBookingScreen(
                                 Text(
                                     text = "SERVICEABLE • ${state.hubName} (~${state.etaMinutes} min dispatch)",
                                     color = SuccessGreen,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    } else if (!state.isCheckingPincode && !state.isLoadingTechnicians && state.pincode.length == 6) {
+                        Surface(
+                            color = Color(0xFFFEF2F2),
+                            shape = RoundedCornerShape(8.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, DangerRed.copy(alpha = 0.5f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(imageVector = Icons.Default.Cancel, contentDescription = "Out of Service", tint = DangerRed, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "OUT OF SERVICE AREA • 0 active online technicians in pincode ${state.pincode}. Bookings are temporarily paused.",
+                                    color = DangerRed,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
                                 )

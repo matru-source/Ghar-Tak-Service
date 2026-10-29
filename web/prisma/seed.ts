@@ -239,6 +239,8 @@ async function main() {
       safetyGlovesConfirmed: true,
       safetyMcbSwitchConfirmed: true,
       handoverOtp: '4829', // 4-digit verification code
+      totalAmountInr: 1250,
+      currency: 'INR',
     },
   });
 
@@ -260,6 +262,8 @@ async function main() {
       scheduledAt: new Date(Date.now() - 40 * 60 * 1000),
       slaExpiryAt: new Date(Date.now() - 10 * 60 * 1000), // SLA breached by 10 mins
       handoverOtp: '9182',
+      totalAmountInr: 1250,
+      currency: 'INR',
     },
   });
 

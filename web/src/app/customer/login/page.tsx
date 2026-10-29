@@ -288,7 +288,7 @@ export default function CustomerLoginPage() {
               <span>256-Bit Banking Grade Security • Zero Spam Guarantee</span>
             </div>
             <p className="text-[11px] text-slate-400">
-              By continuing, you agree to ElectriCare Terms of Service & Electrical Safety Protocols.
+              By continuing, you agree to Ghar Tak Service Terms of Service & Electrical Safety Protocols.
             </p>
           </div>
         </div>

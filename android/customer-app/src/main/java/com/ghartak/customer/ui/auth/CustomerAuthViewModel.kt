@@ -546,7 +546,7 @@ class CustomerAuthViewModel(
                     val resolvedPhone = userMap?.get("phone")?.toString() ?: ""
                     val resolvedEmail = userMap?.get("email")?.toString() ?: email
                     val resolvedAddress = userMap?.get("address")?.toString() ?: sessionManager.getUserAddress()
-                    val resolvedPincode = userMap?.get("pincode")?.toString() ?: sessionManager.getUserPincode().ifEmpty { "760001" }
+                    val resolvedPincode = userMap?.get("pincode")?.toString() ?: sessionManager.getUserPincode().ifEmpty { "400001" }
 
                     val profile = UserProfile(
                         id = userId,
@@ -632,7 +632,7 @@ class CustomerAuthViewModel(
                     val resolvedPhone = userMap?.get("phone")?.toString() ?: ""
                     val resolvedEmail = userMap?.get("email")?.toString() ?: selectedEmail
                     val resolvedAddress = userMap?.get("address")?.toString() ?: sessionManager.getUserAddress()
-                    val resolvedPincode = userMap?.get("pincode")?.toString() ?: sessionManager.getUserPincode().ifEmpty { "760001" }
+                    val resolvedPincode = userMap?.get("pincode")?.toString() ?: sessionManager.getUserPincode().ifEmpty { "400001" }
 
                     val profile = UserProfile(
                         id = userId,

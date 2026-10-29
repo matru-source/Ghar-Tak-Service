@@ -315,7 +315,7 @@ export default function AdminInvoicesPage() {
               <div>
                 <span className="text-[10px] font-bold uppercase text-slate-400">Service Provider</span>
                 <div className="font-extrabold text-slate-900 mt-0.5">Ghar Tak Service (GTS)</div>
-                <div className="text-slate-500 text-[11px]">ElectriCare Technologies Pvt Ltd</div>
+                <div className="text-slate-500 text-[11px]">Ghar Tak Service Technologies Pvt Ltd</div>
                 <div className="font-mono text-[10px] text-purple-700 font-bold mt-1">
                   GSTIN: 27AABCU9603R1ZM
                 </div>

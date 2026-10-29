@@ -34,9 +34,11 @@ export default function SuperAdminLoginPage() {
       const data = await res.json();
       if (data.success && data.data?.token) {
         // Set standard session cookie and localStorage
+        document.cookie = `gts_token=${data.data.token}; path=/; max-age=604800; SameSite=Lax`;
         document.cookie = `gts_auth_token=${data.data.token}; path=/; max-age=604800; SameSite=Lax`;
         document.cookie = `gts_user_role=SUPER_ADMIN; path=/; max-age=604800; SameSite=Lax`;
         localStorage.setItem('gts_token', data.data.token);
+        localStorage.setItem('gts_auth_token', data.data.token);
         localStorage.setItem('gts_user', JSON.stringify(data.data.user));
 
         showToast('✓ Authentication Successful. Establishing National Terminal Session...');
@@ -104,7 +106,7 @@ export default function SuperAdminLoginPage() {
               required
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              placeholder="admin@electricare.in"
+              placeholder="admin@ghartak.in"
               className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
             />
           </div>
@@ -163,13 +165,14 @@ export default function SuperAdminLoginPage() {
           </button>
         </form>
 
-        {/* Navigation Action */}
+        {/* Navigation Shortcut to Partner Portal */}
         <div className="pt-2 border-t border-slate-800/80 flex items-center justify-end">
           <Link
             href="/partner/login"
-            className="text-[11px] text-slate-400 hover:text-slate-200 transition"
+            className="text-[11px] text-slate-400 hover:text-emerald-300 transition flex items-center gap-1 font-semibold"
           >
-            Partner Portal →
+            <span>🏢 Franchise Partner Portal</span>
+            <span>→</span>
           </Link>
         </div>
 

@@ -45,6 +45,22 @@ android {
         }
     }
 
+    flavorDimensions += "environment"
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:3000/api/\"")
+        }
+        create("staging") {
+            dimension = "environment"
+            buildConfigField("String", "BASE_URL", "\"https://staging-api.ghartak.com/api/\"")
+        }
+        create("prod") {
+            dimension = "environment"
+            buildConfigField("String", "BASE_URL", "\"https://api.ghartak.com/api/\"")
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

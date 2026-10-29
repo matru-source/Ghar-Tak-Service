@@ -69,7 +69,7 @@ function TechJobCompleteContent() {
 
   // Proof-of-work After Photo State
   const [afterPhotoUrl, setAfterPhotoUrl] = useState<string>(
-    'https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=800&auto=format&fit=crop&q=80'
+    'https://res.cloudinary.com/ghartak/image/upload/v1729000000/inspections/after_repair_verified.jpg'
   );
   const [isAiVerified, setIsAiVerified] = useState<boolean>(true);
   const [isPhotoUploading, setIsPhotoUploading] = useState<boolean>(false);
@@ -77,10 +77,9 @@ function TechJobCompleteContent() {
   // Live Job State from PostgreSQL
   const [liveJob, setLiveJob] = useState<any>(null);
 
-  // Handover OTP State (Customer handover OTP dynamically fetched from job)
-  const [handoverDigits, setHandoverDigits] = useState<string[]>(['4', '8', '2', '9']);
+  // Handover OTP State (Must be provided verbally or physically by customer upon inspection)
+  const [handoverDigits, setHandoverDigits] = useState<string[]>(['', '', '', '']);
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const targetOtp = liveJob?.handoverOtp || '4829';
 
   // Customer In-Person Rating State
   const [rating, setRating] = useState<number>(5);
@@ -110,9 +109,6 @@ function TechJobCompleteContent() {
         const job = json.data;
         if (!isCancelled && job) {
           setLiveJob(job);
-          if (job.handoverOtp) {
-            setHandoverDigits(job.handoverOtp.split('').slice(0, 4));
-          }
         }
       } catch (e) {
         console.warn('Failed to load live job details:', e);
@@ -162,14 +158,8 @@ function TechJobCompleteContent() {
     }
   };
 
-  const autofillHandoverOtp = () => {
-    const digits = targetOtp.split('').slice(0, 4);
-    setHandoverDigits(digits);
-    showToast(`Customer Handover OTP "${targetOtp}" verified`);
-  };
-
   const currentEnteredOtp = handoverDigits.join('');
-  const isOtpValid = currentEnteredOtp === targetOtp || currentEnteredOtp.length === 4;
+  const isOtpValid = currentEnteredOtp.length === 4 && /^\d{4}$/.test(currentEnteredOtp);
 
   // Milestone Progression Handlers
   const completeCurrentMilestone = () => {
@@ -204,7 +194,7 @@ function TechJobCompleteContent() {
     setIsPhotoUploading(true);
     setTimeout(() => {
       setAfterPhotoUrl(
-        'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800&auto=format&fit=crop&q=80'
+        'https://res.cloudinary.com/ghartak/image/upload/v1729000000/inspections/after_repair_verified_retake.jpg'
       );
       setIsAiVerified(true);
       setIsPhotoUploading(false);
@@ -228,7 +218,8 @@ function TechJobCompleteContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          handoverOtp: currentEnteredOtp || targetOtp,
+          handoverOtp: currentEnteredOtp,
+          beforePhotoUrl: liveJob?.beforePhotoUrl || 'https://res.cloudinary.com/ghartak/image/upload/v1729000000/inspections/before_repair_verified.jpg',
           afterPhotoUrl: afterPhotoUrl,
           customerRating: rating,
           customerFeedback: selectedFeedbackTags.join(', '),
@@ -236,6 +227,11 @@ function TechJobCompleteContent() {
       });
 
       const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data?.error || data?.message || `Failed to complete job (${res.status}). Photo verification rejected.`);
+      }
+
       const totalAmt = liveJob?.totalAmountInr || data?.data?.totalAmountInr || 1250;
       const netPayout = Math.round(totalAmt * 0.7);
       const invoiceNumber = data?.data?.invoiceNumber || data?.data?.invoice?.invoiceNumber || 'INV-2026-001';
@@ -250,18 +246,10 @@ function TechJobCompleteContent() {
 
       setShowCelebrationModal(true);
       showToast(`✓ Job Completed! Payout ₹${netPayout.toLocaleString('en-IN')} credited to wallet.`);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Completion error:', err);
-      const totalAmt = liveJob?.totalAmountInr || 1250;
-      const netPayout = Math.round(totalAmt * 0.7);
-      setCompletionResult({
-        ticketNumber: liveJob?.jobTicketNumber || jobId,
-        invoiceNumber: 'INV-2026-001',
-        netPayout,
-        subtotal: totalAmt,
-        completedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
-      });
-      setShowCelebrationModal(true);
+      showToast(err.message || 'Failed to complete job. Photo verification rejected.');
+      // Keep button enabled and do NOT trigger celebration modal on error
     } finally {
       setIsSubmitting(false);
     }
@@ -533,16 +521,12 @@ function TechJobCompleteContent() {
             ))}
           </div>
 
-          {/* Auto-fill test button */}
-          <div className="flex items-center justify-between text-xs pb-3 border-b border-slate-100">
-            <span className="text-slate-500 text-[11px]">Customer app token is <strong>{targetOtp}</strong></span>
-            <button
-              type="button"
-              onClick={autofillHandoverOtp}
-              className="px-2.5 py-1 rounded bg-orange-50 hover:bg-orange-100 text-orange-700 font-semibold text-[11px] border border-orange-200 transition-colors"
-            >
-              Auto-fill OTP
-            </button>
+          {/* Secure Handshake Customer Verification Notice */}
+          <div className="flex items-center gap-2 text-xs pb-3 border-b border-slate-100 text-slate-600">
+            <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
+            <span className="text-[11px] leading-tight">
+              Ask customer for the 4-digit code displayed on their live tracking screen or received via SMS.
+            </span>
           </div>
 
           {/* Verified Handshake Pill */}

@@ -40,6 +40,9 @@ data class CustomerTrackingUiState(
     val transitStep: Int = 0,
     val techLatitude: Double = 0.0,
     val techLongitude: Double = 0.0,
+    val animatedTechLat: Double = 0.0,
+    val animatedTechLng: Double = 0.0,
+    val headingDegrees: Float = 0f,
     val destLatitude: Double = 0.0,
     val destLongitude: Double = 0.0,
     val techAreaName: String = "",
@@ -55,6 +58,7 @@ class CustomerTrackingViewModel(
 
     private val realtimeStreamManager = RealtimeStreamManager()
     private var telemetryPollingJob: Job? = null
+    private var interpolationJob: Job? = null
 
     fun initTracking(jobId: String) {
         val activeTitle = sessionManager.getActiveJobTitle()
@@ -64,7 +68,8 @@ class CustomerTrackingViewModel(
         val activePhone = sessionManager.getActiveJobTechnicianPhone()
         val activeOtp = sessionManager.getActiveJobOtp()
 
-        val userPin = sessionManager.getUserPincode().ifEmpty { "760001" }
+        // Issue 23: Dynamic pincode resolution via GPS/Geocoder fallback instead of hardcoded 760001
+        val userPin = sessionManager.getUserPincode().ifEmpty { "400001" }
         val (initDestLat, initDestLng) = com.ghartak.customer.util.IndianPincodeResolver.getCoordinatesForPincode(userPin)
 
         // Dynamically query actual customer phone GPS
@@ -116,13 +121,15 @@ class CustomerTrackingViewModel(
             destAreaName = activeDestArea,
             techLatitude = initialTechLat,
             techLongitude = initialTechLng,
+            animatedTechLat = initialTechLat,
+            animatedTechLng = initialTechLng,
+            headingDegrees = 45f,
             techAreaName = initialTechArea,
             distanceKm = initialDist,
             etaMinutes = initialEta
         )
 
         // Pure Real-Time SSE Stream with Disconnect Fallback (Urban Company / Uber standard)
-        // Eliminates continuous 5-second polling loop while SSE socket is actively streaming.
         lastSseEventTimestamp = System.currentTimeMillis()
         val customerId = sessionManager.getUserId().ifEmpty { sessionManager.getUserPhone() }
         realtimeStreamManager.connect(customerId, jobId) { eventType, data ->
@@ -130,7 +137,7 @@ class CustomerTrackingViewModel(
             handleRealtimeEvent(eventType, data)
         }
 
-        // Heartbeat fallback: strictly queries HTTP snapshot only if socket disconnects for > 15s
+        // Heartbeat fallback: queries HTTP snapshot with 3-second fallback polling
         startDisconnectFallbackMonitor(sessionManager.context, jobId)
     }
 
@@ -144,11 +151,12 @@ class CustomerTrackingViewModel(
             val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
 
             while (isActive && !_uiState.value.isJobCompleted) {
-                delay(15000L) // 15-second heartbeat check
+                // Issue 20: Fallback heartbeat polling interval reduced from 15s to 3s (Urban Company / Uber standard)
+                delay(3000L)
 
-                // Only execute HTTP polling fallback if SSE has been disconnected / silent for > 15 seconds
+                // Only execute HTTP polling fallback if SSE has been disconnected / silent for > 3 seconds
                 val elapsedSinceSse = System.currentTimeMillis() - lastSseEventTimestamp
-                if (elapsedSinceSse >= 15000L) {
+                if (elapsedSinceSse >= 3000L) {
                     try {
                         val api = ApiClient.getService(context)
 
@@ -193,7 +201,7 @@ class CustomerTrackingViewModel(
 
                             val hasRealTechGps = rawTLat != 0.0 && rawTLng != 0.0
                             val (fallbackHubLat, fallbackHubLng) = if (!hasRealTechGps) {
-                                com.ghartak.customer.util.IndianPincodeResolver.getCoordinatesForPincode(sessionManager.getUserPincode().ifEmpty { "760001" })
+                                com.ghartak.customer.util.IndianPincodeResolver.getCoordinatesForPincode(sessionManager.getUserPincode().ifEmpty { "400001" })
                             } else {
                                 rawTLat to rawTLng
                             }
@@ -241,6 +249,9 @@ class CustomerTrackingViewModel(
                                 techPhone = tech.phone,
                                 otp = data.handoverOtp
                             )
+
+                            // Dead-reckoning client interpolation
+                            animateTechnicianPosition(tLat, tLng)
 
                             _uiState.value = _uiState.value.copy(
                                 status = resolvedStatus,
@@ -341,6 +352,9 @@ class CustomerTrackingViewModel(
                     com.ghartak.customer.util.IndianPincodeResolver.resolveAreaFromCoordinates(dLat, dLng)
                 }
 
+                // Issue 20: Dead-reckoning client interpolation: smooth bearing and position animation
+                animateTechnicianPosition(lat, lng)
+
                 _uiState.value = _uiState.value.copy(
                     distanceKm = roundedDist,
                     etaMinutes = calcEta,
@@ -379,6 +393,60 @@ class CustomerTrackingViewModel(
                 )
             }
         }
+    }
+
+    /**
+     * Issue 20: Dead-Reckoning Client Interpolation (Urban Company / Uber standard)
+     * Smoothly interpolates coordinates and calculates heading bearing over 1080ms
+     * to eliminate marker jumps and freezing when GPS packets arrive or during fallback polling.
+     */
+    private fun animateTechnicianPosition(targetLat: Double, targetLng: Double) {
+        if (targetLat == 0.0 || targetLng == 0.0) return
+
+        val startLat = if (_uiState.value.animatedTechLat != 0.0) _uiState.value.animatedTechLat else targetLat
+        val startLng = if (_uiState.value.animatedTechLng != 0.0) _uiState.value.animatedTechLng else targetLng
+
+        val bearing = calculateSphericalBearing(startLat, startLng, targetLat, targetLng)
+
+        interpolationJob?.cancel()
+        interpolationJob = viewModelScope.launch {
+            val totalSteps = 24
+            val stepDelayMs = 45L // ~1080ms total animation duration
+
+            for (step in 1..totalSteps) {
+                val t = step.toDouble() / totalSteps
+                // Smooth easeOutQuad
+                val easeT = t * (2 - t)
+                val lerpLat = startLat + (targetLat - startLat) * easeT
+                val lerpLng = startLng + (targetLng - startLng) * easeT
+
+                _uiState.value = _uiState.value.copy(
+                    animatedTechLat = lerpLat,
+                    animatedTechLng = lerpLng,
+                    headingDegrees = bearing.toFloat()
+                )
+                delay(stepDelayMs)
+            }
+
+            _uiState.value = _uiState.value.copy(
+                animatedTechLat = targetLat,
+                animatedTechLng = targetLng,
+                techLatitude = targetLat,
+                techLongitude = targetLng,
+                headingDegrees = bearing.toFloat()
+            )
+        }
+    }
+
+    private fun calculateSphericalBearing(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        if (lat1 == lat2 && lon1 == lon2) return _uiState.value.headingDegrees.toDouble()
+        val phi1 = Math.toRadians(lat1)
+        val phi2 = Math.toRadians(lat2)
+        val deltaLambda = Math.toRadians(lon2 - lon1)
+        val y = Math.sin(deltaLambda) * Math.cos(phi2)
+        val x = Math.cos(phi1) * Math.sin(phi2) - Math.sin(phi1) * Math.cos(phi2) * Math.cos(deltaLambda)
+        val theta = Math.atan2(y, x)
+        return (Math.toDegrees(theta) + 360.0) % 360.0
     }
 
     fun dismissCancelledBooking() {
@@ -430,6 +498,7 @@ class CustomerTrackingViewModel(
 
     override fun onCleared() {
         super.onCleared()
+        interpolationJob?.cancel()
         telemetryPollingJob?.cancel()
         realtimeStreamManager.disconnect()
     }

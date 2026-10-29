@@ -10,7 +10,13 @@ import {
   calculateEtaMinutes,
 } from '@/lib/pincode-resolver';
 
+import { getRedisClient } from '@/lib/redis-client';
+
 export const dynamic = 'force-dynamic';
+
+// In-process memory stores for write throttling and breadcrumbs fallback
+const lastDbFlushMap = new Map<string, number>();
+export const memoryBreadcrumbs = new Map<string, any[]>();
 
 export async function OPTIONS() {
   return corsOptionsResponse();
@@ -71,12 +77,66 @@ export async function POST(request: NextRequest) {
       tech.isOnline = isOnline;
     }
 
-    // Persist live telemetry coordinates to PostgreSQL if connected
-    if (await isDatabaseConnected()) {
+    // --------------------------------------------------------------------------
+    // Issue 22: High-Frequency GPS pings to Redis Geospatial (GEOADD)
+    // Eliminates disk I/O thrashing under heavy fleet load
+    // --------------------------------------------------------------------------
+    const redis = getRedisClient();
+    if (redis) {
+      try {
+        await redis.geoadd('technicians:geo', longitude, latitude, tech.id);
+        await redis.hset(`technician:${tech.id}:telemetry`, {
+          latitude: String(latitude),
+          longitude: String(longitude),
+          heading: String(heading ?? 0),
+          speedKmh: String(speedKmh ?? 0),
+          isOnline: typeof isOnline === 'boolean' ? String(isOnline) : 'true',
+          updatedAt: String(Date.now()),
+          jobId: jobId || '',
+        });
+      } catch (rErr) {
+        console.warn('[Telemetry] Redis geoadd warning:', rErr);
+      }
+    }
+
+    // --------------------------------------------------------------------------
+    // Issue 24: Store timestamped GPS breadcrumb points in Redis list & memory
+    // Key: tech:breadcrumbs:[id]:[jobId]
+    // --------------------------------------------------------------------------
+    const breadcrumbKey = `tech:breadcrumbs:${tech.id}:${jobId || 'patrol'}`;
+    const breadcrumbItem = {
+      latitude,
+      longitude,
+      heading: heading ?? 0,
+      speedKmh: speedKmh ?? 0,
+      timestamp: Date.now(),
+    };
+    if (redis) {
+      try {
+        await redis.rpush(breadcrumbKey, JSON.stringify(breadcrumbItem));
+        await redis.ltrim(breadcrumbKey, -100, -1); // Keep last 100 points
+      } catch (_) {}
+    }
+    const memTrail = memoryBreadcrumbs.get(breadcrumbKey) || [];
+    memTrail.push(breadcrumbItem);
+    if (memTrail.length > 100) memTrail.shift();
+    memoryBreadcrumbs.set(breadcrumbKey, memTrail);
+
+    // --------------------------------------------------------------------------
+    // Issue 22: Throttled database flush — flush to PostgreSQL only every 5 mins
+    // or when online/offline shift status explicitly transitions
+    // --------------------------------------------------------------------------
+    const nowMs = Date.now();
+    const lastFlush = lastDbFlushMap.get(tech.id) || 0;
+    const statusChanged = typeof isOnline === 'boolean' && tech.isOnline !== isOnline;
+    const shouldFlushToPostgres = statusChanged || (nowMs - lastFlush > 5 * 60 * 1000);
+
+    if (shouldFlushToPostgres && await isDatabaseConnected()) {
+      lastDbFlushMap.set(tech.id, nowMs);
       try {
         const { prisma } = await import('@/lib/prisma');
         await prisma.technician.updateMany({
-          where: { OR: [{ id: technicianId }, { badgeNumber: technicianId }] },
+          where: { OR: [{ id: tech.id }, { badgeNumber: tech.badgeNumber }] },
           data: {
             currentLatitude: latitude,
             currentLongitude: longitude,
@@ -104,14 +164,25 @@ export async function POST(request: NextRequest) {
         customerArea = resolveAreaFromCoordinates(destLat, destLng);
 
         const rawDist = calculateHaversineDistanceKm(latitude, longitude, destLat, destLng);
-        // Geofence doorstep arrival strictly requires genuine active GPS hardware
+
+        // ----------------------------------------------------------------------
+        // Issue 19: Geofence Arrival Interlock (Haversine < 150m)
+        // ----------------------------------------------------------------------
+        const isWithin150mGeofence = rawDist <= 0.15; // 150 meters
         const isCoLocated = isGpsActive && (rawDist <= 0.05 || (Math.abs(latitude - destLat) < 0.0002 && Math.abs(longitude - destLng) < 0.0002));
 
-        if (isCoLocated) {
-          distanceRemainingKm = 0.0;
-          etaMinutes = 0;
+        if (body.status === 'ARRIVED' && !isWithin150mGeofence) {
+          return apiError(
+            `Arrival Geofence Interlock Active: Technician is ${Math.round(rawDist * 1000)}m away from customer destination. Proximity within 150m required.`,
+            400
+          );
+        }
+
+        if (isCoLocated || isWithin150mGeofence) {
+          distanceRemainingKm = Number(rawDist.toFixed(2));
+          etaMinutes = isCoLocated ? 0 : 1;
           isDoorstepNearby = true;
-          if (targetJob.status === 'EN_ROUTE') {
+          if (targetJob.status === 'EN_ROUTE' && isCoLocated) {
             targetJob.status = 'ARRIVED';
           }
         } else {
@@ -119,9 +190,9 @@ export async function POST(request: NextRequest) {
           etaMinutes = calculateEtaMinutes(distanceRemainingKm, 25.0);
         }
 
-        // Geofence Doorstep Check (under 50 meters = 0.05 km or manual arrival)
+        // Geofence Doorstep Check (under 150 meters with explicit arrival or 50m auto-arrival)
         // ONLY transition to ARRIVED if technician is actively EN_ROUTE!
-        if (isDoorstepNearby && targetJob.status === 'EN_ROUTE') {
+        if (isDoorstepNearby && targetJob.status === 'EN_ROUTE' && (body.status === 'ARRIVED' || isCoLocated)) {
           targetJob.status = 'ARRIVED';
           if (await isDatabaseConnected()) {
             try {
@@ -272,9 +343,9 @@ export async function GET(request: NextRequest) {
         },
         technician: {
           id: tech?.id || job.technicianId,
-          badgeNumber: tech?.badgeNumber || (job as any).technicianBadge || 'GTS-TECH-101',
+          badgeNumber: tech?.badgeNumber || (job as any).technicianBadge || 'TECH-FIELD',
           name: tech?.fullName || job.technicianName,
-          phone: tech?.phone || '9876543210',
+          phone: tech?.phone || '',
           rating: tech?.rating || 5.0,
           coordinates: { latitude: techLat, longitude: techLng },
           area: techArea,

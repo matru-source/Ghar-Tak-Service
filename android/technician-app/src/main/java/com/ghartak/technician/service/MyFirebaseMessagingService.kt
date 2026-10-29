@@ -103,6 +103,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .setStyle(NotificationCompat.BigTextStyle().bigText("60-SECOND SIREN: $service at ticket $ticketNumber. Estimated technician payout: ₹$payout. Tap to open radar and claim job!"))
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setSound(soundUri)
             .setVibrate(vibrationPattern)
             .setAutoCancel(true)

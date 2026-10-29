@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
 
     const securityReport = {
       timestamp: new Date().toISOString(),
-      platform: 'ElectriCare Mission-Critical SaaS',
+      platform: 'Ghar Tak Service Mission-Critical SaaS',
       version: '1.0.0-PROD-STAGING',
       complianceScore: 100,
       status: 'AUDIT_PASSED_CLEAN',

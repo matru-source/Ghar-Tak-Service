@@ -51,6 +51,32 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Issue 3.3: Unified User Query & Synthetic Customer Profile for Admin/Staff preview
+    if (!customer && (targetId || targetPhone)) {
+      const user = targetId
+        ? (await db.getUserById(targetId)) || dbStore.users.find((u) => u.id === targetId)
+        : (await db.getUserByPhone(targetPhone!)) || dbStore.users.find((u) => u.phone === targetPhone);
+
+      if (user) {
+        customer = {
+          id: `cust_${user.id}`,
+          userId: user.id,
+          fullName: user.fullName || 'Ghar Tak User',
+          phone: user.phone || '',
+          email: user.email || '',
+          defaultAddressLine: 'HQ Command Center, Colaba',
+          defaultPincode: '400001',
+          defaultLatitude: 18.922,
+          defaultLongitude: 72.833,
+          activeSubscriptionPlan: 'ZEX_SHIELD_PRO',
+          totalOrdersCount: 0,
+          totalSpendInr: 0,
+          isVip: true,
+          memberSince: '2026-08-01',
+        };
+      }
+    }
+
     if (!customer) {
       return apiError('Customer profile not found', 404);
     }
@@ -123,6 +149,18 @@ export async function GET(request: NextRequest) {
       activePlan,
       serviceablePincodes,
       recentBookings: allCustomerJobs.slice(0, 5),
+      // Issue 38: Return recent completed job awaiting customer rating/review
+      pendingReviewJob: allCustomerJobs.find(
+        (j: any) =>
+          ['WORK_COMPLETED', 'COMPLETED', 'SETTLED'].includes(j.status) &&
+          (j.customerRating === null || j.customerRating === undefined)
+      ) ? {
+        id: (allCustomerJobs.find((j: any) => ['WORK_COMPLETED', 'COMPLETED', 'SETTLED'].includes(j.status) && (j.customerRating === null || j.customerRating === undefined)) as any).id,
+        jobTicketNumber: (allCustomerJobs.find((j: any) => ['WORK_COMPLETED', 'COMPLETED', 'SETTLED'].includes(j.status) && (j.customerRating === null || j.customerRating === undefined)) as any).jobTicketNumber,
+        serviceTitle: (allCustomerJobs.find((j: any) => ['WORK_COMPLETED', 'COMPLETED', 'SETTLED'].includes(j.status) && (j.customerRating === null || j.customerRating === undefined)) as any).serviceTitle,
+        technicianName: (allCustomerJobs.find((j: any) => ['WORK_COMPLETED', 'COMPLETED', 'SETTLED'].includes(j.status) && (j.customerRating === null || j.customerRating === undefined)) as any).technicianName || 'Field Specialist',
+        totalAmountInr: (allCustomerJobs.find((j: any) => ['WORK_COMPLETED', 'COMPLETED', 'SETTLED'].includes(j.status) && (j.customerRating === null || j.customerRating === undefined)) as any).totalAmountInr,
+      } : null,
     }, 'Customer profile and live operational context retrieved');
   } catch (error) {
     return apiError(

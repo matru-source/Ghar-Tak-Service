@@ -51,7 +51,18 @@ export async function GET(request: NextRequest) {
         subscriberId,
         (event) => {
           try {
-            controller.enqueue(encoder.encode(`event: message\ndata: ${JSON.stringify(event)}\n\n`));
+            // Issue 36: Never send handoverOtp to technicians
+            let safeEvent = event;
+            if (role === 'TECHNICIAN' || technicianId) {
+              if (safeEvent.details?.handoverOtp || (safeEvent as any).handoverOtp) {
+                const cleanDetails = { ...safeEvent.details };
+                delete cleanDetails.handoverOtp;
+                delete cleanDetails.otp;
+                safeEvent = { ...safeEvent, details: cleanDetails };
+                delete (safeEvent as any).handoverOtp;
+              }
+            }
+            controller.enqueue(encoder.encode(`event: message\ndata: ${JSON.stringify(safeEvent)}\n\n`));
           } catch {
             // Controller closed by client
           }

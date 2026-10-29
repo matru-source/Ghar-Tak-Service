@@ -1,0 +1,30 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Rounded Background Pill -->
+    <path
+        android:fillColor="#E0F2FE"
+        android:pathData="M16,0 L80,0 A16,16 0 0,1 96,16 L96,80 A16,16 0 0,1 80,96 L16,96 A16,16 0 0,1 0,80 L0,16 A16,16 0 0,1 16,0 Z" />
+    <!-- Water Tank / Pipe Silhouette -->
+    <path
+        android:fillColor="#0284C7"
+        android:pathData="M24,28 C24,22 28,18 36,18 L60,18 C68,18 72,22 72,28 L72,48 C72,54 68,58 60,58 L36,58 C28,58 24,54 24,48 Z" />
+    <!-- Tank Bands -->
+    <path
+        android:fillColor="#0369A1"
+        android:pathData="M24,30 L72,30 L72,34 L24,34 Z M24,42 L72,42 L72,46 L24,46 Z" />
+    <!-- Drain Pipe & Tap -->
+    <path
+        android:fillColor="#0C4A6E"
+        android:pathData="M44,58 L52,58 L52,68 L64,68 L64,74 L44,74 Z" />
+    <!-- Water Droplet Accent -->
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M54,77 C54,77 62,85 62,88 C62,91.3 59.3,94 56,94 C52.7,94 50,91.3 50,88 C50,85 54,77 54,77 Z" />
+    <!-- Water Waves -->
+    <path
+        android:fillColor="#7DD3FC"
+        android:pathData="M32,38 C36,36 40,40 44,38 C48,36 52,40 56,38 C60,36 64,40 68,38 L68,40 C64,42 60,38 56,40 C52,42 48,38 44,40 C40,42 36,38 32,40 Z" />
+</vector>

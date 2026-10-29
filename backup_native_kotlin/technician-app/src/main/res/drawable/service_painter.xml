@@ -1,0 +1,30 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Rounded Background Pill -->
+    <path
+        android:fillColor="#FDF2F8"
+        android:pathData="M16,0 L80,0 A16,16 0 0,1 96,16 L96,80 A16,16 0 0,1 80,96 L16,96 A16,16 0 0,1 0,80 L0,16 A16,16 0 0,1 16,0 Z" />
+    <!-- Paint Roller Cylinder -->
+    <path
+        android:fillColor="#DB2777"
+        android:pathData="M24,20 L66,20 C69,20 71,22 71,25 L71,38 C71,41 69,43 66,43 L24,43 C21,43 19,41 19,38 L19,25 C19,22 21,20 24,20 Z" />
+    <!-- Fresh Paint Stripe -->
+    <path
+        android:fillColor="#F472B6"
+        android:pathData="M24,22 L66,22 C67,22 68,23 68,24 L68,29 L22,29 L22,24 C22,23 23,22 24,22 Z" />
+    <!-- Metal Arm -->
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M71,31 L76,31 C78,31 80,33 80,35 L80,52 C80,54 78,56 76,56 L49,56 L49,60 L45,60 L45,52 L76,52 L76,35 L71,35 Z" />
+    <!-- Roller Handle Grip -->
+    <path
+        android:fillColor="#831843"
+        android:pathData="M44,60 L50,60 C51.5,60 52,61 52,62.5 L52,82 C52,83.5 51.5,85 50,85 L44,85 C42.5,85 42,83.5 42,82 L42,62.5 C42,61 42.5,60 44,60 Z" />
+    <!-- Paint Drops -->
+    <path
+        android:fillColor="#DB2777"
+        android:pathData="M28,52 C28,52 32,58 32,60 C32,62.2 30.2,64 28,64 C25.8,64 24,62.2 24,60 C24,58 28,52 28,52 Z" />
+</vector>

@@ -2,10 +2,18 @@ package com.ghartak.customer.data.session
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.Manifest
+import android.content.pm.PackageManager
+import android.location.Geocoder
+import android.location.LocationManager
+import android.os.Build
+import android.util.Log
+import androidx.core.content.ContextCompat
 import com.ghartak.customer.data.model.PastOrderItem
 import com.ghartak.customer.data.model.UserProfile
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.Locale
 
 class SessionManager(val context: Context) {
 
@@ -46,7 +54,7 @@ class SessionManager(val context: Context) {
         private const val KEY_ACTIVE_JOB_OTP = "key_active_job_otp"
         private const val KEY_ACTIVE_JOB_STATUS = "key_active_job_status"
 
-        const val DEFAULT_BASE_URL = "https://ghartak-api.onrender.com/api/"
+        val DEFAULT_BASE_URL: String = com.ghartak.customer.BuildConfig.BASE_URL
     }
 
     init {
@@ -162,11 +170,14 @@ class SessionManager(val context: Context) {
         }
     }
 
+    fun isLoggedIn(): Boolean = prefs.getBoolean(KEY_IS_LOGGED_IN, false) && !getAuthToken().isNullOrBlank()
+
     fun getAuthToken(): String? = prefs.getString(KEY_AUTH_TOKEN, null)
 
     fun setAuthToken(token: String) {
         prefs.edit().putString(KEY_AUTH_TOKEN, token).apply()
     }
+
 
     fun getRefreshToken(): String? = prefs.getString("key_refresh_token", null)
 
@@ -200,7 +211,8 @@ class SessionManager(val context: Context) {
 
     fun getUserPincode(): String {
         val saved = prefs.getString(KEY_USER_PINCODE, null)
-        if (!saved.isNullOrBlank()) return saved
+        if (!saved.isNullOrBlank() && saved != "760001") return saved
+
         // If not explicitly saved, try extracting 6-digit pin from saved address
         val address = getUserAddress()
         val match = Regex("""\b(\d{6})\b""").find(address)
@@ -209,7 +221,51 @@ class SessionManager(val context: Context) {
             setUserPincode(pin)
             return pin
         }
-        return "760001" // Default user city (Brahmapur, Odisha)
+
+        // Issue 23: Enforce real device GPS geocoding fallback (Geocoder.getFromLocation)
+        // when session pincode is unpopulated, preventing users in Mumbai/Delhi from seeing Berhampur maps
+        try {
+            val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+            if (lm != null) {
+                val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                val hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                if (hasFine || hasCoarse) {
+                    val loc = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                        ?: lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+                    if (loc != null && loc.latitude != 0.0 && loc.longitude != 0.0) {
+                        // 1. Try native Android Geocoder.getFromLocation
+                        if (Geocoder.isPresent()) {
+                            try {
+                                val geocoder = Geocoder(context, Locale.ENGLISH)
+                                @Suppress("DEPRECATION")
+                                val addresses = geocoder.getFromLocation(loc.latitude, loc.longitude, 1)
+                                if (!addresses.isNullOrEmpty()) {
+                                    val postalCode = addresses[0].postalCode?.filter { it.isDigit() }
+                                    if (!postalCode.isNullOrBlank() && postalCode.length == 6) {
+                                        setUserPincode(postalCode)
+                                        return postalCode
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                Log.w("GTS_SESSION", "Native Geocoder.getFromLocation error: ${e.message}")
+                            }
+                        }
+
+                        // 2. Fallback to nearest hub resolution based on real GPS
+                        val resolved = com.ghartak.customer.util.IndianPincodeResolver.resolveLocationFromCoordinates(loc.latitude, loc.longitude)
+                        if (resolved.pincode.isNotBlank() && resolved.pincode.length == 6) {
+                            setUserPincode(resolved.pincode)
+                            return resolved.pincode
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.w("GTS_SESSION", "Device GPS geocoding fallback error: ${e.message}")
+        }
+
+        // Primary national headquarters hub fallback (Mumbai 400001) instead of hardcoded 760001
+        return if (!saved.isNullOrBlank()) saved else "400001"
     }
 
     fun setUserPincode(pincode: String) {

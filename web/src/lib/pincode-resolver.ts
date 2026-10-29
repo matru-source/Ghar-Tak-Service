@@ -571,3 +571,79 @@ export function resolveFullLocationFromCoordinates(lat: number, lng: number): Fu
   };
 }
 
+/**
+ * GeoJSON Territory Polygon & Spatial Boundary Geofencing Engine
+ * Simulates PostGIS ST_Contains(geom, ST_MakePoint(lng, lat)) & ST_Intersects
+ * Eliminates edge-boundary booking disputes through spatial polygon containment.
+ */
+
+export interface GeoJsonPolygon {
+  type: 'Polygon';
+  coordinates: [number, number][][]; // [ [lng, lat], ... ]
+}
+
+export function generateTerritoryPolygon(
+  centerLat: number,
+  centerLng: number,
+  radiusKm = 5.0,
+  sides = 12
+): GeoJsonPolygon {
+  const coords: [number, number][] = [];
+  const earthRadiusKm = 6371.0;
+
+  for (let i = 0; i < sides; i++) {
+    const bearing = (i * 360) / sides;
+    const bearingRad = (bearing * Math.PI) / 180;
+    const centerLatRad = (centerLat * Math.PI) / 180;
+    const centerLngRad = (centerLng * Math.PI) / 180;
+
+    const latRad = Math.asin(
+      Math.sin(centerLatRad) * Math.cos(radiusKm / earthRadiusKm) +
+        Math.cos(centerLatRad) * Math.sin(radiusKm / earthRadiusKm) * Math.cos(bearingRad)
+    );
+
+    const lngRad =
+      centerLngRad +
+      Math.atan2(
+        Math.sin(bearingRad) * Math.sin(radiusKm / earthRadiusKm) * Math.cos(centerLatRad),
+        Math.cos(radiusKm / earthRadiusKm) - Math.sin(centerLatRad) * Math.sin(latRad)
+      );
+
+    const lat = (latRad * 180) / Math.PI;
+    const lng = (lngRad * 180) / Math.PI;
+    coords.push([Number(lng.toFixed(6)), Number(lat.toFixed(6))]);
+  }
+
+  // Close the polygon ring
+  coords.push(coords[0]);
+
+  return {
+    type: 'Polygon',
+    coordinates: [coords],
+  };
+}
+
+/**
+ * High-performance Point-in-Polygon (Ray-Casting Algorithm)
+ * Equivalent to PostGIS ST_Contains(geom, ST_MakePoint(lng, lat))
+ */
+export function isPointInPolygon(
+  point: { lat: number; lng: number },
+  polygonCoordinates: [number, number][]
+): boolean {
+  const { lat, lng } = point;
+  let isInside = false;
+
+  for (let i = 0, j = polygonCoordinates.length - 1; i < polygonCoordinates.length; j = i++) {
+    const xi = polygonCoordinates[i][0];
+    const yi = polygonCoordinates[i][1];
+    const xj = polygonCoordinates[j][0];
+    const yj = polygonCoordinates[j][1];
+
+    const intersect = yi > lat !== yj > lat && lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi;
+    if (intersect) isInside = !isInside;
+  }
+
+  return isInside;
+}
+

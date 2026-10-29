@@ -11,8 +11,7 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
 
-    // Live Cloud Hosted Backend API on Render
-    var baseUrl: String = "https://ghartak-api.onrender.com/api/"
+    var baseUrl: String = com.ghartak.customer.BuildConfig.BASE_URL
 
     private var retrofit: Retrofit? = null
     private var customerApiService: CustomerApiService? = null
@@ -21,8 +20,10 @@ object ApiClient {
         if (customerApiService == null) {
             val sessionManager = SessionManager(context)
             val customUrl = sessionManager.getCustomBaseUrl()
-            if (customUrl.isNotBlank()) {
-                baseUrl = if (customUrl.endsWith("/")) customUrl else "$customUrl/"
+            baseUrl = if (customUrl.isNotBlank()) {
+                if (customUrl.endsWith("/")) customUrl else "$customUrl/"
+            } else {
+                com.ghartak.customer.BuildConfig.BASE_URL
             }
 
             val authInterceptor = Interceptor { chain ->
