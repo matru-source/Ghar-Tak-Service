@@ -53,6 +53,7 @@ function RegionalPartnerLoginContent() {
         document.cookie = `gts_partner_hub=${selectedHub}; path=/; max-age=604800; SameSite=Lax`;
         localStorage.setItem('gts_token', data.data.token);
         localStorage.setItem('gts_auth_token', data.data.token);
+        localStorage.setItem('gts_user_role', 'PARTNER');
         localStorage.setItem('gts_user', JSON.stringify(data.data.user));
         localStorage.setItem('gts_hub', selectedHub);
 

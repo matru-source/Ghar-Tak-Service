@@ -36,16 +36,12 @@ export function middleware(request: NextRequest) {
   if (pathname.startsWith('/admin')) {
     const isLogin = pathname === '/admin/login';
     if (isLogin) {
-      if (authToken && userRole === 'SUPER_ADMIN') {
-        const url = request.nextUrl.clone();
-        url.pathname = '/admin';
-        return NextResponse.redirect(url);
-      }
+      // Allow explicit access to login screen without forced auto-bouncing
       return NextResponse.next();
     }
 
-    // Guard all non-login admin routes at the edge
-    if (!authToken) {
+    // Guard all non-login admin routes: strictly requires token AND SUPER_ADMIN role
+    if (!authToken || userRole !== 'SUPER_ADMIN') {
       const url = request.nextUrl.clone();
       url.pathname = '/admin/login';
       url.searchParams.set('redirect', pathname);
@@ -59,11 +55,7 @@ export function middleware(request: NextRequest) {
   if (pathname.startsWith('/partner')) {
     const isLogin = pathname === '/partner/login';
     if (isLogin) {
-      if (authToken && userRole === 'PARTNER') {
-        const url = request.nextUrl.clone();
-        url.pathname = '/partner';
-        return NextResponse.redirect(url);
-      }
+      // Allow explicit access to login screen without forced auto-bouncing
       return NextResponse.next();
     }
 
@@ -79,8 +71,8 @@ export function middleware(request: NextRequest) {
       return NextResponse.rewrite(url);
     }
 
-    // Guard all non-login partner routes at the edge
-    if (!authToken) {
+    // Guard all non-login partner routes: strictly requires token AND PARTNER role
+    if (!authToken || userRole !== 'PARTNER') {
       const url = request.nextUrl.clone();
       url.pathname = '/partner/login';
       url.searchParams.set('redirect', pathname);

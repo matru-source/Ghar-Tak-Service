@@ -45,6 +45,7 @@ function SuperAdminLoginContent() {
         document.cookie = `gts_user_role=SUPER_ADMIN; path=/; max-age=604800; SameSite=Lax`;
         localStorage.setItem('gts_token', data.data.token);
         localStorage.setItem('gts_auth_token', data.data.token);
+        localStorage.setItem('gts_user_role', 'SUPER_ADMIN');
         localStorage.setItem('gts_user', JSON.stringify(data.data.user));
 
         showToast('✓ Authentication Successful. Establishing National Terminal Session...');

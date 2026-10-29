@@ -87,9 +87,12 @@ export function AdminSidebar({
     document.cookie = 'gts_token=; path=/; max-age=0';
     document.cookie = 'gts_auth_token=; path=/; max-age=0';
     document.cookie = 'gts_user_role=; path=/; max-age=0';
+    document.cookie = 'token=; path=/; max-age=0';
     localStorage.removeItem('gts_token');
     localStorage.removeItem('gts_auth_token');
+    localStorage.removeItem('gts_user_role');
     localStorage.removeItem('gts_user');
+    localStorage.removeItem('token');
     if (onClose) onClose();
     window.location.href = '/admin/login';
   };

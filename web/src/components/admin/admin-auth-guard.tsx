@@ -34,7 +34,14 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
        document.cookie.includes('gts_auth_token=') ||
        document.cookie.includes('token='));
 
-    if (!hasLocalToken && !hasCookieToken) {
+    const userRole = typeof window !== 'undefined'
+      ? (localStorage.getItem('gts_user_role') || (document.cookie.match(/gts_user_role=([^;]+)/)?.[1]))
+      : null;
+
+    const hasToken = hasLocalToken || hasCookieToken;
+
+    // Must have token AND if role is set, must NOT be a non-admin role
+    if (!hasToken || (userRole && userRole !== 'SUPER_ADMIN')) {
       setIsAuthorized(false);
       router.replace(`/admin/login?redirect=${encodeURIComponent(pathname || '/admin')}`);
     } else {
