@@ -31,7 +31,11 @@ class SessionManager {
   }
 
   static String getBaseUrl() {
-    return _prefs?.getString(AppConstants.keyCustomBaseUrl) ?? AppConstants.defaultBaseUrl;
+    final custom = _prefs?.getString(AppConstants.keyCustomBaseUrl);
+    if (custom != null && custom.isNotEmpty && !custom.contains('vercel.app')) {
+      return custom;
+    }
+    return AppConstants.defaultBaseUrl;
   }
 
   static Future<void> setBaseUrl(String url) async {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/session_manager.dart';
 import '../../core/theme.dart';
 import '../../models/service_model.dart';
+import '../../services/customer_location_service.dart';
 import '../../utils/indian_pincode_resolver.dart';
 import 'payment_screen.dart';
 
@@ -86,17 +87,43 @@ class _AddressBookingScreenState extends State<AddressBookingScreen> {
         _isServiceable;
   }
 
-  void _detectCurrentLocation() {
-    setState(() {
-      _flatController.text = 'Flat 904, Sea Green Horizon';
-      _streetController.text = 'Colaba Causeway';
-      _landmarkController.text = 'Opposite Taj Mahal Palace';
-      _pincodeController.text = '400005';
-    });
-    _resolvePincodeDetails('400005');
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('GPS Auto-detected: Colaba Causeway, Mumbai (400005)')),
-    );
+  bool _isLocating = false;
+
+  Future<void> _detectCurrentLocation() async {
+    setState(() => _isLocating = true);
+    try {
+      final geo = await CustomerLocationService.detectCurrentGpsAddress();
+      if (!mounted) return;
+      setState(() {
+        if (_flatController.text.trim().isEmpty) {
+          _flatController.text = 'Doorstep Premise';
+        }
+        _streetController.text = geo.street;
+        _landmarkController.text = geo.area;
+        _pincodeController.text = geo.pincode;
+      });
+      _resolvePincodeDetails(geo.pincode);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppTheme.sapphireBlue,
+          content: Text(
+            geo.isLiveGps
+                ? '📍 Live GPS Fixed: ${geo.area} (${geo.pincode})'
+                : '📍 Nearest Hub Resolved: ${geo.area} (${geo.pincode})',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not obtain GPS fix. Please verify location permissions.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLocating = false);
+    }
   }
 
   void _proceedToPayment() {
@@ -198,9 +225,18 @@ class _AddressBookingScreenState extends State<AddressBookingScreen> {
                       const Text('Service Address Details', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                       TextButton.icon(
                         style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
-                        icon: const Icon(Icons.my_location_rounded, size: 16, color: AppTheme.sapphireBlue),
-                        label: const Text('Auto-Detect GPS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.sapphireBlue)),
-                        onPressed: _detectCurrentLocation,
+                        icon: _isLocating
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.sapphireBlue),
+                              )
+                            : const Icon(Icons.my_location_rounded, size: 16, color: AppTheme.sapphireBlue),
+                        label: Text(
+                          _isLocating ? 'Acquiring GPS...' : 'Auto-Detect GPS',
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.sapphireBlue),
+                        ),
+                        onPressed: _isLocating ? null : _detectCurrentLocation,
                       ),
                     ],
                   ),

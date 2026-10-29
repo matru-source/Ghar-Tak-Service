@@ -5,11 +5,11 @@ class AppConstants {
   // Google OAuth 2.0 Web Client ID for Android Google Sign-In verification
   static const String googleServerClientId = '458445561611-rjrjgt5angqj7qgdqdup8i8ag954j57c.apps.googleusercontent.com';
   
-  // Base API configuration (Live Cloud Vercel Production)
-  static const String defaultBaseUrl = 'https://ghar-tak-service.vercel.app/api';
+  // Base API configuration (Live Cloud Production)
+  static const String defaultBaseUrl = 'https://gts.saralgroups.com/api';
   static const String localWebBaseUrl = 'http://localhost:3000/api';
   static const String emulatorBaseUrl = 'http://10.0.2.2:3000/api';
-  static const String productionBaseUrl = 'https://ghar-tak-service.vercel.app/api';
+  static const String productionBaseUrl = 'https://gts.saralgroups.com/api';
 
   // Storage Keys
   static const String keyAuthToken = 'gts_customer_jwt_token';

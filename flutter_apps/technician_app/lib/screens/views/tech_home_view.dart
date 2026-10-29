@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/session_manager.dart';
 import '../../core/theme.dart';
+import '../../core/realtime_stream_manager.dart';
+import '../../core/audio_service.dart';
 import '../../models/tech_job_model.dart';
 import '../../models/technician_model.dart';
 import '../../services/tech_job_service.dart';
@@ -29,6 +31,7 @@ class _TechHomeViewState extends State<TechHomeView> {
   bool _isLoading = true;
   List<TechJobModel> _assignedJobs = [];
   Timer? _poller;
+  StreamSubscription? _sseSub;
 
   TechJobModel? get _activeJob {
     try {
@@ -49,6 +52,7 @@ class _TechHomeViewState extends State<TechHomeView> {
 
   @override
   void dispose() {
+    _sseSub?.cancel();
     _poller?.cancel();
     super.dispose();
   }
@@ -74,7 +78,30 @@ class _TechHomeViewState extends State<TechHomeView> {
 
     if (_isOnline) {
       TelemetryService.startLiveTelemetry();
+      _setupRealtimeStream();
     }
+  }
+
+  void _setupRealtimeStream() {
+    _sseSub?.cancel();
+    final sse = RealtimeStreamManager();
+    sse.connect(technicianId: _technician.id);
+    _sseSub = sse.eventStream.listen((event) async {
+      if (!mounted || !_isOnline) return;
+      final type = event['type']?.toString() ?? '';
+      if (type == 'DISPATCH_BROADCAST' ||
+          type == 'NEW_JOB' ||
+          type == 'TECH_DISPATCHED' ||
+          type == 'EMERGENCY_SOS') {
+        final jobs = await TechJobService.getAssignedJobs();
+        if (!mounted) return;
+        setState(() => _assignedJobs = jobs);
+        final incoming = jobs.where((j) => j.status == 'DISPATCHED' || j.status == 'PENDING_ACCEPTANCE').toList();
+        if (incoming.isNotEmpty) {
+          _showIncomingDispatch(incoming.first);
+        }
+      }
+    });
   }
 
   void _startPoller() {
@@ -96,12 +123,16 @@ class _TechHomeViewState extends State<TechHomeView> {
   }
 
   void _showIncomingDispatch(TechJobModel job) {
+    // Wake screen up from pocket / locked state
+    AudioService.acquireScreenWakeLock();
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => TechDispatchAlertScreen(
           job: job,
           onAccepted: (acceptedJob) {
+            AudioService.releaseScreenWakeLock();
             setState(() {
               _assignedJobs = [acceptedJob, ..._assignedJobs.where((j) => j.id != acceptedJob.id)];
             });

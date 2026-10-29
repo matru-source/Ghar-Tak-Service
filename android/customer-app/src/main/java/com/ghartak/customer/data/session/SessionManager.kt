@@ -461,8 +461,6 @@ class SessionManager(val context: Context) {
         }
     }
 
-    fun isLoggedIn(): Boolean = prefs.getBoolean(KEY_IS_LOGGED_IN, false)
-
     fun updateProfile(name: String, email: String, phone: String, address: String, pincode: String? = null) {
         prefs.edit().apply {
             putString(KEY_USER_NAME, name.trim())

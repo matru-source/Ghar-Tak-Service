@@ -1,6 +1,7 @@
 import 'dart:async';
 import '../core/api_client.dart';
 import '../core/session_manager.dart';
+import 'hardware_location_service.dart';
 
 class TelemetryService {
   static Timer? _telemetryTimer;
@@ -27,20 +28,24 @@ class TelemetryService {
 
   static void startLiveTelemetry() {
     _telemetryTimer?.cancel();
-    _telemetryTimer = Timer.periodic(const Duration(seconds: 15), (timer) async {
+    _telemetryTimer = Timer.periodic(const Duration(seconds: 12), (timer) async {
       final tech = SessionManager.getCurrentTechnician();
       if (tech == null || !SessionManager.isDutyOnline()) {
         timer.cancel();
         return;
       }
 
-      // Mumbai Colaba area realistic telemetry coordinates
+      // Query real device hardware GPS sensor
+      final loc = await HardwareLocationService.getCurrentLocation();
+
       await ApiClient.post('/technicians/telemetry', {
         'technicianId': tech.id,
-        'latitude': 18.9220,
-        'longitude': 72.8347,
-        'speed': 18.5,
-        'heading': 45.0,
+        'latitude': loc.latitude,
+        'longitude': loc.longitude,
+        'speed': loc.speed,
+        'heading': loc.heading,
+        'accuracy': loc.accuracy,
+        'isMock': loc.isMock,
       });
     });
   }
