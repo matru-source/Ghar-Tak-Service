@@ -268,18 +268,18 @@ class _TechAuthScreenState extends State<TechAuthScreen> {
                   padding: const EdgeInsets.all(12),
                   margin: const EdgeInsets.only(bottom: 20),
                   decoration: BoxDecoration(
-                    color: TechTheme.signalAlertCrimson.withOpacity(0.12),
+                    color: TechTheme.signalCrimson.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: TechTheme.signalAlertCrimson.withOpacity(0.4)),
+                    border: Border.all(color: TechTheme.signalCrimson.withOpacity(0.4)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline_rounded, color: TechTheme.signalAlertCrimson, size: 20),
+                      const Icon(Icons.error_outline_rounded, color: TechTheme.signalCrimson, size: 20),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           _errorMessage!,
-                          style: const TextStyle(color: TechTheme.signalAlertCrimson, fontSize: 13, fontWeight: FontWeight.bold),
+                          style: const TextStyle(color: TechTheme.signalCrimson, fontSize: 13, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],

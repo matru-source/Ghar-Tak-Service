@@ -29,6 +29,7 @@ class TechTheme {
   static const Color signalOfflineSlate = Color(0xFF94A3B8);
 
   static const Color signalCrimson = Color(0xFFD32F2F);
+  static const Color signalAlertCrimson = Color(0xFFD32F2F);
   static const Color signalCrimsonBg = Color(0xFFFEE2E2);
 
   static const Color signalCobalt = Color(0xFF1976D2);
