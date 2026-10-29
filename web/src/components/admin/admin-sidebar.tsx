@@ -78,6 +78,21 @@ export function AdminSidebar({
   onMouseLeave,
 }: AdminSidebarProps) {
   const pathname = usePathname();
+
+  const handleSignOut = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {}
+    document.cookie = 'gts_token=; path=/; max-age=0';
+    document.cookie = 'gts_auth_token=; path=/; max-age=0';
+    document.cookie = 'gts_user_role=; path=/; max-age=0';
+    localStorage.removeItem('gts_token');
+    localStorage.removeItem('gts_auth_token');
+    localStorage.removeItem('gts_user');
+    if (onClose) onClose();
+    window.location.href = '/admin/login';
+  };
   const [adminUser, setAdminUser] = useState({ name: 'Platform Admin', initials: 'PA' });
 
   useEffect(() => {
@@ -266,14 +281,14 @@ export function AdminSidebar({
                 >
                   🔑
                 </Link>
-                <Link
-                  href="/admin/login"
-                  onClick={onClose}
-                  className="text-xs text-slate-400 hover:text-red-700 p-1.5 rounded hover:bg-red-50 transition"
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="text-xs text-slate-400 hover:text-red-700 p-1.5 rounded hover:bg-red-50 transition cursor-pointer"
                   title="Lock Terminal / Sign Out"
                 >
                   🚪
-                </Link>
+                </button>
               </div>
             </>
           ) : (

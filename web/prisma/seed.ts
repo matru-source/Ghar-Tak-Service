@@ -8,7 +8,7 @@ function generateSha256Checksum(payload: string): string {
 }
 
 async function main() {
-  console.log('⚡ Starting ElectriCare Database Seeding...');
+  console.log('⚡ Starting GTS Ghar Tak Service Database Seeding...');
 
   // 1. Super Admin User
   const adminUser = await prisma.user.upsert({
@@ -16,7 +16,7 @@ async function main() {
     update: {},
     create: {
       phone: '+919876543210',
-      email: 'admin@electricare.in',
+      email: 'admin@ghartak.in',
       fullName: 'Vikram Malhotra',
       role: UserRole.SUPER_ADMIN,
       isVerified: true,
@@ -352,12 +352,12 @@ async function main() {
       targetEntityId: 'ALL_INDIA_ROOT',
       payloadAfter: auditPayload,
       ipAddress: '127.0.0.1',
-      userAgent: 'ElectriCare/Seeder/1.0',
+      userAgent: 'GharTakService/Seeder/1.0',
       checksumSha256: generateSha256Checksum(auditPayload),
     },
   });
 
-  console.log('✅ ElectriCare Database Seeding Complete! Seeded:');
+  console.log('✅ GTS Ghar Tak Service Database Seeding Complete! Seeded:');
   console.log('   • 1 Super Admin (Vikram Malhotra)');
   console.log('   • 1 Partner Hub (Maharashtra Tier-1 Operations Hub)');
   console.log('   • 1 Territory Pincode (400001 Colaba Hub)');
