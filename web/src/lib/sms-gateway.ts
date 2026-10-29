@@ -261,15 +261,20 @@ export class SmsGateway {
     const isProduction = process.env.NODE_ENV === 'production';
 
     if (!successfulProvider) {
-      if (isProduction) {
-        const failMsg = `All SMS providers failed in failover chain (Twilio -> Msg91 -> AWS SNS). Attempts: ${failoverAttempts.join('; ')}`;
-        console.error(`[CRITICAL_AUTH_FAILURE] ${failMsg}`);
-        throw new Error('SMS delivery failed across all redundant gateways. Mock OTP fallback is strictly forbidden in production.');
-      } else {
-        // Development Sandbox Mode: Allowed ONLY in non-production
+      if (
+        process.env.ALLOW_SANDBOX_OTP === 'true' ||
+        process.env.SMS_PROVIDER === 'mock' ||
+        process.env.SMS_PROVIDER === 'MOCK_SANDBOX' ||
+        !isProduction
+      ) {
+        // Development Sandbox Mode or Explicit Sandbox Test Mode
         successfulProvider = 'MOCK_SANDBOX';
         deliveryStatus = 'DELIVERED';
-        console.log(`[SMS_DEV_SANDBOX] Dispatched OTP to ${cleanPhone} via Mock Sandbox: "${messageText}"`);
+        console.log(`[SMS_SANDBOX] Dispatched OTP to ${cleanPhone} via Mock Sandbox: "${messageText}"`);
+      } else {
+        const failMsg = `All SMS providers failed in failover chain (Twilio -> Msg91 -> AWS SNS). Attempts: ${failoverAttempts.join('; ')}`;
+        console.error(`[CRITICAL_AUTH_FAILURE] ${failMsg}`);
+        throw new Error('SMS delivery failed across all redundant gateways. Configure TWILIO_ACCOUNT_SID or set ALLOW_SANDBOX_OTP=true.');
       }
     }
 

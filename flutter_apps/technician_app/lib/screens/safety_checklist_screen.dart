@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../models/tech_job_model.dart';
 import '../services/tech_job_service.dart';
+import '../services/upload_service.dart';
 import '../widgets/safety_item_tile.dart';
 
 class SafetyChecklistScreen extends StatefulWidget {
@@ -37,11 +38,16 @@ class _SafetyChecklistScreenState extends State<SafetyChecklistScreen> {
       _errorMessage = null;
     });
 
+    final uploadedPhotoUrl = await UploadService.uploadEvidencePhoto(
+      jobId: widget.job.id,
+      category: 'SAFETY',
+    );
+
     final res = await TechJobService.verifySafetyChecklist(
       jobId: widget.job.id,
       glovesConfirmed: _glovesConfirmed,
       mcbSwitchConfirmed: _mcbSwitchConfirmed,
-      photoUrl: 'https://uploads.ghartak.in/evidence/safety_${widget.job.id}.jpg',
+      photoUrl: uploadedPhotoUrl,
     );
 
     setState(() => _isSubmitting = false);

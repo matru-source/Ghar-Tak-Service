@@ -24,7 +24,7 @@ class GharTakTechnicianApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Ghar Tak Partner',
+      title: 'Ghar Tak Technician',
       debugShowCheckedModeBanner: false,
       theme: TechTheme.lightTheme,
       home: const TechSplashScreen(),

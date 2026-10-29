@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../models/tech_job_model.dart';
 import '../services/tech_job_service.dart';
+import '../services/upload_service.dart';
 import 'wallet_screen.dart';
 
 class JobCompletionScreen extends StatefulWidget {
@@ -35,11 +36,16 @@ class _JobCompletionScreenState extends State<JobCompletionScreen> {
       _errorMessage = null;
     });
 
+    final uploadedAfterPhoto = await UploadService.uploadEvidencePhoto(
+      jobId: widget.job.id,
+      category: 'COMPLETION',
+    );
+
     final res = await TechJobService.completeJob(
       jobId: widget.job.id,
       handoverOtp: otp,
       resolutionNotes: _notesController.text.trim(),
-      afterPhotoUrl: 'https://uploads.ghartak.in/evidence/completion_${widget.job.id}.jpg',
+      afterPhotoUrl: uploadedAfterPhoto,
     );
 
     setState(() => _isSubmitting = false);

@@ -59,7 +59,7 @@ jobs:
           echo "=== 4. Injecting GTS Icons and App Name ==="
           cp -r ../../android/customer-app/src/main/res/mipmap-* android/app/src/main/res/
           cp ../../android/customer-app/src/main/res/drawable/ic_launcher_background.xml android/app/src/main/res/drawable/ || true
-          sed -i 's/android:label="customer_app"/android:label="Ghar Tak"/g' android/app/src/main/AndroidManifest.xml
+          sed -i 's/android:label="customer_app"/android:label="Ghar Tak Service"/g' android/app/src/main/AndroidManifest.xml
 
           echo "=== 5. Compiling Ghar Tak Customer Flutter APK ==="
           flutter pub get
@@ -70,7 +70,7 @@ jobs:
             done
             exit 1
           }
-          cp build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/GharTak-Customer.apk
+          cp build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/GharTak-Service.apk
 
       - name: Build Flutter Technician App APK
         run: |
@@ -85,7 +85,7 @@ jobs:
           echo "=== 2. Generating standard Android scaffolding ==="
           flutter create . --platforms=android --org=com.ghartak.technician --project-name=technician_app --overwrite
 
-          echo "=== 3. Restoring real Ghar Tak Partner code ==="
+          echo "=== 3. Restoring real Ghar Tak Technician code ==="
           rm -rf lib pubspec.yaml
           cp -r /tmp/tech_lib_backup lib
           cp /tmp/tech_pubspec_backup pubspec.yaml
@@ -93,9 +93,9 @@ jobs:
           echo "=== 4. Injecting GTS Icons and App Name ==="
           cp -r ../../android/technician-app/src/main/res/mipmap-* android/app/src/main/res/
           cp ../../android/technician-app/src/main/res/drawable/ic_launcher_background.xml android/app/src/main/res/drawable/ || true
-          sed -i 's/android:label="technician_app"/android:label="Ghar Tak Partner"/g' android/app/src/main/AndroidManifest.xml
+          sed -i 's/android:label="technician_app"/android:label="Ghar Tak Technician"/g' android/app/src/main/AndroidManifest.xml
 
-          echo "=== 5. Compiling Ghar Tak Partner Technician Flutter APK ==="
+          echo "=== 5. Compiling Ghar Tak Technician Flutter APK ==="
           flutter pub get
           flutter build apk --debug 2>&1 | tee /tmp/flutter_technician.log || {
             echo "::error::Flutter technician build failed! Grepping errors:"
@@ -104,18 +104,18 @@ jobs:
             done
             exit 1
           }
-          cp build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/GharTak-Partner.apk
+          cp build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/GharTak-Technician.apk
 
-      - name: Upload Ghar Tak Customer APK
+      - name: Upload Ghar Tak Service Customer APK
         uses: actions/upload-artifact@v4
         with:
-          name: GharTak-Customer-APK
-          path: flutter_apps/customer_app/build/app/outputs/flutter-apk/GharTak-Customer.apk
+          name: GharTak-Service-APK
+          path: flutter_apps/customer_app/build/app/outputs/flutter-apk/GharTak-Service.apk
           if-no-files-found: error
 
-      - name: Upload Ghar Tak Partner Technician APK
+      - name: Upload Ghar Tak Technician APK
         uses: actions/upload-artifact@v4
         with:
-          name: GharTak-Partner-APK
-          path: flutter_apps/technician_app/build/app/outputs/flutter-apk/GharTak-Partner.apk
+          name: GharTak-Technician-APK
+          path: flutter_apps/technician_app/build/app/outputs/flutter-apk/GharTak-Technician.apk
           if-no-files-found: error

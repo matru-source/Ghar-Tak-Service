@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { generateAndStoreOtp, normalizePhoneNumber } from '@/lib/otp';
+import { generateAndStoreOtpAsync, normalizePhoneNumber } from '@/lib/otp';
 import { sendOtpEmail } from '@/lib/brevo';
 import { SmsGateway } from '@/lib/sms-gateway';
 import { db } from '@/lib/db';
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       let code: string;
       let expiresAt: Date;
       try {
-        const otpData = generateAndStoreOtp(email, purpose);
+        const otpData = await generateAndStoreOtpAsync(email, purpose);
         code = otpData.code;
         expiresAt = otpData.expiresAt;
       } catch (rateErr) {
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
       let code: string;
       let expiresAt: Date;
       try {
-        const otpData = generateAndStoreOtp(cleanPhone, purpose);
+        const otpData = await generateAndStoreOtpAsync(cleanPhone, purpose);
         code = otpData.code;
         expiresAt = otpData.expiresAt;
       } catch (rateErr) {

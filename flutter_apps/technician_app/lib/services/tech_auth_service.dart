@@ -4,31 +4,29 @@ import '../models/technician_model.dart';
 
 class TechAuthService {
   static Future<ApiResponse<dynamic>> sendOtp({
-    required String phone,
-    required String badgeNumber,
+    required String identifier,
+    String? badgeNumber,
   }) async {
     return await ApiClient.post('/auth/otp/send', {
-      'identifier': phone,
-      'phone': phone,
+      'identifier': identifier,
       'purpose': 'LOGIN',
       'role': 'TECHNICIAN',
-      'badgeNumber': badgeNumber,
+      if (badgeNumber != null && badgeNumber.isNotEmpty) 'badgeNumber': badgeNumber,
     });
   }
 
   static Future<ApiResponse<TechnicianModel>> verifyOtp({
-    required String phone,
+    required String identifier,
     required String otp,
-    required String badgeNumber,
+    String? badgeNumber,
   }) async {
     final res = await ApiClient.post('/auth/otp/verify', {
-      'identifier': phone,
-      'phone': phone,
+      'identifier': identifier,
       'code': otp,
       'otp': otp,
       'purpose': 'LOGIN',
       'role': 'TECHNICIAN',
-      'badgeNumber': badgeNumber,
+      if (badgeNumber != null && badgeNumber.isNotEmpty) 'badgeNumber': badgeNumber,
     });
 
     if (res.success && res.data != null) {
@@ -41,9 +39,9 @@ class TechAuthService {
       } else {
         tech = TechnicianModel(
           id: res.data['id']?.toString() ?? 'tech_rajesh_01',
-          fullName: res.data['fullName']?.toString() ?? 'Rajesh Kumar',
-          phone: phone,
-          badgeNumber: badgeNumber.isNotEmpty ? badgeNumber : 'GTS-TECH-101',
+          fullName: res.data['fullName']?.toString() ?? 'Field Technician',
+          phone: identifier,
+          badgeNumber: (badgeNumber != null && badgeNumber.isNotEmpty) ? badgeNumber : 'GTS-TECH-101',
         );
       }
       await SessionManager.saveCurrentTechnician(tech);
@@ -53,6 +51,40 @@ class TechAuthService {
     return ApiResponse(
       success: false,
       message: res.message ?? 'Invalid OTP code. Please retry.',
+      statusCode: res.statusCode,
+    );
+  }
+
+  static Future<ApiResponse<TechnicianModel>> loginWithGoogle({
+    required String email,
+    required String fullName,
+    String? idToken,
+    String? googleId,
+  }) async {
+    final res = await ApiClient.post('/auth/google', {
+      'email': email,
+      'fullName': fullName,
+      'idToken': idToken,
+      'googleId': googleId,
+      'role': 'TECHNICIAN',
+    });
+
+    if (res.success && res.data != null && res.data is Map<String, dynamic>) {
+      final token = res.data['token']?.toString();
+      if (token != null && token.isNotEmpty) {
+        await SessionManager.saveAuthToken(token);
+      }
+      final userData = res.data['user'] is Map<String, dynamic>
+          ? res.data['user'] as Map<String, dynamic>
+          : res.data;
+      final tech = TechnicianModel.fromJson(userData);
+      await SessionManager.saveCurrentTechnician(tech);
+      return ApiResponse(success: true, data: tech, statusCode: 200);
+    }
+
+    return ApiResponse(
+      success: false,
+      message: res.message ?? 'Google Sign-In failed',
       statusCode: res.statusCode,
     );
   }

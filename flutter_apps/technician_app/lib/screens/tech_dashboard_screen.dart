@@ -44,11 +44,11 @@ class _TechDashboardScreenState extends State<TechDashboardScreen> {
   Future<void> _loadTechnicianData() async {
     setState(() => _isLoading = true);
     _technician = SessionManager.getCurrentTechnician() ?? TechnicianModel(
-      id: 'tech_rajesh_01',
-      fullName: 'Rajesh Kumar',
-      phone: '+91 98200 12345',
-      badgeNumber: 'GTS-TECH-101',
-      walletBalance: 1033.0,
+      id: 'tech_${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
+      fullName: 'Field Technician',
+      phone: '',
+      badgeNumber: 'GTS-TECH',
+      walletBalance: 0.0,
     );
     _isOnline = SessionManager.isDutyOnline();
 

@@ -20,10 +20,13 @@ class AuthService {
     String? address,
     String? pincode,
   }) async {
-    // 1. Verify OTP challenge
+    // 1. Verify OTP challenge against backend
     final verifyRes = await ApiClient.post('/auth/otp/verify', {
       'identifier': identifier,
       'code': code,
+      'otp': code,
+      'fullName': fullName,
+      'role': 'CUSTOMER',
     });
 
     if (!verifyRes.success) {
@@ -34,31 +37,31 @@ class AuthService {
       );
     }
 
-    // 2. Register / Authenticate customer account
-    final isEmail = identifier.contains('@');
-    final regRes = await ApiClient.post('/auth/register', {
-      'fullName': fullName ?? 'GTS Customer',
-      'email': isEmail ? identifier : 'customer_${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}@ghartak.in',
-      'phone': !isEmail ? identifier : '+919830000000',
-      'password': 'password123',
-      'address': address ?? 'Flat 904, Sea Green Horizon, Colaba, Mumbai',
-      'pincode': pincode ?? '400001',
-    });
-
-    if (regRes.success && regRes.data != null) {
-      final token = regRes.data['token']?.toString();
-      if (token != null) {
+    final data = verifyRes.data;
+    if (data != null && data is Map<String, dynamic>) {
+      final token = data['token']?.toString();
+      if (token != null && token.isNotEmpty) {
         await SessionManager.saveAuthToken(token);
       }
-      final user = UserModel.fromJson(regRes.data);
+
+      final userData = data['user'] is Map<String, dynamic>
+          ? data['user'] as Map<String, dynamic>
+          : data;
+
+      final user = UserModel.fromJson({
+        ...userData,
+        'address': address ?? userData['address'] ?? 'Doorstep Service Premise',
+        'pincode': pincode ?? userData['pincode'] ?? '400001',
+      });
+
       await SessionManager.saveCurrentUser(user);
       return ApiResponse(success: true, data: user, statusCode: 200);
     }
 
     return ApiResponse(
       success: false,
-      message: regRes.message ?? 'Failed to authenticate user',
-      statusCode: regRes.statusCode,
+      message: 'Failed to parse authentication payload',
+      statusCode: 500,
     );
   }
 
@@ -75,6 +78,40 @@ class AuthService {
       fullName: name,
       address: address,
       pincode: pincode,
+    );
+  }
+
+  static Future<ApiResponse<UserModel>> loginWithGoogle({
+    required String email,
+    required String fullName,
+    String? idToken,
+    String? googleId,
+  }) async {
+    final res = await ApiClient.post('/auth/google', {
+      'email': email,
+      'fullName': fullName,
+      'idToken': idToken,
+      'googleId': googleId,
+      'role': 'CUSTOMER',
+    });
+
+    if (res.success && res.data != null && res.data is Map<String, dynamic>) {
+      final token = res.data['token']?.toString();
+      if (token != null && token.isNotEmpty) {
+        await SessionManager.saveAuthToken(token);
+      }
+      final userData = res.data['user'] is Map<String, dynamic>
+          ? res.data['user'] as Map<String, dynamic>
+          : res.data;
+      final user = UserModel.fromJson(userData);
+      await SessionManager.saveCurrentUser(user);
+      return ApiResponse(success: true, data: user, statusCode: 200);
+    }
+
+    return ApiResponse(
+      success: false,
+      message: res.message ?? 'Google Sign-In failed',
+      statusCode: res.statusCode,
     );
   }
 }

@@ -30,7 +30,7 @@ class _WalletScreenState extends State<WalletScreen> {
   }
 
   void _showWithdrawalModal() {
-    final upiController = TextEditingController(text: 'rajesh.kumar@okhdfcbank');
+    final upiController = TextEditingController();
     final amountController = TextEditingController(text: (_wallet?.balance ?? 1033.0).toStringAsFixed(0));
     bool isRequesting = false;
 

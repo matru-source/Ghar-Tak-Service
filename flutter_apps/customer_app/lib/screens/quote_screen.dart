@@ -35,7 +35,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
   void initState() {
     super.initState();
     final user = SessionManager.getCurrentUser();
-    _addressController.text = user?.address ?? 'Flat 904, Sea Green Horizon, Colaba, Mumbai 400001';
+    _addressController.text = user?.address ?? '';
     _fetchQuote();
   }
 
