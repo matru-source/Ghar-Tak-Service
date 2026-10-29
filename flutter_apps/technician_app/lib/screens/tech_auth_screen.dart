@@ -19,6 +19,7 @@ class _TechAuthScreenState extends State<TechAuthScreen> {
   bool _isOtpSent = false;
   bool _isLoading = false;
   String? _errorMessage;
+  String _sentIdentifier = '';
 
   @override
   void dispose() {
@@ -68,6 +69,7 @@ class _TechAuthScreenState extends State<TechAuthScreen> {
     setState(() => _isLoading = false);
 
     if (res.success) {
+      _sentIdentifier = cleanIdentifier;
       setState(() => _isOtpSent = true);
       final channelMsg = isEmail
           ? 'Verification OTP sent to $cleanIdentifier via Brevo Email'
@@ -99,10 +101,7 @@ class _TechAuthScreenState extends State<TechAuthScreen> {
       _errorMessage = null;
     });
 
-    final isEmail = rawInput.contains('@');
-    final cleanIdentifier = isEmail
-        ? rawInput.toLowerCase()
-        : (rawInput.startsWith('+91') ? rawInput : '+91${rawInput.replaceAll(RegExp(r'\D'), '').padLeft(10, '0')}');
+    final cleanIdentifier = _sentIdentifier.isNotEmpty ? _sentIdentifier : (rawInput.contains('@') ? rawInput.toLowerCase() : '+91${rawInput.replaceAll(RegExp(r'\D'), '').padLeft(10, '0')}');
 
     final res = await TechAuthService.verifyOtp(
       identifier: cleanIdentifier,

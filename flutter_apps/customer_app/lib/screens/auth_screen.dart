@@ -25,6 +25,7 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _isOtpSent = false;
   bool _isLoading = false;
   String? _errorMessage;
+  String _sentIdentifier = '';
   int _logoTapCount = 0;
   DateTime? _lastLogoTapTime;
 
@@ -76,6 +77,7 @@ class _AuthScreenState extends State<AuthScreen> {
     setState(() => _isLoading = false);
 
     if (res.success) {
+      _sentIdentifier = cleanIdentifier;
       setState(() => _isOtpSent = true);
       final channelMessage = isEmail
           ? 'Security OTP dispatched to $cleanIdentifier via Brevo Email.'
@@ -104,17 +106,13 @@ class _AuthScreenState extends State<AuthScreen> {
       _errorMessage = null;
     });
 
-    final rawInput = _identifierController.text.trim();
-    final isEmail = rawInput.contains('@');
-    final identifier = isEmail
-        ? rawInput.toLowerCase()
-        : (rawInput.startsWith('+91') ? rawInput : '+91${rawInput.replaceAll(RegExp(r'\D'), '').padLeft(10, '0')}');
+    final targetIdentifier = _sentIdentifier.isNotEmpty ? _sentIdentifier : (rawInput.contains('@') ? rawInput.toLowerCase() : '+91${rawInput.replaceAll(RegExp(r'\D'), '').padLeft(10, '0')}');
 
     final name = _nameController.text.trim().isEmpty ? 'GTS Customer' : _nameController.text.trim();
     final address = _addressController.text.trim().isEmpty ? 'Doorstep Service Premise' : _addressController.text.trim();
 
     final res = await AuthService.verifyOtp(
-      identifier: identifier,
+      identifier: targetIdentifier,
       otp: code,
       name: name,
       address: address,
