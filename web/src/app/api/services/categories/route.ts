@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { isDatabaseConnected } from '@/lib/db';
 import { prisma } from '@/lib/prisma';
 import { dbStore } from '@/lib/mock-data';
+import { realtimeBus } from '@/lib/realtime-bus';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
 
 export function getCategoryEmoji(name: string = '', slug: string = ''): string {
@@ -182,6 +183,11 @@ export async function POST(request: NextRequest) {
           servicesCount: 0,
           services: [],
         };
+
+        realtimeBus.publish({
+          type: 'CATEGORY_CREATED',
+          details: { id: createdCategory.id, name: createdCategory.name, slug: createdCategory.slug },
+        });
 
         return apiSuccess(enriched, `Category "${cleanName}" created successfully`, 201);
       } catch (prismaErr) {

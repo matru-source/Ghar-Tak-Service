@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { BrandMark } from '@/components/ui/brand-logo';
 import { getActivePartnerId } from '@/lib/partner-session';
+import { useRealtimeEvents } from '@/lib/use-realtime-events';
 
 interface InvoiceRecord {
   id: string;
@@ -174,10 +175,35 @@ export default function PartnerInvoicesPage() {
     }
   };
 
+  const handleFinanceRealtimeEvent = useCallback((event: any) => {
+    if (
+      event.type === 'PAYMENT_RECEIVED' ||
+      event.type === 'WITHDRAWAL_REQUESTED' ||
+      event.type === 'WITHDRAWAL_APPROVED' ||
+      event.type === 'PAYOUT_TRANSFERRED' ||
+      event.type === 'JOB_COMPLETED'
+    ) {
+      fetchInvoices();
+      fetchLedger();
+      fetchWithdrawals();
+    }
+  }, []);
+
+  const { status: financeBusStatus } = useRealtimeEvents({
+    role: 'PARTNER',
+    onEvent: handleFinanceRealtimeEvent,
+  });
+
   useEffect(() => {
     fetchInvoices();
     fetchLedger();
     fetchWithdrawals();
+    const interval = setInterval(() => {
+      fetchInvoices();
+      fetchLedger();
+      fetchWithdrawals();
+    }, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const filteredInvoices = invoices.filter((inv) => {
@@ -238,6 +264,14 @@ export default function PartnerInvoicesPage() {
             </h1>
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#1B5E20] border border-emerald-200 font-bold">
               GSTIN: 27AABCU9603R1ZM
+            </span>
+            <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1.5 ${
+              financeBusStatus === 'CONNECTED'
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-amber-50 text-amber-700 border border-amber-200'
+            }`}>
+              <span className={`w-2 h-2 rounded-full ${financeBusStatus === 'CONNECTED' ? 'bg-emerald-500 animate-ping' : 'bg-amber-500'}`} />
+              {financeBusStatus === 'CONNECTED' ? 'LIVE TREASURY' : 'CONNECTING...'}
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1 max-w-2xl">

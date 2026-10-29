@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db, { isDatabaseConnected } from '@/lib/db';
 import { dbStore } from '@/lib/mock-data';
+import { realtimeBus } from '@/lib/realtime-bus';
 import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
 
 export async function GET(
@@ -135,6 +136,21 @@ export async function PATCH(
       resourceType: 'JOB_ORDER',
       resourceId: job.jobTicketNumber,
       payloadSummary: `Work-Order ${job.jobTicketNumber} transitioned to status=${job.status}. Gloves=${job.safetyGlovesConfirmed}, MCB=${job.safetyMcbSwitchConfirmed}`,
+    });
+
+    realtimeBus.publish({
+      type: job.status === 'WORK_COMPLETED' ? 'JOB_COMPLETED' : 'JOB_STATUS_UPDATE',
+      jobId: job.id,
+      ticketNumber: job.jobTicketNumber,
+      status: job.status,
+      partnerId: job.partnerId,
+      technicianId: job.technicianId,
+      customerId: job.customerId,
+      pincode: job.pincode,
+      details: {
+        safetyGlovesConfirmed: job.safetyGlovesConfirmed,
+        safetyMcbSwitchConfirmed: job.safetyMcbSwitchConfirmed,
+      },
     });
 
     return NextResponse.json({

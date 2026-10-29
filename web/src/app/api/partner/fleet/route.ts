@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { realtimeBus } from '@/lib/realtime-bus';
 import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
 
 export async function GET(request: NextRequest) {
@@ -98,6 +99,19 @@ export async function PATCH(request: NextRequest) {
       resourceType: 'TECHNICIAN',
       resourceId: technicianId,
       payloadSummary: auditSummary,
+    });
+
+    realtimeBus.publish({
+      type: 'TECH_AVAILABILITY_CHANGED',
+      technicianId,
+      partnerId: (updatedTech as any).partnerId || 'ptnr_mah_01',
+      pincode: (updatedTech as any).assignedPincode || undefined,
+      status: (updatedTech as any).isOnline ? 'ONLINE' : 'OFFLINE',
+      details: {
+        fullName: techName,
+        isOnline: (updatedTech as any).isOnline,
+        assignedPincode: (updatedTech as any).assignedPincode,
+      },
     });
 
     return NextResponse.json({

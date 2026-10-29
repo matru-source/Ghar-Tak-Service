@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
+import { realtimeBus } from '@/lib/realtime-bus';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
 
 export async function OPTIONS() {
@@ -35,6 +36,19 @@ export async function PATCH(
     const updated = await db.updateTechnicianAvailability(id, isOnline, {
       latitude: typeof latitude === 'number' ? latitude : undefined,
       longitude: typeof longitude === 'number' ? longitude : undefined,
+    });
+
+    realtimeBus.publish({
+      type: 'TECH_AVAILABILITY_CHANGED',
+      technicianId: id,
+      partnerId: (existing as any).partnerId || 'ptnr_mah_01',
+      pincode: (existing as any).assignedPincode || undefined,
+      status: isOnline ? 'ONLINE' : 'OFFLINE',
+      location: typeof latitude === 'number' && typeof longitude === 'number' ? { latitude, longitude } : undefined,
+      details: {
+        fullName: (existing as any).fullName,
+        isOnline,
+      },
     });
 
     return apiSuccess(

@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { useRealtimeEvents } from '@/lib/use-realtime-events';
 import {
   Zap,
   User,
@@ -92,8 +93,39 @@ function PartnerJobDetailsContent() {
     }
   };
 
+  const handleJobRealtimeEvent = useCallback((event: any) => {
+    // If event corresponds to this ticket / job or any lifecycle change, refresh live
+    const isRelevantTicket =
+      !event.ticketNumber ||
+      !ticketParam ||
+      event.ticketNumber.toLowerCase().replace(/[^a-z0-9]/g, '') === ticketParam.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    if (
+      isRelevantTicket &&
+      (event.type === 'JOB_STATUS_UPDATE' ||
+        event.type === 'TECH_ARRIVED' ||
+        event.type === 'TECH_ACCEPTED' ||
+        event.type === 'TECH_DISPATCHED' ||
+        event.type === 'SAFETY_INTERLOCK_VERIFIED' ||
+        event.type === 'JOB_COMPLETED' ||
+        event.type === 'EMERGENCY_SOS' ||
+        event.type === 'PAYMENT_RECEIVED' ||
+        event.type === 'JOB_PRICE_UPDATED')
+    ) {
+      fetchJob();
+    }
+  }, [ticketParam]);
+
+  const { status: jobBusStatus } = useRealtimeEvents({
+    role: 'PARTNER',
+    jobId: job?.id,
+    onEvent: handleJobRealtimeEvent,
+  });
+
   useEffect(() => {
     fetchJob();
+    const interval = setInterval(fetchJob, 20000);
+    return () => clearInterval(interval);
   }, [ticketParam]);
 
   const handleToggleSafety = async (field: 'gloves' | 'mcb') => {
@@ -188,6 +220,14 @@ function PartnerJobDetailsContent() {
             </span>
             <span className="rounded-lg bg-slate-100 px-2 py-0.5 text-xs font-mono font-bold text-slate-700 border border-slate-200">
               PIN: {job?.pincode || '400001'}
+            </span>
+            <span className={`rounded-lg px-2 py-0.5 text-xs font-bold flex items-center gap-1.5 ${
+              jobBusStatus === 'CONNECTED'
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-amber-50 text-amber-700 border border-amber-200'
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${jobBusStatus === 'CONNECTED' ? 'bg-emerald-500 animate-ping' : 'bg-amber-500'}`} />
+              {jobBusStatus === 'CONNECTED' ? 'LIVE TELEMETRY' : 'CONNECTING...'}
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1 max-w-2xl">

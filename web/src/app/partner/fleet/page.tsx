@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { BrandMark } from '@/components/ui/brand-logo';
 import { getActivePartnerId } from '@/lib/partner-session';
 import { getAuthToken } from '@/lib/api-client';
+import { useRealtimeEvents } from '@/lib/use-realtime-events';
 
 interface Technician {
   id: string;
@@ -84,8 +85,41 @@ export default function PartnerFleetPage() {
     }
   };
 
+  const handleFleetRealtimeEvent = useCallback((event: any) => {
+    if (
+      event.type === 'TECH_AVAILABILITY_CHANGED' ||
+      event.type === 'TECH_DISPATCHED' ||
+      event.type === 'TECH_KYC_VERIFIED' ||
+      event.type === 'TECH_ACCEPTED' ||
+      event.type === 'TECH_REJECTED'
+    ) {
+      fetchFleet();
+    } else if (event.type === 'TECH_LOCATION_UPDATE' && event.location) {
+      setTechnicians((prev) =>
+        prev.map((t) => {
+          if (t.id === event.technicianId || t.fullName === event.details?.fullName) {
+            return {
+              ...t,
+              currentLatitude: event.location.latitude,
+              currentLongitude: event.location.longitude,
+              isOnline: true,
+            };
+          }
+          return t;
+        })
+      );
+    }
+  }, []);
+
+  const { status: fleetBusStatus } = useRealtimeEvents({
+    role: 'PARTNER',
+    onEvent: handleFleetRealtimeEvent,
+  });
+
   useEffect(() => {
     fetchFleet();
+    const timer = setInterval(fetchFleet, 30000);
+    return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -290,6 +324,14 @@ export default function PartnerFleetPage() {
             Regional Fleet Roster & Shift Scheduling
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#1B5E20] border border-emerald-200 font-bold">
               Hub MH-01
+            </span>
+            <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1.5 ${
+              fleetBusStatus === 'CONNECTED'
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-amber-50 text-amber-700 border border-amber-200'
+            }`}>
+              <span className={`w-2 h-2 rounded-full ${fleetBusStatus === 'CONNECTED' ? 'bg-emerald-500 animate-ping' : 'bg-amber-500'}`} />
+              {fleetBusStatus === 'CONNECTED' ? 'LIVE FLEET SSE' : 'CONNECTING...'}
             </span>
           </h1>
           <p className="text-xs text-slate-500 mt-1 max-w-2xl">

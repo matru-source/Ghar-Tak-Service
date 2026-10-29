@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { realtimeBus } from '@/lib/realtime-bus';
 import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
 
 export async function GET(request: NextRequest) {
@@ -137,6 +138,17 @@ export async function PATCH(request: NextRequest) {
       resourceType: 'PINCODE_TERRITORY',
       resourceId: pincode,
       payloadSummary: auditSummary,
+    });
+
+    realtimeBus.publish({
+      type: 'CAPACITY_UPDATED',
+      pincode,
+      partnerId: (updatedPin as any).partnerId || 'ptnr_mah_01',
+      details: {
+        perimeterRadiusKm: (updatedPin as any).perimeterRadiusKm,
+        targetEtaMinutes: updatedPin.targetEtaMinutes,
+        activeCapacityCount: updatedPin.activeCapacityCount,
+      },
     });
 
     return NextResponse.json({

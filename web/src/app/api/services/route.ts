@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { db, isDatabaseConnected } from '@/lib/db';
 import { prisma } from '@/lib/prisma';
 import { dbStore } from '@/lib/mock-data';
+import { realtimeBus } from '@/lib/realtime-bus';
 import { calculateIndianGst18 } from '@/lib/tax-engine';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
 import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
@@ -244,6 +245,10 @@ export async function POST(request: NextRequest) {
         } as any);
 
         const tax = calculateIndianGst18({ baseLaborInr: createdService.basePriceInr });
+        realtimeBus.publish({
+          type: 'SERVICE_CREATED',
+          details: { id: createdService.id, title: createdService.title, code: createdService.code },
+        });
 
         return apiSuccess(
           {
@@ -367,6 +372,10 @@ export async function PATCH(request: NextRequest) {
           }
 
           const tax = calculateIndianGst18({ baseLaborInr: updated.basePriceInr });
+          realtimeBus.publish({
+            type: 'SERVICE_UPDATED',
+            details: { id: updated.id, title: updated.title, isPaused: !updated.isActive },
+          });
 
           return apiSuccess(
             {
@@ -451,6 +460,11 @@ export async function DELETE(request: NextRequest) {
           // Also remove from dbStore
           const memIdx = dbStore.serviceCatalog.findIndex((s) => s.id === existing.id || s.code === existing.code);
           if (memIdx !== -1) dbStore.serviceCatalog.splice(memIdx, 1);
+
+          realtimeBus.publish({
+            type: 'SERVICE_UPDATED',
+            details: { id: existing.id, title: existing.title, deleted: true },
+          });
 
           return apiSuccess(
             { id: existing.id, title: existing.title, permanentlyDeleted: jobCount === 0 },

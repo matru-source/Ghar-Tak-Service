@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { realtimeBus } from '@/lib/realtime-bus';
 import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
 
 export async function POST(request: NextRequest) {
@@ -63,6 +64,16 @@ export async function POST(request: NextRequest) {
       resourceType: 'TECHNICIAN_KYC',
       resourceId: technicianId,
       payloadSummary: auditSummary,
+    });
+
+    realtimeBus.publish({
+      type: status === 'VERIFIED' ? 'TECH_KYC_VERIFIED' : 'TECH_AVAILABILITY_CHANGED',
+      technicianId,
+      partnerId: (updatedTech as any).partnerId || 'ptnr_mah_01',
+      details: {
+        kycStatus: status,
+        fullName: techName,
+      },
     });
 
     return NextResponse.json({

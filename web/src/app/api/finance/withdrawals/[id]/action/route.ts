@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
+import { realtimeBus } from '@/lib/realtime-bus';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
 
 export async function OPTIONS() {
@@ -23,6 +24,18 @@ export async function POST(
       utrNumber,
       message,
       rejectionReason,
+    });
+
+    realtimeBus.publish({
+      type: action === 'APPROVE' ? 'WITHDRAWAL_APPROVED' : 'PAYOUT_TRANSFERRED',
+      technicianId: (updated as any).technicianId,
+      partnerId: (updated as any).partnerId || 'ptnr_mah_01',
+      details: {
+        withdrawalId: id,
+        action,
+        amountInr: (updated as any).amountInr,
+        utrNumber,
+      },
     });
 
     const statusMsg = action === 'APPROVE'

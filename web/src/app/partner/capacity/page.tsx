@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { BrandMark } from '@/components/ui/brand-logo';
 import { getActivePartnerId } from '@/lib/partner-session';
+import { useRealtimeEvents } from '@/lib/use-realtime-events';
 
 interface PincodeData {
   id: string;
@@ -98,8 +99,28 @@ export default function PartnerCapacityPage() {
     }
   };
 
+  const handleCapacityRealtimeEvent = useCallback((event: any) => {
+    if (
+      event.type === 'TECH_AVAILABILITY_CHANGED' ||
+      event.type === 'TECH_DISPATCHED' ||
+      event.type === 'CAPACITY_UPDATED' ||
+      event.type === 'JOB_CREATED' ||
+      event.type === 'JOB_COMPLETED' ||
+      event.type === 'TECH_LOCATION_UPDATE'
+    ) {
+      fetchCapacityData();
+    }
+  }, []);
+
+  const { status: capacityBusStatus } = useRealtimeEvents({
+    role: 'PARTNER',
+    onEvent: handleCapacityRealtimeEvent,
+  });
+
   useEffect(() => {
     fetchCapacityData();
+    const interval = setInterval(fetchCapacityData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleSelectPincode = (pin: PincodeData) => {
@@ -199,6 +220,14 @@ export default function PartnerCapacityPage() {
             Pincode Coverage Density &amp; Fleet Capacity Heatmap
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#1B5E20] border border-emerald-200 font-bold">
               Hub MH-01
+            </span>
+            <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1.5 ${
+              capacityBusStatus === 'CONNECTED'
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-amber-50 text-amber-700 border border-amber-200'
+            }`}>
+              <span className={`w-2 h-2 rounded-full ${capacityBusStatus === 'CONNECTED' ? 'bg-emerald-500 animate-ping' : 'bg-amber-500'}`} />
+              {capacityBusStatus === 'CONNECTED' ? 'LIVE HEATMAP' : 'CONNECTING...'}
             </span>
           </h1>
           <p className="text-xs text-slate-500 mt-1 max-w-2xl">

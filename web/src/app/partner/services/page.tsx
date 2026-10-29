@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRealtimeEvents } from '@/lib/use-realtime-events';
 
 interface ServiceOffering {
   id: string;
@@ -107,9 +108,30 @@ export default function PartnerServicesPage() {
     }
   };
 
+  const handleCatalogRealtimeEvent = useCallback((event: any) => {
+    if (
+      event.type === 'SERVICE_UPDATED' ||
+      event.type === 'SERVICE_CREATED' ||
+      event.type === 'CATEGORY_CREATED'
+    ) {
+      loadServices();
+      loadCategories();
+    }
+  }, []);
+
+  const { status: catalogBusStatus } = useRealtimeEvents({
+    role: 'PARTNER',
+    onEvent: handleCatalogRealtimeEvent,
+  });
+
   useEffect(() => {
     loadServices();
     loadCategories();
+    const interval = setInterval(() => {
+      loadServices();
+      loadCategories();
+    }, 45000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleTogglePause = async (service: ServiceOffering) => {
@@ -390,9 +412,19 @@ export default function PartnerServicesPage() {
             <span>&bull;</span>
             <span className="text-[#1B5E20]">Territory Service Catalog</span>
           </div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-            Manage Service Offerings
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+              Manage Service Offerings
+            </h1>
+            <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1.5 ${
+              catalogBusStatus === 'CONNECTED'
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-amber-50 text-amber-700 border border-amber-200'
+            }`}>
+              <span className={`w-2 h-2 rounded-full ${catalogBusStatus === 'CONNECTED' ? 'bg-emerald-500 animate-ping' : 'bg-amber-500'}`} />
+              {catalogBusStatus === 'CONNECTED' ? 'LIVE CATALOG' : 'CONNECTING...'}
+            </span>
+          </div>
           <p className="text-xs text-slate-500 mt-1 max-w-2xl">
             Fully dynamic catalog with live category creation, real-time pricing sync, and instant dispatches for Customers and Technicians.
           </p>

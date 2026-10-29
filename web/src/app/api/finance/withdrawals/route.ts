@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
+import { realtimeBus } from '@/lib/realtime-bus';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
 
 export async function OPTIONS() {
@@ -83,6 +84,17 @@ export async function POST(request: NextRequest) {
       accountNumber: accountNumber?.trim(),
       ifscCode: ifscCode?.trim(),
       bankName: bankName?.trim(),
+    });
+
+    realtimeBus.publish({
+      type: 'WITHDRAWAL_REQUESTED',
+      technicianId,
+      partnerId: (withdrawal as any).partnerId || 'ptnr_mah_01',
+      details: {
+        amountInr: Number(amountInr),
+        payoutMethod,
+        withdrawalId: withdrawal.id,
+      },
     });
 
     return apiSuccess(
