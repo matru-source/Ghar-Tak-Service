@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { BrandLogo } from '@/components/ui/brand-logo';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default function Home() {
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-4 sm:p-6 md:p-10 relative overflow-hidden">
@@ -29,7 +32,7 @@ export default function Home() {
         <div className="p-8 sm:p-10 space-y-4">
           {/* Card 1: Super Admin Terminal */}
           <Link
-            href="/admin"
+            href="/admin/login"
             className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600 text-white font-extrabold text-sm transition shadow-xl shadow-purple-950/60 flex items-center justify-between group"
           >
             <div className="flex items-center gap-3">

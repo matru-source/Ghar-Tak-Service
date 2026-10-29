@@ -41,6 +41,10 @@ let lastDbCheck = 0;
 let cachedDbConnected = false;
 
 export async function isDatabaseConnected(): Promise<boolean> {
+  if (!prisma || typeof prisma.$queryRaw !== 'function') {
+    return false;
+  }
+
   const { circuitBreaker } = await import('./circuit-breaker');
   if (circuitBreaker.getState() === 'OPEN') {
     return false; // Fast-fail without waiting for socket timeout

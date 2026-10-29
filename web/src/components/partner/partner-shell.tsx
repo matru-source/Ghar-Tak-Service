@@ -12,6 +12,11 @@ export function PartnerShell({ children }: { children: React.ReactNode }) {
   const [isHovered, setIsHovered] = useState(false);
   const pathname = usePathname();
 
+  // Route isolation: Login portal must render completely standalone (no shell, sidebar, or topbar)
+  if (pathname?.startsWith('/partner/login')) {
+    return <>{children}</>;
+  }
+
   // Load pinned sidebar preference from localStorage
   useEffect(() => {
     try {

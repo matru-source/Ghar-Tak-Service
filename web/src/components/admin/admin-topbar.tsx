@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { BrandMark } from '@/components/ui/brand-logo';
-import { useAdminLive } from './admin-live-provider';
 
 interface AdminTopbarProps {
   onToggleSidebar?: () => void;
@@ -11,39 +10,6 @@ interface AdminTopbarProps {
 }
 
 export function AdminTopbar({ onToggleSidebar, isSidebarExpanded = false }: AdminTopbarProps) {
-  const { status: realtimeStatus } = useAdminLive();
-  const [currentTime, setCurrentTime] = useState<string>('');
-  const [escalatedCount, setEscalatedCount] = useState<number>(0);
-
-  useEffect(() => {
-    const update = () => {
-      const now = new Date();
-      setCurrentTime(
-        now.toLocaleTimeString('en-IN', {
-          timeZone: 'Asia/Kolkata',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: true,
-        })
-      );
-    };
-    update();
-    const interval = setInterval(update, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    fetch('/api/jobs/escalations')
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.success && d.data) {
-          setEscalatedCount(d.data.counts?.totalEscalated ?? (d.data.escalatedJobs?.length || 0));
-        }
-      })
-      .catch(() => {});
-  }, []);
-
   return (
     <header className="sticky top-0 z-30 h-16 bg-white/90 backdrop-blur-md border-b border-slate-200 px-3 sm:px-6 lg:px-8 flex items-center justify-between shadow-xs">
       {/* Sidebar Toggle & Search Bar */}
@@ -70,60 +36,6 @@ export function AdminTopbar({ onToggleSidebar, isSidebarExpanded = false }: Admi
             className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-purple-600 transition-colors shadow-xs"
           />
         </div>
-      </div>
-
-      {/* Right Telemetry Controls */}
-      <div className="flex items-center gap-3 lg:gap-5">
-        {/* Live Event Bus Health Pill */}
-        <div
-          className={`hidden sm:flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] font-semibold transition-colors ${
-            realtimeStatus === 'CONNECTED'
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-              : realtimeStatus === 'CONNECTING'
-              ? 'bg-amber-50 border-amber-200 text-amber-800'
-              : 'bg-rose-50 border-rose-200 text-rose-800'
-          }`}
-        >
-          <span
-            className={`w-2 h-2 rounded-full ${
-              realtimeStatus === 'CONNECTED'
-                ? 'bg-emerald-500 animate-pulse'
-                : realtimeStatus === 'CONNECTING'
-                ? 'bg-amber-500 animate-ping'
-                : 'bg-rose-500'
-            }`}
-          ></span>
-          <span>
-            {realtimeStatus === 'CONNECTED'
-              ? 'Live Bus Online'
-              : realtimeStatus === 'CONNECTING'
-              ? 'Reconnecting Bus...'
-              : 'Bus Disconnected'}
-          </span>
-          <span className="text-slate-300">|</span>
-          <span className="text-slate-600 font-mono text-[10px]">{currentTime || '05:30 PM IST'}</span>
-        </div>
-
-        {/* Dynamic SLA Escalation Pill */}
-        {escalatedCount > 0 ? (
-          <Link
-            href="/admin/escalations"
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs font-bold hover:bg-red-100 transition shadow-xs animate-bounce"
-            title={`${escalatedCount} work order breached standard SLA`}
-          >
-            <span>⚠️</span>
-            <span className="hidden md:inline">{escalatedCount} SLA Escalated</span>
-          </Link>
-        ) : (
-          <Link
-            href="/admin/escalations"
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-100 transition shadow-xs"
-            title="0 SLA breaches — operations running optimally"
-          >
-            <span className="text-emerald-500 text-[10px]">●</span>
-            <span className="hidden md:inline">0 Escalations</span>
-          </Link>
-        )}
       </div>
     </header>
   );

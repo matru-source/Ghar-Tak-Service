@@ -74,6 +74,26 @@ export function PartnerSidebar({
 }: PartnerSidebarProps) {
   const pathname = usePathname();
 
+  const handleSignOut = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {}
+    document.cookie = 'gts_token=; path=/; max-age=0';
+    document.cookie = 'gts_auth_token=; path=/; max-age=0';
+    document.cookie = 'gts_user_role=; path=/; max-age=0';
+    document.cookie = 'gts_partner_hub=; path=/; max-age=0';
+    document.cookie = 'token=; path=/; max-age=0';
+    localStorage.removeItem('gts_token');
+    localStorage.removeItem('gts_auth_token');
+    localStorage.removeItem('gts_user_role');
+    localStorage.removeItem('gts_user');
+    localStorage.removeItem('gts_hub');
+    localStorage.removeItem('token');
+    if (onClose) onClose();
+    window.location.href = '/partner/login';
+  };
+
   return (
     <>
       {/* Backdrop for mobile */}
@@ -249,21 +269,26 @@ export function PartnerSidebar({
                   </div>
                 </div>
               </div>
-              <Link
-                href="/partner/login"
-                onClick={onClose}
-                className="text-xs text-slate-400 hover:text-slate-700 p-1.5 rounded hover:bg-slate-200/60 transition font-bold shrink-0"
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="text-xs text-slate-400 hover:text-red-700 p-1.5 rounded hover:bg-red-50 transition cursor-pointer font-bold shrink-0"
                 title="Switch Hub / Sign Out"
               >
                 🚪
-              </Link>
+              </button>
             </>
           ) : (
-            <div className="mx-auto" title="Maharashtra Ops • FRANCHISE_MH_01">
-              <div className="w-8 h-8 rounded-full bg-[#1B5E20] flex items-center justify-center text-xs font-bold text-white ring-2 ring-emerald-200 shadow-xs">
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="mx-auto cursor-pointer group"
+              title="Maharashtra Ops • FRANCHISE_MH_01 (Click to Sign Out)"
+            >
+              <div className="w-8 h-8 rounded-full bg-[#1B5E20] group-hover:bg-red-700 flex items-center justify-center text-xs font-bold text-white ring-2 ring-emerald-200 shadow-xs transition-colors">
                 MH
               </div>
-            </div>
+            </button>
           )}
         </div>
       </aside>

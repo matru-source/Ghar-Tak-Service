@@ -1,5 +1,6 @@
 import React from 'react';
 import { PartnerShell } from '@/components/partner/partner-shell';
+import { PartnerAuthGuard } from '@/components/partner/partner-auth-guard';
 
 export const metadata = {
   title: 'Ghar Tak Service Partner CRM — Regional Operations Hub',
@@ -11,5 +12,9 @@ export default function PartnerLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <PartnerShell>{children}</PartnerShell>;
+  return (
+    <PartnerAuthGuard>
+      <PartnerShell>{children}</PartnerShell>
+    </PartnerAuthGuard>
+  );
 }

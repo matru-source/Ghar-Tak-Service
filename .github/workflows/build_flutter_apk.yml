@@ -48,18 +48,33 @@ jobs:
           set -e -o pipefail
           cd flutter_apps/customer_app
 
-          echo "=== 1. Backing up real Customer App Dart code and pubspec ==="
-          rm -rf /tmp/cust_lib_backup /tmp/cust_pubspec_backup
+          echo "=== 1. Backing up real Customer App Dart code, pubspec, and native hardware bindings ==="
+          rm -rf /tmp/cust_lib_backup /tmp/cust_pubspec_backup /tmp/cust_android_backup /tmp/cust_xml_backup
           cp -r lib /tmp/cust_lib_backup
           cp pubspec.yaml /tmp/cust_pubspec_backup
+          if [ -d "android/app/src/main/kotlin" ]; then
+            mkdir -p /tmp/cust_android_backup
+            cp -r android/app/src/main/kotlin/* /tmp/cust_android_backup/
+          fi
+          if [ -d "android/app/src/main/res/xml" ]; then
+            mkdir -p /tmp/cust_xml_backup
+            cp -r android/app/src/main/res/xml/* /tmp/cust_xml_backup/
+          fi
 
           echo "=== 2. Generating standard Android scaffolding ==="
           flutter create . --platforms=android --org=com.ghartak.customer --project-name=customer_app --overwrite
 
-          echo "=== 3. Restoring real Ghar Tak Customer code ==="
+          echo "=== 3. Restoring real Ghar Tak Customer code and native hardware bindings ==="
           rm -rf lib pubspec.yaml
           cp -r /tmp/cust_lib_backup lib
           cp /tmp/cust_pubspec_backup pubspec.yaml
+          if [ -d "/tmp/cust_android_backup" ]; then
+            cp -r /tmp/cust_android_backup/* android/app/src/main/kotlin/
+          fi
+          if [ -d "/tmp/cust_xml_backup" ]; then
+            mkdir -p android/app/src/main/res/xml
+            cp -r /tmp/cust_xml_backup/* android/app/src/main/res/xml/
+          fi
 
           echo "=== 4. Injecting GTS Icons and App Name ==="
           cp -r ../../android/customer-app/src/main/res/mipmap-* android/app/src/main/res/
@@ -82,18 +97,25 @@ jobs:
           set -e -o pipefail
           cd flutter_apps/technician_app
 
-          echo "=== 1. Backing up real Technician App Dart code and pubspec ==="
-          rm -rf /tmp/tech_lib_backup /tmp/tech_pubspec_backup
+          echo "=== 1. Backing up real Technician App Dart code, pubspec, and native hardware bindings ==="
+          rm -rf /tmp/tech_lib_backup /tmp/tech_pubspec_backup /tmp/tech_android_backup
           cp -r lib /tmp/tech_lib_backup
           cp pubspec.yaml /tmp/tech_pubspec_backup
+          if [ -d "android/app/src/main/kotlin" ]; then
+            mkdir -p /tmp/tech_android_backup
+            cp -r android/app/src/main/kotlin/* /tmp/tech_android_backup/
+          fi
 
           echo "=== 2. Generating standard Android scaffolding ==="
           flutter create . --platforms=android --org=com.ghartak.technician --project-name=technician_app --overwrite
 
-          echo "=== 3. Restoring real Ghar Tak Technician code ==="
+          echo "=== 3. Restoring real Ghar Tak Technician code and native hardware bindings ==="
           rm -rf lib pubspec.yaml
           cp -r /tmp/tech_lib_backup lib
           cp /tmp/tech_pubspec_backup pubspec.yaml
+          if [ -d "/tmp/tech_android_backup" ]; then
+            cp -r /tmp/tech_android_backup/* android/app/src/main/kotlin/
+          fi
 
           echo "=== 4. Injecting GTS Icons and App Name ==="
           cp -r ../../android/technician-app/src/main/res/mipmap-* android/app/src/main/res/

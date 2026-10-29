@@ -25,7 +25,64 @@ export function middleware(request: NextRequest) {
     return response;
   }
 
-  // 2. Super Admin Portal Routing (admin.localhost:3000, admin.*, or Port 3001)
+  // Extract authentication tokens from cookies
+  const authToken =
+    request.cookies.get('gts_token')?.value ||
+    request.cookies.get('gts_auth_token')?.value ||
+    request.cookies.get('token')?.value;
+  const userRole = request.cookies.get('gts_user_role')?.value;
+
+  // 2. Direct Path Route Protection for /admin
+  if (pathname.startsWith('/admin')) {
+    const isLogin = pathname === '/admin/login';
+    if (isLogin) {
+      // Allow explicit access to login screen without forced auto-bouncing
+      return NextResponse.next();
+    }
+
+    // Guard all non-login admin routes: strictly requires token AND SUPER_ADMIN role
+    if (!authToken || userRole !== 'SUPER_ADMIN') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/admin/login';
+      url.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(url);
+    }
+
+    return NextResponse.next();
+  }
+
+  // 3. Direct Path Route Protection for /partner
+  if (pathname.startsWith('/partner')) {
+    const isLogin = pathname === '/partner/login';
+    if (isLogin) {
+      // Allow explicit access to login screen without forced auto-bouncing
+      return NextResponse.next();
+    }
+
+    // Common partner aliases
+    if (pathname === '/partner/technicians') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/partner/fleet';
+      return NextResponse.rewrite(url);
+    }
+    if (pathname === '/partner/finance') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/partner/invoices';
+      return NextResponse.rewrite(url);
+    }
+
+    // Guard all non-login partner routes: strictly requires token AND PARTNER role
+    if (!authToken || userRole !== 'PARTNER') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/partner/login';
+      url.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(url);
+    }
+
+    return NextResponse.next();
+  }
+
+  // 4. Super Admin Subdomain Routing (admin.localhost:3000, admin.*, or Port 3001)
   const isAdminHost = host.startsWith('admin.') || host.includes(':3001');
   if (isAdminHost) {
     // Prevent admin from viewing partner or customer pages

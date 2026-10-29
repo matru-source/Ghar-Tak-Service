@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/session_manager.dart';
 import '../../core/theme.dart';
+import '../../core/realtime_stream_manager.dart';
 import '../../models/job_model.dart';
 import '../../services/job_service.dart';
 import 'service_signoff_screen.dart';
@@ -22,6 +23,7 @@ class ActiveJobScreen extends StatefulWidget {
 class _ActiveJobScreenState extends State<ActiveJobScreen> {
   late JobModel _job;
   Timer? _statusPoller;
+  StreamSubscription? _sseSubscription;
   bool _hasPromptedArrival = false;
   int _etaMinutes = 12;
 
@@ -37,11 +39,39 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
   void initState() {
     super.initState();
     _job = widget.initialJob;
+    _subscribeRealtimeStream();
     _startLiveTrackingPoller();
+  }
+
+  void _subscribeRealtimeStream() {
+    final sse = RealtimeStreamManager();
+    sse.connect(jobId: _job.id);
+    _sseSubscription = sse.eventStream.listen((event) {
+      if (!mounted) return;
+      final eventType = event['type']?.toString() ?? '';
+      final targetJobId = event['jobId']?.toString() ?? event['details']?['jobId']?.toString();
+      if (targetJobId != null && targetJobId != _job.id) return;
+
+      final newStatus = event['status']?.toString() ?? event['details']?['status']?.toString();
+      if (newStatus != null && newStatus.isNotEmpty) {
+        setState(() {
+          _job = _job.copyWith(status: newStatus);
+        });
+        if ((newStatus == 'ARRIVED' || newStatus == 'DOORSTEP_ARRIVED') && !_hasPromptedArrival) {
+          _hasPromptedArrival = true;
+          _showArrivalDialog();
+        }
+        if (newStatus == 'WORK_COMPLETED' || newStatus == 'COMPLETED') {
+          _statusPoller?.cancel();
+          _transitionToSignoff();
+        }
+      }
+    });
   }
 
   @override
   void dispose() {
+    _sseSubscription?.cancel();
     _statusPoller?.cancel();
     super.dispose();
   }

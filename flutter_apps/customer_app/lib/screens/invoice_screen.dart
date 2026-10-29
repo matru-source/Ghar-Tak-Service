@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../models/job_model.dart';
+import '../utils/offline_invoice_generator.dart';
 import '../widgets/custom_button.dart';
 import 'home_screen.dart';
 
@@ -165,6 +166,23 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                     ],
                   ),
                 ],
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Offline PDF Download / View Action
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.sapphireBlue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                icon: const Icon(Icons.picture_as_pdf_rounded, size: 20),
+                label: const Text('Download / Open Official GST PDF (Offline)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                onPressed: () => OfflineInvoiceGenerator.generateAndOpenInvoice(context, widget.job),
               ),
             ),
             const SizedBox(height: 20),
