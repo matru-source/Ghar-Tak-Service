@@ -20,39 +20,41 @@ export default function Home() {
               GTS Ghar Tak Service
             </h1>
             <p className="text-slate-400 text-sm mt-2 max-w-md leading-relaxed font-medium">
-              Central Enterprise Portal for Multi-State Service Dispatch, Field Fleet Management, and Financial Governance.
+              Central Enterprise Portal for Multi-State Service Dispatch, Regional Franchise Management, and Financial Governance.
             </p>
           </div>
         </div>
 
         {/* Action Panel */}
         <div className="p-8 sm:p-10 space-y-4">
+          {/* Card 1: Super Admin Terminal */}
           <Link
             href="/admin"
             className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600 text-white font-extrabold text-sm transition shadow-xl shadow-purple-950/60 flex items-center justify-between group"
           >
             <div className="flex items-center gap-3">
-              <span className="text-xl">👑</span>
+              <span className="text-2xl">👑</span>
               <div className="text-left">
-                <div className="font-black text-white">Enter Super Admin Terminal</div>
-                <div className="text-[11px] text-purple-200 font-normal">Live Telemetry, Dispatch Radar, Jobs & Ledgers</div>
+                <div className="font-black text-white text-base">Super Admin Terminal</div>
+                <div className="text-[11px] text-purple-200 font-normal">National Telemetry, Central Ledgers & WORM Audit Trail</div>
               </div>
             </div>
-            <span className="text-lg group-hover:translate-x-1 transition-transform">→</span>
+            <span className="text-lg group-hover:translate-x-1.5 transition-transform">→</span>
           </Link>
 
+          {/* Card 2: Regional Franchise Partner Portal */}
           <Link
-            href="/admin/technicians"
-            className="w-full py-3.5 px-6 rounded-2xl bg-slate-850 hover:bg-slate-800 border border-slate-750 text-slate-200 font-bold text-xs transition flex items-center justify-between group"
+            href="/partner"
+            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-900/60 to-emerald-950/60 hover:from-emerald-800/70 hover:to-emerald-900/70 border border-emerald-500/30 text-slate-100 font-bold text-xs transition shadow-lg shadow-emerald-950/40 flex items-center justify-between group"
           >
             <div className="flex items-center gap-3">
-              <span className="text-lg">🔧</span>
+              <span className="text-2xl">🏢</span>
               <div className="text-left">
-                <div className="font-bold text-slate-100">Technician Fleet & Dispatch</div>
-                <div className="text-[10px] text-slate-400 font-normal">Active mobile rosters & safety verifications</div>
+                <div className="font-black text-emerald-300 text-base">Franchise Partner Portal</div>
+                <div className="text-[11px] text-emerald-200/80 font-normal">State Hub Operations, Live Dispatch Console & 15% Rev Share</div>
               </div>
             </div>
-            <span className="text-slate-400 group-hover:translate-x-1 transition-transform">→</span>
+            <span className="text-emerald-400 text-lg group-hover:translate-x-1.5 transition-transform">→</span>
           </Link>
         </div>
 

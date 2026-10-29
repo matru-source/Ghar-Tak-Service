@@ -106,7 +106,7 @@ export default function SuperAdminLoginPage() {
               required
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              placeholder="admin@electricare.in"
+              placeholder="admin@ghartak.in"
               className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
             />
           </div>
@@ -164,6 +164,17 @@ export default function SuperAdminLoginPage() {
             )}
           </button>
         </form>
+
+        {/* Navigation Shortcut to Partner Portal */}
+        <div className="pt-2 border-t border-slate-800/80 flex items-center justify-end">
+          <Link
+            href="/partner/login"
+            className="text-[11px] text-slate-400 hover:text-emerald-300 transition flex items-center gap-1 font-semibold"
+          >
+            <span>🏢 Franchise Partner Portal</span>
+            <span>→</span>
+          </Link>
+        </div>
 
         {/* Security Compliance Footer */}
         <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-[10px] text-slate-500 text-center leading-relaxed font-mono">

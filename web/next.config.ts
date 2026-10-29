@@ -5,22 +5,12 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/partner-app',
-        destination: '/admin',
+        destination: '/partner',
         permanent: false,
       },
       {
         source: '/partner-app/:path*',
-        destination: '/admin',
-        permanent: false,
-      },
-      {
-        source: '/partner',
-        destination: '/admin',
-        permanent: false,
-      },
-      {
-        source: '/partner/:path*',
-        destination: '/admin',
+        destination: '/partner',
         permanent: false,
       },
       {
@@ -30,6 +20,16 @@ const nextConfig: NextConfig = {
       },
       {
         source: '/customer/:path*',
+        destination: '/admin',
+        permanent: false,
+      },
+      {
+        source: '/tech',
+        destination: '/admin',
+        permanent: false,
+      },
+      {
+        source: '/tech/:path*',
         destination: '/admin',
         permanent: false,
       },
