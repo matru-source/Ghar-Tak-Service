@@ -2,7 +2,6 @@
 
 import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { BrandLogo, BrandMark } from '@/components/ui/brand-logo';
 
 function SuperAdminLoginContent() {
@@ -13,7 +12,6 @@ function SuperAdminLoginContent() {
   const [identifier, setIdentifier] = useState('admin@ghartak.in');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [twoFactorCode, setTwoFactorCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -35,7 +33,6 @@ function SuperAdminLoginContent() {
         body: JSON.stringify({
           identifier,
           password,
-          twoFactorCode: twoFactorCode.trim(),
           role: 'SUPER_ADMIN',
         }),
       });
@@ -169,30 +166,6 @@ function SuperAdminLoginContent() {
             </div>
           </div>
 
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label htmlFor="admin-totp" className="text-xs font-bold text-slate-300">
-                Two-Factor Code (TOTP / Authenticator)
-              </label>
-              <span className="text-[10px] text-slate-400 font-mono">
-                Authenticator App
-              </span>
-            </div>
-            <input
-              id="admin-totp"
-              name="twoFactorCode"
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              maxLength={6}
-              autoComplete="one-time-code"
-              value={twoFactorCode}
-              onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ''))}
-              placeholder="000000"
-              className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-purple-300 font-mono text-center tracking-widest text-sm font-bold focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
-            />
-          </div>
-
           <button
             type="submit"
             disabled={loading}
@@ -211,22 +184,6 @@ function SuperAdminLoginContent() {
             )}
           </button>
         </form>
-
-        {/* Navigation Shortcut to Franchise Partner Portal */}
-        <div className="pt-2 border-t border-slate-800/80 flex items-center justify-end">
-          <Link
-            href="/partner/login"
-            className="text-[11px] text-slate-400 hover:text-emerald-300 transition flex items-center gap-1.5 font-semibold"
-          >
-            <span>🏢 Franchise Partner Portal</span>
-            <span>→</span>
-          </Link>
-        </div>
-
-        {/* Security Compliance Footer */}
-        <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 text-[10px] text-slate-500 text-center leading-relaxed font-mono">
-          🔒 Write-Once-Read-Many (WORM) audit ledger active. IP address, timestamp & TLS fingerprint logged.
-        </div>
       </div>
     </div>
   );

@@ -2,7 +2,6 @@
 
 import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { BrandLogo, BrandMark } from '@/components/ui/brand-logo';
 
 const FRANCHISE_HUBS = [
@@ -20,7 +19,6 @@ function RegionalPartnerLoginContent() {
   const [identifier, setIdentifier] = useState('operations@ghartak.in');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [licenseCode, setLicenseCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -144,7 +142,7 @@ function RegionalPartnerLoginContent() {
 
           <div>
             <label htmlFor="partner-identifier" className="block text-xs font-bold text-slate-300 mb-1.5">
-              Hub Manager Email / Phone
+              Hub Manager Email / Partner ID / Phone
             </label>
             <input
               id="partner-identifier"
@@ -201,21 +199,6 @@ function RegionalPartnerLoginContent() {
             </div>
           </div>
 
-          <div>
-            <label htmlFor="partner-license" className="block text-xs font-bold text-slate-300 mb-1.5">
-              Regional Security Key / License Serial
-            </label>
-            <input
-              id="partner-license"
-              name="licenseCode"
-              type="text"
-              value={licenseCode}
-              onChange={(e) => setLicenseCode(e.target.value)}
-              placeholder="LIC-MH-2026-991"
-              className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-emerald-300 font-mono text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
-            />
-          </div>
-
           <button
             type="submit"
             disabled={loading}
@@ -224,7 +207,7 @@ function RegionalPartnerLoginContent() {
             {loading ? (
               <>
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Validating State License...</span>
+                <span>Authenticating Partner Portal...</span>
               </>
             ) : (
               <>
@@ -234,22 +217,6 @@ function RegionalPartnerLoginContent() {
             )}
           </button>
         </form>
-
-        {/* Navigation Action */}
-        <div className="pt-2 border-t border-slate-800/80 flex items-center justify-end">
-          <Link
-            href="/admin/login"
-            className="text-[11px] text-slate-400 hover:text-slate-200 transition flex items-center gap-1 font-semibold"
-          >
-            <span>Super Admin Terminal</span>
-            <span>→</span>
-          </Link>
-        </div>
-
-        {/* Territory Compliance Footer */}
-        <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 text-[10px] text-slate-500 text-center leading-relaxed font-mono">
-          🏢 Multi-Tenant Territory Scoped. Access restricted to allocated state pincodes & licensed fleet.
-        </div>
       </div>
     </div>
   );
