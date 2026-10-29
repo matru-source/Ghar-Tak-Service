@@ -257,7 +257,7 @@ export default function AdminDispatchPage() {
       </div>
 
       {/* KPI Stats Strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
           <div className="text-[11px] font-bold text-slate-500 uppercase">Active Dispatches</div>
           <div className="text-2xl font-black text-slate-900 mt-1 flex items-baseline gap-2">
@@ -279,14 +279,6 @@ export default function AdminDispatchPage() {
           <div className="text-2xl font-black text-emerald-600 mt-1 flex items-baseline gap-2">
             {onlineTechs.length}
             <span className="text-xs text-slate-400 font-normal">/ {technicians.length} Total</span>
-          </div>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
-          <div className="text-[11px] font-bold text-slate-500 uppercase">Target SLA Commitment</div>
-          <div className="text-2xl font-black text-purple-700 mt-1 flex items-baseline gap-2">
-            &lt; 30 Mins
-            <span className="text-xs text-purple-500 font-bold">Guaranteed</span>
           </div>
         </div>
       </div>
