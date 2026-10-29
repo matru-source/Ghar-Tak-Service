@@ -85,7 +85,7 @@ class _TechHomeViewState extends State<TechHomeView> {
   void _setupRealtimeStream() {
     _sseSub?.cancel();
     final sse = RealtimeStreamManager();
-    sse.connect(technicianId: _technician.id);
+    sse.connect(technicianId: _technician?.id);
     _sseSub = sse.eventStream.listen((event) async {
       if (!mounted || !_isOnline) return;
       final type = event['type']?.toString() ?? '';
