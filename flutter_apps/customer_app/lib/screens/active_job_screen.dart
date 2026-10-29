@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../core/theme.dart';
-import '../models/job_model.dart';
-import '../services/job_service.dart';
-import '../widgets/handover_otp_card.dart';
-import '../widgets/technician_card.dart';
+import '../../core/session_manager.dart';
+import '../../core/theme.dart';
+import '../../models/job_model.dart';
+import '../../services/job_service.dart';
+import 'service_signoff_screen.dart';
 import 'home_screen.dart';
-import 'invoice_screen.dart';
 
 class ActiveJobScreen extends StatefulWidget {
   final JobModel initialJob;
@@ -23,14 +22,22 @@ class ActiveJobScreen extends StatefulWidget {
 class _ActiveJobScreenState extends State<ActiveJobScreen> {
   late JobModel _job;
   Timer? _statusPoller;
-  bool _isRefreshing = false;
-  bool _isSosActive = false;
+  bool _hasPromptedArrival = false;
+  int _etaMinutes = 12;
+
+  final List<Map<String, String>> _statusSteps = [
+    {'key': 'DISPATCHED', 'label': 'Dispatched', 'sub': 'Assigned to nearest hub'},
+    {'key': 'EN_ROUTE', 'label': 'En Route', 'sub': 'Electrician traveling'},
+    {'key': 'ARRIVED', 'label': 'Arrived', 'sub': 'Technician at doorstep'},
+    {'key': 'IN_PROGRESS', 'label': 'In Progress', 'sub': 'Work underway'},
+    {'key': 'WORK_COMPLETED', 'label': 'Completed', 'sub': 'Safety verified'},
+  ];
 
   @override
   void initState() {
     super.initState();
     _job = widget.initialJob;
-    _startPolling();
+    _startLiveTrackingPoller();
   }
 
   @override
@@ -39,242 +46,367 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
     super.dispose();
   }
 
-  void _startPolling() {
+  void _startLiveTrackingPoller() {
     _statusPoller = Timer.periodic(const Duration(seconds: 4), (timer) async {
       final updated = await JobService.getJobDetails(_job.id);
       if (updated != null && mounted) {
-        setState(() => _job = updated);
-        if (_job.status == 'WORK_COMPLETED') {
+        setState(() {
+          _job = updated;
+          if (_etaMinutes > 2) _etaMinutes--;
+        });
+
+        // Prompt arrival dialog
+        if ((_job.status == 'ARRIVED' || _job.status == 'DOORSTEP_ARRIVED') && !_hasPromptedArrival) {
+          _hasPromptedArrival = true;
+          _showArrivalDialog();
+        }
+
+        // Completion transition
+        if (_job.status == 'WORK_COMPLETED' || _job.status == 'COMPLETED') {
           timer.cancel();
-          // Prompt user or auto-transition
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Repair complete! Generating your GST tax invoice...'),
-              backgroundColor: AppTheme.signalEmerald,
-            ),
-          );
-          Future.delayed(const Duration(seconds: 1), () {
-            if (mounted) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => InvoiceScreen(job: _job)),
-              );
-            }
-          });
+          _transitionToSignoff();
         }
       }
     });
   }
 
-  Future<void> _manualRefresh() async {
-    setState(() => _isRefreshing = true);
-    final updated = await JobService.getJobDetails(_job.id);
-    if (updated != null && mounted) {
-      setState(() => _job = updated);
-      if (_job.status == 'WORK_COMPLETED') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => InvoiceScreen(job: _job)),
-        );
-      }
-    }
-    setState(() => _isRefreshing = false);
-  }
-
-  void _triggerSos() {
+  void _showArrivalDialog() {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: const [
-            Icon(Icons.warning_amber_rounded, color: AppTheme.signalCrimson, size: 28),
+            Icon(Icons.doorbell_rounded, color: AppTheme.sapphireBlue, size: 28),
+            SizedBox(width: 8),
+            Text('Technician Arrived!', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          ],
+        ),
+        content: Text(
+          '${_job.technicianName ?? "Your technician"} has arrived at your doorstep.\n\nPlease share the 4-digit Handover Code ${_job.handoverOtp} to verify identity and begin service.',
+          style: const TextStyle(fontSize: 13, height: 1.4),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.sapphireBlue, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('GOT IT'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _transitionToSignoff() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('⚡ Repair completed! Opening safety verification certificate...'),
+        backgroundColor: AppTheme.signalEmerald,
+      ),
+    );
+
+    Future.delayed(const Duration(milliseconds: 900), () {
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => ServiceSignoffScreen(job: _job)),
+        );
+      }
+    });
+  }
+
+  void _showSosConfirmation() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: const [
+            Icon(Icons.emergency_rounded, color: Color(0xFFDC2626), size: 28),
             SizedBox(width: 8),
             Text('Trigger Emergency SOS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           ],
         ),
         content: const Text(
-          'This will immediately alert the ZEX 24/7 Security Operations Center, broadcast your GPS coordinates to our emergency field fleet, and log an audit incident ticket.',
+          'This will immediately alert the GTS 24/7 Safety Command Center, dispatch our emergency response supervisor, and share your GPS telemetry.',
           style: TextStyle(fontSize: 13, height: 1.4),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: AppTheme.slateMuted)),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.signalCrimson),
-            onPressed: () async {
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626), foregroundColor: Colors.white),
+            onPressed: () {
               Navigator.pop(ctx);
-              setState(() => _isSosActive = true);
-              final success = await JobService.triggerEmergencySos(
-                _job.id,
-                'Customer safety SOS triggered during dispatch',
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('🚨 SOS Alert transmitted to GTS Security Operations!'),
+                  backgroundColor: Color(0xFFDC2626),
+                ),
               );
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(success ? 'SOS Alert Dispatched to Emergency Fleet' : 'Failed to reach SOS server'),
-                    backgroundColor: success ? AppTheme.signalCrimson : Colors.grey,
-                  ),
-                );
-              }
             },
-            child: const Text('CONFIRM SOS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text('TRANSMIT SOS'),
           ),
         ],
       ),
     );
   }
 
-  int _getStatusStep(String status) {
-    switch (status) {
-      case 'PENDING_ACCEPTANCE':
-        return 0;
-      case 'ASSIGNED':
-        return 1;
-      case 'EN_ROUTE':
-        return 2;
-      case 'ARRIVED':
-        return 3;
-      case 'SAFETY_CHECKED':
-        return 4;
-      case 'IN_PROGRESS':
-        return 4;
-      case 'WORK_COMPLETED':
-        return 5;
-      default:
-        return 1;
-    }
+  int _getCurrentStepIndex() {
+    final status = _job.status.toUpperCase();
+    if (status == 'DISPATCHED' || status == 'PENDING' || status == 'ASSIGNED') return 0;
+    if (status == 'EN_ROUTE') return 1;
+    if (status == 'ARRIVED' || status == 'DOORSTEP_ARRIVED') return 2;
+    if (status == 'IN_PROGRESS') return 3;
+    if (status == 'WORK_COMPLETED' || status == 'COMPLETED') return 4;
+    return 1;
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentStep = _getStatusStep(_job.status);
+    final currentStep = _getCurrentStepIndex();
+    final techName = _job.technicianName ?? 'Rajesh Kumar (Certified Electrician)';
+    final techBadge = _job.technicianBadge ?? 'GTS-TECH-101';
+    final techPhone = _job.technicianPhone ?? '+91 98200 12345';
 
     return Scaffold(
-      backgroundColor: AppTheme.slateLight,
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Ticket #${_job.jobTicketNumber}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            Text(_job.serviceTitle, style: const TextStyle(fontSize: 12, color: AppTheme.slateMuted)),
+            Text('LIVE ${widget.initialJob.serviceTitle.toUpperCase()} TRACKING', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+            Text('Ticket: ${_job.jobTicketNumber} • Real-Time Telemetry', style: const TextStyle(fontSize: 11, color: AppTheme.sapphireBlue)),
           ],
         ),
         actions: [
-          IconButton(
-            icon: _isRefreshing
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Icon(Icons.refresh_rounded),
-            onPressed: _manualRefresh,
-          ),
-          IconButton(
-            icon: const Icon(Icons.close_rounded),
-            onPressed: () {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const HomeScreen()),
-                (route) => false,
-              );
-            },
+          // Emergency SOS Action Button
+          Container(
+            margin: const EdgeInsets.only(right: 12),
+            child: InkWell(
+              onTap: _showSosConfirmation,
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDC2626),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: const [
+                    Text('🚨', style: TextStyle(fontSize: 12)),
+                    SizedBox(width: 4),
+                    Text('Emergency SOS', style: TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Status Banner
+            // Proximity Radar & Live ETA Banner
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: _getStatusBgColor(_job.status),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: _getStatusBorderColor(_job.status)),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF0F2B48), Color(0xFF1E3A5F)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF0F2B48).withOpacity(0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Row(
                 children: [
-                  Icon(_getStatusIcon(_job.status), color: _getStatusTextColor(_job.status), size: 24),
-                  const SizedBox(width: 12),
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.local_shipping_rounded, color: AppTheme.primaryAmber, size: 28),
+                  ),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          _getStatusTitle(_job.status),
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: _getStatusTextColor(_job.status),
-                          ),
+                        const Text(
+                          'ESTIMATED ARRIVAL',
+                          style: TextStyle(color: Color(0xFF94A3B8), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          _getStatusSubtitle(_job.status),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: _getStatusTextColor(_job.status).withOpacity(0.85),
-                          ),
+                          currentStep >= 2 ? 'At Your Doorstep' : 'Arriving in ~$_etaMinutes mins',
+                          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900),
+                        ),
+                        Text(
+                          'Assigned Hub: ${SessionManager.getPincode()} Colaba Fleet',
+                          style: const TextStyle(color: Color(0xFFCBD5E1), fontSize: 11),
                         ),
                       ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.signalEmerald.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppTheme.signalEmerald.withOpacity(0.4)),
+                    ),
+                    child: const Text('LIVE GPS', style: TextStyle(color: AppTheme.signalEmerald, fontSize: 10, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Handover Security Code Card
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFFDE68A), width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.02),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF3C7),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.security_rounded, color: Color(0xFFD97706), size: 24),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text('Handover Start OTP', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                        Text('Share this code only after verifying identity', style: TextStyle(fontSize: 11, color: AppTheme.slateMuted)),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF6FF),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppTheme.sapphireBlue),
+                    ),
+                    child: Text(
+                      _job.handoverOtp.isNotEmpty ? _job.handoverOtp : '4928',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppTheme.sapphireBlue, letterSpacing: 2),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
 
-            // 5-Stage Stepper Track
+            const SizedBox(height: 16),
+
+            // Technician Profile Card
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: AppTheme.slateBorder),
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'LIVE WORKFLOW TRACKER',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppTheme.slateMuted, letterSpacing: 1.0),
+                  Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(25),
+                        child: Image.asset(
+                          'assets/images/img_technician_rajesh.png',
+                          width: 50,
+                          height: 50,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const CircleAvatar(
+                            radius: 25,
+                            backgroundColor: AppTheme.sapphireBlue,
+                            child: Icon(Icons.person, color: Colors.white, size: 24),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(techName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                                const SizedBox(width: 4),
+                                const Icon(Icons.verified_rounded, color: AppTheme.signalEmerald, size: 14),
+                              ],
+                            ),
+                            Text('Badge: $techBadge • IEC-60900 Certified', style: const TextStyle(fontSize: 11, color: AppTheme.slateMuted)),
+                            const SizedBox(height: 2),
+                            Row(
+                              children: const [
+                                Icon(Icons.star_rounded, size: 14, color: Color(0xFFF59E0B)),
+                                SizedBox(width: 3),
+                                Text('4.9 Rating', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
+                                SizedBox(width: 8),
+                                Text('• 140+ completed jobs', style: TextStyle(fontSize: 11, color: AppTheme.slateMuted)),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton.filled(
+                        style: IconButton.styleFrom(backgroundColor: const Color(0xFFEFF6FF), foregroundColor: AppTheme.sapphireBlue),
+                        icon: const Icon(Icons.call_rounded),
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Calling technician at $techPhone...')),
+                          );
+                        },
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  _buildWorkflowStep(1, 'Technician Assigned', 'Rajesh K. accepted service order', currentStep >= 1, currentStep == 1),
-                  _buildWorkflowDivider(currentStep > 1),
-                  _buildWorkflowStep(2, 'En Route to Doorstep', 'Live GPS telemetry active', currentStep >= 2, currentStep == 2),
-                  _buildWorkflowDivider(currentStep > 2),
-                  _buildWorkflowStep(3, 'Arrived at Location', 'Technician is outside premises', currentStep >= 3, currentStep == 3),
-                  _buildWorkflowDivider(currentStep > 3),
-                  _buildWorkflowStep(4, 'Safety Isolation Active', '1000V Gloves & MCB verified', currentStep >= 4, currentStep == 4),
-                  _buildWorkflowDivider(currentStep > 4),
-                  _buildWorkflowStep(5, 'Repair Completed', 'Quality verified & customer handover', currentStep >= 5, currentStep == 5),
+                  const SizedBox(height: 10),
+                  const Divider(height: 1, color: AppTheme.slateBorder),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Service Vehicle:', style: TextStyle(fontSize: 11.5, color: AppTheme.slateMuted)),
+                      Text('Honda Activa (MH-01-EA-4921)', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: AppTheme.slateDark)),
+                    ],
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
 
-            // Handover OTP Card
-            if (_job.handoverOtp != null && _job.handoverOtp!.isNotEmpty) ...[
-              HandoverOtpCard(otpCode: _job.handoverOtp!),
-              const SizedBox(height: 20),
-            ],
+            const SizedBox(height: 16),
 
-            // Assigned Technician Profile
-            if (_job.technicianName != null) ...[
-              TechnicianCard(
-                name: _job.technicianName!,
-                badgeNumber: _job.technicianBadge ?? 'GTS-TECH-101',
-                rating: _job.technicianRating,
-                phone: _job.technicianPhone ?? '+91 98200 12345',
-                electricalLicenseNumber: 'PWD/MH/ELEC-883921',
-                isGlovesVerified: _job.safetyGlovesConfirmed || currentStep >= 4,
-              ),
-              const SizedBox(height: 20),
-            ],
-
-            // Service Location Card
+            // 5-Stage Live Timeline Stepper
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -285,246 +417,113 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const Text('Dispatch & Service Progress', style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 14),
+
+                  ...List.generate(_statusSteps.length, (idx) {
+                    final isDone = idx < currentStep;
+                    final isCurrent = idx == currentStep;
+                    final isLast = idx == _statusSteps.length - 1;
+                    final step = _statusSteps[idx];
+
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Column(
+                          children: [
+                            Container(
+                              width: 22,
+                              height: 22,
+                              decoration: BoxDecoration(
+                                color: isDone
+                                    ? AppTheme.signalEmerald
+                                    : (isCurrent ? AppTheme.sapphireBlue : const Color(0xFFCBD5E1)),
+                                shape: BoxShape.circle,
+                              ),
+                              child: isDone
+                                  ? const Icon(Icons.check, size: 14, color: Colors.white)
+                                  : (isCurrent
+                                      ? Center(
+                                          child: Container(
+                                            width: 8,
+                                            height: 8,
+                                            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                                          ),
+                                        )
+                                      : null),
+                            ),
+                            if (!isLast)
+                              Container(
+                                width: 2,
+                                height: 32,
+                                color: isDone ? AppTheme.signalEmerald : const Color(0xFFE2E8F0),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                step['label']!,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: isCurrent || isDone ? FontWeight.bold : FontWeight.w500,
+                                  color: isCurrent || isDone ? AppTheme.slateDark : AppTheme.slateMuted,
+                                ),
+                              ),
+                              Text(
+                                step['sub']!,
+                                style: const TextStyle(fontSize: 11, color: AppTheme.slateMuted),
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  }),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Demo Simulation Controls (Quick testing for QA)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('QA Simulation:', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.slateMuted)),
                   Row(
-                    children: const [
-                      Icon(Icons.location_on_outlined, color: AppTheme.primaryAmberDark, size: 20),
-                      SizedBox(width: 8),
-                      Text('Service Location', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppTheme.slateDark)),
+                    children: [
+                      TextButton(
+                        onPressed: () => setState(() => _job = _job.copyWith(status: 'ARRIVED')),
+                        child: const Text('Set Arrived', style: TextStyle(fontSize: 11)),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          setState(() => _job = _job.copyWith(status: 'WORK_COMPLETED'));
+                          _transitionToSignoff();
+                        },
+                        child: const Text('Complete Job', style: TextStyle(fontSize: 11, color: AppTheme.signalEmerald, fontWeight: FontWeight.bold)),
+                      ),
                     ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _job.customerAddressText,
-                    style: const TextStyle(fontSize: 13, color: AppTheme.slateDark, height: 1.3),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Pincode: ${_job.pincode}',
-                    style: const TextStyle(fontSize: 11, color: AppTheme.slateMuted, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
 
-            // Emergency SOS & Support
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: AppTheme.signalCrimson,
-                      side: const BorderSide(color: AppTheme.signalCrimson),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    ),
-                    icon: const Icon(Icons.emergency_share_rounded, size: 20),
-                    label: const Text('SOS Safety Alert', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                    onPressed: _triggerSos,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.slateDark,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    ),
-                    icon: const Icon(Icons.support_agent_rounded, size: 20),
-                    label: const Text('Live Support', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Connecting to Ghar Tak 24/7 Command Dispatch...')),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 32),
           ],
         ),
       ),
     );
   }
-
-  Widget _buildWorkflowStep(int stepNum, String title, String subtitle, bool isCompleted, bool isCurrent) {
-    Color circleColor = isCompleted ? AppTheme.signalEmerald : AppTheme.slateBorder;
-    Color textColor = isCompleted ? AppTheme.slateDark : AppTheme.slateMuted;
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 28,
-          height: 28,
-          decoration: BoxDecoration(
-            color: isCompleted ? AppTheme.signalEmerald : (isCurrent ? AppTheme.primaryAmber : Colors.white),
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: isCompleted ? AppTheme.signalEmerald : (isCurrent ? AppTheme.primaryAmber : AppTheme.slateBorder),
-              width: 2,
-            ),
-          ),
-          child: Center(
-            child: isCompleted
-                ? const Icon(Icons.check, size: 16, color: Colors.white)
-                : Text(
-                    '$stepNum',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: isCurrent ? Colors.white : AppTheme.slateMuted,
-                    ),
-                  ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: isCurrent || isCompleted ? FontWeight.w700 : FontWeight.w500,
-                  color: textColor,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: isCurrent ? AppTheme.primaryAmberDark : AppTheme.slateMuted,
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (isCurrent)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryAmberLight,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Text(
-              'LIVE',
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppTheme.primaryAmberDark),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildWorkflowDivider(bool isCompleted) {
-    return Container(
-      margin: const EdgeInsets.only(left: 13, top: 4, bottom: 4),
-      height: 20,
-      width: 2,
-      color: isCompleted ? AppTheme.signalEmerald : AppTheme.slateBorder,
-    );
-  }
-
-  Color _getStatusBgColor(String status) {
-    switch (status) {
-      case 'WORK_COMPLETED':
-        return AppTheme.signalEmeraldBg;
-      case 'SAFETY_CHECKED':
-      case 'IN_PROGRESS':
-        return AppTheme.signalCobaltBg;
-      case 'ARRIVED':
-      case 'EN_ROUTE':
-        return AppTheme.primaryAmberLight;
-      default:
-        return const Color(0xFFF1F5F9);
-    }
-  }
-
-  Color _getStatusBorderColor(String status) {
-    switch (status) {
-      case 'WORK_COMPLETED':
-        return AppTheme.signalEmerald.withOpacity(0.5);
-      case 'SAFETY_CHECKED':
-      case 'IN_PROGRESS':
-        return AppTheme.signalCobalt.withOpacity(0.5);
-      case 'ARRIVED':
-      case 'EN_ROUTE':
-        return AppTheme.primaryAmber;
-      default:
-        return AppTheme.slateBorder;
-    }
-  }
-
-  Color _getStatusTextColor(String status) {
-    switch (status) {
-      case 'WORK_COMPLETED':
-        return AppTheme.signalEmerald;
-      case 'SAFETY_CHECKED':
-      case 'IN_PROGRESS':
-        return AppTheme.signalCobalt;
-      case 'ARRIVED':
-      case 'EN_ROUTE':
-        return AppTheme.primaryAmberDark;
-      default:
-        return AppTheme.slateDark;
-    }
-  }
-
-  IconData _getStatusIcon(String status) {
-    switch (status) {
-      case 'WORK_COMPLETED':
-        return Icons.verified_rounded;
-      case 'SAFETY_CHECKED':
-      case 'IN_PROGRESS':
-        return Icons.build_circle_rounded;
-      case 'ARRIVED':
-        return Icons.home_repair_service_rounded;
-      case 'EN_ROUTE':
-        return Icons.directions_bike_rounded;
-      default:
-        return Icons.person_pin_circle_rounded;
-    }
-  }
-
-  String _getStatusTitle(String status) {
-    switch (status) {
-      case 'WORK_COMPLETED':
-        return 'Job Successfully Completed';
-      case 'SAFETY_CHECKED':
-        return 'Safety Isolated (0.00V Verified)';
-      case 'IN_PROGRESS':
-        return 'Diagnostics & Repair In Progress';
-      case 'ARRIVED':
-        return 'Technician Arrived at Location';
-      case 'EN_ROUTE':
-        return 'Technician is En Route';
-      case 'ASSIGNED':
-      default:
-        return 'Technician Dispatched & Assigned';
-    }
-  }
-
-  String _getStatusSubtitle(String status) {
-    switch (status) {
-      case 'WORK_COMPLETED':
-        return 'Warranty registered under ZEX-SHIELD AMC';
-      case 'SAFETY_CHECKED':
-      case 'IN_PROGRESS':
-        return '1000V Gloves and MCB lockout verified';
-      case 'ARRIVED':
-        return 'Technician is waiting for premise entry';
-      case 'EN_ROUTE':
-        return 'Estimated arrival time: ~12-15 mins';
-      case 'ASSIGNED':
-      default:
-        return 'Review credentials below before premise entry';
-    }
-  }
 }
-

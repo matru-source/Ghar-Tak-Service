@@ -15,8 +15,11 @@ class JobModel {
   final String? invoiceNumber;
   final String? scheduledAt;
   final String? completedAt;
+  final String? createdAt;
   final bool safetyGlovesConfirmed;
   final bool safetyMcbSwitchConfirmed;
+
+  String get addressText => customerAddressText;
 
   JobModel({
     required this.id,
@@ -24,7 +27,8 @@ class JobModel {
     required this.status,
     required this.serviceTitle,
     required this.pincode,
-    required this.customerAddressText,
+    String? customerAddressText,
+    String? addressText,
     required this.totalAmountInr,
     this.handoverOtp,
     this.technicianId,
@@ -35,9 +39,54 @@ class JobModel {
     this.invoiceNumber,
     this.scheduledAt,
     this.completedAt,
+    this.createdAt,
     this.safetyGlovesConfirmed = false,
     this.safetyMcbSwitchConfirmed = false,
-  });
+  }) : customerAddressText = customerAddressText ?? addressText ?? 'Doorstep Location';
+
+  JobModel copyWith({
+    String? id,
+    String? jobTicketNumber,
+    String? status,
+    String? serviceTitle,
+    String? pincode,
+    String? customerAddressText,
+    double? totalAmountInr,
+    String? handoverOtp,
+    String? technicianId,
+    String? technicianName,
+    String? technicianBadge,
+    String? technicianPhone,
+    double? technicianRating,
+    String? invoiceNumber,
+    String? scheduledAt,
+    String? completedAt,
+    String? createdAt,
+    bool? safetyGlovesConfirmed,
+    bool? safetyMcbSwitchConfirmed,
+  }) {
+    return JobModel(
+      id: id ?? this.id,
+      jobTicketNumber: jobTicketNumber ?? this.jobTicketNumber,
+      status: status ?? this.status,
+      serviceTitle: serviceTitle ?? this.serviceTitle,
+      pincode: pincode ?? this.pincode,
+      customerAddressText: customerAddressText ?? this.customerAddressText,
+      totalAmountInr: totalAmountInr ?? this.totalAmountInr,
+      handoverOtp: handoverOtp ?? this.handoverOtp,
+      technicianId: technicianId ?? this.technicianId,
+      technicianName: technicianName ?? this.technicianName,
+      technicianBadge: technicianBadge ?? this.technicianBadge,
+      technicianPhone: technicianPhone ?? this.technicianPhone,
+      technicianRating: technicianRating ?? this.technicianRating,
+      invoiceNumber: invoiceNumber ?? this.invoiceNumber,
+      scheduledAt: scheduledAt ?? this.scheduledAt,
+      completedAt: completedAt ?? this.completedAt,
+      createdAt: createdAt ?? this.createdAt,
+      safetyGlovesConfirmed: safetyGlovesConfirmed ?? this.safetyGlovesConfirmed,
+      safetyMcbSwitchConfirmed: safetyMcbSwitchConfirmed ?? this.safetyMcbSwitchConfirmed,
+    );
+  }
 
   factory JobModel.fromJson(Map<String, dynamic> json) {
     final data = json['job'] is Map ? json['job'] : json;
@@ -53,7 +102,7 @@ class JobModel {
       status: data['status']?.toString() ?? 'ASSIGNED',
       serviceTitle: data['serviceTitle']?.toString() ?? 'Circuit Diagnostic',
       pincode: data['pincode']?.toString() ?? '400001',
-      customerAddressText: data['customerAddressText']?.toString() ?? 'Doorstep Location',
+      customerAddressText: data['customerAddressText']?.toString() ?? data['addressText']?.toString() ?? 'Doorstep Location',
       totalAmountInr: total,
       handoverOtp: data['handoverOtp']?.toString(),
       technicianId: data['technicianId']?.toString() ?? tech?['id']?.toString(),
@@ -64,9 +113,9 @@ class JobModel {
       invoiceNumber: data['invoiceNumber']?.toString() ?? data['invoice']?['invoiceNumber']?.toString(),
       scheduledAt: data['scheduledAt']?.toString(),
       completedAt: data['completedAt']?.toString(),
+      createdAt: data['createdAt']?.toString(),
       safetyGlovesConfirmed: data['safetyGlovesConfirmed'] == true,
       safetyMcbSwitchConfirmed: data['safetyMcbSwitchConfirmed'] == true,
     );
   }
 }
-

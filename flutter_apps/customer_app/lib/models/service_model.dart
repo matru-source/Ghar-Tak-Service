@@ -10,18 +10,33 @@ class ServiceModel {
   final String? description;
   final bool isEmergencySosEligible;
 
+  String get category {
+    if (categoryId.toLowerCase().contains('fan')) return 'Fans & Fixtures';
+    if (categoryId.toLowerCase().contains('light')) return 'Lighting';
+    if (categoryId.toLowerCase().contains('switch') || categoryId.toLowerCase().contains('mcb')) return 'Switchboards & MCB';
+    if (categoryId.toLowerCase().contains('geyser') || categoryId.toLowerCase().contains('appliance')) return 'Heavy Appliances/Geyser';
+    if (categoryId.toLowerCase().contains('wir')) return 'House Wiring';
+    if (categoryId.toLowerCase().contains('plumb')) return 'Plumbing';
+    return 'Electrical';
+  }
+
+  int get durationMinutes => estimatedDurationMinutes;
+
   ServiceModel({
     required this.id,
     required this.code,
     required this.title,
-    required this.categoryId,
+    String? categoryId,
+    String? category,
     required this.basePriceInr,
     this.gstRatePct = 18.0,
-    this.estimatedDurationMinutes = 45,
+    int? estimatedDurationMinutes,
+    int? durationMinutes,
     this.imageAsset,
     this.description,
     this.isEmergencySosEligible = false,
-  });
+  })  : categoryId = categoryId ?? category ?? 'Electrical',
+        estimatedDurationMinutes = estimatedDurationMinutes ?? durationMinutes ?? 45;
 
   factory ServiceModel.fromJson(Map<String, dynamic> json) {
     final title = json['title']?.toString() ?? 'Electrical Service';
@@ -43,14 +58,14 @@ class ServiceModel {
       id: json['id']?.toString() ?? '',
       code: json['code']?.toString() ?? 'SRV-01',
       title: title,
-      categoryId: json['categoryId']?.toString() ?? 'cat_electrician',
+      categoryId: json['categoryId']?.toString() ?? json['category']?.toString() ?? 'Electrical',
       basePriceInr: (json['basePriceInr'] is num)
           ? (json['basePriceInr'] as num).toDouble()
           : double.tryParse(json['basePriceInr']?.toString() ?? '499') ?? 499.0,
       gstRatePct: (json['gstRatePct'] is num)
           ? (json['gstRatePct'] as num).toDouble()
           : 18.0,
-      estimatedDurationMinutes: json['estimatedDurationMinutes'] ?? 45,
+      estimatedDurationMinutes: json['estimatedDurationMinutes'] ?? json['durationMinutes'] ?? 45,
       imageAsset: resolvedImage ?? 'assets/images/service_switchboard.png',
       description: json['description']?.toString() ?? 'Complete diagnostic, repair, and safety verification by verified professional.',
       isEmergencySosEligible: json['isEmergencySosEligible'] == true,

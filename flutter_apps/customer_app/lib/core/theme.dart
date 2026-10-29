@@ -7,6 +7,8 @@ class AppTheme {
   static const Color gtsHeaderGradientEnd = Color(0xFF0284C7);   // Bright Sky Cerulean
   static const Color sapphireBlue900 = Color(0xFF0D47A1);
   static const Color sapphireBlue800 = Color(0xFF1565C0);
+  static const Color sapphireBlue = Color(0xFF1565C0);
+  static const Color sapphireBlueLight = Color(0xFFEFF6FF);
   static const Color electricCyan = Color(0xFF00B4D8);
 
   // Amber & Accent
