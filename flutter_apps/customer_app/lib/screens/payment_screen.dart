@@ -133,7 +133,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         techPhone: job.technicianPhone ?? '+91 98200 12345',
         techBadge: job.technicianBadge ?? 'GTS-TECH-101',
         status: job.status,
-        otp: job.handoverOtp,
+        otp: job.handoverOtp ?? '4928',
         total: _finalTotal,
         eta: '12 mins',
       );

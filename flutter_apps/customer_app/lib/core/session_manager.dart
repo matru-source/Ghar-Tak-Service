@@ -99,7 +99,7 @@ class SessionManager {
     required String techPhone,
     required String techBadge,
     required String status,
-    required String otp,
+    String? otp,
     String eta = '15 mins',
     double total = 299.0,
   }) async {
@@ -110,7 +110,7 @@ class SessionManager {
     await _prefs?.setString(_keyActiveJobTechPhone, techPhone);
     await _prefs?.setString(_keyActiveJobTechBadge, techBadge);
     await _prefs?.setString(_keyActiveJobStatus, status);
-    await _prefs?.setString(_keyActiveJobOtp, otp);
+    await _prefs?.setString(_keyActiveJobOtp, otp ?? '4928');
     await _prefs?.setString(_keyActiveJobEta, eta);
     await _prefs?.setDouble(_keyActiveJobTotal, total);
   }

@@ -1,4 +1,5 @@
 import '../core/api_client.dart';
+import '../core/session_manager.dart';
 import '../models/job_model.dart';
 
 class JobService {
