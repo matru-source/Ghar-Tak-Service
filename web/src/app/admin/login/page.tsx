@@ -165,16 +165,6 @@ export default function SuperAdminLoginPage() {
           </button>
         </form>
 
-        {/* Navigation Action */}
-        <div className="pt-2 border-t border-slate-800/80 flex items-center justify-end">
-          <Link
-            href="/partner/login"
-            className="text-[11px] text-slate-400 hover:text-slate-200 transition"
-          >
-            Partner Portal →
-          </Link>
-        </div>
-
         {/* Security Compliance Footer */}
         <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-[10px] text-slate-500 text-center leading-relaxed font-mono">
           🔒 Write-Once-Read-Many (WORM) audit ledger active. IP address, timestamp & TLS fingerprint logged.
