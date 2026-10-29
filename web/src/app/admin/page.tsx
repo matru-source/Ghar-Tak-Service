@@ -6,19 +6,28 @@ import { BrandMark } from '@/components/ui/brand-logo';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboardPage() {
-  // Fetch live telemetry from the backend engine
-  const jobs = await db.getJobs();
-  const pincodes = await db.getAllPincodes();
-  const technicians = await db.getAllTechnicians();
-  const escalations = await db.getEscalatedJobs();
-  const ledgers = await db.getLedgerEntries();
+  let jobs: any[] = [];
+  let pincodes: any[] = [];
+  let technicians: any[] = [];
+  let escalations: any = { counts: { totalEscalated: 0 } };
+  let ledgers: any = { telemetry: { totalCustomerInflowInr: 0, totalGstReserveInr: 0 } };
+
+  try {
+    jobs = (await db.getJobs()) || [];
+    pincodes = (await db.getAllPincodes()) || [];
+    technicians = (await db.getAllTechnicians()) || [];
+    escalations = (await db.getEscalatedJobs()) || { counts: { totalEscalated: 0 } };
+    ledgers = (await db.getLedgerEntries()) || { telemetry: { totalCustomerInflowInr: 0, totalGstReserveInr: 0 } };
+  } catch (err) {
+    console.error('[AdminDashboardPage] Error fetching dashboard data:', err);
+  }
 
   const totalJobs = jobs.length;
   const inProgressJobs = jobs.filter((j) => j.status === 'IN_PROGRESS' || j.status === 'SAFETY_CHECKED').length;
-  const escalatedCount = escalations.counts.totalEscalated;
+  const escalatedCount = escalations?.counts?.totalEscalated || 0;
   const onlineTechs = technicians.filter((t) => t.isOnline).length;
-  const totalGmv = ledgers.telemetry.totalCustomerInflowInr;
-  const gstWithheld = ledgers.telemetry.totalGstReserveInr;
+  const totalGmv = ledgers?.telemetry?.totalCustomerInflowInr || 0;
+  const gstWithheld = ledgers?.telemetry?.totalGstReserveInr || 0;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -240,7 +249,7 @@ export default async function AdminDashboardPage() {
 
               <div>
                 <div className="flex justify-between text-xs font-semibold mb-1">
-                  <span className="text-slate-600">ElectriCare Platform Fee (15%)</span>
+                  <span className="text-slate-600">Ghar Tak Service Platform Fee (15%)</span>
                   <span className="text-purple-700 font-bold">₹{ledgers.telemetry.totalPlatformFeeInr}</span>
                 </div>
                 <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">

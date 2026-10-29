@@ -1,5 +1,5 @@
 // ==============================================================================
-// ElectriCare Mission-Critical SaaS Platform — Enterprise Mock Data Store
+// Ghar Tak Service Mission-Critical SaaS Platform — Enterprise Mock Data Store
 // Provides instant high-fidelity seed records for local offline development,
 // Flutter app testing, and CI environments when PostgreSQL container is offline.
 // ==============================================================================
@@ -134,7 +134,7 @@ export interface JobPartRecord {
   rejectedAt?: string;
 }
 
-export interface ElectriCareStore {
+export interface GharTakServiceStore {
   users: Array<{
     id: string;
     phone: string;
@@ -345,7 +345,7 @@ export interface ElectriCareStore {
   jobParts: JobPartRecord[];
 }
 
-export const initialStore: ElectriCareStore = {
+export const initialStore: GharTakServiceStore = {
   users: [
     {
       id: 'usr_admin_01',
@@ -443,7 +443,7 @@ export const initialStore: ElectriCareStore = {
     userId: 'usr_partner_01',
     entityName: 'Maharashtra Tier-1 Operations Hub',
     directorName: 'Suresh Patil',
-    email: 'maharashtra.ops@electricare.in',
+    email: 'maharashtra.ops@ghartak.in',
     phone: '+919876543211',
     companyRegistrationNumber: 'CIN-MH-2024-88912',
     gstin: '27AABCU9603R1ZM',
@@ -467,7 +467,7 @@ export const initialStore: ElectriCareStore = {
       userId: 'usr_partner_01',
       entityName: 'Maharashtra Tier-1 Operations Hub',
       directorName: 'Suresh Patil',
-      email: 'maharashtra.ops@electricare.in',
+      email: 'maharashtra.ops@ghartak.in',
       phone: '+919876543211',
       companyRegistrationNumber: 'CIN-MH-2024-88912',
       gstin: '27AABCU9603R1ZM',
@@ -490,7 +490,7 @@ export const initialStore: ElectriCareStore = {
       userId: 'usr_partner_02',
       entityName: 'Delhi-NCR ElectroGrid Franchise Ltd',
       directorName: 'Raman Singhal',
-      email: 'delhi.franchise@electricare.in',
+      email: 'delhi.franchise@ghartak.in',
       phone: '+919811022334',
       companyRegistrationNumber: 'CIN-DL-2023-44120',
       gstin: '07AAACD1234F1Z8',
@@ -513,7 +513,7 @@ export const initialStore: ElectriCareStore = {
       userId: 'usr_partner_03',
       entityName: 'Karnataka TechPower Systems Pvt Ltd',
       directorName: 'Venkatesh Rao',
-      email: 'bangalore.ops@electricare.in',
+      email: 'bangalore.ops@ghartak.in',
       phone: '+919845012345',
       companyRegistrationNumber: 'CIN-KA-2024-11883',
       gstin: '29AABCK5512L1Z3',
@@ -536,7 +536,7 @@ export const initialStore: ElectriCareStore = {
       userId: 'usr_partner_04',
       entityName: 'Gujarat Solar & Electricals Enterprise',
       directorName: 'Kirit Patel',
-      email: 'ahmedabad.ops@electricare.in',
+      email: 'ahmedabad.ops@ghartak.in',
       phone: '+919825098765',
       companyRegistrationNumber: 'CIN-GJ-2023-77231',
       gstin: '24AABCG9812M1Z2',
@@ -1545,7 +1545,7 @@ export const initialStore: ElectriCareStore = {
       resourceId: 'SYS-001',
       previousHash: '0000000000000000000000000000000000000000000000000000000000000000',
       currentHash: '38ab1e73644172943b9f151635c636b25914fee7e04eb4a164b93bf69418c64b',
-      payloadSummary: 'ElectriCare National Multi-Tenant Core Cluster Genesis Block initialized',
+      payloadSummary: 'Ghar Tak Service National Multi-Tenant Core Cluster Genesis Block initialized',
       ipAddress: '127.0.0.1',
       isTamperVerified: true,
     },

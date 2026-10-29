@@ -3,7 +3,7 @@ import { AdminShell } from '@/components/admin/admin-shell';
 import { AdminAuthGuard } from '@/components/admin/admin-auth-guard';
 
 export const metadata = {
-  title: 'ElectriCare Admin & Owner CRM — National Command Console',
+  title: 'Ghar Tak Service Admin & Owner CRM — National Command Console',
   description: 'National overview, dispatch telemetry, franchise accounting & WORM compliance for Pan-India electrical services',
 };
 

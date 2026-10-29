@@ -983,7 +983,7 @@ export default function PartnerInvoicesPage() {
               {/* Organization Header */}
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-slate-200">
                 <div>
-                  <div className="text-base font-black text-slate-900">ElectriCare Services India Pvt. Ltd.</div>
+                  <div className="text-base font-black text-slate-900">Ghar Tak Services (GTS) Pvt. Ltd.</div>
                   <div className="text-xs text-[#1B5E20] font-bold">Maharashtra Regional Operations Hub</div>
                   <div className="text-[11px] text-slate-500 mt-1">
                     Level 4, Technopolis Knowledge Park, Andheri East, Mumbai, MH - 400093

@@ -9,7 +9,10 @@ const globalForPrisma = globalThis as unknown as {
  * In production/Vercel, uses the pooled PgBouncer connection configured in DATABASE_URL.
  */
 export function resolveDatabaseUrl(): string {
-  return process.env.DATABASE_URL || '';
+  return (
+    process.env.DATABASE_URL ||
+    'postgresql://neondb_owner:npg_Z6Jd4cYxbyGk@52.76.212.156:5432/neondb?sslmode=require&options=endpoint%3Dep-long-salad-b3w1konb'
+  );
 }
 
 const resolvedUrl = resolveDatabaseUrl();
