@@ -32,6 +32,18 @@ if (fs.existsSync(envPath)) {
 
 // 2. Ensure default critical environment fallbacks
 process.env.NODE_ENV = 'production';
+
+// Purge stale Next.js cache on startup so new builds take effect immediately
+try {
+  const cacheDir = path.join(__dirname, '.next', 'cache');
+  if (fs.existsSync(cacheDir)) {
+    fs.rmSync(cacheDir, { recursive: true, force: true });
+    console.log('[Plesk] Stale .next/cache purged.');
+  }
+} catch (e) {
+  console.warn('[Plesk] Could not purge cache:', e);
+}
+
 if (!process.env.DATABASE_URL) {
   process.env.DATABASE_URL =
     'postgresql://neondb_owner:npg_Z6Jd4cYxbyGk@52.76.212.156:5432/neondb?sslmode=require&options=endpoint%3Dep-long-salad-b3w1konb';
