@@ -47,12 +47,31 @@ export async function verifyAccessToken(token: string): Promise<TokenPayload | n
 }
 
 /**
- * Extracts Bearer token from Request Authorization header.
+ * Extracts Bearer token from Request Authorization header or cookies.
  */
 export function extractBearerToken(request: Request): string | null {
   const authHeader = request.headers.get('Authorization') || request.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return authHeader.substring(7).trim();
   }
-  return authHeader.substring(7).trim();
+
+  // Fallback to NextRequest cookies if available
+  if ('cookies' in request && typeof (request as any).cookies?.get === 'function') {
+    const cookieToken =
+      (request as any).cookies.get('gts_token')?.value ||
+      (request as any).cookies.get('gts_auth_token')?.value ||
+      (request as any).cookies.get('token')?.value;
+    if (cookieToken) return cookieToken;
+  }
+
+  // Fallback to standard cookie header parsing
+  const cookieHeader = request.headers.get('cookie') || request.headers.get('Cookie');
+  if (cookieHeader) {
+    const match = cookieHeader.match(/(?:^|;\s*)(?:gts_token|gts_auth_token|token)=([^;]+)/);
+    if (match && match[1]) {
+      return decodeURIComponent(match[1].trim());
+    }
+  }
+
+  return null;
 }

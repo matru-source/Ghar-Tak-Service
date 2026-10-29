@@ -270,13 +270,6 @@ export function AdminSidebar({
                 </div>
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                <Link
-                  href="/api/auth/me"
-                  className="text-xs text-slate-400 hover:text-slate-700 p-1.5 rounded hover:bg-slate-200/60 transition"
-                  title="Inspect JWT Token"
-                >
-                  🔑
-                </Link>
                 <button
                   type="button"
                   onClick={handleSignOut}
