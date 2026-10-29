@@ -118,13 +118,16 @@ class _TechNavigationScreenState extends State<TechNavigationScreen> with Single
     }
   }
 
-  void _proceedToSafetyGate() {
-    Navigator.push(
+  void _proceedToSafetyGate() async {
+    final passed = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (_) => SafetyChecklistScreen(job: _job),
       ),
     );
+    if (passed == true && mounted) {
+      Navigator.pop(context); // Return cleanly to dashboard with active job card in progress
+    }
   }
 
   @override
@@ -342,3 +345,4 @@ class _RadarPulsePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _RadarPulsePainter oldDelegate) => true;
 }
+
