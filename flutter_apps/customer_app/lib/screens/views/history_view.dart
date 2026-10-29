@@ -47,11 +47,13 @@ class _HistoryViewState extends State<HistoryView> {
                 final total = (j['totalAmountInr'] as num?)?.toDouble() ?? 299.0;
                 final taxable = total / 1.18;
                 final gst = total - taxable;
+                final createdStr = j['createdAt']?.toString() ?? '';
+                final dateText = createdStr.length >= 10 ? createdStr.substring(0, 10) : 'Today';
                 localOrders.add(PastOrderItem(
                   ticketNumber: ticket,
                   invoiceNumber: j['invoiceNumber']?.toString() ?? 'INV-2026-${ticket.replaceAll(RegExp(r'\D'), '')}',
                   serviceTitle: j['serviceTitle']?.toString() ?? 'Doorstep Service',
-                  dateText: j['createdAt']?.toString().length >= 10 ? j['createdAt'].toString().substring(0, 10) : 'Today',
+                  dateText: dateText,
                   technicianName: j['technicianName']?.toString() ?? 'Rajesh Kumar (GTS Certified)',
                   amountInr: total,
                   taxableAmount: taxable,

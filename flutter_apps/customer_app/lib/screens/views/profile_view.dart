@@ -110,8 +110,10 @@ class _ProfileViewState extends State<ProfileView> {
                 fullName: nameCtrl.text.trim(),
                 email: emailCtrl.text.trim(),
                 phone: phoneCtrl.text.trim(),
+                role: _user?.role ?? 'CUSTOMER',
                 address: addrCtrl.text.trim(),
                 pincode: _user?.pincode ?? '400001',
+                hasActiveSubscription: _user?.hasActiveSubscription ?? false,
               );
               await SessionManager.saveCurrentUser(updated);
               setState(() => _user = updated);

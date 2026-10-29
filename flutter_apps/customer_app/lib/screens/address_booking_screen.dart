@@ -48,8 +48,8 @@ class _AddressBookingScreenState extends State<AddressBookingScreen> {
     final pin = SessionManager.getPincode();
     _pincodeController.text = pin;
 
-    if (user != null && user.address.isNotEmpty) {
-      final parts = user.address.split(',');
+    if (user != null && user.address != null && user.address!.isNotEmpty) {
+      final parts = user.address!.split(',');
       if (parts.isNotEmpty) _flatController.text = parts[0].trim();
       if (parts.length > 1) _streetController.text = parts[1].trim();
       if (parts.length > 2) _landmarkController.text = parts.sublist(2).join(', ').trim();

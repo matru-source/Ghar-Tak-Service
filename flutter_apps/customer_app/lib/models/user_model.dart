@@ -14,12 +14,36 @@ class UserModel {
     required this.fullName,
     this.email,
     required this.phone,
-    required this.role,
+    this.role = 'CUSTOMER',
     this.avatarUrl,
     this.address,
     this.pincode,
     this.hasActiveSubscription = false,
   });
+
+  UserModel copyWith({
+    String? id,
+    String? fullName,
+    String? email,
+    String? phone,
+    String? role,
+    String? avatarUrl,
+    String? address,
+    String? pincode,
+    bool? hasActiveSubscription,
+  }) {
+    return UserModel(
+      id: id ?? this.id,
+      fullName: fullName ?? this.fullName,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      role: role ?? this.role,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      address: address ?? this.address,
+      pincode: pincode ?? this.pincode,
+      hasActiveSubscription: hasActiveSubscription ?? this.hasActiveSubscription,
+    );
+  }
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     final userMap = json['user'] is Map ? json['user'] : json;
