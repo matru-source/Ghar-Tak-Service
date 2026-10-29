@@ -106,6 +106,7 @@ class _AuthScreenState extends State<AuthScreen> {
       _errorMessage = null;
     });
 
+    final rawInput = _identifierController.text.trim();
     final targetIdentifier = _sentIdentifier.isNotEmpty ? _sentIdentifier : (rawInput.contains('@') ? rawInput.toLowerCase() : '+91${rawInput.replaceAll(RegExp(r'\D'), '').padLeft(10, '0')}');
 
     final name = _nameController.text.trim().isEmpty ? 'GTS Customer' : _nameController.text.trim();
