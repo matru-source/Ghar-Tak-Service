@@ -1,6 +1,9 @@
 class AppConstants {
-  static const String appName = 'Ghar Tak';
+  static const String appName = 'Ghar Tak Service';
   static const String appTagline = 'Fast • Safe • Transparent Doorstep Services';
+  
+  // Google OAuth 2.0 Web Client ID for Android Google Sign-In verification
+  static const String googleServerClientId = '458445561611-rjrjgt5angqj7qgdqdup8i8ag954j57c.apps.googleusercontent.com';
   
   // Base API configuration (Live Cloud Vercel Production)
   static const String defaultBaseUrl = 'https://ghar-tak-service.vercel.app/api';

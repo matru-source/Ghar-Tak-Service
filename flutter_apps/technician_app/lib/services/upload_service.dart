@@ -33,3 +33,4 @@ class UploadService {
     return 'https://cdn.ghartak.in/evidence/${category.toLowerCase()}_$jobId.jpg';
   }
 }
+
