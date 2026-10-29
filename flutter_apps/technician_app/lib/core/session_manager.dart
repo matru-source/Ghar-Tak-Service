@@ -58,5 +58,7 @@ class SessionManager {
     await _prefs?.remove(AppConstants.keyTechnicianJson);
     await _prefs?.remove(AppConstants.keyIsOnline);
   }
+
+  static Future<void> clearSession() => logout();
 }
 

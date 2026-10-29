@@ -550,3 +550,4 @@ class _TechHomeViewState extends State<TechHomeView> {
     );
   }
 }
+

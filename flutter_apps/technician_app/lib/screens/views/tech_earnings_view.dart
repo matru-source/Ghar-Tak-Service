@@ -315,3 +315,4 @@ class _TechEarningsViewState extends State<TechEarningsView> {
     );
   }
 }
+

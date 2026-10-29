@@ -286,3 +286,4 @@ class _TechDispatchAlertScreenState extends State<TechDispatchAlertScreen> with 
     );
   }
 }
+

@@ -144,7 +144,7 @@ class _TechProfileViewState extends State<TechProfileView> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: TechTheme.signalCrimson, foregroundColor: Colors.white),
             onPressed: () async {
-              await SessionManager.clearSession();
+              await SessionManager.logout();
               Navigator.pop(ctx);
               Navigator.pushAndRemoveUntil(
                 context,
@@ -326,3 +326,4 @@ class _TechProfileViewState extends State<TechProfileView> {
     );
   }
 }
+

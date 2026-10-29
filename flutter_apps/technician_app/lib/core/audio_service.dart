@@ -26,6 +26,9 @@ class AudioService {
     });
   }
 
+  static void playDispatchSiren() => startDispatchSiren();
+  static void stopSiren() => stopDispatchSiren();
+
   static void stopDispatchSiren() {
     _isPlayingSiren = false;
     _hapticLoop?.cancel();
