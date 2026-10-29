@@ -59,7 +59,7 @@ class _AuthScreenState extends State<AuthScreen> {
       }
       cleanIdentifier = digits.length == 10 ? '+91$digits' : (digits.startsWith('91') ? '+$digits' : '+91$digits');
     } else {
-      if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').test(rawInput)) {
+      if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(rawInput)) {
         setState(() => _errorMessage = 'Please enter a valid email address');
         return;
       }
