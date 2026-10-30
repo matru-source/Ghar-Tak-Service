@@ -1489,7 +1489,11 @@ export const db = {
     serviceTitle?: string;
     basePriceInr?: number;
     pincode: string;
-    customerAddressText: string;
+    customerAddressText?: string;
+    addressText?: string;
+    address?: string;
+    customerAddress?: string;
+    fullAddress?: string;
     customerLatitude?: number;
     customerLongitude?: number;
     priority?: 'STANDARD' | 'URGENT_SLA' | 'EMERGENCY_SOS_247';
@@ -1497,6 +1501,15 @@ export const db = {
   }) {
     const isOdisha = params.pincode.startsWith('75') || params.pincode.startsWith('76') || params.pincode.startsWith('77');
     const defaultPartnerId = isOdisha ? 'ptnr_odisha_01' : 'ptnr_mah_01';
+
+    const resolvedAddress = (
+      params.customerAddressText ||
+      params.addressText ||
+      params.address ||
+      params.customerAddress ||
+      params.fullAddress ||
+      'Customer Premise Address'
+    ).trim();
 
     let service = dbStore.serviceCatalog.find(
       (s) =>
@@ -1841,7 +1854,7 @@ export const db = {
           cp = await prisma.customerProfile.create({
             data: {
               userId: u.id,
-              defaultAddressLine: params.customerAddressText,
+              defaultAddressLine: resolvedAddress,
               defaultPincode: params.pincode,
               defaultLatitude: params.customerLatitude || 18.9220,
               defaultLongitude: params.customerLongitude || 72.8347,
@@ -1985,7 +1998,8 @@ export const db = {
       serviceId: realServiceId,
       serviceTitle: service.title,
       pincode: params.pincode,
-      customerAddressText: params.customerAddressText,
+      customerAddressText: resolvedAddress,
+      addressText: resolvedAddress,
       customerLatitude: params.customerLatitude || (assignedTech?.currentLatitude || getCoordinatesForPincode(params.pincode).latitude),
       customerLongitude: params.customerLongitude || (assignedTech?.currentLongitude || getCoordinatesForPincode(params.pincode).longitude),
       status: (realTechnicianId ? 'ASSIGNED' : 'PENDING_DISPATCH') as

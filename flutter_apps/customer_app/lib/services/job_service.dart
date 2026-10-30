@@ -10,9 +10,16 @@ class JobService {
     required String serviceId,
     required String serviceTitle,
     required String pincode,
-    required String addressText,
+    String? addressText,
+    String? customerAddressText,
     String? technicianId,
   }) async {
+    final effectiveAddress = (customerAddressText != null && customerAddressText.trim().isNotEmpty)
+        ? customerAddressText.trim()
+        : (addressText != null && addressText.trim().isNotEmpty)
+            ? addressText.trim()
+            : 'Doorstep Premise Address';
+
     final res = await ApiClient.post('/jobs', {
       'customerId': customerId,
       'customerName': customerName,
@@ -20,7 +27,11 @@ class JobService {
       'serviceId': serviceId,
       'serviceTitle': serviceTitle,
       'pincode': pincode,
-      'customerAddressText': addressText,
+      // Canonical and legacy field aliases for 100% interoperability
+      'customerAddressText': effectiveAddress,
+      'addressText': effectiveAddress,
+      'address': effectiveAddress,
+      'customerAddress': effectiveAddress,
       if (technicianId != null) 'technicianId': technicianId,
     });
 

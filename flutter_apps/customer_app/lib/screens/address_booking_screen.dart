@@ -140,7 +140,23 @@ class _AddressBookingScreenState extends State<AddressBookingScreen> {
   }
 
   void _proceedToPayment() {
-    final fullAddress = '${_flatController.text.trim()}, ${_streetController.text.trim()}, ${_landmarkController.text.trim()}';
+    final addressParts = [
+      _flatController.text.trim(),
+      _streetController.text.trim(),
+      if (_landmarkController.text.trim().isNotEmpty) _landmarkController.text.trim(),
+    ].where((part) => part.isNotEmpty).toList();
+
+    final fullAddress = addressParts.join(', ');
+
+    if (fullAddress.length < 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a complete doorstep address (flat/house no. and street).'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
 
     Navigator.push(
       context,

@@ -86,7 +86,12 @@ class TechJobModel {
       serviceTitle: data['serviceTitle']?.toString() ?? 'Circuit Diagnostic & Repair',
       customerName: data['customerName']?.toString() ?? customer?['fullName']?.toString() ?? 'Premise Owner',
       customerPhone: data['customerPhone']?.toString() ?? customer?['phone']?.toString() ?? '+91 98200 54321',
-      customerAddressText: data['customerAddressText']?.toString() ?? data['addressText']?.toString() ?? 'Customer Premise Address',
+      customerAddressText: data['customerAddressText']?.toString() ??
+          data['addressText']?.toString() ??
+          data['address']?.toString() ??
+          data['customerAddress']?.toString() ??
+          data['fullAddress']?.toString() ??
+          'Customer Premise Address',
       pincode: data['pincode']?.toString() ?? '400001',
       customerLatitude: lat,
       customerLongitude: lng,

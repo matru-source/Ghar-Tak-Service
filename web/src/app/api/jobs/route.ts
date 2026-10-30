@@ -127,14 +127,37 @@ export async function POST(request: NextRequest) {
       scheduledAt,
     } = body;
 
-    // Parameter aliasing for address contracts (Issue 3.1)
-    const rawAddress =
+    // Robust Parameter Aliasing & Normalization for Address Contracts
+    let rawAddress =
       body.customerAddressText ||
       body.addressText ||
       body.address ||
       body.customerAddress ||
+      body.fullAddress ||
+      body.premiseAddress ||
+      body.serviceAddress ||
+      body.locationAddress ||
+      body.addressLine ||
       '';
-    const customerAddressText = String(rawAddress).trim();
+
+    let customerAddressText = String(rawAddress).trim();
+
+    // If empty or less than 5 characters, attempt fallback to customer's saved default address
+    if ((!customerAddressText || customerAddressText.length < 5) && activeCustomerId) {
+      const userProfile = dbStore.customers.find(
+        (c) => c.userId === activeCustomerId || c.id === activeCustomerId
+      );
+      if (userProfile?.defaultAddressLine && userProfile.defaultAddressLine.trim().length >= 5) {
+        customerAddressText = userProfile.defaultAddressLine.trim();
+      } else {
+        const dbUser = dbStore.users.find(
+          (u) => u.id === activeCustomerId || (customerPhone && u.phone === customerPhone)
+        );
+        if (dbUser && (dbUser as any).address && String((dbUser as any).address).trim().length >= 5) {
+          customerAddressText = String((dbUser as any).address).trim();
+        }
+      }
+    }
 
     if (!serviceId) {
       return apiError("'serviceId' is required", 400);
@@ -143,7 +166,10 @@ export async function POST(request: NextRequest) {
       return apiError("'pincode' must be a valid 6-digit Indian postal code", 400);
     }
     if (!customerAddressText || customerAddressText.length < 5) {
-      return apiError("'customerAddressText' (or 'addressText') must contain a detailed address (min 5 characters)", 400);
+      return apiError(
+        "'customerAddressText' (or 'addressText') must contain a detailed premise address (min 5 characters)",
+        400
+      );
     }
 
     // Issue 7: Serviceable Pincode & Active Coverage Gate
@@ -303,6 +329,8 @@ export async function POST(request: NextRequest) {
         priority: newJob.priority,
         technicianName: newJob.technicianName,
         customerAddress: newJob.customerAddressText,
+        customerAddressText: newJob.customerAddressText,
+        addressText: newJob.customerAddressText,
         customerName: newJob.customerName,
         customerPhone: newJob.customerPhone,
         pincode: newJob.pincode,
@@ -329,6 +357,8 @@ export async function POST(request: NextRequest) {
           customerName: newJob.customerName,
           customerPhone: newJob.customerPhone,
           customerAddress: newJob.customerAddressText,
+          customerAddressText: newJob.customerAddressText,
+          addressText: newJob.customerAddressText,
           pincode: newJob.pincode,
           customerLatitude: newJob.customerLatitude,
           customerLongitude: newJob.customerLongitude,
@@ -352,6 +382,8 @@ export async function POST(request: NextRequest) {
           customerName: newJob.customerName,
           customerPhone: newJob.customerPhone,
           customerAddress: newJob.customerAddressText,
+          customerAddressText: newJob.customerAddressText,
+          addressText: newJob.customerAddressText,
           pincode: newJob.pincode,
           customerLatitude: newJob.customerLatitude,
           customerLongitude: newJob.customerLongitude,

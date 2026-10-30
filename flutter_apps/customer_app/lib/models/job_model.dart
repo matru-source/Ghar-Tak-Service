@@ -96,13 +96,20 @@ class JobModel {
 
     final tech = data['technician'] is Map ? data['technician'] : null;
 
+    final resolvedAddress = data['customerAddressText']?.toString() ??
+        data['addressText']?.toString() ??
+        data['address']?.toString() ??
+        data['customerAddress']?.toString() ??
+        data['fullAddress']?.toString() ??
+        'Doorstep Location';
+
     return JobModel(
       id: data['id']?.toString() ?? '',
       jobTicketNumber: data['jobTicketNumber']?.toString() ?? 'J-1001',
       status: data['status']?.toString() ?? 'ASSIGNED',
       serviceTitle: data['serviceTitle']?.toString() ?? 'Circuit Diagnostic',
       pincode: data['pincode']?.toString() ?? '400001',
-      customerAddressText: data['customerAddressText']?.toString() ?? data['addressText']?.toString() ?? 'Doorstep Location',
+      customerAddressText: resolvedAddress,
       totalAmountInr: total,
       handoverOtp: data['handoverOtp']?.toString(),
       technicianId: data['technicianId']?.toString() ?? tech?['id']?.toString(),
@@ -117,5 +124,31 @@ class JobModel {
       safetyGlovesConfirmed: data['safetyGlovesConfirmed'] == true,
       safetyMcbSwitchConfirmed: data['safetyMcbSwitchConfirmed'] == true,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'jobTicketNumber': jobTicketNumber,
+      'status': status,
+      'serviceTitle': serviceTitle,
+      'pincode': pincode,
+      'customerAddressText': customerAddressText,
+      'addressText': customerAddressText,
+      'address': customerAddressText,
+      'totalAmountInr': totalAmountInr,
+      'handoverOtp': handoverOtp,
+      'technicianId': technicianId,
+      'technicianName': technicianName,
+      'technicianBadge': technicianBadge,
+      'technicianPhone': technicianPhone,
+      'technicianRating': technicianRating,
+      'invoiceNumber': invoiceNumber,
+      'scheduledAt': scheduledAt,
+      'completedAt': completedAt,
+      'createdAt': createdAt,
+      'safetyGlovesConfirmed': safetyGlovesConfirmed,
+      'safetyMcbSwitchConfirmed': safetyMcbSwitchConfirmed,
+    };
   }
 }
