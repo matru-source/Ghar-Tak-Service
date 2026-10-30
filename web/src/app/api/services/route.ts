@@ -7,6 +7,36 @@ import { calculateIndianGst18 } from '@/lib/tax-engine';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
 import { extractBearerToken, verifyAccessToken } from '@/lib/jwt';
 
+const TRADE_CATEGORY_MAP: Record<string, string[]> = {
+  CARPENTRY: ['cat_carpenter', 'carpentry', 'carpenter', 'furniture'],
+  ELECTRICAL: ['cat_electrician', 'electrical', 'electrician'],
+  PLUMBING: ['cat_plumber', 'plumbing', 'plumber'],
+  APPLIANCE: ['cat_hot_cool', 'cat_gas_stove', 'cat_generator', 'appliance', 'ac', 'refrigerator', 'geyser', 'heating', 'cool'],
+  CLEANING: ['cat_cleaner', 'cat_laundry', 'cat_pest_control', 'cleaning', 'cleaner'],
+  PAINTING: ['cat_house_painting', 'cat_wallpaper', 'painting', 'painter'],
+  MASONRY: ['cat_rajmistri', 'cat_false_ceiling', 'cat_aluminum_glass', 'masonry'],
+  IT_SECURITY: ['cat_cctv', 'cat_it_service', 'cat_digital_marketer', 'cctv'],
+};
+
+function filterServicesByTrades(services: any[], trades: string[]) {
+  if (!trades || trades.length === 0) return [];
+  const allowedTokens = new Set<string>();
+  trades.forEach((tr) => {
+    const list = TRADE_CATEGORY_MAP[tr] || [tr.toLowerCase()];
+    list.forEach((tok) => allowedTokens.add(tok.toLowerCase()));
+  });
+
+  return services.filter((srv) => {
+    const catId = (srv.categoryId || '').toLowerCase();
+    const catName = (srv.categoryName || '').toLowerCase();
+    const code = (srv.code || '').toLowerCase();
+    return (
+      allowedTokens.has(catId) ||
+      Array.from(allowedTokens).some((tok) => catId.includes(tok) || catName.includes(tok) || code.includes(tok))
+    );
+  });
+}
+
 export async function OPTIONS() {
   return corsOptionsResponse();
 }
@@ -18,6 +48,30 @@ export async function GET(request: NextRequest) {
     const emergencyOnly = searchParams.get('emergencyOnly') === 'true';
     const search = searchParams.get('search')?.toLowerCase();
     const includeAll = searchParams.get('includeAll') === 'true';
+    const pincodeParam = searchParams.get('pincode')?.trim();
+
+    // Hyperlocal Skill Matchmaking: If customer enters pincode, resolve available trades
+    let activeTradesInPin: string[] | null = null;
+    if (pincodeParam && pincodeParam.length === 6) {
+      const techs = await db.getAllTechnicians({ pincode: pincodeParam });
+      activeTradesInPin = Array.from(new Set(techs.map((t: any) => (t.trade || 'ELECTRICAL').toUpperCase())));
+
+      // If no technicians in this pincode, immediately return empty with coverage notice
+      if (techs.length === 0) {
+        return apiSuccess(
+          {
+            count: 0,
+            services: [],
+            availableTrades: [],
+            pincode: pincodeParam,
+            isServiceable: false,
+            message: `No technicians are currently stationed in pincode ${pincodeParam}. Territory coverage pending.`,
+          },
+          `No active technicians stationed in pincode ${pincodeParam}`,
+          200
+        );
+      }
+    }
 
     if (await isDatabaseConnected()) {
       try {
@@ -77,12 +131,18 @@ export async function GET(request: NextRequest) {
             };
           });
 
+          let finalServices = servicesWithTax;
+          if (activeTradesInPin) {
+            finalServices = filterServicesByTrades(servicesWithTax, activeTradesInPin);
+          }
           return apiSuccess(
             {
-              count: servicesWithTax.length,
-              services: servicesWithTax,
+              count: finalServices.length,
+              services: finalServices,
+              pincode: pincodeParam || undefined,
+              availableTrades: activeTradesInPin || undefined,
             },
-            `Retrieved ${servicesWithTax.length} service catalog offerings from live database`,
+            `Retrieved ${finalServices.length} service catalog offerings${pincodeParam ? ' for pincode ' + pincodeParam : ''}`,
             200
           );
         }
@@ -143,12 +203,18 @@ export async function GET(request: NextRequest) {
       };
     });
 
+    let finalServices = servicesWithTax;
+    if (activeTradesInPin) {
+      finalServices = filterServicesByTrades(servicesWithTax, activeTradesInPin);
+    }
     return apiSuccess(
       {
-        count: servicesWithTax.length,
-        services: servicesWithTax,
+        count: finalServices.length,
+        services: finalServices,
+        pincode: pincodeParam || undefined,
+        availableTrades: activeTradesInPin || undefined,
       },
-      `Retrieved ${servicesWithTax.length} service catalog offerings`,
+      `Retrieved ${finalServices.length} service catalog offerings${pincodeParam ? ' for pincode ' + pincodeParam : ''}`,
       200
     );
   } catch (error) {

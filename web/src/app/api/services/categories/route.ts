@@ -39,10 +39,64 @@ export async function OPTIONS() {
 /**
  * GET: Retrieve all active service categories with dynamic service counts
  */
+
+const TRADE_CATEGORY_MAP: Record<string, string[]> = {
+  CARPENTRY: ['cat_carpenter', 'carpentry', 'carpenter', 'furniture'],
+  ELECTRICAL: ['cat_electrician', 'electrical', 'electrician'],
+  PLUMBING: ['cat_plumber', 'plumbing', 'plumber'],
+  APPLIANCE: ['cat_hot_cool', 'cat_gas_stove', 'cat_generator', 'appliance', 'ac', 'refrigerator', 'geyser', 'heating', 'cool'],
+  CLEANING: ['cat_cleaner', 'cat_laundry', 'cat_pest_control', 'cleaning', 'cleaner'],
+  PAINTING: ['cat_house_painting', 'cat_wallpaper', 'painting', 'painter'],
+  MASONRY: ['cat_rajmistri', 'cat_false_ceiling', 'cat_aluminum_glass', 'masonry'],
+  IT_SECURITY: ['cat_cctv', 'cat_it_service', 'cat_digital_marketer', 'cctv'],
+};
+
+function filterCategoriesByTrades(categories: any[], trades: string[]) {
+  if (!trades || trades.length === 0) return [];
+  const allowedTokens = new Set<string>();
+  trades.forEach((tr) => {
+    const list = TRADE_CATEGORY_MAP[tr] || [tr.toLowerCase()];
+    list.forEach((tok) => allowedTokens.add(tok.toLowerCase()));
+  });
+
+  return categories.filter((cat) => {
+    const slug = (cat.slug || '').toLowerCase();
+    const name = (cat.name || '').toLowerCase();
+    const id = (cat.id || '').toLowerCase();
+    return (
+      allowedTokens.has(id) ||
+      allowedTokens.has(slug) ||
+      Array.from(allowedTokens).some((tok) => slug.includes(tok) || name.includes(tok) || id.includes(tok))
+    );
+  });
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const includeInactive = searchParams.get('includeAll') === 'true';
+    const pincodeParam = searchParams.get('pincode')?.trim();
+
+    let activeTradesInPin: string[] | null = null;
+    if (pincodeParam && pincodeParam.length === 6) {
+      const techs = await db.getAllTechnicians({ pincode: pincodeParam });
+      activeTradesInPin = Array.from(new Set(techs.map((t: any) => (t.trade || 'ELECTRICAL').toUpperCase())));
+
+      if (techs.length === 0) {
+        return apiSuccess(
+          {
+            count: 0,
+            categories: [],
+            availableTrades: [],
+            pincode: pincodeParam,
+            isServiceable: false,
+            message: `No technicians are currently stationed in pincode ${pincodeParam}. Territory coverage pending.`,
+          },
+          `No active technicians stationed in pincode ${pincodeParam}`,
+          200
+        );
+      }
+    }
 
     if (await isDatabaseConnected()) {
       try {
@@ -76,12 +130,18 @@ export async function GET(request: NextRequest) {
             services: cat.catalogServices,
           }));
 
+          let finalCategories = categoriesWithCount;
+          if (activeTradesInPin) {
+            finalCategories = filterCategoriesByTrades(categoriesWithCount, activeTradesInPin);
+          }
           return apiSuccess(
             {
-              count: categoriesWithCount.length,
-              categories: categoriesWithCount,
+              count: finalCategories.length,
+              categories: finalCategories,
+              pincode: pincodeParam || undefined,
+              availableTrades: activeTradesInPin || undefined,
             },
-            `Retrieved ${categoriesWithCount.length} service categories from live database`,
+            `Retrieved ${finalCategories.length} service categories${pincodeParam ? ' for pincode ' + pincodeParam : ''}`,
             200
           );
         }
@@ -106,12 +166,18 @@ export async function GET(request: NextRequest) {
       };
     });
 
+    let finalCategories = categoriesWithCount;
+    if (activeTradesInPin) {
+      finalCategories = filterCategoriesByTrades(categoriesWithCount, activeTradesInPin);
+    }
     return apiSuccess(
       {
-        count: categoriesWithCount.length,
-        categories: categoriesWithCount,
+        count: finalCategories.length,
+        categories: finalCategories,
+        pincode: pincodeParam || undefined,
+        availableTrades: activeTradesInPin || undefined,
       },
-      `Retrieved ${categoriesWithCount.length} service categories`,
+      `Retrieved ${finalCategories.length} service categories${pincodeParam ? ' for pincode ' + pincodeParam : ''}`,
       200
     );
   } catch (error) {

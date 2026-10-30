@@ -470,7 +470,24 @@ export const db = {
         const whereClause: Record<string, unknown> = {};
         if (filter?.partnerId && filter.partnerId !== 'ALL') {
           const resolvedPartner = await resolvePartnerId(filter.partnerId);
-          whereClause.partnerId = { in: [filter.partnerId, resolvedPartner] };
+          // Territory Pincode Isolation: Restrict to partner's licensed pincodes
+          try {
+            const partnerPincodeRecords = await prisma.pincodeCoverage.findMany({
+              where: { partnerId: { in: [filter.partnerId, resolvedPartner] } },
+              select: { pincode: true },
+            });
+            const partnerPincodes = partnerPincodeRecords.map((p) => p.pincode);
+            if (partnerPincodes.length > 0) {
+              whereClause.OR = [
+                { partnerId: { in: [filter.partnerId, resolvedPartner] } },
+                { assignedPincode: { in: partnerPincodes } },
+              ];
+            } else {
+              whereClause.partnerId = { in: [filter.partnerId, resolvedPartner] };
+            }
+          } catch (_) {
+            whereClause.partnerId = { in: [filter.partnerId, resolvedPartner] };
+          }
         }
         if (filter?.pincode) whereClause.assignedPincode = filter.pincode;
         if (filter?.isOnline !== undefined) whereClause.isOnline = filter.isOnline;
@@ -504,7 +521,7 @@ export const db = {
           kycStatus: t.kycStatus as 'VERIFIED' | 'PENDING_REVIEW' | 'REJECTED',
           email: t.user?.email || (t as any).email || '',
           avatarUrl: t.user?.avatarUrl || (t as any).avatarUrl || null,
-          trade: (t as any).trade || 'Certified Professional',
+          trade: t.trade || (t as any).trade || 'ELECTRICAL',
           electricalLicenseNumber: t.electricalLicenseNumber || undefined,
           insulatedGlovesVerified: t.insulatedGlovesVerified ?? false,
           safetyKitSerial: t.safetyKitSerial || undefined,
@@ -515,8 +532,18 @@ export const db = {
     }
 
     // Fallback: only used if database is offline
+    let fallbackPartnerPins: string[] = [];
+    if (filter?.partnerId && filter.partnerId !== 'ALL') {
+      fallbackPartnerPins = dbStore.pincodes
+        .filter((p) => p.partnerId === filter.partnerId)
+        .map((p) => p.pincode);
+    }
     return dbStore.technicians.filter((t) => {
-      if (filter?.partnerId && t.partnerId !== filter.partnerId) return false;
+      if (filter?.partnerId && filter.partnerId !== 'ALL') {
+        const matchesPartner = t.partnerId === filter.partnerId;
+        const matchesPincode = fallbackPartnerPins.length > 0 && fallbackPartnerPins.includes(t.assignedPincode);
+        if (!matchesPartner && !matchesPincode) return false;
+      }
       if (filter?.pincode && t.assignedPincode !== filter.pincode) return false;
       if (filter?.isOnline !== undefined && t.isOnline !== filter.isOnline) return false;
       if (filter?.kycStatus && t.kycStatus !== filter.kycStatus) return false;
@@ -612,7 +639,21 @@ export const db = {
     longitude?: number;
     avatarUrl?: string;
   }) {
-    const cleanPin = (params.pincode || '759001').trim();
+    const cleanPin = (params.pincode || '').trim();
+    if (!cleanPin || cleanPin.length !== 6 || !/^\d{6}$/.test(cleanPin)) {
+      throw new Error('Mandatory 6-digit postal Pincode is strictly required for technician registration.');
+    }
+
+    const rawTrade = (params.trade || params.specialization || 'ELECTRICAL').trim().toUpperCase();
+    let normalizedTrade = 'ELECTRICAL';
+    if (rawTrade.includes('CARPENT')) normalizedTrade = 'CARPENTRY';
+    else if (rawTrade.includes('PLUMB')) normalizedTrade = 'PLUMBING';
+    else if (rawTrade.includes('APPLIANCE') || rawTrade.includes('AC') || rawTrade.includes('COOL') || rawTrade.includes('HEATING') || rawTrade.includes('GEYSER')) normalizedTrade = 'APPLIANCE';
+    else if (rawTrade.includes('CLEAN')) normalizedTrade = 'CLEANING';
+    else if (rawTrade.includes('PAINT')) normalizedTrade = 'PAINTING';
+    else if (rawTrade.includes('CCTV') || rawTrade.includes('SECURITY') || rawTrade.includes('IT')) normalizedTrade = 'IT_SECURITY';
+    else normalizedTrade = 'ELECTRICAL';
+
     const techId = params.id || `tech_${Math.floor(1000 + Math.random() * 9000)}`;
     const badgeNumber = params.badgeNumber || `GTS-TECH-${Math.floor(3000 + Math.random() * 7000)}`;
     const cleanEmail = params.email?.trim().toLowerCase() || `${techId}@ghartak.in`;
@@ -622,10 +663,21 @@ export const db = {
     // 1. Persist to PostgreSQL via Prisma if connected
     if (await isDatabaseConnected()) {
       try {
-        const defaultPartner = await prisma.partner.findFirst();
-        const partnerId = params.partnerId || defaultPartner?.id || 'bb2c2fae-936f-4b56-a1da-078844915983';
+        let partnerId = params.partnerId;
+        if (!partnerId) {
+          const coverage = await prisma.pincodeCoverage.findUnique({
+            where: { pincode: cleanPin },
+            select: { partnerId: true },
+          });
+          if (coverage?.partnerId) {
+            partnerId = coverage.partnerId;
+          } else {
+            const defaultPartner = await prisma.partner.findFirst();
+            partnerId = defaultPartner?.id || 'bb2c2fae-936f-4b56-a1da-078844915983';
+          }
+        }
 
-        // Issue 5: Franchise Quota Guard - Prevent unbounded fleet registration beyond partner's quota
+        // Franchise Quota Guard - Prevent unbounded fleet registration beyond partner's quota
         const partner = await prisma.partner.findUnique({
           where: { id: partnerId },
           include: { technicians: true },
@@ -639,7 +691,6 @@ export const db = {
         }
 
         let user = await prisma.user.findFirst({
-
           where: {
             OR: [
               { email: { equals: cleanEmail, mode: 'insensitive' } },
@@ -688,6 +739,7 @@ export const db = {
               totalJobsCompleted: 0,
               isOnline: true,
               assignedPincode: cleanPin,
+              trade: normalizedTrade,
               currentLatitude: params.latitude,
               currentLongitude: params.longitude,
               kycStatus: 'PENDING_REVIEW',
@@ -699,6 +751,7 @@ export const db = {
         } else {
           const techUpdates: Record<string, any> = {
             assignedPincode: cleanPin,
+            trade: normalizedTrade,
           };
           if (params.latitude !== undefined) techUpdates.currentLatitude = params.latitude;
           if (params.longitude !== undefined) techUpdates.currentLongitude = params.longitude;
@@ -708,7 +761,6 @@ export const db = {
           }
           if (params.safetyKitSerial) techUpdates.safetyKitSerial = params.safetyKitSerial;
 
-          // Implement prisma.technician.update to update specialization, trade, and license details when profile sync is called
           await prisma.technician.update({
             where: { id: existingTech.id },
             data: techUpdates,
@@ -725,7 +777,6 @@ export const db = {
     const geo = getCoordinatesForPincode(cleanPin);
     const defaultLat = typeof params.latitude === 'number' ? params.latitude : geo.latitude;
     const defaultLng = typeof params.longitude === 'number' ? params.longitude : geo.longitude;
-    const resolvedTrade = params.specialization || params.trade || 'Certified Professional';
 
     const newRecord: any = {
       id: techId,
@@ -740,13 +791,13 @@ export const db = {
       currentLatitude: defaultLat,
       currentLongitude: defaultLng,
       assignedPincode: cleanPin,
+      trade: normalizedTrade,
       kycStatus: 'PENDING_REVIEW' as const,
       electricalLicenseNumber: params.electricalLicenseNumber || params.license || `LIC-${cleanPin}-${Math.floor(1000 + Math.random() * 9000)}`,
       insulatedGlovesVerified: false,
       safetyKitSerial: params.safetyKitSerial || `KIT-${Math.floor(10000 + Math.random() * 90000)}`,
       email: cleanEmail,
-      trade: resolvedTrade,
-      specialization: resolvedTrade,
+      specialization: normalizedTrade,
       experience: params.experience || '3+ Years',
       license: params.license || 'Govt. Licensed Professional',
       serviceArea: params.serviceArea || `${cleanPin} Doorstep Hub`,

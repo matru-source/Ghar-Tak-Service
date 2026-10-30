@@ -197,6 +197,7 @@ model Technician {
   currentLatitude           Float?
   currentLongitude          Float?
   assignedPincode           String    @default("400001")
+  trade                     String?   @default("ELECTRICAL") // e.g. "ELECTRICAL", "CARPENTRY", "PLUMBING", "APPLIANCE", "CLEANING"
   kycStatus                 KycStatus @default(PENDING_REVIEW)
   aadharNumberMasked        String?
   aadharDocUrl              String?

@@ -59,7 +59,8 @@ class _HomeDashboardViewState extends State<HomeDashboardView> {
     setState(() => _isLoading = true);
     _user = SessionManager.getCurrentUser();
     _hasActiveJob = SessionManager.hasActiveJob();
-    final list = await ServiceCatalogService.getServices();
+    final userPin = _user?.pincode ?? SessionManager.getPincode();
+    final list = await ServiceCatalogService.getServices(pincode: userPin);
     if (mounted) {
       setState(() {
         _services = list;

@@ -17,6 +17,8 @@ export async function POST(request: NextRequest) {
     const phone = (body.phone || body.phoneNumber || '').trim();
     const address = (body.address || '').trim();
     const pincode = (body.pincode || '').trim();
+    const role = (body.role || 'CUSTOMER').toUpperCase();
+    const trade = (body.trade || body.skills?.[0] || 'ELECTRICAL').toUpperCase();
 
     if (!fullName) {
       return apiError('Full Name is required', 400);
@@ -28,6 +30,11 @@ export async function POST(request: NextRequest) {
 
     if (!password || password.length < 4) {
       return apiError('Password must be at least 4 characters long', 400);
+    }
+
+    // Mandatory 6-digit postal Pincode verification for both Customer & Technician
+    if (!pincode || pincode.length !== 6 || !/^\d{6}$/.test(pincode)) {
+      return apiError('Mandatory 6-digit postal Pincode is required to verify local service territory coverage', 400);
     }
 
     // Check if account already exists with this email or phone
@@ -43,6 +50,46 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Handle Technician Registration
+    if (role === 'TECHNICIAN') {
+      const registeredTech = await db.registerTechnician({
+        fullName,
+        phone: phone || `+91${Math.floor(6000000000 + Math.random() * 3999999999)}`,
+        email,
+        password,
+        pincode,
+        trade,
+      });
+
+      const token = await signAccessToken({
+        sub: registeredTech.userId,
+        phone: registeredTech.phone,
+        fullName: registeredTech.fullName,
+        role: 'TECHNICIAN',
+      });
+
+      return apiSuccess(
+        {
+          token,
+          tokenType: 'Bearer',
+          expiresIn: '7d',
+          user: {
+            id: registeredTech.userId,
+            technicianId: registeredTech.id,
+            partnerId: registeredTech.partnerId,
+            fullName: registeredTech.fullName,
+            email: registeredTech.email,
+            phone: registeredTech.phone,
+            role: 'TECHNICIAN',
+            pincode: registeredTech.assignedPincode,
+            trade: registeredTech.trade || trade,
+          },
+        },
+        `Welcome Technician ${registeredTech.fullName}! Bound to Pincode ${pincode} (${registeredTech.trade || trade})`,
+        201
+      );
+    }
+
     // Hash password with salt
     const passwordHash = hashPassword(password);
 
@@ -53,7 +100,7 @@ export async function POST(request: NextRequest) {
       passwordHash,
       phone: phone || undefined,
       address: address || undefined,
-      pincode: pincode || undefined,
+      pincode,
     });
 
     // Issue verified JWT access token

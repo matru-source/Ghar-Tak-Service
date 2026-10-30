@@ -3,8 +3,11 @@ import '../models/service_model.dart';
 import '../models/quote_model.dart';
 
 class ServiceCatalogService {
-  static Future<List<ServiceModel>> getServices() async {
-    final res = await ApiClient.get('/services');
+  static Future<List<ServiceModel>> getServices({String? pincode}) async {
+    final endpoint = (pincode != null && pincode.trim().length == 6)
+        ? '/services?pincode=${pincode.trim()}'
+        : '/services';
+    final res = await ApiClient.get(endpoint);
     if (res.success && res.data != null) {
       final list = res.data['services'] ?? res.data;
       if (list is List) {

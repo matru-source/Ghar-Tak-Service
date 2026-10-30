@@ -52,7 +52,8 @@ class _BookServicesViewState extends State<BookServicesView> {
 
   Future<void> _loadCatalog() async {
     setState(() => _isLoading = true);
-    final services = await ServiceCatalogService.getServices();
+    final userPin = SessionManager.getPincode();
+    final services = await ServiceCatalogService.getServices(pincode: userPin);
     if (mounted) {
       setState(() {
         _allServices = services;
