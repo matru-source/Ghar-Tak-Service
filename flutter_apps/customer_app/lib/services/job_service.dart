@@ -55,6 +55,29 @@ class JobService {
     return null;
   }
 
+  static Future<Map<String, dynamic>?> getJobParts(String jobId) async {
+    final res = await ApiClient.get('/jobs/$jobId/parts');
+    if (res.success && res.data != null && res.data is Map) {
+      return Map<String, dynamic>.from(res.data);
+    }
+    return null;
+  }
+
+  static Future<ApiResponse<dynamic>> approvePartsQuote({
+    required String jobId,
+    required String partId,
+    required String decision,
+    String? paymentMethod,
+  }) async {
+    final user = SessionManager.getCurrentUser();
+    return await ApiClient.post('/jobs/$jobId/parts/approve', {
+      'partId': partId,
+      'decision': decision,
+      'customerId': user?.id,
+      if (paymentMethod != null) 'paymentMethod': paymentMethod,
+    });
+  }
+
   static Future<bool> triggerEmergencySos(String jobId, String reason) async {
     final user = SessionManager.getCurrentUser();
     final res = await ApiClient.post('/emergency-sos', {

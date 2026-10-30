@@ -25,6 +25,8 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
   Timer? _statusPoller;
   StreamSubscription? _sseSubscription;
   bool _hasPromptedArrival = false;
+  bool _isPartsModalOpen = false;
+  Map<String, dynamic>? _pendingPartsQuote;
   int _etaMinutes = 12;
 
   final List<Map<String, String>> _statusSteps = [
@@ -56,6 +58,20 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
       if (eventType == 'SAFETY_INTERLOCK_VERIFIED' && (newStatus == null || newStatus.isEmpty)) {
         newStatus = 'SAFETY_CHECKED';
       }
+
+      // Real-time Parts Quote Intercept (Issue 7)
+      if (eventType == 'QUOTE_APPROVAL_REQUESTED' ||
+          eventType == 'JOB_PRICE_UPDATED' ||
+          newStatus == 'WAITING_CUSTOMER_APPROVAL') {
+        final partData = event['details']?['part'] ?? event['details']?['pendingQuote'];
+        if (partData != null && partData is Map) {
+          _pendingPartsQuote = Map<String, dynamic>.from(partData);
+        }
+        if (!_isPartsModalOpen && mounted) {
+          _openPartsApprovalModal(_pendingPartsQuote);
+        }
+      }
+
       if (newStatus != null && newStatus.isNotEmpty) {
         setState(() {
           _job = _job.copyWith(status: newStatus);
@@ -94,6 +110,11 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
           _showArrivalDialog();
         }
 
+        // Parts approval trigger from poller (Issue 7)
+        if (_job.status == 'WAITING_CUSTOMER_APPROVAL' && !_isPartsModalOpen) {
+          _fetchAndPromptPendingParts();
+        }
+
         // Completion transition
         if (_job.status == 'WORK_COMPLETED' || _job.status == 'COMPLETED') {
           timer.cancel();
@@ -127,6 +148,432 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _fetchAndPromptPendingParts() async {
+    final partsData = await JobService.getJobParts(_job.id);
+    if (partsData != null && mounted) {
+      final pending = partsData['pendingQuote'];
+      if (pending != null && pending is Map) {
+        _pendingPartsQuote = Map<String, dynamic>.from(pending);
+      }
+      if (!_isPartsModalOpen && mounted) {
+        _openPartsApprovalModal(_pendingPartsQuote);
+      }
+    }
+  }
+
+  void _openPartsApprovalModal(Map<String, dynamic>? initialQuote) async {
+    if (_isPartsModalOpen) return;
+    _isPartsModalOpen = true;
+
+    final quote = initialQuote ?? _pendingPartsQuote ?? {
+      'id': 'part_latest',
+      'name': 'Schneider Electric 63A Double Pole MCB',
+      'sku': 'SKU-MCB-63A-DP',
+      'unitPriceInr': 450.0,
+      'quantity': 1,
+      'subtotalInr': 450.0,
+      'gstAmountInr': 81.0,
+      'totalAmountInr': 531.0,
+      'damagedComponentPhotoUrl': 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=500',
+    };
+
+    final partId = quote['id']?.toString() ?? 'latest';
+    final partName = quote['name']?.toString() ?? quote['partName']?.toString() ?? 'Replacement Spare Part';
+    final partSku = quote['sku']?.toString() ?? 'GEN-SPARE-01';
+    final qty = (quote['quantity'] is num) ? (quote['quantity'] as num).toInt() : 1;
+    final unitPrice = (quote['unitPriceInr'] is num) ? (quote['unitPriceInr'] as num).toDouble() : 450.0;
+    final subtotal = (quote['subtotalInr'] is num) ? (quote['subtotalInr'] as num).toDouble() : unitPrice * qty;
+    final gst = (quote['gstAmountInr'] is num) ? (quote['gstAmountInr'] as num).toDouble() : subtotal * 0.18;
+    final addedTotal = (quote['totalAmountInr'] is num) ? (quote['totalAmountInr'] as num).toDouble() : subtotal + gst;
+    final damagedPhoto = quote['damagedComponentPhotoUrl']?.toString() ?? quote['photoUrl']?.toString();
+
+    final baseLabor = _job.totalAmountInr;
+    final revisedGrandTotal = baseLabor + addedTotal;
+
+    String selectedPaymentMode = 'UPI';
+    bool isSubmitting = false;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Pull Handle
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFCBD5E1),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Top Banner
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFEF3C7),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.build_circle_rounded, color: Color(0xFFD97706), size: 28),
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Spare Part Approval Required',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'Technician detected a component requiring replacement',
+                                style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+
+                    // Damaged Component Photographic Evidence
+                    if (damagedPhoto != null && damagedPhoto.isNotEmpty) ...[
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: Stack(
+                          children: [
+                            Image.network(
+                              damagedPhoto,
+                              height: 150,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                height: 110,
+                                color: const Color(0xFFF1F5F9),
+                                child: const Center(
+                                  child: Icon(Icons.broken_image_rounded, color: Color(0xFF94A3B8), size: 36),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              top: 10,
+                              left: 10,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.75),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.camera_alt_rounded, color: Colors.white, size: 12),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      'Technician Diagnostic Photo',
+                                      style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // Part Details Card
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  partName,
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF0F172A)),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'SKU: $partSku • Qty: $qty',
+                                  style: const TextStyle(fontSize: 11, color: Color(0xFF64748B), fontFamily: 'monospace'),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            '₹${unitPrice.toStringAsFixed(0)}',
+                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Recalculation Breakdown Card
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Column(
+                        children: [
+                          _buildPriceRow('Base Spare Part Price', '₹${subtotal.toStringAsFixed(2)}'),
+                          const SizedBox(height: 6),
+                          _buildPriceRow('Applicable GST (18%)', '₹${gst.toStringAsFixed(2)}'),
+                          const SizedBox(height: 6),
+                          _buildPriceRow('Added Part Total', '+₹${addedTotal.toStringAsFixed(2)}', isHighlight: true),
+                          const SizedBox(height: 6),
+                          _buildPriceRow('Initial Labor & Service', '₹${baseLabor.toStringAsFixed(2)}'),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 8),
+                            child: Divider(height: 1, color: Color(0xFFCBD5E1)),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Revised Grand Total',
+                                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Color(0xFF0F172A)),
+                              ),
+                              Text(
+                                '₹${revisedGrandTotal.toStringAsFixed(2)}',
+                                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: AppTheme.signalEmerald),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Payment Mode Toggle
+                    const Text(
+                      'PAYMENT METHOD FOR REVISED ESTIMATE',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 0.5),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () => setModalState(() => selectedPaymentMode = 'UPI'),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: selectedPaymentMode == 'UPI' ? const Color(0xFFEFF6FF) : Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: selectedPaymentMode == 'UPI' ? AppTheme.sapphireBlue : const Color(0xFFE2E8F0),
+                                  width: selectedPaymentMode == 'UPI' ? 1.5 : 1.0,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    selectedPaymentMode == 'UPI' ? Icons.radio_button_checked : Icons.radio_button_off,
+                                    size: 16,
+                                    color: selectedPaymentMode == 'UPI' ? AppTheme.sapphireBlue : const Color(0xFF94A3B8),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text(
+                                    'Instant UPI',
+                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () => setModalState(() => selectedPaymentMode = 'CASH'),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: selectedPaymentMode == 'CASH' ? const Color(0xFFEFF6FF) : Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: selectedPaymentMode == 'CASH' ? AppTheme.sapphireBlue : const Color(0xFFE2E8F0),
+                                  width: selectedPaymentMode == 'CASH' ? 1.5 : 1.0,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    selectedPaymentMode == 'CASH' ? Icons.radio_button_checked : Icons.radio_button_off,
+                                    size: 16,
+                                    color: selectedPaymentMode == 'CASH' ? AppTheme.sapphireBlue : const Color(0xFF94A3B8),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text(
+                                    'Cash on Done',
+                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Decision Action Buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFFDC2626),
+                              side: const BorderSide(color: Color(0xFFDC2626)),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
+                            onPressed: isSubmitting
+                                ? null
+                                : () async {
+                                    setModalState(() => isSubmitting = true);
+                                    await JobService.approvePartsQuote(
+                                      jobId: _job.id,
+                                      partId: partId,
+                                      decision: 'REJECT',
+                                    );
+                                    Navigator.pop(ctx);
+                                    setState(() {
+                                      _pendingPartsQuote = null;
+                                      _job = _job.copyWith(status: 'IN_PROGRESS');
+                                    });
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Spare part estimate declined. Technician proceeding without replacement.'),
+                                        backgroundColor: Color(0xFF475569),
+                                      ),
+                                    );
+                                  },
+                            child: const Text('DECLINE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 2,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.signalEmerald,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
+                            onPressed: isSubmitting
+                                ? null
+                                : () async {
+                                    setModalState(() => isSubmitting = true);
+                                    await JobService.approvePartsQuote(
+                                      jobId: _job.id,
+                                      partId: partId,
+                                      decision: 'ACCEPT',
+                                      paymentMethod: selectedPaymentMode,
+                                    );
+                                    Navigator.pop(ctx);
+                                    setState(() {
+                                      _pendingPartsQuote = null;
+                                      _job = _job.copyWith(
+                                        status: 'IN_PROGRESS',
+                                        totalAmountInr: revisedGrandTotal,
+                                      );
+                                    });
+                                    SessionManager.updateActiveJobStatus('IN_PROGRESS');
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('✓ Parts approved! ₹${addedTotal.toStringAsFixed(0)} added to estimate ($selectedPaymentMode).'),
+                                        backgroundColor: AppTheme.signalEmerald,
+                                      ),
+                                    );
+                                  },
+                            child: isSubmitting
+                                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                : Text(
+                                    'APPROVE (₹${revisedGrandTotal.toStringAsFixed(0)})',
+                                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12),
+                                  ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    _isPartsModalOpen = false;
+  }
+
+  Widget _buildPriceRow(String label, String value, {bool isHighlight = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: isHighlight ? const Color(0xFF0F172A) : const Color(0xFF64748B),
+            fontWeight: isHighlight ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isHighlight ? FontWeight.w900 : FontWeight.w600,
+            color: isHighlight ? const Color(0xFFD97706) : const Color(0xFF0F172A),
+          ),
+        ),
+      ],
     );
   }
 
@@ -309,6 +756,69 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
             ),
 
             const SizedBox(height: 16),
+
+            // Pending Parts Approval Alert Banner (Issue 7)
+            if (_job.status.toUpperCase() == 'WAITING_CUSTOMER_APPROVAL' || _pendingPartsQuote != null) ...[
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFFBEB),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFF59E0B), width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFF59E0B).withOpacity(0.12),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEF3C7),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.build_circle_rounded, color: Color(0xFFD97706), size: 26),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Action Required: Spare Part Estimate',
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: Color(0xFF92400E)),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _pendingPartsQuote != null
+                                ? '${_pendingPartsQuote!['name'] ?? 'Replacement part'} requires your approval.'
+                                : 'Technician submitted a spare part quote for your approval.',
+                            style: const TextStyle(fontSize: 11, color: Color(0xFF78350F)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFD97706),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: () => _openPartsApprovalModal(_pendingPartsQuote),
+                      child: const Text('REVIEW', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11.5)),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
 
             // Handover Security Code Card
             Container(
@@ -551,6 +1061,15 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
                       TextButton(
                         onPressed: () => setState(() => _job = _job.copyWith(status: 'SAFETY_CHECKED')),
                         child: const Text('Safety Pass', style: TextStyle(fontSize: 11, color: AppTheme.sapphireBlue)),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _job = _job.copyWith(status: 'WAITING_CUSTOMER_APPROVAL');
+                          });
+                          _openPartsApprovalModal(null);
+                        },
+                        child: const Text('Parts Quote', style: TextStyle(fontSize: 11, color: Color(0xFFD97706), fontWeight: FontWeight.bold)),
                       ),
                       TextButton(
                         onPressed: () {
