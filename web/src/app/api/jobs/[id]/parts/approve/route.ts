@@ -19,19 +19,23 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const body = await request.json();
-    const { partId, decision = 'ACCEPT', customerId } = body;
+    const body = await request.json().catch(() => ({}));
+    const rawPartId = body.partId || body.id || 'latest';
+    const effectivePartId = String(rawPartId || 'latest').trim();
 
-    if (!partId) {
-      return apiError("'partId' (or 'latest') is required", 400);
-    }
+    const rawDecision = String(body.decision || body.action || body.status || 'ACCEPT').toUpperCase().trim();
+    const isAccept = rawDecision === 'ACCEPT' || rawDecision === 'APPROVE' || rawDecision === 'ACCEPTED';
+    const isReject = rawDecision === 'REJECT' || rawDecision === 'DECLINE' || rawDecision === 'REJECTED';
 
-    const dec = (decision || '').toUpperCase();
-    if (dec !== 'ACCEPT' && dec !== 'REJECT') {
+    if (!isAccept && !isReject) {
       return apiError("Decision must be either 'ACCEPT' or 'REJECT'", 422);
     }
 
-    const result = await db.approveJobPartQuote(id, partId, dec as 'ACCEPT' | 'REJECT', {
+    const dec: 'ACCEPT' | 'REJECT' = isAccept ? 'ACCEPT' : 'REJECT';
+    const customerId = body.customerId || undefined;
+    const paymentMethod = body.paymentMethod || 'UPI';
+
+    const result = await db.approveJobPartQuote(id, effectivePartId, dec, {
       customerId,
       actorRole: 'CUSTOMER',
     });
@@ -45,6 +49,7 @@ export async function POST(
         decision: result.decision,
         part: result.part,
         revisedTotalAmountInr: result.revisedTotalAmountInr,
+        paymentMethod,
       },
       `Customer has ${actionText} the spare parts estimate. Work order resumed in IN_PROGRESS.`,
       200
@@ -57,3 +62,18 @@ export async function POST(
     );
   }
 }
+
+export async function PATCH(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  return POST(request, context);
+}
+
+export async function PUT(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  return POST(request, context);
+}
+

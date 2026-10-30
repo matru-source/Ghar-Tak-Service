@@ -63,6 +63,7 @@ export async function GET(
 
 /**
  * POST: Technician proposes spare part from standardized catalog with mandatory damaged photo (Issues 31, 32, 34).
+ * If approval payload is detected, routes seamlessly to db.approveJobPartQuote.
  * Transitions job to WAITING_CUSTOMER_APPROVAL and pauses work until customer accepts.
  */
 export async function POST(
@@ -71,7 +72,36 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
+
+    // Detect inline customer approval/rejection decision
+    if (body.decision || body.action === 'APPROVE' || body.action === 'ACCEPT' || body.action === 'REJECT' || body.action === 'DECLINE') {
+      const rawPartId = body.partId || body.id || 'latest';
+      const effectivePartId = String(rawPartId || 'latest').trim();
+      const rawDecision = String(body.decision || body.action || 'ACCEPT').toUpperCase().trim();
+      const isAccept = rawDecision === 'ACCEPT' || rawDecision === 'APPROVE' || rawDecision === 'ACCEPTED';
+      const dec: 'ACCEPT' | 'REJECT' = isAccept ? 'ACCEPT' : 'REJECT';
+
+      const result = await db.approveJobPartQuote(id, effectivePartId, dec, {
+        customerId: body.customerId,
+        actorRole: 'CUSTOMER',
+      });
+
+      const actionText = dec === 'ACCEPT' ? 'ACCEPTED' : 'DECLINED';
+      return apiSuccess(
+        {
+          jobId: result.job.id,
+          ticketNumber: result.job.jobTicketNumber,
+          status: result.job.status,
+          decision: result.decision,
+          part: result.part,
+          revisedTotalAmountInr: result.revisedTotalAmountInr,
+        },
+        `Customer has ${actionText} the spare parts estimate. Work order resumed in IN_PROGRESS.`,
+        200
+      );
+    }
+
     const {
       sku,
       partNumber,
@@ -135,4 +165,60 @@ export async function POST(
       msg
     );
   }
+}
+
+/**
+ * PATCH / PUT: Direct quote approval or rejection endpoint
+ */
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const body = await request.json().catch(() => ({}));
+    const rawPartId = body.partId || body.id || 'latest';
+    const effectivePartId = String(rawPartId || 'latest').trim();
+
+    const rawDecision = String(body.decision || body.action || body.status || 'ACCEPT').toUpperCase().trim();
+    const isAccept = rawDecision === 'ACCEPT' || rawDecision === 'APPROVE' || rawDecision === 'ACCEPTED';
+    const isReject = rawDecision === 'REJECT' || rawDecision === 'DECLINE' || rawDecision === 'REJECTED';
+
+    if (!isAccept && !isReject) {
+      return apiError("Decision must be either 'ACCEPT' or 'REJECT'", 422);
+    }
+
+    const dec: 'ACCEPT' | 'REJECT' = isAccept ? 'ACCEPT' : 'REJECT';
+    const result = await db.approveJobPartQuote(id, effectivePartId, dec, {
+      customerId: body.customerId,
+      actorRole: 'CUSTOMER',
+    });
+
+    const actionText = dec === 'ACCEPT' ? 'ACCEPTED' : 'DECLINED';
+    return apiSuccess(
+      {
+        jobId: result.job.id,
+        ticketNumber: result.job.jobTicketNumber,
+        status: result.job.status,
+        decision: result.decision,
+        part: result.part,
+        revisedTotalAmountInr: result.revisedTotalAmountInr,
+      },
+      `Customer has ${actionText} the spare parts estimate. Work order resumed in IN_PROGRESS.`,
+      200
+    );
+  } catch (error: any) {
+    return apiError(
+      'Failed to process parts quote decision',
+      500,
+      error instanceof Error ? error.message : String(error)
+    );
+  }
+}
+
+export async function PUT(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  return PATCH(request, context);
 }
