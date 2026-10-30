@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1159.0",
+    "@devzoy/indian-pincode": "^2.1.0",
     "@prisma/client": "6.4.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",

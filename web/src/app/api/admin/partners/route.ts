@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
       gstin,
       stateLicensed,
       allocatedStates,
+      allocatedPincodes,
       maxPincodeQuota,
       activeTechnicianQuota,
       platformRevenueSharePct,
@@ -79,6 +80,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Exclusivity Check: Ensure none of the requested pincodes are already assigned to another partner
+    const requestedPincodes: string[] = Array.isArray(allocatedPincodes)
+      ? Array.from(new Set(allocatedPincodes.map((p: any) => String(p).trim()))).filter((p) => p.length === 6)
+      : [];
+
+    if (requestedPincodes.length > 0) {
+      const allAssigned = await db.getAllPincodes();
+      const assignedSet = new Set(allAssigned.map((p) => String(p.pincode).trim()));
+      const conflicts = requestedPincodes.filter((p) => assignedSet.has(p));
+
+      if (conflicts.length > 0) {
+        return apiError(
+          `Territorial conflict: Pincode(s) ${conflicts.slice(0, 5).join(', ')}${conflicts.length > 5 ? ` and ${conflicts.length - 5} more` : ''} are already assigned to an existing franchise partner.`,
+          409
+        );
+      }
+    }
+
     const partner = await db.createPartner({
       entityName,
       directorName,
@@ -88,7 +107,7 @@ export async function POST(request: NextRequest) {
       gstin,
       stateLicensed,
       allocatedStates: allocatedStates || [stateLicensed],
-      maxPincodeQuota: Number(maxPincodeQuota) || 30,
+      maxPincodeQuota: Math.max(Number(maxPincodeQuota) || 30, requestedPincodes.length + 10),
       activeTechnicianQuota: Number(activeTechnicianQuota) || 50,
       platformRevenueSharePct: Number(platformRevenueSharePct) || 15.0,
       partnerRevenueSharePct: Number(partnerRevenueSharePct) || 15.0,
@@ -97,7 +116,42 @@ export async function POST(request: NextRequest) {
       bankName: String(bankName).trim(),
     });
 
-    return apiSuccess(partner, `Franchise partner '${entityName}' onboarded successfully`, 201);
+    // Allocate selected pincodes to the newly onboarded partner
+    if (requestedPincodes.length > 0) {
+      const { getDetails } = await import('@devzoy/indian-pincode');
+      for (const pin of requestedPincodes) {
+        const details = getDetails(pin);
+        const districtName = details?.districts?.[0]
+          ? details.districts[0].charAt(0).toUpperCase() + details.districts[0].slice(1).toLowerCase()
+          : 'General District';
+        await db.createPincode({
+          pincode: pin,
+          areaName: `${districtName} Hub (${pin})`,
+          district: districtName,
+          state: stateLicensed,
+          partnerId: partner.id,
+          isActive: true,
+          isExclusive: true,
+        });
+      }
+      await db.updatePartner(partner.id, {
+        activePincodesCount: requestedPincodes.length,
+        maxPincodeQuota: Math.max(Number(maxPincodeQuota) || 30, requestedPincodes.length + 10),
+      });
+      partner.activePincodesCount = requestedPincodes.length;
+    }
+
+    // WORM Audit Logging
+    await db.recordWormAuditLog({
+      actorId: payload.sub,
+      actorRole: payload.role,
+      action: 'ONBOARD_FRANCHISE_PARTNER',
+      resourceType: 'PARTNER',
+      resourceId: partner.id,
+      payloadSummary: `Onboarded partner ${entityName} in state ${stateLicensed} with ${requestedPincodes.length} exclusive pincodes allocated.`,
+    });
+
+    return apiSuccess(partner, `Franchise partner '${entityName}' onboarded successfully with ${requestedPincodes.length} allocated pincodes`, 201);
   } catch (error) {
     return apiError(
       'Failed to onboard franchise partner',

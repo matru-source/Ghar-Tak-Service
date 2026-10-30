@@ -4327,6 +4327,61 @@ export const db = {
       createdAt: new Date().toISOString(),
     };
     dbStore.partners.push(newPartner);
+
+    if (await isDatabaseConnected()) {
+      try {
+        const { prisma } = await import('@/lib/prisma');
+        let user = await prisma.user.findFirst({
+          where: { OR: [{ email: data.email }, { phone: data.phone }] },
+        });
+        if (!user) {
+          user = await prisma.user.create({
+            data: {
+              email: data.email,
+              phone: data.phone,
+              fullName: data.directorName,
+              role: 'PARTNER',
+              isActive: true,
+              isVerified: true,
+            },
+          });
+        }
+        await prisma.partner.upsert({
+          where: { id: newPartner.id },
+          update: {
+            entityName: data.entityName,
+            companyRegistrationNumber: data.companyRegistrationNumber,
+            stateLicensed: data.stateLicensed,
+            maxPincodeQuota: data.maxPincodeQuota || 30,
+            activeTechnicianQuota: data.activeTechnicianQuota || 50,
+            platformRevenueSharePct: data.platformRevenueSharePct || 15.0,
+            ifscCode: data.ifscCode,
+            bankAccountNumber: data.bankAccountNumber,
+            bankName: data.bankName,
+            bankAccountHolder: data.directorName,
+            status: 'ACTIVE',
+          },
+          create: {
+            id: newPartner.id,
+            userId: user.id,
+            entityName: data.entityName,
+            companyRegistrationNumber: data.companyRegistrationNumber,
+            stateLicensed: data.stateLicensed,
+            maxPincodeQuota: data.maxPincodeQuota || 30,
+            activeTechnicianQuota: data.activeTechnicianQuota || 50,
+            platformRevenueSharePct: data.platformRevenueSharePct || 15.0,
+            ifscCode: data.ifscCode,
+            bankAccountNumber: data.bankAccountNumber,
+            bankName: data.bankName,
+            bankAccountHolder: data.directorName,
+            status: 'ACTIVE',
+          },
+        });
+      } catch (err) {
+        console.warn('[DB] Failed to persist partner to PostgreSQL:', err);
+      }
+    }
+
     return newPartner;
   },
 
@@ -4335,6 +4390,25 @@ export const db = {
     const partner = list.find((p) => p.id === id);
     if (!partner) return null;
     Object.assign(partner, updates);
+
+    if (await isDatabaseConnected()) {
+      try {
+        const { prisma } = await import('@/lib/prisma');
+        await prisma.partner.update({
+          where: { id },
+          data: {
+            ...(updates.entityName && { entityName: updates.entityName }),
+            ...(updates.maxPincodeQuota !== undefined && { maxPincodeQuota: updates.maxPincodeQuota }),
+            ...(updates.activeTechnicianQuota !== undefined && { activeTechnicianQuota: updates.activeTechnicianQuota }),
+            ...(updates.platformRevenueSharePct !== undefined && { platformRevenueSharePct: updates.platformRevenueSharePct }),
+            ...(updates.status && { status: updates.status }),
+          },
+        }).catch(() => {});
+      } catch (err) {
+        console.warn('[DB] Failed to update partner in PostgreSQL:', err);
+      }
+    }
+
     return partner;
   },
 

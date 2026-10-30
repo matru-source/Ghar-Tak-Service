@@ -38,6 +38,19 @@ export default function AdminPartnersPage() {
   const [isOnboardModalOpen, setIsOnboardModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Dynamic Indian States & Territory Pincodes State
+  const [allStates, setAllStates] = useState<string[]>([]);
+  const [availablePincodes, setAvailablePincodes] = useState<
+    Array<{ pincode: string; district: string; state: string }>
+  >([]);
+  const [selectedPincodes, setSelectedPincodes] = useState<string[]>([]);
+  const [districtsList, setDistrictsList] = useState<string[]>([]);
+  const [selectedDistrict, setSelectedDistrict] = useState<string>('ALL');
+  const [pincodeSearch, setPincodeSearch] = useState<string>('');
+  const [pincodesLoading, setPincodesLoading] = useState<boolean>(false);
+  const [assignedInStateCount, setAssignedInStateCount] = useState<number>(0);
+  const [totalInStateCount, setTotalInStateCount] = useState<number>(0);
+
   // Form state for new partner onboarding
   const [newPartner, setNewPartner] = useState({
     entityName: '',
@@ -51,14 +64,44 @@ export default function AdminPartnersPage() {
     activeTechnicianQuota: 80,
     platformRevenueSharePct: 15.0,
     partnerRevenueSharePct: 15.0,
-    ifscCode: '',
-    bankAccountNumber: '',
-    bankName: '',
+    ifscCode: 'HDFC0001234',
+    bankAccountNumber: '50200088912345',
+    bankName: 'HDFC Bank',
   });
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const fetchAvailablePincodes = async (state: string) => {
+    if (!state) return;
+    setPincodesLoading(true);
+    try {
+      const res = await fetch(`/api/admin/pincodes/available?state=${encodeURIComponent(state)}`);
+      const json = await res.json();
+      if (json.success && json.data) {
+        if (json.data.states && json.data.states.length > 0) {
+          setAllStates(json.data.states);
+        }
+        setAvailablePincodes(json.data.pincodes || []);
+        setDistrictsList(json.data.districts || []);
+        setAssignedInStateCount(json.data.assignedPincodesInState || 0);
+        setTotalInStateCount(json.data.totalPincodesInState || 0);
+      }
+    } catch (err) {
+      console.error('Failed to load dynamic pincodes:', err);
+    } finally {
+      setPincodesLoading(false);
+    }
+  };
+
+  const handleStateChange = (newState: string) => {
+    setNewPartner((prev) => ({ ...prev, stateLicensed: newState }));
+    setSelectedPincodes([]);
+    setSelectedDistrict('ALL');
+    setPincodeSearch('');
+    fetchAvailablePincodes(newState);
   };
 
   const fetchPartners = async () => {
@@ -73,6 +116,9 @@ export default function AdminPartnersPage() {
       const json = await res.json();
       if (json.success && json.data) {
         setPartners(json.data.partners);
+        if (json.data.metrics?.uniqueStates && json.data.metrics.uniqueStates.length > 0) {
+          setAllStates((prev) => Array.from(new Set([...prev, ...json.data.metrics.uniqueStates])));
+        }
       }
     } catch {
       showToast('Error loading franchise partners');
@@ -83,7 +129,23 @@ export default function AdminPartnersPage() {
 
   useEffect(() => {
     fetchPartners();
+    // Preload available states
+    fetch('/api/admin/pincodes/available')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && d.data?.states) {
+          setAllStates(d.data.states);
+        }
+      })
+      .catch(() => {});
   }, [stateFilter, statusFilter]);
+
+  // Load available pincodes whenever the onboarding modal opens
+  useEffect(() => {
+    if (isOnboardModalOpen) {
+      fetchAvailablePincodes(newPartner.stateLicensed || 'Maharashtra');
+    }
+  }, [isOnboardModalOpen]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,12 +158,20 @@ export default function AdminPartnersPage() {
       const res = await fetch('/api/admin/partners', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newPartner),
+        body: JSON.stringify({
+          ...newPartner,
+          allocatedPincodes: selectedPincodes,
+          maxPincodeQuota: Math.max(newPartner.maxPincodeQuota, selectedPincodes.length + 10),
+        }),
       });
       const json = await res.json();
       if (json.success) {
-        showToast(`Franchise partner '${newPartner.entityName}' onboarded successfully!`);
+        showToast(
+          `Franchise partner '${newPartner.entityName}' onboarded with ${selectedPincodes.length} allocated pincodes!`
+        );
         setIsOnboardModalOpen(false);
+        setSelectedPincodes([]);
+        setPincodeSearch('');
         fetchPartners();
       } else {
         showToast(json.error || 'Failed to onboard partner');
@@ -109,6 +179,20 @@ export default function AdminPartnersPage() {
     } catch {
       showToast('Network error during onboarding');
     }
+  };
+
+  const togglePincode = (pin: string) => {
+    setSelectedPincodes((prev) =>
+      prev.includes(pin) ? prev.filter((p) => p !== pin) : [...prev, pin]
+    );
+  };
+
+  const selectAllFiltered = (filteredPins: string[]) => {
+    setSelectedPincodes((prev) => Array.from(new Set([...prev, ...filteredPins])));
+  };
+
+  const clearSelectedPincodes = () => {
+    setSelectedPincodes([]);
   };
 
   const handleUpdateDossier = async (partnerId: string, updates: Partial<Partner>) => {
@@ -228,13 +312,14 @@ export default function AdminPartnersPage() {
           <select
             value={stateFilter}
             onChange={(e) => setStateFilter(e.target.value)}
-            className="bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-xl px-3 py-2 outline-none focus:border-blue-500 focus:bg-white"
+            className="bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-xl px-3 py-2 outline-none focus:border-blue-500 focus:bg-white font-medium"
           >
             <option value="ALL">All States</option>
-            <option value="Maharashtra">Maharashtra Hub</option>
-            <option value="Delhi NCR">Delhi NCR</option>
-            <option value="Karnataka">Karnataka Hub</option>
-            <option value="Gujarat">Gujarat Hub</option>
+            {allStates.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
           </select>
 
           <form onSubmit={handleSearchSubmit} className="flex-1 md:w-64 flex items-center">
@@ -548,29 +633,34 @@ export default function AdminPartnersPage() {
       {/* Onboard New Partner Modal */}
       {isOnboardModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white border border-slate-200 rounded-3xl max-w-xl w-full p-6 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-start justify-between">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-3xl w-full p-6 space-y-5 shadow-2xl max-h-[92vh] overflow-y-auto">
+            <div className="flex items-start justify-between border-b border-slate-100 pb-4">
               <div>
-                <h2 className="text-xl font-black text-slate-900">Onboard Franchise Partner</h2>
-                <p className="text-xs text-slate-500">Register new regional operations hub and allocate state jurisdiction.</p>
+                <h2 className="text-xl font-black text-slate-900 tracking-tight">Onboard Franchise Partner</h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Register regional operations entity, select dynamic state territory, and assign exclusive pincodes.
+                </p>
               </div>
               <button
                 type="button"
-                onClick={() => setIsOnboardModalOpen(false)}
-                className="p-2 text-slate-400 hover:text-slate-700 rounded-lg bg-slate-100 hover:bg-slate-200 text-sm font-bold"
+                onClick={() => {
+                  setIsOnboardModalOpen(false);
+                  setSelectedPincodes([]);
+                }}
+                className="p-2 text-slate-400 hover:text-slate-700 rounded-xl bg-slate-100 hover:bg-slate-200 text-sm font-bold transition cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
             <form onSubmit={handleOnboardSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="md:col-span-2">
                   <label className="block text-xs font-semibold text-slate-600 mb-1">Entity Name *</label>
                   <input
                     required
                     type="text"
-                    placeholder="e.g. Tamil Nadu Power Grid Solutions Pvt Ltd"
+                    placeholder="e.g. Odisha Eastern Operations Hub Pvt Ltd"
                     value={newPartner.entityName}
                     onChange={(e) => setNewPartner({ ...newPartner, entityName: e.target.value })}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 text-xs outline-none focus:border-blue-500 focus:bg-white"
@@ -610,33 +700,32 @@ export default function AdminPartnersPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Primary State *</label>
-                  <select
-                    value={newPartner.stateLicensed}
-                    onChange={(e) => setNewPartner({ ...newPartner, stateLicensed: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 text-xs outline-none focus:border-blue-500 focus:bg-white"
-                  >
-                    <option value="Maharashtra">Maharashtra</option>
-                    <option value="Delhi NCR">Delhi NCR</option>
-                    <option value="Karnataka">Karnataka</option>
-                    <option value="Gujarat">Gujarat</option>
-                    <option value="Tamil Nadu">Tamil Nadu</option>
-                    <option value="Telangana">Telangana</option>
-                  </select>
-                </div>
-                <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1">GSTIN (15 Digits) *</label>
                   <input
                     required
                     type="text"
-                    placeholder="33AAAAA0000A1Z5"
+                    placeholder="27AABCU9603R1ZM"
                     value={newPartner.gstin}
-                    onChange={(e) => setNewPartner({ ...newPartner, gstin: e.target.value })}
+                    onChange={(e) => setNewPartner({ ...newPartner, gstin: e.target.value.toUpperCase() })}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 text-xs outline-none focus:border-blue-500 focus:bg-white uppercase font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Bank Name</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Primary State Jurisdiction *</label>
+                  <select
+                    value={newPartner.stateLicensed}
+                    onChange={(e) => handleStateChange(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 text-xs font-semibold outline-none focus:border-blue-500 focus:bg-white cursor-pointer"
+                  >
+                    {allStates.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Settlement Bank Name</label>
                   <input
                     type="text"
                     placeholder="HDFC Bank"
@@ -647,19 +736,204 @@ export default function AdminPartnersPage() {
                 </div>
               </div>
 
+              {/* Exclusive Pincode Territory Allocation */}
+              <div className="pt-3 border-t border-slate-200 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <label className="text-xs font-black text-slate-900 flex items-center gap-2">
+                      <span>Exclusive Service Pincodes</span>
+                      <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                        {newPartner.stateLicensed}
+                      </span>
+                    </label>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Assigned pincodes become exclusive to this partner. Pincodes already claimed by other partners are hidden automatically.
+                    </p>
+                  </div>
+                  <div className="text-left sm:text-right shrink-0">
+                    <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      {pincodesLoading ? 'Loading...' : `${availablePincodes.length} Available in State`}
+                    </span>
+                    {assignedInStateCount > 0 && (
+                      <div className="text-[10px] text-slate-400 mt-1">
+                        ({assignedInStateCount} already allocated • hidden)
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Filters & Selection Controls */}
+                <div className="flex flex-col sm:flex-row gap-2 items-center justify-between bg-slate-100 p-2.5 rounded-2xl border border-slate-200">
+                  <div className="flex items-center gap-2 w-full sm:w-auto flex-1">
+                    <select
+                      value={selectedDistrict}
+                      onChange={(e) => setSelectedDistrict(e.target.value)}
+                      className="bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-700 outline-none font-semibold shrink-0 cursor-pointer"
+                    >
+                      <option value="ALL">All Districts ({districtsList.length})</option>
+                      {districtsList.map((d) => (
+                        <option key={d} value={d}>
+                          {d}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      placeholder="Filter 6-digit PIN or district..."
+                      value={pincodeSearch}
+                      onChange={(e) => setPincodeSearch(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 outline-none focus:border-blue-500 placeholder:text-slate-400"
+                    />
+                  </div>
+
+                  {(() => {
+                    const filtered = availablePincodes.filter((p) => {
+                      if (selectedDistrict !== 'ALL' && p.district.toLowerCase() !== selectedDistrict.toLowerCase()) {
+                        return false;
+                      }
+                      if (pincodeSearch.trim()) {
+                        const q = pincodeSearch.trim().toLowerCase();
+                        return p.pincode.includes(q) || p.district.toLowerCase().includes(q);
+                      }
+                      return true;
+                    });
+
+                    return (
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => selectAllFiltered(filtered.map((p) => p.pincode))}
+                          disabled={pincodesLoading || filtered.length === 0}
+                          className="text-[11px] font-bold text-blue-700 hover:text-blue-900 bg-white hover:bg-blue-50 border border-slate-200 px-3 py-1.5 rounded-xl transition cursor-pointer disabled:opacity-50"
+                        >
+                          + Select All Visible ({filtered.length})
+                        </button>
+                        {selectedPincodes.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={clearSelectedPincodes}
+                            className="text-[11px] font-bold text-rose-700 hover:text-rose-900 bg-white hover:bg-rose-50 border border-slate-200 px-3 py-1.5 rounded-xl transition cursor-pointer"
+                          >
+                            Clear ({selectedPincodes.length})
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Selected Pincodes Badges */}
+                {selectedPincodes.length > 0 && (
+                  <div className="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-3 space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold text-emerald-900">
+                      <span>✓ {selectedPincodes.length} Pincode(s) Selected for Allocation:</span>
+                      <span className="text-[10px] text-emerald-600 font-normal">Click any tag to deselect</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
+                      {selectedPincodes.map((pin) => (
+                        <button
+                          key={pin}
+                          type="button"
+                          onClick={() => togglePincode(pin)}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white text-emerald-900 text-xs font-bold font-mono rounded-lg border border-emerald-300 shadow-2xs hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 transition cursor-pointer"
+                          title="Click to remove from partner"
+                        >
+                          <span>{pin}</span>
+                          <span className="text-slate-400 hover:text-rose-600">✕</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Scrollable Available Pincodes Grid */}
+                {(() => {
+                  const filtered = availablePincodes.filter((p) => {
+                    if (selectedDistrict !== 'ALL' && p.district.toLowerCase() !== selectedDistrict.toLowerCase()) {
+                      return false;
+                    }
+                    if (pincodeSearch.trim()) {
+                      const q = pincodeSearch.trim().toLowerCase();
+                      return p.pincode.includes(q) || p.district.toLowerCase().includes(q);
+                    }
+                    return true;
+                  });
+
+                  return (
+                    <div className="border border-slate-200 rounded-2xl bg-slate-50 p-3 max-h-52 overflow-y-auto">
+                      {pincodesLoading ? (
+                        <div className="py-10 text-center text-xs text-slate-500 font-semibold flex items-center justify-center gap-2">
+                          <span className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                          <span>Fetching official postal directory for {newPartner.stateLicensed}...</span>
+                        </div>
+                      ) : filtered.length === 0 ? (
+                        <div className="py-10 text-center text-xs text-slate-500 space-y-1">
+                          <div className="font-bold text-slate-700">No Unassigned Pincodes Found</div>
+                          <div>
+                            {availablePincodes.length === 0
+                              ? `All pincodes in ${newPartner.stateLicensed} are already claimed by existing partners.`
+                              : 'No unassigned pincodes match your current district or search filter.'}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                          {filtered.map((item) => {
+                            const isSelected = selectedPincodes.includes(item.pincode);
+                            return (
+                              <button
+                                key={item.pincode}
+                                type="button"
+                                onClick={() => togglePincode(item.pincode)}
+                                className={`flex items-center justify-between p-2 rounded-xl text-left text-xs transition border cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-emerald-600 text-white border-emerald-700 shadow-sm font-black'
+                                    : 'bg-white text-slate-800 border-slate-200 hover:border-blue-400 hover:bg-blue-50/50'
+                                }`}
+                              >
+                                <div>
+                                  <div className="font-mono font-bold leading-tight tracking-wide">{item.pincode}</div>
+                                  <div
+                                    className={`text-[10px] truncate max-w-[110px] ${
+                                      isSelected ? 'text-emerald-100 font-normal' : 'text-slate-400 font-medium'
+                                    }`}
+                                  >
+                                    {item.district}
+                                  </div>
+                                </div>
+                                <span className={`text-xs font-black ${isSelected ? 'text-white' : 'text-slate-300'}`}>
+                                  {isSelected ? '✓' : '+'}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
                 <button
                   type="button"
-                  onClick={() => setIsOnboardModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold hover:bg-slate-200 transition border border-slate-200"
+                  onClick={() => {
+                    setIsOnboardModalOpen(false);
+                    setSelectedPincodes([]);
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold hover:bg-slate-200 transition border border-slate-200 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-500 transition shadow-lg shadow-blue-600/30"
+                  className="px-5 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-black hover:bg-blue-500 transition shadow-lg shadow-blue-600/30 cursor-pointer flex items-center gap-2"
                 >
-                  Confirm & Onboard
+                  <span>Confirm & Onboard</span>
+                  {selectedPincodes.length > 0 && (
+                    <span className="px-2 py-0.5 rounded-full bg-blue-700 text-[11px] font-mono">
+                      {selectedPincodes.length} Pincodes
+                    </span>
+                  )}
                 </button>
               </div>
             </form>
