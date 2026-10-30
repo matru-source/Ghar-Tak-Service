@@ -133,7 +133,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         techPhone: job.technicianPhone ?? '+91 98200 12345',
         techBadge: job.technicianBadge ?? 'GTS-TECH-101',
         status: job.status,
-        otp: job.handoverOtp ?? '4928',
+        otp: job.handoverOtp ?? '4829',
         total: _finalTotal,
         eta: '12 mins',
       );
@@ -163,7 +163,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         technicianName: 'Rajesh Kumar (GTS Certified)',
         technicianBadge: 'GTS-TECH-101',
         technicianPhone: '+91 98200 12345',
-        handoverOtp: '4928',
+        handoverOtp: '4829',
         totalAmountInr: _finalTotal,
         createdAt: DateTime.now().toIso8601String(),
       );
@@ -176,7 +176,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         techPhone: fallbackJob.technicianPhone!,
         techBadge: fallbackJob.technicianBadge!,
         status: 'EN_ROUTE',
-        otp: '4928',
+        otp: '4829',
         total: _finalTotal,
         eta: '12 mins',
       );

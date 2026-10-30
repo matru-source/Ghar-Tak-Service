@@ -21,6 +21,8 @@ class ApiClient {
     final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'x-client-app': 'customer',
+      'x-user-role': 'CUSTOMER',
     };
     final token = SessionManager.getAuthToken();
     if (token != null && token.isNotEmpty) {

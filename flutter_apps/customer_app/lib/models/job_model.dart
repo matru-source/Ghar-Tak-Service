@@ -111,7 +111,7 @@ class JobModel {
       pincode: data['pincode']?.toString() ?? '400001',
       customerAddressText: resolvedAddress,
       totalAmountInr: total,
-      handoverOtp: data['handoverOtp']?.toString(),
+      handoverOtp: data['handoverOtp']?.toString() ?? data['otp']?.toString() ?? data['verificationCode']?.toString(),
       technicianId: data['technicianId']?.toString() ?? tech?['id']?.toString(),
       technicianName: data['technicianName']?.toString() ?? tech?['fullName']?.toString() ?? 'Verified Pro',
       technicianBadge: tech?['badgeNumber']?.toString() ?? 'GTS-TECH-101',

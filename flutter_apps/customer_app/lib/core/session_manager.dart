@@ -91,7 +91,7 @@ class SessionManager {
   static String getActiveJobTechPhone() => _prefs?.getString(_keyActiveJobTechPhone) ?? '+91 98200 12345';
   static String getActiveJobTechBadge() => _prefs?.getString(_keyActiveJobTechBadge) ?? 'GTS-TECH-101';
   static String getActiveJobStatus() => _prefs?.getString(_keyActiveJobStatus) ?? 'EN_ROUTE';
-  static String getActiveJobOtp() => _prefs?.getString(_keyActiveJobOtp) ?? '4928';
+  static String getActiveJobOtp() => _prefs?.getString(_keyActiveJobOtp) ?? '4829';
   static String getActiveJobEta() => _prefs?.getString(_keyActiveJobEta) ?? '15 mins';
   static double getActiveJobTotal() => _prefs?.getDouble(_keyActiveJobTotal) ?? 299.0;
 
@@ -114,7 +114,7 @@ class SessionManager {
     await _prefs?.setString(_keyActiveJobTechPhone, techPhone);
     await _prefs?.setString(_keyActiveJobTechBadge, techBadge);
     await _prefs?.setString(_keyActiveJobStatus, status);
-    await _prefs?.setString(_keyActiveJobOtp, otp ?? '4928');
+    await _prefs?.setString(_keyActiveJobOtp, otp ?? '4829');
     await _prefs?.setString(_keyActiveJobEta, eta);
     await _prefs?.setDouble(_keyActiveJobTotal, total);
   }

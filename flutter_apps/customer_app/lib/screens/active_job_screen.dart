@@ -116,7 +116,7 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
           ],
         ),
         content: Text(
-          '${_job.technicianName ?? "Your technician"} has arrived at your doorstep.\n\nPlease share the 4-digit Handover Code ${_job.handoverOtp} to verify identity and begin service.',
+          '${_job.technicianName ?? "Your technician"} has arrived at your doorstep.\n\nPlease share the 4-digit Handover Code ${_job.handoverOtp ?? SessionManager.getActiveJobOtp()} to verify identity and begin service.',
           style: const TextStyle(fontSize: 13, height: 1.4),
         ),
         actions: [
@@ -354,7 +354,9 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
                       border: Border.all(color: AppTheme.sapphireBlue),
                     ),
                     child: Text(
-                      (_job.handoverOtp != null && _job.handoverOtp!.isNotEmpty) ? _job.handoverOtp! : '4928',
+                      (_job.handoverOtp != null && _job.handoverOtp!.isNotEmpty)
+                          ? _job.handoverOtp!
+                          : SessionManager.getActiveJobOtp(),
                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppTheme.sapphireBlue, letterSpacing: 2),
                     ),
                   ),
