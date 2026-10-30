@@ -46,7 +46,15 @@ class _TechJobsViewState extends State<TechJobsView> {
   List<TechJobModel> get _filteredJobs {
     return _allJobs.where((j) {
       final matchesFilter = _selectedFilter == 'All' ||
-          (_selectedFilter == 'Active' && (j.status == 'EN_ROUTE' || j.status == 'ARRIVED' || j.status == 'IN_PROGRESS' || j.status == 'DISPATCHED' || j.status == 'PENDING_ACCEPTANCE')) ||
+          (_selectedFilter == 'Active' &&
+              (j.status == 'EN_ROUTE' ||
+                  j.status == 'ARRIVED' ||
+                  j.status == 'DOORSTEP_ARRIVED' ||
+                  j.status == 'SAFETY_CHECKED' ||
+                  j.status == 'IN_PROGRESS' ||
+                  j.status == 'WAITING_CUSTOMER_APPROVAL' ||
+                  j.status == 'DISPATCHED' ||
+                  j.status == 'PENDING_ACCEPTANCE')) ||
           (_selectedFilter == 'Completed' && (j.status == 'COMPLETED' || j.status == 'WORK_COMPLETED')) ||
           (_selectedFilter == 'Cancelled' && j.status == 'CANCELLED');
 
@@ -104,45 +112,58 @@ class _TechJobsViewState extends State<TechJobsView> {
             _buildDetailRow(Icons.timeline_rounded, 'Current Status', job.status),
 
             const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: TechTheme.signalCobalt,
-                      side: const BorderSide(color: TechTheme.signalCobalt),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+            Builder(builder: (context) {
+              final isReadyForCompletion =
+                  job.status == 'IN_PROGRESS' || job.status == 'SAFETY_CHECKED';
+              return Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: TechTheme.signalCobalt,
+                        side: const BorderSide(color: TechTheme.signalCobalt),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => TechNavigationScreen(job: job)));
+                      },
+                      icon: const Icon(Icons.navigation_rounded),
+                      label: const Text('NAVIGATE', style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => TechNavigationScreen(job: job)));
-                    },
-                    icon: const Icon(Icons.navigation_rounded),
-                    label: const Text('NAVIGATE', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: TechTheme.flameOrange,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isReadyForCompletion
+                            ? TechTheme.signalOnlineEmerald
+                            : TechTheme.flameOrange,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onPressed: () async {
+                        Navigator.pop(ctx);
+                        if (isReadyForCompletion) {
+                          await Navigator.push(context, MaterialPageRoute(builder: (_) => JobCompletionScreen(job: job)));
+                          _loadJobs();
+                        } else {
+                          final passed = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => SafetyChecklistScreen(job: job)));
+                          if (passed == true) {
+                            _loadJobs();
+                          }
+                        }
+                      },
+                      icon: Icon(isReadyForCompletion ? Icons.verified_rounded : Icons.bolt_rounded),
+                      label: Text(
+                        isReadyForCompletion ? 'COMPLETE JOB' : 'SAFETY GATE',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      if (job.status == 'IN_PROGRESS') {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => JobCompletionScreen(job: job)));
-                      } else {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => SafetyChecklistScreen(job: job)));
-                      }
-                    },
-                    icon: Icon(job.status == 'IN_PROGRESS' ? Icons.verified_rounded : Icons.bolt_rounded),
-                    label: Text(job.status == 'IN_PROGRESS' ? 'COMPLETE' : 'SAFETY GATE', style: const TextStyle(fontWeight: FontWeight.bold)),
                   ),
-                ),
-              ],
-            ),
+                ],
+              );
+            }),
           ],
         ),
       ),
@@ -266,6 +287,9 @@ class _TechJobsViewState extends State<TechJobsView> {
     Color statusColor = TechTheme.signalCobalt;
     if (isDone) {
       statusBg = TechTheme.signalOnlineBg;
+      statusColor = TechTheme.signalOnlineEmerald;
+    } else if (job.status == 'SAFETY_CHECKED' || job.status == 'IN_PROGRESS') {
+      statusBg = const Color(0xFFECFDF5);
       statusColor = TechTheme.signalOnlineEmerald;
     } else if (isCancelled) {
       statusBg = TechTheme.signalCrimsonBg;

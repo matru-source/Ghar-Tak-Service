@@ -36,10 +36,21 @@ class _TechHomeViewState extends State<TechHomeView> with WidgetsBindingObserver
   TechJobModel? get _activeJob {
     try {
       return _assignedJobs.firstWhere(
-        (j) => j.status == 'EN_ROUTE' || j.status == 'ARRIVED' || j.status == 'IN_PROGRESS' || j.status == 'DOORSTEP_ARRIVED',
+        (j) =>
+            j.status == 'EN_ROUTE' ||
+            j.status == 'ARRIVED' ||
+            j.status == 'DOORSTEP_ARRIVED' ||
+            j.status == 'SAFETY_CHECKED' ||
+            j.status == 'IN_PROGRESS' ||
+            j.status == 'WAITING_CUSTOMER_APPROVAL',
       );
     } catch (_) {
-      return _assignedJobs.isNotEmpty && _assignedJobs.first.status != 'COMPLETED' ? _assignedJobs.first : null;
+      return _assignedJobs.isNotEmpty &&
+              _assignedJobs.first.status != 'COMPLETED' &&
+              _assignedJobs.first.status != 'WORK_COMPLETED' &&
+              _assignedJobs.first.status != 'SETTLED'
+          ? _assignedJobs.first
+          : null;
     }
   }
 
@@ -429,43 +440,63 @@ class _TechHomeViewState extends State<TechHomeView> with WidgetsBindingObserver
                     const SizedBox(height: 12),
 
                     // Action Grid
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: TechTheme.signalCobalt,
-                              side: const BorderSide(color: TechTheme.signalCobalt),
-                              padding: const EdgeInsets.symmetric(vertical: 10),
+                    Builder(builder: (context) {
+                      final isReadyForCompletion =
+                          active.status == 'IN_PROGRESS' || active.status == 'SAFETY_CHECKED';
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: TechTheme.signalCobalt,
+                                side: const BorderSide(color: TechTheme.signalCobalt),
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                              ),
+                              onPressed: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => TechNavigationScreen(job: active)));
+                              },
+                              icon: Icon(
+                                active.status == 'EN_ROUTE' ? Icons.navigation_rounded : Icons.location_on_rounded,
+                                size: 16,
+                              ),
+                              label: Text(
+                                active.status == 'EN_ROUTE' ? 'NAVIGATE' : 'VIEW DETAILS',
+                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                              ),
                             ),
-                            onPressed: () {
-                              Navigator.push(context, MaterialPageRoute(builder: (_) => TechNavigationScreen(job: active)));
-                            },
-                            icon: const Icon(Icons.navigation_rounded, size: 16),
-                            label: const Text('NAVIGATE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: TechTheme.flameOrange,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 10),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: isReadyForCompletion ? TechTheme.signalOnlineEmerald : TechTheme.flameOrange,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                              ),
+                              onPressed: () async {
+                                if (isReadyForCompletion) {
+                                  await Navigator.push(context, MaterialPageRoute(builder: (_) => JobCompletionScreen(job: active)));
+                                  _loadData();
+                                } else {
+                                  final passed = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => SafetyChecklistScreen(job: active)));
+                                  if (passed == true) {
+                                    _loadData();
+                                  }
+                                }
+                              },
+                              icon: Icon(
+                                isReadyForCompletion ? Icons.verified_rounded : Icons.bolt_rounded,
+                                size: 16,
+                              ),
+                              label: Text(
+                                isReadyForCompletion ? 'COMPLETE JOB' : 'SAFETY GATE',
+                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                              ),
                             ),
-                            onPressed: () {
-                              if (active.status == 'IN_PROGRESS') {
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => JobCompletionScreen(job: active)));
-                              } else {
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => SafetyChecklistScreen(job: active)));
-                              }
-                            },
-                            icon: Icon(active.status == 'IN_PROGRESS' ? Icons.verified_rounded : Icons.bolt_rounded, size: 16),
-                            label: Text(active.status == 'IN_PROGRESS' ? 'COMPLETE' : 'SAFETY GATE', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      );
+                    }),
                   ],
                 ),
               ),

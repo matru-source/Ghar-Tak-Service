@@ -261,12 +261,15 @@ export async function POST(
       ticketNumber: updatedJob.jobTicketNumber,
       partnerId: updatedJob.partnerId,
       technicianId: updatedJob.technicianId,
+      customerId: updatedJob.customerId,
       status: updatedJob.status,
       details: {
         category: ppeInspection.category,
         glovesVerified: true,
         beforePhotoUrl,
         ppeInspection,
+        status: updatedJob.status,
+        timestamp: new Date().toISOString(),
       },
     });
 

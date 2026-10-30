@@ -52,7 +52,10 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
       final targetJobId = event['jobId']?.toString() ?? event['details']?['jobId']?.toString();
       if (targetJobId != null && targetJobId != _job.id) return;
 
-      final newStatus = event['status']?.toString() ?? event['details']?['status']?.toString();
+      String? newStatus = event['status']?.toString() ?? event['details']?['status']?.toString();
+      if (eventType == 'SAFETY_INTERLOCK_VERIFIED' && (newStatus == null || newStatus.isEmpty)) {
+        newStatus = 'SAFETY_CHECKED';
+      }
       if (newStatus != null && newStatus.isNotEmpty) {
         setState(() {
           _job = _job.copyWith(status: newStatus);
@@ -278,7 +281,11 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          currentStep >= 2 ? 'At Your Doorstep' : 'Arriving in ~$_etaMinutes mins',
+                          currentStep >= 3
+                              ? (_job.status.toUpperCase() == 'SAFETY_CHECKED'
+                                  ? 'Safety Verified • In Progress'
+                                  : 'Repair in Progress')
+                              : (currentStep == 2 ? 'At Your Doorstep' : 'Arriving in ~$_etaMinutes mins'),
                           style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900),
                         ),
                         Text(
@@ -504,7 +511,9 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
                                 ),
                               ),
                               Text(
-                                step['sub']!,
+                                step['key'] == 'IN_PROGRESS' && _job.status.toUpperCase() == 'SAFETY_CHECKED'
+                                    ? 'Safety verified • Repair in progress'
+                                    : step['sub']!,
                                 style: const TextStyle(fontSize: 11, color: AppTheme.slateMuted),
                               ),
                               const SizedBox(height: 12),
@@ -536,6 +545,10 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
                       TextButton(
                         onPressed: () => setState(() => _job = _job.copyWith(status: 'ARRIVED')),
                         child: const Text('Set Arrived', style: TextStyle(fontSize: 11)),
+                      ),
+                      TextButton(
+                        onPressed: () => setState(() => _job = _job.copyWith(status: 'SAFETY_CHECKED')),
+                        child: const Text('Safety Pass', style: TextStyle(fontSize: 11, color: AppTheme.sapphireBlue)),
                       ),
                       TextButton(
                         onPressed: () {
