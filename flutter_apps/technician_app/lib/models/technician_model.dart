@@ -16,6 +16,7 @@ class TechnicianModel {
   final String languages;
   final String specialization;
   final String experience;
+  final String trade;
   final String? avatarUrl;
 
   TechnicianModel({
@@ -36,6 +37,7 @@ class TechnicianModel {
     this.languages = 'Hindi, Marathi, English',
     this.specialization = 'Certified Electrician (1000V Dielectric)',
     this.experience = '6+ Years Field Experience',
+    this.trade = 'ELECTRICAL',
     this.avatarUrl,
   });
 
@@ -69,6 +71,7 @@ class TechnicianModel {
       languages: tech['languages']?.toString() ?? 'Hindi, Marathi, English',
       specialization: tech['specialization']?.toString() ?? 'Certified Electrician (1000V Dielectric)',
       experience: tech['experience']?.toString() ?? '6+ Years Field Experience',
+      trade: tech['trade']?.toString() ?? 'ELECTRICAL',
       avatarUrl: tech['avatarUrl']?.toString(),
     );
   }
@@ -92,6 +95,7 @@ class TechnicianModel {
       'languages': languages,
       'specialization': specialization,
       'experience': experience,
+      'trade': trade,
       'avatarUrl': avatarUrl,
     };
   }
@@ -114,6 +118,7 @@ class TechnicianModel {
     String? languages,
     String? specialization,
     String? experience,
+    String? trade,
     String? avatarUrl,
   }) {
     return TechnicianModel(
@@ -134,6 +139,7 @@ class TechnicianModel {
       languages: languages ?? this.languages,
       specialization: specialization ?? this.specialization,
       experience: experience ?? this.experience,
+      trade: trade ?? this.trade,
       avatarUrl: avatarUrl ?? this.avatarUrl,
     );
   }

@@ -24,8 +24,26 @@ class TechJobModel {
   final String? createdAt;
   final String? completedAt;
   final String? resolutionSummary;
+  final String? _trade;
+  final String? category;
 
   String get addressText => customerAddressText;
+
+  String get trade {
+    if (_trade != null && _trade!.isNotEmpty) return _trade!;
+    if (category != null && category!.isNotEmpty) return category!;
+    final title = serviceTitle.toLowerCase();
+    if (title.contains('plumb') || title.contains('pipe') || title.contains('tap') || title.contains('drain') || title.contains('valve') || title.contains('water') || title.contains('leak')) {
+      return 'Plumbing';
+    }
+    if (title.contains('carpent') || title.contains('wood') || title.contains('door') || title.contains('furniture') || title.contains('table') || title.contains('chair') || title.contains('cupboard')) {
+      return 'Carpentry';
+    }
+    if (title.contains('clean') || title.contains('sanit') || title.contains('wash') || title.contains('pest') || title.contains('sofa') || title.contains('deep clean')) {
+      return 'Cleaning';
+    }
+    return 'Electrical';
+  }
 
   TechJobModel({
     required this.id,
@@ -53,7 +71,9 @@ class TechJobModel {
     this.createdAt,
     this.completedAt,
     this.resolutionSummary,
-  });
+    String? trade,
+    this.category,
+  }) : _trade = trade;
 
   factory TechJobModel.fromJson(Map<String, dynamic> json) {
     final data = json['job'] is Map ? json['job'] : json;
@@ -110,6 +130,8 @@ class TechJobModel {
       createdAt: data['createdAt']?.toString(),
       completedAt: data['completedAt']?.toString(),
       resolutionSummary: data['resolutionSummary']?.toString() ?? data['resolutionNotes']?.toString(),
+      trade: data['trade']?.toString() ?? (data['technician'] is Map ? data['technician']['trade']?.toString() : null),
+      category: data['category']?.toString() ?? (data['service'] is Map && data['service']['category'] is Map ? data['service']['category']['name']?.toString() : null),
     );
   }
 
@@ -139,6 +161,8 @@ class TechJobModel {
     String? createdAt,
     String? completedAt,
     String? resolutionSummary,
+    String? trade,
+    String? category,
   }) {
     return TechJobModel(
       id: id ?? this.id,
@@ -166,6 +190,8 @@ class TechJobModel {
       createdAt: createdAt ?? this.createdAt,
       completedAt: completedAt ?? this.completedAt,
       resolutionSummary: resolutionSummary ?? this.resolutionSummary,
+      trade: trade ?? this.trade,
+      category: category ?? this.category,
     );
   }
 
@@ -196,6 +222,8 @@ class TechJobModel {
       'createdAt': createdAt,
       'completedAt': completedAt,
       'resolutionSummary': resolutionSummary,
+      'trade': trade,
+      'category': category,
     };
   }
 }

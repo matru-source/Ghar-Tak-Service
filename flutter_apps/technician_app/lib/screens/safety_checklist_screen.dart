@@ -18,18 +18,153 @@ class SafetyChecklistScreen extends StatefulWidget {
 }
 
 class _SafetyChecklistScreenState extends State<SafetyChecklistScreen> {
-  bool _glovesConfirmed = false;
-  bool _mcbSwitchConfirmed = false;
-  bool _multimeterConfirmed = false;
+  final Set<int> _checkedIndices = {};
   bool _photoAttached = false;
   bool _isSubmitting = false;
   String? _errorMessage;
 
-  bool get _isAllChecked => _glovesConfirmed && _mcbSwitchConfirmed && _multimeterConfirmed && _photoAttached;
+  late final _TradeSafetyConfig _config;
+
+  @override
+  void initState() {
+    super.initState();
+    _config = _resolveTradeConfig(widget.job.trade, widget.job.serviceTitle);
+  }
+
+  bool get _isAllChecked =>
+      _checkedIndices.length == _config.checkpoints.length && _photoAttached;
+
+  _TradeSafetyConfig _resolveTradeConfig(String trade, String serviceTitle) {
+    final lowerTrade = trade.toLowerCase();
+    final lowerTitle = serviceTitle.toLowerCase();
+
+    if (lowerTrade.contains('plumb') || lowerTitle.contains('plumb') || lowerTitle.contains('pipe') || lowerTitle.contains('tap') || lowerTitle.contains('leak') || lowerTitle.contains('drain') || lowerTitle.contains('water')) {
+      return const _TradeSafetyConfig(
+        tradeCategory: 'PLUMBING',
+        bannerTitle: 'WATER SUPPLY ISOLATION PROTOCOL',
+        bannerSubtitle: 'Premise flooding mitigation. Shut off the main water stopcock and purge standing line pressure before servicing pipes or fixtures.',
+        bannerIcon: Icons.water_damage_rounded,
+        bannerBg: Color(0xFFE0F2FE),
+        bannerBorder: Color(0xFF38BDF8),
+        bannerIconColor: Color(0xFF0284C7),
+        photoTitle: 'Stopcock & Catch Basin Evidence',
+        photoSubtitle: 'Snap photo showing closed water valve and dry catch basin',
+        checkpoints: [
+          _SafetyCheckpoint(
+            title: 'Main Stopcock Shut Off',
+            description: 'Premise primary supply valve turned fully OFF to isolate mains water pressure.',
+            standardCode: 'IS 2065:1983',
+          ),
+          _SafetyCheckpoint(
+            title: 'Line Depressurized & Drained',
+            description: 'Lowest premise tap opened to bleed residual line pressure into a catch bucket.',
+            standardCode: 'BIS-PLUMB-04',
+          ),
+          _SafetyCheckpoint(
+            title: 'Non-Slip Grip Footwear Worn',
+            description: 'Water-resistant safety grip footwear equipped to prevent wet tile slipping hazards.',
+            standardCode: 'ISO 20345',
+          ),
+        ],
+      );
+    }
+
+    if (lowerTrade.contains('carpent') || lowerTitle.contains('carpent') || lowerTitle.contains('wood') || lowerTitle.contains('door') || lowerTitle.contains('furniture') || lowerTitle.contains('cupboard') || lowerTitle.contains('table')) {
+      return const _TradeSafetyConfig(
+        tradeCategory: 'CARPENTRY',
+        bannerTitle: 'EYE PROTECTION & MACHINE SAFETY',
+        bannerSubtitle: 'High-velocity debris protocol. Never operate circular saws, planers, or chisels without ANSI Z87.1 certified eye goggles.',
+        bannerIcon: Icons.carpenter_rounded,
+        bannerBg: Color(0xFFFFF7ED),
+        bannerBorder: Color(0xFFFB923C),
+        bannerIconColor: Color(0xFFEA580C),
+        photoTitle: 'Eye Goggles & Clamped Workpiece Evidence',
+        photoSubtitle: 'Snap photo showing protective eyewear equipped and workpiece clamped',
+        checkpoints: [
+          _SafetyCheckpoint(
+            title: 'ANSI Z87.1 Protective Eye Goggles',
+            description: 'Impact-resistant safety goggles securely worn against flying chips, nails, and sawdust.',
+            standardCode: 'ANSI Z87.1',
+          ),
+          _SafetyCheckpoint(
+            title: 'Blade Guard & Tool Shield Tested',
+            description: 'Power tool mechanical blade guards verified for smooth, unobstructed self-retraction.',
+            standardCode: 'OSHA 1910.213',
+          ),
+          _SafetyCheckpoint(
+            title: 'Workpiece Clamped / Vice-Locked',
+            description: 'Timber securely anchored using G-clamps or workbench vice to prevent violent kickback.',
+            standardCode: 'BIS-WOOD-02',
+          ),
+        ],
+      );
+    }
+
+    if (lowerTrade.contains('clean') || lowerTitle.contains('clean') || lowerTitle.contains('sanit') || lowerTitle.contains('wash') || lowerTitle.contains('pest') || lowerTitle.contains('sofa')) {
+      return const _TradeSafetyConfig(
+        tradeCategory: 'CLEANING',
+        bannerTitle: 'CHEMICAL RESPIRATOR & VENTILATION',
+        bannerSubtitle: 'Hazardous fume containment protocol. Ensure N95 / chemical vapor mask is fitted and premise windows are open for cross-ventilation.',
+        bannerIcon: Icons.cleaning_services_rounded,
+        bannerBg: Color(0xFFF0FDF4),
+        bannerBorder: Color(0xFF4ADE80),
+        bannerIconColor: Color(0xFF16A34A),
+        photoTitle: 'Chemical PPE & Respirator Evidence',
+        photoSubtitle: 'Snap photo showing chemical respirator mask and protective gloves',
+        checkpoints: [
+          _SafetyCheckpoint(
+            title: 'Vapor Respirator / N95 Mask Fitted',
+            description: 'Sealed respirator equipped to prevent inhalation of volatile solvent, bleach, or acidic fumes.',
+            standardCode: 'EN 149:2001',
+          ),
+          _SafetyCheckpoint(
+            title: 'Nitrile Chemical-Resistant Gloves',
+            description: 'Heavy-duty chemical-barrier gloves worn to eliminate direct caustic dermal contact.',
+            standardCode: 'EN 374-1',
+          ),
+          _SafetyCheckpoint(
+            title: 'Cross-Ventilation Established',
+            description: 'Premise windows and exterior doors opened to maintain continuous fresh airflow.',
+            standardCode: 'ASHRAE 62.1',
+          ),
+        ],
+      );
+    }
+
+    // Default to Electrical
+    return const _TradeSafetyConfig(
+      tradeCategory: 'ELECTRICAL',
+      bannerTitle: 'ELECTRICAL ISOLATION PROTOCOL',
+      bannerSubtitle: 'Zero-tolerance policy. Never touch high-voltage switchboards or wiring without Class 0 (1000V) dielectric gloves.',
+      bannerIcon: Icons.electric_meter_rounded,
+      bannerBg: TechTheme.primaryAmberLight,
+      bannerBorder: TechTheme.primaryAmber,
+      bannerIconColor: TechTheme.primaryAmberDark,
+      photoTitle: 'Glove & MCB Photo Evidence',
+      photoSubtitle: 'Snap photo showing 1000V gloves and open circuit breaker',
+      checkpoints: [
+        _SafetyCheckpoint(
+          title: '1000V Dielectric Gloves',
+          description: 'Class 0 rated rubber insulating gloves worn and visually checked for punctures or air leaks.',
+          standardCode: 'IEC 60900',
+        ),
+        _SafetyCheckpoint(
+          title: 'Main MCB / Isolator Off',
+          description: 'Premise primary miniature circuit breaker physically tripped to OFF and danger lockout tag placed.',
+          standardCode: 'IS 732:2019',
+        ),
+        _SafetyCheckpoint(
+          title: 'Multimeter 0.00V Verified',
+          description: 'True-RMS multimeter probe confirmed zero potential between Phase-Neutral and Phase-Earth.',
+          standardCode: 'CAT-III 600V',
+        ),
+      ],
+    );
+  }
 
   Future<void> _submitSafetyVerification() async {
     if (!_isAllChecked) {
-      setState(() => _errorMessage = 'All 4 safety protocols must be verified before opening circuit');
+      setState(() => _errorMessage = 'All ${_config.checkpoints.length} safety checkpoints and photo evidence must be verified before starting work.');
       return;
     }
 
@@ -45,8 +180,14 @@ class _SafetyChecklistScreenState extends State<SafetyChecklistScreen> {
 
     final res = await TechJobService.verifySafetyChecklist(
       jobId: widget.job.id,
-      glovesConfirmed: _glovesConfirmed,
-      mcbSwitchConfirmed: _mcbSwitchConfirmed,
+      category: _config.tradeCategory,
+      trade: _config.tradeCategory,
+      glovesConfirmed: true,
+      mcbSwitchConfirmed: _config.tradeCategory == 'ELECTRICAL',
+      mainValveOffConfirmed: _config.tradeCategory == 'PLUMBING',
+      chemicalSafetyMaskConfirmed: _config.tradeCategory == 'CLEANING',
+      eyeGogglesConfirmed: _config.tradeCategory == 'CARPENTRY',
+      bladeGuardConfirmed: _config.tradeCategory == 'CARPENTRY',
       photoUrl: uploadedPhotoUrl,
     );
 
@@ -54,8 +195,8 @@ class _SafetyChecklistScreenState extends State<SafetyChecklistScreen> {
 
     if (res.success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Safety interlock verified. Premise circuit unlocked.'),
+        SnackBar(
+          content: Text('${_config.tradeCategory} safety interlock verified. Premise unlocked for service.'),
           backgroundColor: TechTheme.signalOnlineEmerald,
         ),
       );
@@ -70,7 +211,7 @@ class _SafetyChecklistScreenState extends State<SafetyChecklistScreen> {
     return Scaffold(
       backgroundColor: TechTheme.slateLight,
       appBar: AppBar(
-        title: const Text('Mandatory Safety Gate'),
+        title: Text('${widget.job.trade} Safety Gate'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.pop(context, false),
@@ -81,30 +222,35 @@ class _SafetyChecklistScreenState extends State<SafetyChecklistScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // High Voltage Warning Banner
+            // Dynamic Trade Warning Banner
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: TechTheme.primaryAmberLight,
+                color: _config.bannerBg,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: TechTheme.primaryAmber),
+                border: Border.all(color: _config.bannerBorder),
               ),
               child: Row(
-                children: const [
-                  Icon(Icons.electric_meter_rounded, color: TechTheme.primaryAmberDark, size: 28),
-                  SizedBox(width: 12),
+                children: [
+                  Icon(_config.bannerIcon, color: _config.bannerIconColor, size: 28),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'ELECTRICAL ISOLATION PROTOCOL',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: TechTheme.primaryAmberDark, letterSpacing: 0.6),
+                          _config.bannerTitle,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            color: _config.bannerIconColor,
+                            letterSpacing: 0.6,
+                          ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
-                          'Zero-tolerance policy. Never touch high-voltage switchboards or wiring without Class 0 (1000V) dielectric gloves.',
-                          style: TextStyle(fontSize: 11, color: TechTheme.slateDark, height: 1.3),
+                          _config.bannerSubtitle,
+                          style: const TextStyle(fontSize: 11, color: TechTheme.slateDark, height: 1.3),
                         ),
                       ],
                     ),
@@ -144,38 +290,29 @@ class _SafetyChecklistScreenState extends State<SafetyChecklistScreen> {
             ),
             const SizedBox(height: 12),
 
-            // Checkpoint 1: 1000V Gloves
-            SafetyItemTile(
-              title: '1000V Dielectric Gloves',
-              description: 'Class 0 rated rubber insulating gloves worn and visually checked for punctures or air leaks.',
-              standardCode: 'IEC 60900',
-              isChecked: _glovesConfirmed,
-              isPhotoAttached: _photoAttached,
-              onToggleCheck: () => setState(() => _glovesConfirmed = !_glovesConfirmed),
-              onAttachPhoto: () => setState(() => _photoAttached = true),
-            ),
+            // Dynamic Checkpoints List
+            ...List.generate(_config.checkpoints.length, (index) {
+              final item = _config.checkpoints[index];
+              final isChecked = _checkedIndices.contains(index);
 
-            // Checkpoint 2: MCB Lockout
-            SafetyItemTile(
-              title: 'Main MCB / Isolator Off',
-              description: 'Premise primary miniature circuit breaker physically tripped to OFF and danger lockout tag placed.',
-              standardCode: 'IS 732:2019',
-              isChecked: _mcbSwitchConfirmed,
-              isPhotoAttached: _photoAttached,
-              onToggleCheck: () => setState(() => _mcbSwitchConfirmed = !_mcbSwitchConfirmed),
-              onAttachPhoto: () => setState(() => _photoAttached = true),
-            ),
-
-            // Checkpoint 3: Multimeter 0.00V
-            SafetyItemTile(
-              title: 'Multimeter 0.00V Verified',
-              description: 'True-RMS multimeter probe confirmed zero potential between Phase-Neutral and Phase-Earth.',
-              standardCode: 'CAT-III 600V',
-              isChecked: _multimeterConfirmed,
-              isPhotoAttached: _photoAttached,
-              onToggleCheck: () => setState(() => _multimeterConfirmed = !_multimeterConfirmed),
-              onAttachPhoto: () => setState(() => _photoAttached = true),
-            ),
+              return SafetyItemTile(
+                title: item.title,
+                description: item.description,
+                standardCode: item.standardCode,
+                isChecked: isChecked,
+                isPhotoAttached: _photoAttached,
+                onToggleCheck: () {
+                  setState(() {
+                    if (isChecked) {
+                      _checkedIndices.remove(index);
+                    } else {
+                      _checkedIndices.add(index);
+                    }
+                  });
+                },
+                onAttachPhoto: () => setState(() => _photoAttached = true),
+              );
+            }),
 
             // Photo Evidence Card
             Container(
@@ -206,12 +343,12 @@ class _SafetyChecklistScreenState extends State<SafetyChecklistScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _photoAttached ? 'Evidence Snapped' : 'Glove & MCB Photo Evidence',
+                          _photoAttached ? 'Evidence Snapped' : _config.photoTitle,
                           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: TechTheme.slateDark),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          _photoAttached ? 'Ready for cloud AI audit' : 'Snap photo showing gloves and open breaker',
+                          _photoAttached ? 'Ready for cloud AI audit' : _config.photoSubtitle,
                           style: const TextStyle(fontSize: 11, color: TechTheme.slateMuted),
                         ),
                       ],
@@ -266,3 +403,40 @@ class _SafetyChecklistScreenState extends State<SafetyChecklistScreen> {
   }
 }
 
+class _TradeSafetyConfig {
+  final String tradeCategory;
+  final String bannerTitle;
+  final String bannerSubtitle;
+  final IconData bannerIcon;
+  final Color bannerBg;
+  final Color bannerBorder;
+  final Color bannerIconColor;
+  final String photoTitle;
+  final String photoSubtitle;
+  final List<_SafetyCheckpoint> checkpoints;
+
+  const _TradeSafetyConfig({
+    required this.tradeCategory,
+    required this.bannerTitle,
+    required this.bannerSubtitle,
+    required this.bannerIcon,
+    required this.bannerBg,
+    required this.bannerBorder,
+    required this.bannerIconColor,
+    required this.photoTitle,
+    required this.photoSubtitle,
+    required this.checkpoints,
+  });
+}
+
+class _SafetyCheckpoint {
+  final String title;
+  final String description;
+  final String standardCode;
+
+  const _SafetyCheckpoint({
+    required this.title,
+    required this.description,
+    required this.standardCode,
+  });
+}

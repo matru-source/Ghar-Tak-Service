@@ -146,12 +146,32 @@ export async function POST(
     // Issue 27: Category-Specific Dynamic Safety Checklist
     // Electrician -> MCB/Gloves; Plumber -> Main Valve Off; Cleaner -> Chemical Safety/Mask
     // --------------------------------------------------------------------------
-    const titleLower = (job.serviceTitle || body.serviceTitle || '').toLowerCase();
-    const explicitCat = (body.category || body.serviceCategory || (job as any).serviceCategory || '').toUpperCase();
+    let techTrade = '';
+    const techIdToQuery = body.technicianId || job.technicianId;
+    if (techIdToQuery) {
+      const tech = dbStore.technicians.find(
+        (t) => t.id === techIdToQuery || t.badgeNumber === techIdToQuery || t.userId === techIdToQuery
+      );
+      if (tech && (tech as any).trade) {
+        techTrade = String((tech as any).trade).toUpperCase();
+      }
+    }
 
-    const isPlumbing = explicitCat === 'PLUMBING' || titleLower.includes('plumb') || titleLower.includes('pipe') || titleLower.includes('tap') || titleLower.includes('drain') || titleLower.includes('valve') || titleLower.includes('leak');
-    const isCleaning = explicitCat === 'CLEANING' || titleLower.includes('clean') || titleLower.includes('sanit') || titleLower.includes('wash') || titleLower.includes('pest') || titleLower.includes('sofa');
-    const isCarpentry = explicitCat === 'CARPENTRY' || titleLower.includes('carpent') || titleLower.includes('wood') || titleLower.includes('door') || titleLower.includes('furniture');
+    const titleLower = (job.serviceTitle || body.serviceTitle || (job as any).service?.title || '').toLowerCase();
+    const explicitCat = (
+      body.category ||
+      body.trade ||
+      body.serviceCategory ||
+      (job as any).trade ||
+      (job as any).serviceCategory ||
+      (job as any).service?.category?.name ||
+      techTrade ||
+      ''
+    ).toUpperCase();
+
+    const isPlumbing = explicitCat.includes('PLUMB') || titleLower.includes('plumb') || titleLower.includes('pipe') || titleLower.includes('tap') || titleLower.includes('drain') || titleLower.includes('valve') || titleLower.includes('leak') || titleLower.includes('water');
+    const isCleaning = explicitCat.includes('CLEAN') || titleLower.includes('clean') || titleLower.includes('sanit') || titleLower.includes('wash') || titleLower.includes('pest') || titleLower.includes('sofa');
+    const isCarpentry = explicitCat.includes('CARPENT') || titleLower.includes('carpent') || titleLower.includes('wood') || titleLower.includes('door') || titleLower.includes('furniture');
     const isElectric = !isPlumbing && !isCleaning && !isCarpentry;
 
     let ppeInspection: any;
