@@ -52,3 +52,43 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+/**
+ * PATCH /api/partner/inventory
+ * Franchise local warehouse restock execution with PostgreSQL persistence & WORM audit logging (Issue 9)
+ */
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json().catch(() => ({}));
+    const { searchParams } = new URL(request.url);
+    const partnerId = body.partnerId || searchParams.get('partnerId') || 'ptnr_mah_01';
+
+    const result = await db.restockPartnerInventory(partnerId, body);
+
+    return apiSuccess(
+      {
+        partnerId,
+        item: result.item,
+        restockedQuantity: result.restockedQuantity,
+        previousQuantity: result.previousQuantity,
+        newStockQuantity: result.newStockQuantity,
+      },
+      `Successfully restocked ${result.restockedQuantity} units of ${result.item.name} (${result.item.sku}). New shelf total: ${result.newStockQuantity} units.`,
+      200
+    );
+  } catch (error) {
+    return apiError(
+      'Failed to restock inventory',
+      400,
+      error instanceof Error ? error.message : String(error)
+    );
+  }
+}
+
+/**
+ * POST /api/partner/inventory
+ * Alias to PATCH for clients submitting via standard POST
+ */
+export async function POST(request: NextRequest) {
+  return PATCH(request);
+}

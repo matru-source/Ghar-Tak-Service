@@ -55,6 +55,7 @@ export default function PartnerWarehouseInventoryPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [restockItem, setRestockItem] = useState<PartnerInventoryItem | null>(null);
   const [restockQty, setRestockQty] = useState(20);
+  const [isRestocking, setIsRestocking] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -90,17 +91,57 @@ export default function PartnerWarehouseInventoryPage() {
     fetchInventory();
   }, []);
 
-  const handleRestock = () => {
-    if (!restockItem) return;
-    setInventory((prev) =>
-      prev.map((item) =>
-        item.id === restockItem.id
-          ? { ...item, stockQuantity: item.stockQuantity + restockQty }
-          : item
-      )
-    );
-    showToast(`✓ Restocked ${restockQty} units of ${restockItem.name}`);
-    setRestockItem(null);
+  const handleRestock = async () => {
+    if (!restockItem || isRestocking) return;
+    try {
+      setIsRestocking(true);
+      const partnerId = getActivePartnerId();
+      const res = await fetch('/api/partner/inventory', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          partnerId,
+          sku: restockItem.sku,
+          inventoryId: restockItem.id,
+          quantity: restockQty,
+          reason: 'Franchise Warehouse Restock Delivery',
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.message || 'Failed to restock warehouse item');
+      }
+
+      const updatedItem = json.data?.item;
+      const newQty = updatedItem?.stockQuantity ?? (restockItem.stockQuantity + restockQty);
+
+      setInventory((prev) =>
+        prev.map((item) =>
+          item.id === restockItem.id || item.sku === restockItem.sku
+            ? { ...item, stockQuantity: newQty }
+            : item
+        )
+      );
+
+      // Dynamically update telemetry metrics
+      setTelemetry((prev) => ({
+        ...prev,
+        totalUnitsInStock: prev.totalUnitsInStock + restockQty,
+        totalInventoryValueInr: Math.round((prev.totalInventoryValueInr + (restockItem.costPriceInr * restockQty)) * 100) / 100,
+        lowStockCount: newQty > 10 && restockItem.stockQuantity <= 10
+          ? Math.max(0, prev.lowStockCount - 1)
+          : prev.lowStockCount,
+      }));
+
+      showToast(`✓ Restocked ${restockQty} units of ${restockItem.name}`);
+      setRestockItem(null);
+    } catch (err: any) {
+      console.error('Restock error:', err);
+      showToast(`⚠️ Failed to restock: ${err.message || 'Server error'}`);
+    } finally {
+      setIsRestocking(false);
+    }
   };
 
   const filteredItems = inventory.filter((item) => {
@@ -356,11 +397,21 @@ export default function PartnerWarehouseInventoryPage() {
               </button>
               <button
                 type="button"
+                disabled={isRestocking}
                 onClick={handleRestock}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-orange-600 hover:bg-orange-700 text-white transition flex items-center gap-1 shadow-sm"
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-orange-600 hover:bg-orange-700 disabled:opacity-60 text-white transition flex items-center gap-1 shadow-sm"
               >
-                <Check className="w-3.5 h-3.5" />
-                <span>Confirm Delivery</span>
+                {isRestocking ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Restocking...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Confirm Delivery</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

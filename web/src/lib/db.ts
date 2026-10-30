@@ -2740,6 +2740,157 @@ export const db = {
     return filtered.length > 0 ? filtered : all;
   },
 
+  async restockPartnerInventory(
+    partnerId: string,
+    data: {
+      sku?: string;
+      inventoryId?: string;
+      id?: string;
+      quantity?: number;
+      restockQty?: number;
+      reason?: string;
+      actorId?: string;
+      actorRole?: string;
+    }
+  ) {
+    const rawQty = data.quantity ?? data.restockQty;
+    const qty = Number(rawQty);
+    if (!qty || isNaN(qty) || qty <= 0) {
+      throw new Error('Restock quantity must be a positive integer greater than zero');
+    }
+
+    const targetSku = (data.sku || '').trim().toLowerCase();
+    const targetId = (data.inventoryId || data.id || '').trim();
+
+    if (!targetSku && !targetId) {
+      throw new Error('Either part SKU or inventoryId is required to restock warehouse item');
+    }
+
+    let item: any = null;
+    let liveDbItem: any = null;
+
+    // 1. Search in PostgreSQL via Prisma
+    if (await isDatabaseConnected()) {
+      try {
+        const { prisma } = await import('@/lib/prisma');
+        if ((prisma as any).partnerInventory?.findFirst) {
+          liveDbItem = await (prisma as any).partnerInventory.findFirst({
+            where: {
+              OR: [
+                ...(targetId ? [{ id: targetId }] : []),
+                ...(targetSku ? [{ sku: { equals: targetSku, mode: 'insensitive' } }] : []),
+              ],
+            },
+          });
+        }
+      } catch (err) {
+        console.warn('[DB] Prisma find partnerInventory error:', err);
+      }
+    }
+
+    // 2. Search in dbStore.partnerInventory
+    const allMemory = dbStore.partnerInventory || [];
+    let memIdx = allMemory.findIndex(
+      (i: any) =>
+        (targetId && i.id === targetId) ||
+        (targetSku && i.sku.toLowerCase() === targetSku)
+    );
+
+    if (liveDbItem) {
+      item = { ...liveDbItem };
+    } else if (memIdx !== -1) {
+      item = { ...allMemory[memIdx] };
+    } else {
+      throw new Error(`Warehouse SKU '${data.sku || data.inventoryId}' not found in partner inventory catalog`);
+    }
+
+    const previousQuantity = item.stockQuantity || 0;
+    const newStockQuantity = previousQuantity + Math.round(qty);
+    item.stockQuantity = newStockQuantity;
+
+    // 3. Update memory store
+    if (memIdx !== -1) {
+      dbStore.partnerInventory[memIdx].stockQuantity = newStockQuantity;
+    } else {
+      dbStore.partnerInventory.push({
+        id: item.id || `inv_${Date.now()}`,
+        partnerId: item.partnerId || partnerId,
+        sku: item.sku,
+        name: item.name,
+        category: item.category as any,
+        brand: item.brand,
+        unit: item.unit || 'PIECE',
+        mrpInr: item.mrpInr,
+        costPriceInr: item.costPriceInr,
+        stockQuantity: newStockQuantity,
+        gstRatePct: item.gstRatePct || 18.0,
+        warrantyMonths: item.warrantyMonths || 12,
+        isActive: true,
+        createdAt: item.createdAt || new Date().toISOString(),
+      });
+    }
+
+    // 4. Update in PostgreSQL via Prisma
+    if (await isDatabaseConnected()) {
+      try {
+        const { prisma } = await import('@/lib/prisma');
+        if ((prisma as any).partnerInventory?.updateMany) {
+          await (prisma as any).partnerInventory.updateMany({
+            where: {
+              OR: [
+                ...(item.id ? [{ id: item.id }] : []),
+                { sku: item.sku },
+              ],
+            },
+            data: {
+              stockQuantity: newStockQuantity,
+              updatedAt: new Date(),
+            },
+          });
+        }
+      } catch (err) {
+        console.warn('[DB] Prisma update partnerInventory error:', err);
+      }
+    }
+
+    const reasonText = data.reason || 'Central Warehouse Bulk Restock Delivery';
+
+    // 5. WORM Non-Repudiation Audit Log
+    await this.recordWormAuditLog({
+      actorId: data.actorId || partnerId || 'ptnr_mah_01',
+      actorRole: (data.actorRole as any) || 'PARTNER',
+      action: 'INVENTORY_RESTOCKED',
+      resourceType: 'PARTNER_INVENTORY',
+      resourceId: item.sku,
+      payloadSummary: `Restocked ${qty} ${item.unit || 'units'} of ${item.name} (${item.sku}) for Franchise Hub ${partnerId}. Stock level: ${previousQuantity} -> ${newStockQuantity}. Reason: ${reasonText}.`,
+    });
+
+    // 6. Broadcast Real-Time SSE Event
+    const { realtimeBus } = await import('@/lib/realtime-bus');
+    realtimeBus.publish({
+      type: 'INVENTORY_RESTOCKED',
+      partnerId: item.partnerId || partnerId,
+      status: 'RESTOCKED',
+      details: {
+        inventoryId: item.id,
+        sku: item.sku,
+        name: item.name,
+        brand: item.brand,
+        restockedQuantity: qty,
+        previousQuantity,
+        newStockQuantity,
+        reason: reasonText,
+      },
+    });
+
+    return {
+      item,
+      restockedQuantity: qty,
+      previousQuantity,
+      newStockQuantity,
+    };
+  },
+
   async proposeJobPart(
     jobId: string,
     data: {
