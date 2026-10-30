@@ -94,7 +94,31 @@ class JobModel {
         ? (data['totalAmountInr'] as num).toDouble()
         : double.tryParse(data['totalAmountInr']?.toString() ?? '1475') ?? 1475.0;
 
+    final rawStatus = data['status']?.toString() ?? 'PENDING_DISPATCH';
+    final isUnassignedStatus = rawStatus.toUpperCase() == 'PENDING_DISPATCH' || rawStatus.toUpperCase() == 'PENDING';
+
     final tech = data['technician'] is Map ? data['technician'] : null;
+    final rawTechId = data['technicianId']?.toString() ?? tech?['id']?.toString();
+    final hasValidTech = rawTechId != null &&
+        rawTechId.trim().isNotEmpty &&
+        rawTechId != 'null' &&
+        rawTechId != 'tech_unassigned' &&
+        !isUnassignedStatus;
+
+    final effectiveTechId = hasValidTech ? rawTechId : null;
+
+    final rawTechName = data['technicianName']?.toString() ?? tech?['fullName']?.toString();
+    final effectiveTechName = hasValidTech
+        ? (rawTechName ?? 'Certified Specialist')
+        : (isUnassignedStatus || rawTechName == 'Verified Pro' || rawTechName == 'Rajesh Kumar (Certified Electrician)' ? null : rawTechName);
+
+    final effectiveTechBadge = hasValidTech
+        ? (tech?['badgeNumber']?.toString() ?? data['technicianBadge']?.toString() ?? 'GTS-TECH-101')
+        : null;
+
+    final effectiveTechPhone = hasValidTech
+        ? (tech?['phone']?.toString() ?? data['technicianPhone']?.toString() ?? '')
+        : null;
 
     final resolvedAddress = data['customerAddressText']?.toString() ??
         data['addressText']?.toString() ??
@@ -106,17 +130,17 @@ class JobModel {
     return JobModel(
       id: data['id']?.toString() ?? '',
       jobTicketNumber: data['jobTicketNumber']?.toString() ?? 'J-1001',
-      status: data['status']?.toString() ?? 'ASSIGNED',
+      status: rawStatus,
       serviceTitle: data['serviceTitle']?.toString() ?? 'Circuit Diagnostic',
       pincode: data['pincode']?.toString() ?? '400001',
       customerAddressText: resolvedAddress,
       totalAmountInr: total,
       handoverOtp: data['handoverOtp']?.toString() ?? data['otp']?.toString() ?? data['verificationCode']?.toString(),
-      technicianId: data['technicianId']?.toString() ?? tech?['id']?.toString(),
-      technicianName: data['technicianName']?.toString() ?? tech?['fullName']?.toString() ?? 'Verified Pro',
-      technicianBadge: tech?['badgeNumber']?.toString() ?? 'GTS-TECH-101',
-      technicianPhone: tech?['phone']?.toString() ?? '',
-      technicianRating: (tech?['rating'] is num) ? (tech!['rating'] as num).toDouble() : 4.9,
+      technicianId: effectiveTechId,
+      technicianName: effectiveTechName,
+      technicianBadge: effectiveTechBadge,
+      technicianPhone: effectiveTechPhone,
+      technicianRating: (hasValidTech && tech?['rating'] is num) ? (tech!['rating'] as num).toDouble() : 4.9,
       invoiceNumber: data['invoiceNumber']?.toString() ?? data['invoice']?['invoiceNumber']?.toString(),
       scheduledAt: data['scheduledAt']?.toString(),
       completedAt: data['completedAt']?.toString(),

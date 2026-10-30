@@ -149,7 +149,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 contentPadding: EdgeInsets.zero,
                 leading: const CircleAvatar(backgroundColor: Color(0xFFDCFCE7), child: Icon(Icons.bolt, color: Color(0xFF15803D))),
                 title: Text('Active Job ${SessionManager.getActiveJobTicketNumber()}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                subtitle: Text('Technician ${SessionManager.getActiveJobTechName()} is en route. Handover OTP: ${SessionManager.getActiveJobOtp()}'),
+                subtitle: Text(
+                  SessionManager.isJobAssigned()
+                      ? 'Technician ${SessionManager.getActiveJobTechName()} is en route. Handover OTP: ${SessionManager.getActiveJobOtp()}'
+                      : 'Searching for nearest certified specialist in PIN ${SessionManager.getPincode()}...',
+                ),
               ),
             if (hasAmc)
               const ListTile(

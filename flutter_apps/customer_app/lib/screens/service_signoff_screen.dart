@@ -64,7 +64,7 @@ class _ServiceSignoffScreenState extends State<ServiceSignoffScreen> {
       invoiceNumber: invoiceNo,
       serviceTitle: widget.job.serviceTitle,
       dateText: '${DateTime.now().day} Oct, 2026',
-      technicianName: widget.job.technicianName ?? 'Rajesh Kumar (GTS Certified)',
+      technicianName: widget.job.technicianName ?? 'GTS Certified Specialist',
       amountInr: total,
       taxableAmount: taxable,
       cgstAmount: cgst,

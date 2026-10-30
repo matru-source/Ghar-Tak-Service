@@ -20,7 +20,7 @@ class ActiveJobScreen extends StatefulWidget {
   State<ActiveJobScreen> createState() => _ActiveJobScreenState();
 }
 
-class _ActiveJobScreenState extends State<ActiveJobScreen> {
+class _ActiveJobScreenState extends State<ActiveJobScreen> with SingleTickerProviderStateMixin {
   late JobModel _job;
   Timer? _statusPoller;
   StreamSubscription? _sseSubscription;
@@ -28,6 +28,9 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
   bool _isPartsModalOpen = false;
   Map<String, dynamic>? _pendingPartsQuote;
   int _etaMinutes = 12;
+
+  late AnimationController _radarPulseController;
+  late Animation<double> _radarPulseAnimation;
 
   final List<Map<String, String>> _statusSteps = [
     {'key': 'DISPATCHED', 'label': 'Dispatched', 'sub': 'Assigned to nearest hub'},
@@ -37,10 +40,31 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
     {'key': 'WORK_COMPLETED', 'label': 'Completed', 'sub': 'Safety verified'},
   ];
 
+  bool get _isUnassigned {
+    final status = _job.status.toUpperCase();
+    if (status == 'PENDING_DISPATCH' || status == 'PENDING') return true;
+    final techId = _job.technicianId;
+    return techId == null ||
+        techId.trim().isEmpty ||
+        techId == 'null' ||
+        techId == 'tech_unassigned' ||
+        _job.technicianName == null ||
+        _job.technicianName!.trim().isEmpty ||
+        _job.technicianName == 'Searching Pro...' ||
+        _job.technicianName == 'Searching Nearest Specialist...';
+  }
+
   @override
   void initState() {
     super.initState();
     _job = widget.initialJob;
+    _radarPulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat(reverse: true);
+    _radarPulseAnimation = Tween<double>(begin: 0.94, end: 1.08).animate(
+      CurvedAnimation(parent: _radarPulseController, curve: Curves.easeInOut),
+    );
     _subscribeRealtimeStream();
     _startLiveTrackingPoller();
   }
@@ -57,6 +81,38 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
       String? newStatus = event['status']?.toString() ?? event['details']?['status']?.toString();
       if (eventType == 'SAFETY_INTERLOCK_VERIFIED' && (newStatus == null || newStatus.isEmpty)) {
         newStatus = 'SAFETY_CHECKED';
+      }
+
+      // Tech Assigned or Reassigned: Immediately sync new technician profile
+      if (eventType == 'TECH_ACCEPTED' ||
+          eventType == 'JOB_REASSIGNED' ||
+          eventType == 'TECH_DISPATCHED' ||
+          newStatus == 'ASSIGNED' ||
+          newStatus == 'EN_ROUTE') {
+        _fetchFullJobDetails();
+      }
+
+      // Tech Rejected / Dispatch Exhaustion: Transition to unassigned searching radar
+      if (eventType == 'TECH_REJECTED' ||
+          eventType == 'DISPATCH_EXHAUSTED' ||
+          newStatus == 'PENDING_DISPATCH') {
+        setState(() {
+          _job = _job.copyWith(
+            status: 'PENDING_DISPATCH',
+            technicianId: '',
+            technicianName: '',
+            technicianBadge: '',
+            technicianPhone: '',
+          );
+        });
+        SessionManager.updateActiveJobStatus('PENDING_DISPATCH');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('⚡ Re-routing ticket to nearest standby pro in PIN ${_job.pincode}...'),
+            backgroundColor: AppTheme.sapphireBlue,
+            duration: const Duration(seconds: 3),
+          ),
+        );
       }
 
       // Real-time Parts Quote Intercept (Issue 7)
@@ -88,8 +144,32 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
     });
   }
 
+  Future<void> _fetchFullJobDetails() async {
+    final updated = await JobService.getJobDetails(_job.id);
+    if (updated != null && mounted) {
+      setState(() {
+        _job = updated;
+      });
+      if (updated.technicianName != null && updated.technicianName!.isNotEmpty) {
+        await SessionManager.setActiveJob(
+          jobId: updated.id,
+          title: updated.serviceTitle,
+          ticketNumber: updated.jobTicketNumber,
+          techName: updated.technicianName!,
+          techPhone: updated.technicianPhone ?? '',
+          techBadge: updated.technicianBadge ?? '',
+          status: updated.status,
+          otp: updated.handoverOtp ?? '4829',
+          total: updated.totalAmountInr,
+          eta: '12 mins',
+        );
+      }
+    }
+  }
+
   @override
   void dispose() {
+    _radarPulseController.dispose();
     _sseSubscription?.cancel();
     _statusPoller?.cancel();
     super.dispose();
@@ -101,7 +181,7 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
       if (updated != null && mounted) {
         setState(() {
           _job = updated;
-          if (_etaMinutes > 2) _etaMinutes--;
+          if (!_isUnassigned && _etaMinutes > 2) _etaMinutes--;
         });
 
         // Prompt arrival dialog
@@ -633,20 +713,21 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
 
   int _getCurrentStepIndex() {
     final status = _job.status.toUpperCase();
-    if (status == 'DISPATCHED' || status == 'PENDING' || status == 'ASSIGNED' || status == 'PENDING_DISPATCH') return 0;
+    if (_isUnassigned || status == 'PENDING_DISPATCH' || status == 'PENDING') return 0;
+    if (status == 'DISPATCHED' || status == 'ASSIGNED') return 0;
     if (status == 'EN_ROUTE') return 1;
     if (status == 'ARRIVED' || status == 'DOORSTEP_ARRIVED') return 2;
     if (status == 'SAFETY_CHECKED' || status == 'IN_PROGRESS' || status == 'WAITING_CUSTOMER_APPROVAL') return 3;
     if (status == 'WORK_COMPLETED' || status == 'COMPLETED' || status == 'PAYMENT_PENDING' || status == 'SETTLED') return 4;
-    return 1;
+    return 0;
   }
 
   @override
   Widget build(BuildContext context) {
     final currentStep = _getCurrentStepIndex();
-    final techName = _job.technicianName ?? 'Rajesh Kumar (Certified Electrician)';
+    final techName = _job.technicianName ?? 'Certified Pro';
     final techBadge = _job.technicianBadge ?? 'GTS-TECH-101';
-    final techPhone = _job.technicianPhone ?? '+91 98200 12345';
+    final techPhone = _job.technicianPhone ?? '';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -692,15 +773,17 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF0F2B48), Color(0xFF1E3A5F)],
+                gradient: LinearGradient(
+                  colors: _isUnassigned
+                      ? const [Color(0xFF0F172A), Color(0xFF1E293B)]
+                      : const [Color(0xFF0F2B48), Color(0xFF1E3A5F)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF0F2B48).withOpacity(0.2),
+                    color: (_isUnassigned ? const Color(0xFF0F172A) : const Color(0xFF0F2B48)).withOpacity(0.25),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -708,35 +791,53 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
               ),
               child: Row(
                 children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.local_shipping_rounded, color: AppTheme.primaryAmber, size: 28),
-                  ),
+                  _isUnassigned
+                      ? ScaleTransition(
+                          scale: _radarPulseAnimation,
+                          child: Container(
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0284C7).withOpacity(0.2),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: const Color(0xFF38BDF8), width: 1.5),
+                            ),
+                            child: const Icon(Icons.radar_rounded, color: Color(0xFF38BDF8), size: 28),
+                          ),
+                        )
+                      : Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.local_shipping_rounded, color: AppTheme.primaryAmber, size: 28),
+                        ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'ESTIMATED ARRIVAL',
-                          style: TextStyle(color: Color(0xFF94A3B8), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                        Text(
+                          _isUnassigned ? 'FLEET DISPATCH IN PROGRESS' : 'ESTIMATED ARRIVAL',
+                          style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          currentStep >= 3
-                              ? (_job.status.toUpperCase() == 'SAFETY_CHECKED'
-                                  ? 'Safety Verified • In Progress'
-                                  : 'Repair in Progress')
-                              : (currentStep == 2 ? 'At Your Doorstep' : 'Arriving in ~$_etaMinutes mins'),
+                          _isUnassigned
+                              ? 'Locating Nearest Pro...'
+                              : (currentStep >= 3
+                                  ? (_job.status.toUpperCase() == 'SAFETY_CHECKED'
+                                      ? 'Safety Verified • In Progress'
+                                      : 'Repair in Progress')
+                                  : (currentStep == 2 ? 'At Your Doorstep' : 'Arriving in ~$_etaMinutes mins')),
                           style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900),
                         ),
                         Text(
-                          'Assigned Hub: ${SessionManager.getPincode()} Colaba Fleet',
+                          _isUnassigned
+                              ? 'Hub: PIN ${_job.pincode} • Sub-30 Min SLA Active'
+                              : 'Assigned Hub: ${SessionManager.getPincode()} Colaba Fleet',
                           style: const TextStyle(color: Color(0xFFCBD5E1), fontSize: 11),
                         ),
                       ],
@@ -745,11 +846,31 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppTheme.signalEmerald.withOpacity(0.2),
+                      color: (_isUnassigned ? const Color(0xFF0284C7) : AppTheme.signalEmerald).withOpacity(0.2),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppTheme.signalEmerald.withOpacity(0.4)),
+                      border: Border.all(color: (_isUnassigned ? const Color(0xFF38BDF8) : AppTheme.signalEmerald).withOpacity(0.5)),
                     ),
-                    child: const Text('LIVE GPS', style: TextStyle(color: AppTheme.signalEmerald, fontSize: 10, fontWeight: FontWeight.bold)),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_isUnassigned) ...[
+                          const SizedBox(
+                            width: 8,
+                            height: 8,
+                            child: CircularProgressIndicator(strokeWidth: 1.5, color: Color(0xFF38BDF8)),
+                          ),
+                          const SizedBox(width: 5),
+                        ],
+                        Text(
+                          _isUnassigned ? 'SEARCHING FLEET' : 'LIVE GPS',
+                          style: TextStyle(
+                            color: _isUnassigned ? const Color(0xFF38BDF8) : AppTheme.signalEmerald,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -850,9 +971,14 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text('Handover Start OTP', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                        Text('Share this code only after verifying identity', style: TextStyle(fontSize: 11, color: AppTheme.slateMuted)),
+                      children: [
+                        const Text('Handover Start OTP', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                        Text(
+                          _isUnassigned
+                              ? 'Share this code once the technician arrives at your doorstep'
+                              : 'Share this code only after verifying identity',
+                          style: const TextStyle(fontSize: 11, color: AppTheme.slateMuted),
+                        ),
                       ],
                     ),
                   ),
@@ -876,82 +1002,197 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
 
             const SizedBox(height: 16),
 
-            // Technician Profile Card
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppTheme.slateBorder),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(25),
-                        child: Image.asset(
-                          'assets/images/img_technician_rajesh.png',
-                          width: 50,
-                          height: 50,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const CircleAvatar(
-                            radius: 25,
-                            backgroundColor: AppTheme.sapphireBlue,
-                            child: Icon(Icons.person, color: Colors.white, size: 24),
+            if (_isUnassigned) ...[
+              // Searching Active Standby Fleet Radar Card
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFBAE6FD), width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF0284C7).withOpacity(0.06),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        ScaleTransition(
+                          scale: _radarPulseAnimation,
+                          child: Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF0F9FF),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: const Color(0xFF38BDF8), width: 1.5),
+                            ),
+                            child: const Center(
+                              child: Icon(Icons.sensors_rounded, color: Color(0xFF0284C7), size: 24),
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Text(techName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                                const SizedBox(width: 4),
-                                const Icon(Icons.verified_rounded, color: AppTheme.signalEmerald, size: 14),
-                              ],
-                            ),
-                            Text('Badge: $techBadge • IEC-60900 Certified', style: const TextStyle(fontSize: 11, color: AppTheme.slateMuted)),
-                            const SizedBox(height: 2),
-                            Row(
-                              children: const [
-                                Icon(Icons.star_rounded, size: 14, color: Color(0xFFF59E0B)),
-                                SizedBox(width: 3),
-                                Text('4.9 Rating', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
-                                SizedBox(width: 8),
-                                Text('• 140+ completed jobs', style: TextStyle(fontSize: 11, color: AppTheme.slateMuted)),
-                              ],
-                            ),
-                          ],
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: const [
+                                  Text(
+                                    'Searching Standby Fleet',
+                                    style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.bold, color: AppTheme.slateDark),
+                                  ),
+                                  SizedBox(width: 6),
+                                  Icon(Icons.shield_rounded, color: AppTheme.sapphireBlue, size: 14),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Broadcasting ticket to verified technicians in PIN ${_job.pincode}...',
+                                style: const TextStyle(fontSize: 11.5, color: AppTheme.slateMuted),
+                              ),
+                            ],
+                          ),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: const LinearProgressIndicator(
+                        minHeight: 4,
+                        backgroundColor: Color(0xFFE2E8F0),
+                        color: AppTheme.sapphireBlue,
                       ),
-                      IconButton.filled(
-                        style: IconButton.styleFrom(backgroundColor: const Color(0xFFEFF6FF), foregroundColor: AppTheme.sapphireBlue),
-                        icon: const Icon(Icons.call_rounded),
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Calling technician at $techPhone...')),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  const Divider(height: 1, color: AppTheme.slateBorder),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Service Vehicle:', style: TextStyle(fontSize: 11.5, color: AppTheme.slateMuted)),
-                      Text('Honda Activa (MH-01-EA-4921)', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: AppTheme.slateDark)),
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 12),
+                    const Divider(height: 1, color: AppTheme.slateBorder),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: const [
+                        Icon(Icons.timer_outlined, size: 14, color: Color(0xFF0284C7)),
+                        SizedBox(width: 6),
+                        Text('Average response time: < 45 seconds', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppTheme.slateDark)),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: const [
+                        Icon(Icons.verified_user_rounded, size: 14, color: Color(0xFF16A34A)),
+                        SizedBox(width: 6),
+                        Text('100% Background-checked & Tool-insulated technicians', style: TextStyle(fontSize: 11.5, color: AppTheme.slateMuted)),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        const Icon(Icons.bolt_rounded, size: 14, color: AppTheme.primaryAmber),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Franchise Cluster: PIN ${_job.pincode} • Sub-30 Min Doorstep SLA Active',
+                            style: const TextStyle(fontSize: 11, color: AppTheme.slateMuted),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ] else ...[
+              // Assigned Technician Profile Card
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppTheme.slateBorder),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(25),
+                          child: Image.asset(
+                            'assets/images/img_technician_rajesh.png',
+                            width: 50,
+                            height: 50,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => const CircleAvatar(
+                              radius: 25,
+                              backgroundColor: AppTheme.sapphireBlue,
+                              child: Icon(Icons.person, color: Colors.white, size: 24),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(techName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                                  const SizedBox(width: 4),
+                                  const Icon(Icons.verified_rounded, color: AppTheme.signalEmerald, size: 14),
+                                ],
+                              ),
+                              Text('Badge: $techBadge • IEC-60900 Certified', style: const TextStyle(fontSize: 11, color: AppTheme.slateMuted)),
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  const Icon(Icons.star_rounded, size: 14, color: Color(0xFFF59E0B)),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    '${_job.technicianRating > 0 ? _job.technicianRating.toStringAsFixed(1) : "4.9"} Rating',
+                                    style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text('• 140+ completed jobs', style: TextStyle(fontSize: 11, color: AppTheme.slateMuted)),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton.filled(
+                          style: IconButton.styleFrom(backgroundColor: const Color(0xFFEFF6FF), foregroundColor: AppTheme.sapphireBlue),
+                          icon: const Icon(Icons.call_rounded),
+                          onPressed: () {
+                            if (techPhone.isNotEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Calling technician at $techPhone...')),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Technician phone number not available')),
+                              );
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    const Divider(height: 1, color: AppTheme.slateBorder),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: const [
+                        Text('Service Vehicle:', style: TextStyle(fontSize: 11.5, color: AppTheme.slateMuted)),
+                        Text('Two-Wheeler Service Unit', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: AppTheme.slateDark)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
 
             const SizedBox(height: 16),
 
@@ -1015,7 +1256,7 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                step['label']!,
+                                idx == 0 && _isUnassigned ? 'Dispatching Fleet' : step['label']!,
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: isCurrent || isDone ? FontWeight.bold : FontWeight.w500,
@@ -1023,9 +1264,11 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
                                 ),
                               ),
                               Text(
-                                step['key'] == 'IN_PROGRESS' && _job.status.toUpperCase() == 'SAFETY_CHECKED'
-                                    ? 'Safety verified • Repair in progress'
-                                    : step['sub']!,
+                                idx == 0 && _isUnassigned
+                                    ? 'Locating nearest certified pro in PIN ${_job.pincode}'
+                                    : (step['key'] == 'IN_PROGRESS' && _job.status.toUpperCase() == 'SAFETY_CHECKED'
+                                        ? 'Safety verified • Repair in progress'
+                                        : (idx == 0 && !_isUnassigned ? 'Assigned to $techName' : step['sub']!)),
                                 style: const TextStyle(fontSize: 11, color: AppTheme.slateMuted),
                               ),
                               const SizedBox(height: 12),

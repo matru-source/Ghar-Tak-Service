@@ -124,24 +124,35 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
     if (res.success && res.data != null && mounted) {
       final job = res.data!;
+      final isAssigned = job.technicianId != null &&
+          job.technicianId!.isNotEmpty &&
+          job.status.toUpperCase() != 'PENDING_DISPATCH' &&
+          job.status.toUpperCase() != 'PENDING' &&
+          job.technicianName != null &&
+          job.technicianName!.isNotEmpty;
+
       // Save active job in SessionManager
       await SessionManager.setActiveJob(
         jobId: job.id,
         title: job.serviceTitle,
         ticketNumber: job.jobTicketNumber,
-        techName: job.technicianName ?? 'Rajesh Kumar (GTS Certified)',
-        techPhone: job.technicianPhone ?? '+91 98200 12345',
-        techBadge: job.technicianBadge ?? 'GTS-TECH-101',
+        techName: isAssigned ? job.technicianName! : 'Searching Pro...',
+        techPhone: isAssigned ? (job.technicianPhone ?? '') : '',
+        techBadge: isAssigned ? (job.technicianBadge ?? '') : '',
         status: job.status,
         otp: job.handoverOtp ?? '4829',
         total: _finalTotal,
-        eta: '12 mins',
+        eta: isAssigned ? '12 mins' : 'Assigning...',
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('⚡ Work Order ${job.jobTicketNumber} dispatched to ${job.technicianName ?? "Certified Pro"}!'),
-          backgroundColor: AppTheme.signalEmerald,
+          content: Text(
+            isAssigned
+                ? '⚡ Work Order ${job.jobTicketNumber} dispatched to ${job.technicianName}!'
+                : '⚡ Work Order ${job.jobTicketNumber} placed! Searching nearest certified pro in PIN ${widget.pincode}...',
+          ),
+          backgroundColor: isAssigned ? AppTheme.signalEmerald : AppTheme.sapphireBlue,
         ),
       );
 
@@ -151,18 +162,19 @@ class _PaymentScreenState extends State<PaymentScreen> {
         (route) => route.isFirst,
       );
     } else {
-      // Fallback: create mock local job if offline/dev server
+      // Fallback: create mock local job in PENDING_DISPATCH if offline/dev server
       final fallbackTicket = 'GTS-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
       final fallbackJob = JobModel(
         id: 'job_${DateTime.now().millisecondsSinceEpoch}',
         jobTicketNumber: fallbackTicket,
         serviceTitle: widget.service.title,
-        status: 'EN_ROUTE',
+        status: 'PENDING_DISPATCH',
         pincode: widget.pincode,
         addressText: widget.fullAddress,
-        technicianName: 'Rajesh Kumar (GTS Certified)',
-        technicianBadge: 'GTS-TECH-101',
-        technicianPhone: '+91 98200 12345',
+        technicianId: null,
+        technicianName: null,
+        technicianBadge: null,
+        technicianPhone: null,
         handoverOtp: '4829',
         totalAmountInr: _finalTotal,
         createdAt: DateTime.now().toIso8601String(),
@@ -172,16 +184,23 @@ class _PaymentScreenState extends State<PaymentScreen> {
         jobId: fallbackJob.id,
         title: fallbackJob.serviceTitle,
         ticketNumber: fallbackJob.jobTicketNumber,
-        techName: fallbackJob.technicianName!,
-        techPhone: fallbackJob.technicianPhone!,
-        techBadge: fallbackJob.technicianBadge!,
-        status: 'EN_ROUTE',
+        techName: 'Searching Pro...',
+        techPhone: '',
+        techBadge: '',
+        status: 'PENDING_DISPATCH',
         otp: '4829',
         total: _finalTotal,
-        eta: '12 mins',
+        eta: 'Assigning...',
       );
 
       if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('⚡ Work Order ${fallbackJob.jobTicketNumber} placed! Searching nearest certified pro in PIN ${widget.pincode}...'),
+            backgroundColor: AppTheme.sapphireBlue,
+          ),
+        );
+
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => ActiveJobScreen(initialJob: fallbackJob)),

@@ -41,7 +41,7 @@ class PastOrderItem {
     invoiceNumber: json['invoiceNumber'] ?? 'INV-2026-1001',
     serviceTitle: json['serviceTitle'] ?? 'Electrical Service',
     dateText: json['dateText'] ?? 'Today',
-    technicianName: json['technicianName'] ?? 'Rajesh Kumar (GTS Certified)',
+    technicianName: json['technicianName'] ?? 'GTS Certified Specialist',
     amountInr: (json['amountInr'] as num?)?.toDouble() ?? 299.0,
     taxableAmount: (json['taxableAmount'] as num?)?.toDouble() ?? 253.39,
     cgstAmount: (json['cgstAmount'] as num?)?.toDouble() ?? 22.80,

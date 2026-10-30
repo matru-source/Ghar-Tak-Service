@@ -87,13 +87,23 @@ class SessionManager {
   static String getActiveJobId() => _prefs?.getString(_keyActiveJobId) ?? '';
   static String getActiveJobTitle() => _prefs?.getString(_keyActiveJobTitle) ?? 'Electrical Doorstep Service';
   static String getActiveJobTicketNumber() => _prefs?.getString(_keyActiveJobTicketNo) ?? '#J-1001';
-  static String getActiveJobTechName() => _prefs?.getString(_keyActiveJobTechName) ?? 'Rajesh Kumar';
-  static String getActiveJobTechPhone() => _prefs?.getString(_keyActiveJobTechPhone) ?? '+91 98200 12345';
-  static String getActiveJobTechBadge() => _prefs?.getString(_keyActiveJobTechBadge) ?? 'GTS-TECH-101';
-  static String getActiveJobStatus() => _prefs?.getString(_keyActiveJobStatus) ?? 'EN_ROUTE';
+  static String getActiveJobTechName() => _prefs?.getString(_keyActiveJobTechName) ?? '';
+  static String getActiveJobTechPhone() => _prefs?.getString(_keyActiveJobTechPhone) ?? '';
+  static String getActiveJobTechBadge() => _prefs?.getString(_keyActiveJobTechBadge) ?? '';
+  static String getActiveJobStatus() => _prefs?.getString(_keyActiveJobStatus) ?? 'PENDING_DISPATCH';
   static String getActiveJobOtp() => _prefs?.getString(_keyActiveJobOtp) ?? '4829';
-  static String getActiveJobEta() => _prefs?.getString(_keyActiveJobEta) ?? '15 mins';
+  static String getActiveJobEta() => _prefs?.getString(_keyActiveJobEta) ?? 'Assigning...';
   static double getActiveJobTotal() => _prefs?.getDouble(_keyActiveJobTotal) ?? 299.0;
+
+  static bool isJobAssigned() {
+    final status = getActiveJobStatus().toUpperCase();
+    final name = getActiveJobTechName();
+    return status != 'PENDING_DISPATCH' &&
+        status != 'PENDING' &&
+        name.trim().isNotEmpty &&
+        name != 'Searching Pro...' &&
+        name != 'Searching Nearest Specialist...';
+  }
 
   static Future<void> setActiveJob({
     required String jobId,
@@ -104,7 +114,7 @@ class SessionManager {
     required String techBadge,
     required String status,
     String? otp,
-    String eta = '15 mins',
+    String eta = 'Assigning...',
     double total = 299.0,
   }) async {
     await _prefs?.setString(_keyActiveJobId, jobId);
@@ -117,6 +127,20 @@ class SessionManager {
     await _prefs?.setString(_keyActiveJobOtp, otp ?? '4829');
     await _prefs?.setString(_keyActiveJobEta, eta);
     await _prefs?.setDouble(_keyActiveJobTotal, total);
+  }
+
+  static Future<void> updateActiveJobTechnician({
+    required String techName,
+    required String techPhone,
+    required String techBadge,
+    String? status,
+    String? eta,
+  }) async {
+    await _prefs?.setString(_keyActiveJobTechName, techName);
+    await _prefs?.setString(_keyActiveJobTechPhone, techPhone);
+    await _prefs?.setString(_keyActiveJobTechBadge, techBadge);
+    if (status != null) await _prefs?.setString(_keyActiveJobStatus, status);
+    if (eta != null) await _prefs?.setString(_keyActiveJobEta, eta);
   }
 
   static Future<void> updateActiveJobStatus(String status) async {

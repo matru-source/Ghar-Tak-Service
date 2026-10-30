@@ -145,7 +145,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                   const Divider(height: 24),
                   _buildBillRow('Job Ticket', widget.job.jobTicketNumber),
                   _buildBillRow('Service Plan', widget.job.serviceTitle),
-                  _buildBillRow('Technician', widget.job.technicianName ?? 'Rajesh K.'),
+                  _buildBillRow('Technician', widget.job.technicianName ?? 'GTS Certified Pro'),
                   _buildBillRow('GSTIN', '27AABCZ9921D1Z4 (MH)'),
                   const Divider(height: 24),
                   _buildBillRow('Base Diagnostic & Labor', '₹${baseAmount.toStringAsFixed(2)}'),

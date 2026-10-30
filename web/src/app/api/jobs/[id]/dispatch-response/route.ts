@@ -189,6 +189,20 @@ export async function POST(
           message: 'Technician declined. Queued for Partner Hub dispatch.',
         },
       });
+
+      realtimeBus.publish({
+        type: 'DISPATCH_EXHAUSTED',
+        jobId: id,
+        ticketNumber: result.job?.jobTicketNumber,
+        partnerId: result.job?.partnerId,
+        customerId: result.job?.customerId,
+        status: 'PENDING_DISPATCH',
+        details: {
+          action: 'SEARCHING_STANDBY',
+          rejectionReason,
+          message: 'Technician declined. Searching standby fleet...',
+        },
+      });
     }
 
     const responsePayload = {
