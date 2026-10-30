@@ -19,9 +19,29 @@ function toTitleCase(str: string): string {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    const pincodeParam = searchParams.get('pincode');
     const stateParam = searchParams.get('state');
     const districtParam = searchParams.get('district');
     const searchParam = searchParams.get('search');
+
+    // Quick lookup for single 6-digit pincode
+    if (pincodeParam && pincodeParam.length === 6) {
+      const details = getDetails(pincodeParam.trim());
+      if (details) {
+        return apiSuccess(
+          {
+            lookup: {
+              pincode: details.pincode,
+              state: toTitleCase(details.state),
+              district: details.districts && details.districts[0] ? toTitleCase(details.districts[0]) : '',
+              districts: (details.districts || []).map((d) => toTitleCase(d)),
+            },
+          },
+          'Pincode resolved successfully',
+          200
+        );
+      }
+    }
 
     // 1. Retrieve all standard Indian States and Union Territories (36 total)
     const rawStates = listStates();
@@ -120,3 +140,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+

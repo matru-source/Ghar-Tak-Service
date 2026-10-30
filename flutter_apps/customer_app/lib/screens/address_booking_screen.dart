@@ -3,6 +3,7 @@ import '../../core/session_manager.dart';
 import '../../core/theme.dart';
 import '../../models/service_model.dart';
 import '../../services/customer_location_service.dart';
+import '../../services/service_catalog_service.dart';
 import '../../utils/indian_pincode_resolver.dart';
 import 'payment_screen.dart';
 
@@ -72,6 +73,18 @@ class _AddressBookingScreenState extends State<AddressBookingScreen> {
       _gstinCode = details.gstinStateCode;
       _isServiceable = details.isServiceable;
     });
+
+    // Real-time backend partner serviceability check
+    final cleanPin = pin.trim();
+    if (cleanPin.length == 6) {
+      ServiceCatalogService.checkServiceable(cleanPin).then((isLiveServiceable) {
+        if (mounted) {
+          setState(() {
+            _isServiceable = isLiveServiceable;
+          });
+        }
+      }).catchError((_) {});
+    }
   }
 
   double get _basePrice => widget.service.basePriceInr;
@@ -290,7 +303,10 @@ class _AddressBookingScreenState extends State<AddressBookingScreen> {
                       counterText: '',
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       suffixIcon: _pincodeController.text.length == 6
-                          ? const Icon(Icons.check_circle_rounded, color: AppTheme.signalEmerald)
+                          ? Icon(
+                              _isServiceable ? Icons.check_circle_rounded : Icons.info_outline_rounded,
+                              color: _isServiceable ? AppTheme.signalEmerald : Colors.amber.shade800,
+                            )
                           : null,
                     ),
                   ),
@@ -300,18 +316,26 @@ class _AddressBookingScreenState extends State<AddressBookingScreen> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEFF6FF),
+                      color: _isServiceable ? const Color(0xFFEFF6FF) : const Color(0xFFFFFBEB),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFBFDBFE)),
+                      border: Border.all(color: _isServiceable ? const Color(0xFFBFDBFE) : const Color(0xFFFDE68A)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.pin_drop_rounded, size: 16, color: AppTheme.sapphireBlue),
+                        Icon(
+                          Icons.pin_drop_rounded,
+                          size: 16,
+                          color: _isServiceable ? AppTheme.sapphireBlue : Colors.amber.shade900,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Zone: $_resolvedArea • $_resolvedState',
-                            style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: AppTheme.sapphireBlue),
+                            'Zone: $_resolvedArea • $_resolvedState (${_isServiceable ? "Serviceable" : "Coverage Pending"})',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.bold,
+                              color: _isServiceable ? AppTheme.sapphireBlue : Colors.amber.shade900,
+                            ),
                           ),
                         ),
                       ],

@@ -42,6 +42,17 @@ export default function AdminPincodesPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Dynamic Indian states (All 36 States & UTs)
+  const [availableStates, setAvailableStates] = useState<string[]>([
+    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana',
+    'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur',
+    'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+    'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Andaman and Nicobar Islands',
+    'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Jammu and Kashmir', 'Ladakh',
+    'Lakshadweep', 'Puducherry'
+  ]);
+  const [availablePartners, setAvailablePartners] = useState<{ id: string; entityName: string; stateLicensed: string }[]>([]);
+
   // New pincode form
   const [newPin, setNewPin] = useState({
     pincode: '',
@@ -58,6 +69,53 @@ export default function AdminPincodesPage() {
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  // Preload dynamic states and partners
+  useEffect(() => {
+    fetch('/api/admin/pincodes/available')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && Array.isArray(d.data?.states) && d.data.states.length > 0) {
+          setAvailableStates(d.data.states);
+        }
+      })
+      .catch(() => {});
+
+    fetch('/api/admin/partners')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && Array.isArray(d.data?.partners)) {
+          setAvailablePartners(d.data.partners.map((p: any) => ({
+            id: p.id,
+            entityName: p.entityName || p.id,
+            stateLicensed: p.stateLicensed || 'All',
+          })));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handlePincodeChange = async (pin: string) => {
+    const cleanPin = pin.replace(/\D/g, '').slice(0, 6);
+    setNewPin((prev) => ({ ...prev, pincode: cleanPin }));
+
+    if (cleanPin.length === 6) {
+      try {
+        const res = await fetch(`/api/admin/pincodes/available?pincode=${cleanPin}`);
+        const data = await res.json();
+        if (data.success && data.data?.lookup) {
+          const l = data.data.lookup;
+          setNewPin((prev) => ({
+            ...prev,
+            pincode: cleanPin,
+            state: l.state || prev.state,
+            district: l.district || prev.district,
+            areaName: prev.areaName || `${l.district || 'Territory'} Hub`,
+          }));
+        }
+      } catch (_) {}
+    }
   };
 
   const fetchPincodes = async () => {
@@ -235,11 +293,12 @@ export default function AdminPincodesPage() {
             onChange={(e) => setStateFilter(e.target.value)}
             className="bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-xl px-3 py-2 outline-none focus:border-emerald-500 focus:bg-white transition"
           >
-            <option value="ALL">All States</option>
-            <option value="Maharashtra">Maharashtra</option>
-            <option value="Delhi">Delhi</option>
-            <option value="Karnataka">Karnataka</option>
-            <option value="Gujarat">Gujarat</option>
+            <option value="ALL">All States ({availableStates.length})</option>
+            {availableStates.map((st) => (
+              <option key={st} value={st}>
+                {st}
+              </option>
+            ))}
           </select>
 
           <select
@@ -505,9 +564,9 @@ export default function AdminPincodesPage() {
                     required
                     maxLength={6}
                     pattern="\d{6}"
-                    placeholder="e.g. 400050"
+                    placeholder="e.g. 759001 or 400050"
                     value={newPin.pincode}
-                    onChange={(e) => setNewPin({ ...newPin, pincode: e.target.value })}
+                    onChange={(e) => handlePincodeChange(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 text-xs outline-none focus:border-emerald-500 focus:bg-white transition font-mono"
                   />
                 </div>
@@ -515,7 +574,7 @@ export default function AdminPincodesPage() {
                   <label className="block text-xs font-semibold text-slate-700 mb-1">Postal Area Name *</label>
                   <input
                     required
-                    placeholder="e.g. Bandra West Hub"
+                    placeholder="e.g. Dhenkanal Town Hub / Bandra West Hub"
                     value={newPin.areaName}
                     onChange={(e) => setNewPin({ ...newPin, areaName: e.target.value })}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 text-xs outline-none focus:border-emerald-500 focus:bg-white transition"
@@ -525,7 +584,7 @@ export default function AdminPincodesPage() {
                   <label className="block text-xs font-semibold text-slate-700 mb-1">District *</label>
                   <input
                     required
-                    placeholder="e.g. Mumbai Suburban"
+                    placeholder="e.g. Dhenkanal / Mumbai Suburban"
                     value={newPin.district}
                     onChange={(e) => setNewPin({ ...newPin, district: e.target.value })}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 text-xs outline-none focus:border-emerald-500 focus:bg-white transition"
@@ -538,10 +597,26 @@ export default function AdminPincodesPage() {
                     onChange={(e) => setNewPin({ ...newPin, state: e.target.value })}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 text-xs outline-none focus:border-emerald-500 focus:bg-white transition"
                   >
-                    <option value="Maharashtra">Maharashtra</option>
-                    <option value="Delhi">Delhi</option>
-                    <option value="Karnataka">Karnataka</option>
-                    <option value="Gujarat">Gujarat</option>
+                    {availableStates.map((st) => (
+                      <option key={st} value={st}>
+                        {st}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Assigned Franchise Partner</label>
+                  <select
+                    value={newPin.partnerId}
+                    onChange={(e) => setNewPin({ ...newPin, partnerId: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 text-xs outline-none focus:border-emerald-500 focus:bg-white transition"
+                  >
+                    <option value="">-- Unassigned / Open Pool --</option>
+                    {availablePartners.map((ptnr) => (
+                      <option key={ptnr.id} value={ptnr.id}>
+                        {ptnr.entityName} ({ptnr.stateLicensed})
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>

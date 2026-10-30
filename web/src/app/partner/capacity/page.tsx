@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { BrandMark } from '@/components/ui/brand-logo';
 import { getActivePartnerId } from '@/lib/partner-session';
@@ -44,8 +44,10 @@ export default function PartnerCapacityPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [cityFilter, setCityFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [partnerState, setPartnerState] = useState<string>('Maharashtra');
+  const [partnerEntityName, setPartnerEntityName] = useState<string>('Operations Hub');
 
-  // Selected pincode for deep dive (PTNR-SCR-10) — default Colaba 400001
+  // Selected pincode for deep dive (PTNR-SCR-10)
   const [selectedPin, setSelectedPin] = useState<PincodeData | null>(null);
 
   // Editable parameters for selected pincode
@@ -76,9 +78,16 @@ export default function PartnerCapacityPage() {
 
         // Fetch live fleet technicians for dynamic stationing roster
         try {
-          const fleetRes = await fetch(`/api/partner/fleet?partnerId=${encodeURIComponent(activePartner)}`).then((r) => r.json());
+          const [fleetRes, profRes] = await Promise.all([
+            fetch(`/api/partner/fleet?partnerId=${encodeURIComponent(activePartner)}`).then((r) => r.json()).catch(() => null),
+            fetch(`/api/partner/profile?partnerId=${encodeURIComponent(activePartner)}`).then((r) => r.json()).catch(() => null),
+          ]);
           if (fleetRes?.technicians) {
             setStationedTechs(fleetRes.technicians);
+          }
+          if (profRes?.partner) {
+            if (profRes.partner.stateLicensed) setPartnerState(profRes.partner.stateLicensed);
+            if (profRes.partner.entityName) setPartnerEntityName(profRes.partner.entityName);
           }
         } catch (_) {}
 
@@ -174,10 +183,20 @@ export default function PartnerCapacityPage() {
     }
   };
 
-  // Filtered list
+  // Extract all unique districts/areas dynamically across the partner's assigned territory
+  const availableDistricts = useMemo(() => {
+    const list = Array.from(new Set(pincodes.map((p) => p.district || p.areaName).filter(Boolean)));
+    return list.sort();
+  }, [pincodes]);
+
+  // Dynamic filtered list
   const filteredPincodes = pincodes.filter((pin) => {
-    if (cityFilter === 'Mumbai' && !pin.district.toLowerCase().includes('mumbai') && !pin.areaName.toLowerCase().includes('mumbai')) return false;
-    if (cityFilter === 'Pune' && !pin.district.toLowerCase().includes('pune') && !pin.areaName.toLowerCase().includes('pune')) return false;
+    if (cityFilter !== 'ALL') {
+      const q = cityFilter.toLowerCase();
+      const match = (pin.district && pin.district.toLowerCase().includes(q)) ||
+                    (pin.areaName && pin.areaName.toLowerCase().includes(q));
+      if (!match) return false;
+    }
 
     if (statusFilter === 'Active' && pin.capacityStatus !== 'NORMAL') return false;
     if (statusFilter === 'Limited' && pin.capacityStatus !== 'LIMITED') return false;
@@ -185,7 +204,7 @@ export default function PartnerCapacityPage() {
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      return pin.pincode.includes(q) || pin.areaName.toLowerCase().includes(q) || pin.district.toLowerCase().includes(q);
+      return pin.pincode.includes(q) || (pin.areaName && pin.areaName.toLowerCase().includes(q)) || (pin.district && pin.district.toLowerCase().includes(q));
     }
     return true;
   });
@@ -210,7 +229,7 @@ export default function PartnerCapacityPage() {
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">
-            <span>Maharashtra Ops</span>
+            <span>{partnerState} Ops</span>
             <span>/</span>
             <span>Territory Governance</span>
             <span>/</span>
@@ -219,7 +238,7 @@ export default function PartnerCapacityPage() {
           <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
             Pincode Coverage Density &amp; Fleet Capacity Heatmap
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#1B5E20] border border-emerald-200 font-bold">
-              Hub MH-01
+              {partnerEntityName}
             </span>
             <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1.5 ${
               capacityBusStatus === 'CONNECTED'
@@ -357,17 +376,20 @@ export default function PartnerCapacityPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
-          {/* City Filter */}
+          {/* District / City Filter */}
           <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700">
-            <span className="text-slate-400 font-normal">City:</span>
+            <span className="text-slate-400 font-normal">District:</span>
             <select
               value={cityFilter}
               onChange={(e) => setCityFilter(e.target.value)}
               className="bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
             >
-              <option value="ALL">All Cities ({pincodes.length})</option>
-              <option value="Mumbai">Mumbai Metro</option>
-              <option value="Pune">Pune Division</option>
+              <option value="ALL">All Districts ({pincodes.length})</option>
+              {availableDistricts.map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -523,7 +545,7 @@ export default function PartnerCapacityPage() {
                 Pincode {selectedPin.pincode} — {selectedPin.areaName}
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Primary rapid-deployment territory under Maharashtra Tier-1 Operations Hub
+                Primary rapid-deployment territory under {partnerState} Operations Hub
               </p>
             </div>
 

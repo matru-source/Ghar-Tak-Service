@@ -11,6 +11,19 @@ interface PartnerTopbarProps {
 
 export function PartnerTopbar({ onToggleSidebar, isSidebarExpanded = false }: PartnerTopbarProps) {
   const [timeStr, setTimeStr] = useState('');
+  const [hubName, setHubName] = useState('Operations Hub');
+
+  useEffect(() => {
+    fetch('/api/partner/profile')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.partner) {
+          const st = d.partner.stateLicensed || '';
+          setHubName(st ? `${st} Hub` : (d.partner.entityName || 'Operations Hub'));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const updateTime = () => {
@@ -62,7 +75,7 @@ export function PartnerTopbar({ onToggleSidebar, isSidebarExpanded = false }: Pa
         {/* State Hub Pill */}
         <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-xs font-semibold text-emerald-100">
           <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Maharashtra Hub</span>
+          <span>{hubName}</span>
         </div>
 
         {/* Live IST Clock */}

@@ -14,10 +14,11 @@ export async function GET(request: NextRequest) {
     let pincodes: any[] = await db.getAllPincodes({ partnerId, search: search || undefined });
 
     if (city && city !== 'ALL') {
+      const q = city.trim().toLowerCase();
       pincodes = pincodes.filter((p) => {
-        if (city.toLowerCase().includes('mumbai')) return p.district.toLowerCase().includes('mumbai') || p.areaName.toLowerCase().includes('mumbai');
-        if (city.toLowerCase().includes('pune')) return p.district.toLowerCase().includes('pune') || p.areaName.toLowerCase().includes('pune');
-        return true;
+        const d = (p.district || '').toLowerCase();
+        const a = (p.areaName || '').toLowerCase();
+        return d.includes(q) || a.includes(q);
       });
     }
 

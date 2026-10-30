@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { getAuthToken } from '@/lib/api-client';
 import { useRealtimeEvents } from '@/lib/use-realtime-events';
@@ -70,6 +70,8 @@ export default function PartnerDispatchPage() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [pincodeFilter, setPincodeFilter] = useState('ALL');
   const [priorityFilter, setPriorityFilter] = useState('ALL');
+  const [partnerState, setPartnerState] = useState('Maharashtra');
+  const [partnerEntityName, setPartnerEntityName] = useState('Operations Hub');
 
   // Quick Reassign Modal state
   const [selectedJob, setSelectedJob] = useState<JobOrder | null>(null);
@@ -80,12 +82,18 @@ export default function PartnerDispatchPage() {
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/partner/dispatch');
-      const data = await res.json();
-      if (data.success) {
-        setJobs(data.jobs || []);
-        setMetrics(data.metrics || null);
-        setStandbyTechs(data.standbyTechnicians || []);
+      const [dispRes, profRes] = await Promise.all([
+        fetch('/api/partner/dispatch').then((r) => r.json()).catch(() => null),
+        fetch('/api/partner/profile').then((r) => r.json()).catch(() => null),
+      ]);
+      if (dispRes?.success) {
+        setJobs(dispRes.jobs || []);
+        setMetrics(dispRes.metrics || null);
+        setStandbyTechs(dispRes.standbyTechnicians || []);
+      }
+      if (profRes?.partner) {
+        if (profRes.partner.stateLicensed) setPartnerState(profRes.partner.stateLicensed);
+        if (profRes.partner.entityName) setPartnerEntityName(profRes.partner.entityName);
       }
     } catch (err) {
       console.error('Error fetching dispatch jobs:', err);
@@ -93,6 +101,17 @@ export default function PartnerDispatchPage() {
       setLoading(false);
     }
   };
+
+  const availablePincodes = useMemo(() => {
+    const set = new Set<string>();
+    jobs.forEach((j) => {
+      if (j.pincode) set.add(j.pincode);
+    });
+    standbyTechs.forEach((t) => {
+      if (t.assignedPincode) set.add(t.assignedPincode);
+    });
+    return Array.from(set).sort();
+  }, [jobs, standbyTechs]);
 
   const handlePartnerDispatchEvent = useCallback((event: any) => {
     if (event.type === 'TECH_LOCATION_UPDATE' && event.location) {
@@ -264,7 +283,7 @@ export default function PartnerDispatchPage() {
             Territory Dispatch &amp; Work-Order Queue
           </h1>
           <p className="text-xs text-slate-500 mt-1 max-w-2xl">
-            Live work orders executing within Maharashtra postal jurisdiction &bull; Proximity fleet allocation.
+            Live work orders executing within {partnerState} postal jurisdiction &bull; Proximity fleet allocation.
           </p>
         </div>
 
@@ -296,7 +315,7 @@ export default function PartnerDispatchPage() {
           <div className="mt-2 text-3xl font-black text-slate-900">
             {metrics?.totalTerritoryJobs ?? '0'}
           </div>
-          <div className="mt-1 text-xs text-slate-500">Maharashtra Cluster</div>
+          <div className="mt-1 text-xs text-slate-500">{partnerState} Cluster</div>
         </div>
 
         <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs">
@@ -377,8 +396,8 @@ export default function PartnerDispatchPage() {
             onChange={(e) => setPincodeFilter(e.target.value)}
             className="rounded-xl bg-slate-50 border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
           >
-            <option value="ALL">All Pincodes</option>
-            {Array.from(new Set(['400001', '400002', '400005', '400020', ...jobs.map((j) => j.pincode).filter(Boolean)])).map((pin) => (
+            <option value="ALL">All Pincodes ({availablePincodes.length})</option>
+            {availablePincodes.map((pin) => (
               <option key={pin} value={pin}>{pin}</option>
             ))}
           </select>
@@ -534,7 +553,7 @@ export default function PartnerDispatchPage() {
             <div className="text-3xl">📋</div>
             <div className="text-base font-bold text-slate-800">No Work Orders Found</div>
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              No work orders in Maharashtra territory currently match your active query filters.
+              No work orders in {partnerState} territory currently match your active query filters.
             </p>
           </div>
         )}

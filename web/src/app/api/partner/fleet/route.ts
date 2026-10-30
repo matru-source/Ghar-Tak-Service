@@ -29,6 +29,15 @@ export async function GET(request: NextRequest) {
     const verifiedKycCount = allTechs.filter((t) => t.kycStatus === 'VERIFIED').length;
     const safetyGearVerifiedCount = allTechs.filter((t) => t.insulatedGlovesVerified).length;
 
+    // Fetch licensed partner territory pincodes
+    const territoryPincodesList = await db.getAllPincodes({ partnerId });
+    const territoryPincodes = territoryPincodesList.map((p) => ({
+      pincode: p.pincode,
+      areaName: p.areaName,
+      district: p.district,
+      state: p.state,
+    }));
+
     return NextResponse.json({
       success: true,
       partnerId,
@@ -42,6 +51,7 @@ export async function GET(request: NextRequest) {
         onlinePercentage: totalFleet > 0 ? Math.round((onlineCount / totalFleet) * 100) : 0,
       },
       technicians,
+      territoryPincodes,
     });
   } catch (error) {
     console.error('Failed to fetch partner fleet roster:', error);

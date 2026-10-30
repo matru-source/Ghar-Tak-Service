@@ -73,6 +73,26 @@ export function PartnerSidebar({
   onMouseLeave,
 }: PartnerSidebarProps) {
   const pathname = usePathname();
+  const [partnerState, setPartnerState] = React.useState('Maharashtra');
+  const [partnerName, setPartnerName] = React.useState('Regional Operations Hub');
+  const [partnerInitials, setPartnerInitials] = React.useState('MH');
+
+  React.useEffect(() => {
+    fetch('/api/partner/profile')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.partner) {
+          const st = d.partner.stateLicensed || 'Maharashtra';
+          const name = d.partner.entityName || `${st} Operations Hub`;
+          setPartnerState(st);
+          setPartnerName(name);
+          const words = name.trim().split(/\s+/);
+          const inits = words.length >= 2 ? (words[0][0] + words[1][0]).toUpperCase() : st.slice(0, 2).toUpperCase();
+          setPartnerInitials(inits);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSignOut = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -124,8 +144,8 @@ export function PartnerSidebar({
                     PARTNER
                   </span>
                 </div>
-                <div className="text-[11px] text-slate-500 font-medium whitespace-nowrap">
-                  Maharashtra Regional Hub MH-01
+                <div className="text-[11px] text-slate-500 font-medium whitespace-nowrap truncate max-w-[190px]">
+                  {partnerName}
                 </div>
               </div>
             ) : (
@@ -259,13 +279,13 @@ export function PartnerSidebar({
             <>
               <div className="flex items-center gap-2.5 overflow-hidden">
                 <div className="w-8 h-8 rounded-full bg-[#1B5E20] flex items-center justify-center text-xs font-bold text-white ring-2 ring-emerald-200 shadow-xs shrink-0">
-                  MH
+                  {partnerInitials}
                 </div>
                 <div className="truncate">
-                  <div className="text-xs font-bold text-slate-900 leading-tight truncate">Maharashtra Ops</div>
+                  <div className="text-xs font-bold text-slate-900 leading-tight truncate">{partnerName}</div>
                   <div className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-                    FRANCHISE_MH_01
+                    {partnerState} Jurisdiction
                   </div>
                 </div>
               </div>
@@ -283,10 +303,10 @@ export function PartnerSidebar({
               type="button"
               onClick={handleSignOut}
               className="mx-auto cursor-pointer group"
-              title="Maharashtra Ops • FRANCHISE_MH_01 (Click to Sign Out)"
+              title={`${partnerName} • (Click to Sign Out)`}
             >
               <div className="w-8 h-8 rounded-full bg-[#1B5E20] group-hover:bg-red-700 flex items-center justify-center text-xs font-bold text-white ring-2 ring-emerald-200 shadow-xs transition-colors">
-                MH
+                {partnerInitials}
               </div>
             </button>
           )}

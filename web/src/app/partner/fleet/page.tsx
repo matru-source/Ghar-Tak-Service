@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { BrandMark } from '@/components/ui/brand-logo';
 import { getActivePartnerId } from '@/lib/partner-session';
@@ -51,6 +51,9 @@ export default function PartnerFleetPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPincode, setSelectedPincode] = useState('ALL');
   const [updatingTechId, setUpdatingTechId] = useState<string | null>(null);
+  const [partnerState, setPartnerState] = useState('Maharashtra');
+  const [partnerEntityName, setPartnerEntityName] = useState('Operations Hub');
+  const [territoryPincodes, setTerritoryPincodes] = useState<{ pincode: string; areaName?: string; district?: string }[]>([]);
 
   // Modal states
   const [dossierTech, setDossierTech] = useState<Technician | null>(null);
@@ -72,11 +75,20 @@ export default function PartnerFleetPage() {
     try {
       setLoading(true);
       const activePartner = getActivePartnerId();
-      const res = await fetch(`/api/partner/fleet?partnerId=${encodeURIComponent(activePartner)}`);
-      const data = await res.json();
-      if (data.success) {
-        setTechnicians(data.technicians || []);
-        setStats(data.stats || null);
+      const [fleetRes, profRes] = await Promise.all([
+        fetch(`/api/partner/fleet?partnerId=${encodeURIComponent(activePartner)}`).then((r) => r.json()).catch(() => null),
+        fetch(`/api/partner/profile?partnerId=${encodeURIComponent(activePartner)}`).then((r) => r.json()).catch(() => null),
+      ]);
+      if (fleetRes?.success) {
+        setTechnicians(fleetRes.technicians || []);
+        setStats(fleetRes.stats || null);
+        if (Array.isArray(fleetRes.territoryPincodes)) {
+          setTerritoryPincodes(fleetRes.territoryPincodes);
+        }
+      }
+      if (profRes?.partner) {
+        if (profRes.partner.stateLicensed) setPartnerState(profRes.partner.stateLicensed);
+        if (profRes.partner.entityName) setPartnerEntityName(profRes.partner.entityName);
       }
     } catch (err) {
       console.error('Failed to load fleet roster:', err);
@@ -84,6 +96,20 @@ export default function PartnerFleetPage() {
       setLoading(false);
     }
   };
+
+  // Dynamically assemble all available beat pincodes for this partner's jurisdiction
+  const allPincodeOptions = useMemo(() => {
+    const map = new Map<string, { pincode: string; areaName: string }>();
+    territoryPincodes.forEach((tp) => {
+      if (tp.pincode) map.set(tp.pincode, { pincode: tp.pincode, areaName: tp.areaName || tp.district || 'Territory' });
+    });
+    technicians.forEach((t) => {
+      if (t.assignedPincode && !map.has(t.assignedPincode)) {
+        map.set(t.assignedPincode, { pincode: t.assignedPincode, areaName: 'Assigned Beat' });
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => a.pincode.localeCompare(b.pincode));
+  }, [territoryPincodes, technicians]);
 
   const handleFleetRealtimeEvent = useCallback((event: any) => {
     if (
@@ -314,7 +340,7 @@ export default function PartnerFleetPage() {
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">
-            <span>Maharashtra Ops</span>
+            <span>{partnerState} Ops</span>
             <span>/</span>
             <span>Workforce Operations</span>
             <span>/</span>
@@ -323,7 +349,7 @@ export default function PartnerFleetPage() {
           <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
             Regional Fleet Roster & Shift Scheduling
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#1B5E20] border border-emerald-200 font-bold">
-              Hub MH-01
+              {partnerEntityName}
             </span>
             <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1.5 ${
               fleetBusStatus === 'CONNECTED'
@@ -335,7 +361,7 @@ export default function PartnerFleetPage() {
             </span>
           </h1>
           <p className="text-xs text-slate-500 mt-1 max-w-2xl">
-            Live shift management, real-time availability toggles, territorial pincode allocation, and regulatory KYC screening for Maharashtra electrical personnel.
+            Live shift management, real-time availability toggles, territorial pincode allocation, and regulatory KYC screening for {partnerState} service personnel.
           </p>
         </div>
 
@@ -563,19 +589,12 @@ export default function PartnerFleetPage() {
               onChange={(e) => setSelectedPincode(e.target.value)}
               className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:border-emerald-500 cursor-pointer"
             >
-              <option value="ALL">All Territory Pincodes</option>
-              {Array.from(new Set(technicians.map((t) => t.assignedPincode)))
-                .filter((pin) => pin && !['400001', '400005', '400020', '400021', '411001'].includes(pin))
-                .map((pin) => (
-                  <option key={pin} value={pin}>
-                    {pin} — Active Field Territory
-                  </option>
-                ))}
-              <option value="400001">400001 — Colaba, Mumbai</option>
-              <option value="400005">400005 — Cuffe Parade, Mumbai</option>
-              <option value="400020">400020 — Marine Drive, Mumbai</option>
-              <option value="400021">400021 — Nariman Point, Mumbai</option>
-              <option value="411001">411001 — Pune Central</option>
+              <option value="ALL">All Territory Pincodes ({allPincodeOptions.length})</option>
+              {allPincodeOptions.map((pin) => (
+                <option key={pin.pincode} value={pin.pincode}>
+                  {pin.pincode} — {pin.areaName || 'Field Beat'}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -610,7 +629,7 @@ export default function PartnerFleetPage() {
               {loading ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-slate-400">
-                    Loading Maharashtra Fleet Roster...
+                    Loading {partnerState} Fleet Roster...
                   </td>
                 </tr>
               ) : filteredTechs.length === 0 ? (
@@ -810,16 +829,15 @@ export default function PartnerFleetPage() {
                           onChange={(e) => handleReassignPincode(tech, e.target.value)}
                           className="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:border-emerald-500 cursor-pointer"
                         >
-                          {!['400001', '400005', '400020', '400021', '411001'].includes(tech.assignedPincode) && (
-                            <option value={tech.assignedPincode}>
-                              {tech.assignedPincode} (Active Beat)
-                            </option>
+                          {allPincodeOptions.length > 0 ? (
+                            allPincodeOptions.map((pin) => (
+                              <option key={pin.pincode} value={pin.pincode}>
+                                {pin.pincode} ({pin.areaName || 'Beat'})
+                              </option>
+                            ))
+                          ) : (
+                            <option value={tech.assignedPincode}>{tech.assignedPincode} (Active Beat)</option>
                           )}
-                          <option value="400001">400001 (Colaba)</option>
-                          <option value="400005">400005 (Cuffe Parade)</option>
-                          <option value="400020">400020 (Marine Drive)</option>
-                          <option value="400021">400021 (Nariman Point)</option>
-                          <option value="411001">411001 (Pune Central)</option>
                         </select>
                       </div>
                     </td>
@@ -884,7 +902,7 @@ export default function PartnerFleetPage() {
                     </span>
                   </div>
                   <div className="text-xs text-slate-500">
-                    Lead Electrical Field Specialist &bull; Maharashtra Tier-1 Operations Hub
+                    Lead Electrical Field Specialist &bull; {partnerEntityName}
                   </div>
                 </div>
               </div>

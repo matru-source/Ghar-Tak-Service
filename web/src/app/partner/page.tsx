@@ -66,6 +66,7 @@ export default function PartnerDashboardPage() {
     entityName: 'Maharashtra Team',
     stateLicensed: 'Maharashtra',
   });
+  const [partnerPincodes, setPartnerPincodes] = useState<string[]>([]);
 
   // 4 Primary KPI values matching Client Mockup
   const [kpiStats, setKpiStats] = useState({
@@ -178,6 +179,10 @@ export default function PartnerDashboardPage() {
       }
 
       // 4. Compute real KPIs directly from live database queries
+      if (fleetRes?.territoryPincodes && Array.isArray(fleetRes.territoryPincodes)) {
+        const pins = fleetRes.territoryPincodes.map((tp: any) => tp.pincode).filter(Boolean);
+        if (pins.length > 0) setPartnerPincodes(pins);
+      }
       const totalLiveJobs = jobsRes?.data?.counts?.total ?? mappedJobs.length ?? 0;
       const totalLiveTechs = fleetRes?.stats?.totalFleet ?? (fleetRes?.technicians?.length ?? 0);
       const liveOnlineTechs = fleetRes?.stats?.onlineCount ?? (fleetRes?.technicians?.filter((t: any) => t.isOnline).length ?? 0);
@@ -441,7 +446,7 @@ export default function PartnerDashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 sm:p-3.5 rounded-2xl border border-slate-200 shadow-2xs">
         <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
           <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 uppercase text-[10px]">Territory Hub</span>
-          <span className="truncate">Maharashtra &bull; Pincodes: 400001, 400002, 400005, 400020</span>
+          <span className="truncate">{partnerInfo.stateLicensed} &bull; Pincodes: {partnerPincodes.length > 0 ? partnerPincodes.slice(0, 8).join(', ') : 'All Active Beats'}</span>
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -468,10 +473,10 @@ export default function PartnerDashboardPage() {
         <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
           <div>
             <h2 className="text-base sm:text-lg font-extrabold text-[#1B5E20]">
-              Recent Jobs in Maharashtra
+              Recent Jobs in {partnerInfo.stateLicensed || 'Your Territory'}
             </h2>
             <p className="text-[11px] sm:text-xs text-slate-500">
-              Live dispatch feed &bull; State Jurisdiction: MH-01
+              Live dispatch feed &bull; {partnerInfo.entityName}
             </p>
           </div>
 
@@ -1006,9 +1011,15 @@ export default function PartnerDashboardPage() {
               <div>
                 <label className="font-bold text-slate-700 block mb-1">Assigned Territory Pincode</label>
                 <select className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-emerald-600">
-                  <option value="400001">400001 - Colaba / Fort</option>
-                  <option value="400002">400002 - Marine Lines</option>
-                  <option value="400005">400005 - Cuffe Parade</option>
+                  {partnerPincodes.length > 0 ? (
+                    partnerPincodes.map((pin) => (
+                      <option key={pin} value={pin}>
+                        {pin} - Active Licensed Beat
+                      </option>
+                    ))
+                  ) : (
+                    <option value="ALL">All Territory Beats</option>
+                  )}
                 </select>
               </div>
 
