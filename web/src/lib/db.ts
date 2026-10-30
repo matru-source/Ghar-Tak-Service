@@ -3139,19 +3139,30 @@ export const db = {
       dbStore.invoices.push(invoice);
     }
 
+    // Dynamic Territory Resolution via PincodeCoverage for 70/15/15 Split (Issue 8)
+    if (job.pincode) {
+      const pinCov = dbStore.pincodes.find((p) => p.pincode === job.pincode);
+      if (pinCov?.partnerId) {
+        job.partnerId = pinCov.partnerId;
+      }
+    }
+
     // Ensure memory store job is directly updated
     const storeJobIdx = dbStore.jobs.findIndex((j) => j.id === job.id || j.jobTicketNumber === job.jobTicketNumber);
     if (storeJobIdx !== -1) {
       dbStore.jobs[storeJobIdx].status = 'WORK_COMPLETED';
       dbStore.jobs[storeJobIdx].completedAt = now;
+      if (job.partnerId) dbStore.jobs[storeJobIdx].partnerId = job.partnerId;
       if (data.afterPhotoUrl) dbStore.jobs[storeJobIdx].afterPhotoUrl = data.afterPhotoUrl;
       if (data.customerRating) dbStore.jobs[storeJobIdx].customerRating = data.customerRating;
       if (data.customerFeedback) dbStore.jobs[storeJobIdx].customerFeedback = data.customerFeedback;
     }
 
-    // Add 70% technician payout ledger entry into dbStore.ledgerEntries for immediate wallet reflection
+    // Add 70% technician payout & 15% franchise commission into dbStore.ledgerEntries for immediate reflection
     const jobTotalAmount = Number(job.totalAmountInr || invoice.totalAmount || 1250);
     const techPayoutAmount = Math.round(jobTotalAmount * 0.7);
+    const franchiseCommissionAmount = Math.round(jobTotalAmount * 0.15);
+
     const existingLedger = dbStore.ledgerEntries.find(
       (e) => e.jobTicketNumber === job.jobTicketNumber && e.ledgerType === 'TECHNICIAN_PAYOUT'
     );
@@ -3168,6 +3179,25 @@ export const db = {
         amountInr: techPayoutAmount,
         runningBalanceInr: techPayoutAmount,
         narrative: `70% Commission Payout for Work Order #${job.jobTicketNumber}`,
+        createdAt: now,
+      });
+    }
+
+    const existingPartnerLedger = dbStore.ledgerEntries.find(
+      (e) => e.jobTicketNumber === job.jobTicketNumber && e.ledgerType === 'PARTNER_COMMISSION'
+    );
+    if (!existingPartnerLedger && job.partnerId) {
+      dbStore.ledgerEntries.push({
+        id: `led_${Date.now()}_partner`,
+        transactionReference: `TXN-FRAN-15-${Date.now()}`,
+        invoiceId: invoice.id,
+        jobTicketNumber: job.jobTicketNumber,
+        partnerId: job.partnerId,
+        ledgerType: 'PARTNER_COMMISSION' as any,
+        entryDirection: 'CREDIT' as any,
+        amountInr: franchiseCommissionAmount,
+        runningBalanceInr: franchiseCommissionAmount,
+        narrative: `15% Franchise Commission for Work Order #${job.jobTicketNumber}`,
         createdAt: now,
       });
     }
@@ -4179,8 +4209,9 @@ export const db = {
   },
 
   async getPartnerAccountingSummary(partnerId: string) {
-    const p = dbStore.partner;
-    const partnerEntries = dbStore.ledgerEntries.filter((e) => e.partnerId === p.id);
+    const resolvedPid = await resolvePartnerId(partnerId);
+    const p = dbStore.partners?.find((pt) => pt.id === partnerId || pt.id === resolvedPid) || dbStore.partner;
+    const partnerEntries = dbStore.ledgerEntries.filter((e) => e.partnerId === p.id || e.partnerId === partnerId || e.partnerId === resolvedPid);
 
     const partnerCommissions = partnerEntries
       .filter((e) => e.ledgerType === 'PARTNER_COMMISSION')

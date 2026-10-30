@@ -118,6 +118,8 @@ export async function POST(
       customerFeedback: typeof customerFeedback === 'string' ? customerFeedback : undefined,
     });
 
+    let validPartnerId = job.partnerId;
+
     // ACID Financial Distribution (Issue 42): Wrap job completion, invoice, and 70/15/15 commission ledger credits inside a single prisma.$transaction
     try {
       const { prisma } = await import('@/lib/prisma');
@@ -130,25 +132,88 @@ export async function POST(
         const gstReserve = Math.round(((invoice as any).cgstAmount || 0) + ((invoice as any).sgstAmount || 0)) || Math.round(totalAmount * 0.18);
 
         await prisma.$transaction(async (tx) => {
-          // 1. Update job to WORK_COMPLETED
+          // Resolve foreign key safe technician
+          const techRec = job.technicianId
+            ? await tx.technician.findFirst({ where: { OR: [{ id: job.technicianId }, { badgeNumber: job.technicianId }] } })
+            : null;
+
+          // Dynamic Franchise Partner Resolution via PincodeCoverage & Territory (Issue 8)
+          let resolvedPartnerId: string | null = null;
+          const targetPincode = (job as any).pincode || (job as any).customerPincode;
+
+          // 1. Primary Authority: Query PincodeCoverage for the job's pincode at settlement time
+          if (targetPincode) {
+            const coverage = await tx.pincodeCoverage.findFirst({
+              where: { pincode: String(targetPincode).trim() },
+              include: { partner: true },
+            });
+            if (coverage?.partnerId) {
+              resolvedPartnerId = coverage.partnerId;
+            }
+          }
+
+          // 2. Secondary Authority: Check assigned technician's registered franchise partner
+          if (!resolvedPartnerId && techRec?.partnerId) {
+            resolvedPartnerId = techRec.partnerId;
+          }
+
+          // 3. Tertiary Authority: Check job's assigned partnerId
+          if (!resolvedPartnerId && job.partnerId) {
+            resolvedPartnerId = job.partnerId;
+          }
+
+          // 4. Verify resolvedPartnerId exists in PostgreSQL Partner table
+          let partnerRec = resolvedPartnerId
+            ? await tx.partner.findFirst({ where: { id: resolvedPartnerId } })
+            : null;
+
+          // 5. Territory-aware heuristic fallback based on Indian postal pincode zones
+          if (!partnerRec && targetPincode) {
+            const pinStr = String(targetPincode).trim();
+            const isOdisha = pinStr.startsWith('75') || pinStr.startsWith('76') || pinStr.startsWith('77');
+            const isMaharashtra = pinStr.startsWith('40') || pinStr.startsWith('41') || pinStr.startsWith('42') || pinStr.startsWith('43') || pinStr.startsWith('44');
+
+            if (isOdisha) {
+              partnerRec = await tx.partner.findFirst({
+                where: {
+                  OR: [
+                    { id: 'ptnr_odisha_01' },
+                    { stateLicensed: { contains: 'Odisha', mode: 'insensitive' } },
+                    { entityName: { contains: 'Odisha', mode: 'insensitive' } },
+                  ],
+                },
+              });
+            } else if (isMaharashtra) {
+              partnerRec = await tx.partner.findFirst({
+                where: {
+                  OR: [
+                    { id: 'ptnr_mah_01' },
+                    { stateLicensed: { contains: 'Maharashtra', mode: 'insensitive' } },
+                    { entityName: { contains: 'Maharashtra', mode: 'insensitive' } },
+                  ],
+                },
+              });
+            }
+          }
+
+          // 6. Absolute last resort fallback to first available partner
+          if (!partnerRec) {
+            partnerRec = await tx.partner.findFirst();
+          }
+
+          validPartnerId = partnerRec?.id || resolvedPartnerId || 'ptnr_mah_01';
+          job.partnerId = validPartnerId;
+
+          // 1. Update job to WORK_COMPLETED and stamp dynamically resolved franchise partnerId
           await tx.job.updateMany({
             where: { OR: [{ id: job.id }, { jobTicketNumber: job.jobTicketNumber }] },
             data: {
               status: 'WORK_COMPLETED',
               completedAt: new Date(job.completedAt),
               afterPhotoUrl: resolvedAfterPhotoUrl,
+              partnerId: validPartnerId,
             },
           });
-
-          // Resolve foreign key safe partner & technician
-          const partnerRec = job.partnerId
-            ? await tx.partner.findFirst({ where: { id: job.partnerId } })
-            : await tx.partner.findFirst();
-          const validPartnerId = partnerRec?.id || job.partnerId;
-
-          const techRec = job.technicianId
-            ? await tx.technician.findFirst({ where: { OR: [{ id: job.technicianId }, { badgeNumber: job.technicianId }] } })
-            : null;
 
           // 2. Atomic Invoice Creation / Guarantee
           const existingInv = await tx.invoice.findFirst({
