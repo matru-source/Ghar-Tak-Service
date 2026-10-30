@@ -44,6 +44,14 @@ class SessionManager {
     await _prefs?.setString(AppConstants.keyTechnicianJson, jsonEncode(technician.toJson()));
   }
 
+  static String? getPushToken() {
+    return _prefs?.getString(AppConstants.keyPushToken);
+  }
+
+  static Future<void> savePushToken(String token) async {
+    await _prefs?.setString(AppConstants.keyPushToken, token);
+  }
+
   static bool isDutyOnline() {
     return _prefs?.getBool(AppConstants.keyIsOnline) ?? true;
   }

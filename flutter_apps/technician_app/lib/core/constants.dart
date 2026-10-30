@@ -14,6 +14,7 @@ class AppConstants {
   static const String keyTechnicianJson = 'tech_profile_json';
   static const String keyIsOnline = 'tech_is_online';
   static const String keyCustomBaseUrl = 'tech_custom_base_url';
+  static const String keyPushToken = 'tech_fcm_push_token';
 
   // Dispatch siren timeout in seconds
   static const int dispatchSirenTimeoutSeconds = 60;

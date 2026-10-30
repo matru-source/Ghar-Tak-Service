@@ -4,6 +4,7 @@ import { dbStore } from '@/lib/mock-data';
 import { realtimeBus } from '@/lib/realtime-bus';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
 import { assertAuth } from '@/lib/auth-guard';
+import { sendHighPriorityDispatchSiren, broadcastDispatchSirenToPincodeFleet } from '@/lib/fcm-dispatcher';
 
 
 export async function OPTIONS() {
@@ -364,6 +365,19 @@ export async function POST(request: NextRequest) {
           customerLongitude: newJob.customerLongitude,
         },
       });
+
+      // Dual-Channel FCM High-Priority Push Siren (Issue 2)
+      sendHighPriorityDispatchSiren({
+        technicianId: newJob.technicianId,
+        ticketNumber: newJob.jobTicketNumber,
+        serviceTitle: newJob.serviceTitle,
+        payoutInr: Math.round(newJob.totalAmountInr * 0.7),
+        jobId: newJob.id,
+        pincode: newJob.pincode,
+        customerId: newJob.customerId,
+        customerAddress: newJob.customerAddressText,
+        timerSeconds: 60,
+      }).catch((err) => console.warn('[Jobs -> FCM] Error sending targeted push:', err));
     } else {
       // Geo-Pincode Broadcast Model: Broadcast unassigned work orders to nearby technician fleet
       realtimeBus.publish({
@@ -389,6 +403,18 @@ export async function POST(request: NextRequest) {
           customerLongitude: newJob.customerLongitude,
         },
       });
+
+      // Dual-Channel FCM High-Priority Pincode Fleet Broadcast (Issue 2)
+      broadcastDispatchSirenToPincodeFleet({
+        pincode: newJob.pincode,
+        ticketNumber: newJob.jobTicketNumber,
+        serviceTitle: newJob.serviceTitle,
+        payoutInr: Math.round(newJob.totalAmountInr * 0.7),
+        jobId: newJob.id,
+        customerId: newJob.customerId,
+        customerAddress: newJob.customerAddressText,
+        timerSeconds: 60,
+      }).catch((err) => console.warn('[Jobs -> FCM] Error sending fleet broadcast:', err));
     }
 
     return apiSuccess(

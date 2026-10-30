@@ -25,7 +25,7 @@ class TechHomeView extends StatefulWidget {
   State<TechHomeView> createState() => _TechHomeViewState();
 }
 
-class _TechHomeViewState extends State<TechHomeView> {
+class _TechHomeViewState extends State<TechHomeView> with WidgetsBindingObserver {
   TechnicianModel? _technician;
   bool _isOnline = true;
   bool _isLoading = true;
@@ -46,15 +46,39 @@ class _TechHomeViewState extends State<TechHomeView> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadData();
     _startPoller();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _sseSub?.cancel();
     _poller?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      RealtimeStreamManager().onAppResumed();
+      _pollIncomingDispatches();
+    }
+  }
+
+  Future<void> _pollIncomingDispatches() async {
+    final jobs = await TechJobService.getAssignedJobs();
+    if (mounted) {
+      final incoming = jobs.where((j) => j.status == 'DISPATCHED' || j.status == 'PENDING_ACCEPTANCE').toList();
+      if (incoming.isNotEmpty && _isOnline) {
+        final target = incoming.first;
+        if (_assignedJobs.every((j) => j.id != target.id || j.status != target.status)) {
+          _showIncomingDispatch(target);
+        }
+      }
+      setState(() => _assignedJobs = jobs);
+    }
   }
 
   Future<void> _loadData() async {

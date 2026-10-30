@@ -188,6 +188,21 @@ class RealtimeEventBus {
         console.warn('[RealtimeBus] Redis publish error:', err.message);
       }
     }
+
+    // 3. Automated Dual-Channel High-Priority Push Notification Hook (Issue 2)
+    try {
+      if (
+        fullEvent.type === 'TECH_DISPATCHED' ||
+        fullEvent.type === 'TECH_BROADCAST' ||
+        fullEvent.type === 'EMERGENCY_SOS'
+      ) {
+        import('./fcm-dispatcher').then(({ autoDispatchFcmFromRealtimeEvent }) => {
+          autoDispatchFcmFromRealtimeEvent(fullEvent).catch((err) => {
+            console.warn('[RealtimeBus -> FCM] Error triggering push notification:', err);
+          });
+        }).catch(() => {});
+      }
+    } catch (_) {}
   }
 
   private dispatchLocal(fullEvent: RealtimeEventPayload) {

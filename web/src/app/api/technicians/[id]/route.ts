@@ -62,6 +62,14 @@ export async function PATCH(
     }
     if (body.safetyKitSerial !== undefined) updates.safetyKitSerial = body.safetyKitSerial;
     if (body.partnerId !== undefined) updates.partnerId = body.partnerId;
+    if (body.fcmToken !== undefined || body.deviceToken !== undefined || body.pushToken !== undefined) {
+      const pToken = body.fcmToken || body.deviceToken || body.pushToken;
+      updates.fcmToken = pToken;
+      try {
+        const { registerTechnicianPushToken } = await import('@/lib/fcm-dispatcher');
+        registerTechnicianPushToken(id, pToken);
+      } catch (_) {}
+    }
 
     const updated = await db.updateTechnician(id, updates);
     if (!updated) {

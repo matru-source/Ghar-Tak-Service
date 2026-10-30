@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'session_manager.dart';
+import 'api_client.dart';
 
 typedef TechRealtimeEventCallback = void Function(String eventType, Map<String, dynamic> data);
 
@@ -16,6 +17,7 @@ class RealtimeStreamManager {
   bool _isConnected = false;
   bool _shouldReconnect = true;
   Timer? _reconnectTimer;
+  Timer? _heartbeatWatchdog;
 
   final List<TechRealtimeEventCallback> _listeners = [];
   final StreamController<Map<String, dynamic>> _eventStreamController =
@@ -32,6 +34,15 @@ class RealtimeStreamManager {
 
   void removeListener(TechRealtimeEventCallback listener) {
     _listeners.remove(listener);
+  }
+
+  /// Reset the 35-second heartbeat watchdog. Reconnects if the background connection stalls.
+  void _resetHeartbeatWatchdog() {
+    _heartbeatWatchdog?.cancel();
+    _heartbeatWatchdog = Timer(const Duration(seconds: 35), () {
+      // Background socket likely dropped or froze during device doze mode
+      _handleDisconnect();
+    });
   }
 
   void connect({String? technicianId, String? hubId}) {
@@ -72,10 +83,12 @@ class RealtimeStreamManager {
       final response = await _request!.close();
       if (response.statusCode == 200) {
         _isConnected = true;
+        _resetHeartbeatWatchdog();
 
         String buffer = '';
         _subscription = response.transform(utf8.decoder).listen(
           (chunk) {
+            _resetHeartbeatWatchdog();
             buffer += chunk;
             while (buffer.contains('\n\n')) {
               final eventEndIndex = buffer.indexOf('\n\n');
@@ -130,6 +143,44 @@ class RealtimeStreamManager {
     }
   }
 
+  /// Ingest background Firebase Cloud Messaging (FCM) or APNs notification payload directly
+  /// and wake up the 60-second dispatch siren dialog even if SSE was asleep.
+  void handleIncomingPushNotification(Map<String, dynamic> fcmData) {
+    final type = fcmData['type']?.toString() ?? 'DISPATCH_BROADCAST';
+    _eventStreamController.add(fcmData);
+    for (final callback in List.from(_listeners)) {
+      try {
+        callback(type, fcmData);
+      } catch (_) {}
+    }
+  }
+
+  /// Register or sync this device's push token with the backend dispatch engine.
+  Future<bool> registerDevicePushToken(String token) async {
+    final tech = SessionManager.getCurrentTechnician();
+    if (tech == null) return false;
+
+    await SessionManager.savePushToken(token);
+
+    final res = await ApiClient.post('/technicians/${tech.id}/push-token', {
+      'token': token,
+      'platform': Platform.isAndroid ? 'android' : 'ios',
+    });
+
+    return res.success;
+  }
+
+  /// Called when the application resumes from the background or locked screen.
+  /// Instantly verifies connection and recovers if the background socket was frozen.
+  void onAppResumed() {
+    if (!_isConnected) {
+      final tech = SessionManager.getCurrentTechnician();
+      connect(technicianId: tech?.id);
+    } else {
+      _resetHeartbeatWatchdog();
+    }
+  }
+
   void _handleDisconnect() {
     _isConnected = false;
     _cleanup();
@@ -145,6 +196,8 @@ class RealtimeStreamManager {
   }
 
   void _cleanup() {
+    _heartbeatWatchdog?.cancel();
+    _heartbeatWatchdog = null;
     _subscription?.cancel();
     _subscription = null;
     _request = null;
@@ -160,4 +213,3 @@ class RealtimeStreamManager {
     _cleanup();
   }
 }
-
