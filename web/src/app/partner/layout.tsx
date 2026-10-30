@@ -1,6 +1,7 @@
 import React from 'react';
 import { PartnerShell } from '@/components/partner/partner-shell';
 import { PartnerAuthGuard } from '@/components/partner/partner-auth-guard';
+import { PartnerLiveProvider } from '@/components/partner/partner-live-provider';
 
 export const metadata = {
   title: 'Ghar Tak Service Partner CRM — Regional Operations Hub',
@@ -14,7 +15,9 @@ export default function PartnerLayout({
 }) {
   return (
     <PartnerAuthGuard>
-      <PartnerShell>{children}</PartnerShell>
+      <PartnerLiveProvider>
+        <PartnerShell>{children}</PartnerShell>
+      </PartnerLiveProvider>
     </PartnerAuthGuard>
   );
 }

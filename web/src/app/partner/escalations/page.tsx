@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getAuthToken } from '@/lib/api-client';
+import { usePartnerLive } from '@/components/partner/partner-live-provider';
 import {
   AlertTriangle,
   Clock,
@@ -44,6 +45,7 @@ interface ProximityCandidate {
 }
 
 export default function PartnerEscalationsPage() {
+  const { lastEvent, status: sseStatus } = usePartnerLive();
   const [escalatedJobs, setEscalatedJobs] = useState<EscalatedJob[]>([]);
   const [candidates, setCandidates] = useState<ProximityCandidate[]>([]);
   const [counts, setCounts] = useState<{ totalEscalated: number; totalAtRisk: number } | null>(null);
@@ -78,6 +80,27 @@ export default function PartnerEscalationsPage() {
   useEffect(() => {
     fetchEscalations();
   }, []);
+
+  // Real-Time SSE auto-refresh (Issue 9): Instantly refresh escalations on emergency SOS or SLA breach
+  useEffect(() => {
+    if (!lastEvent) return;
+    const type = lastEvent.type;
+    if (
+      type === 'EMERGENCY_SOS' ||
+      type === 'EMERGENCY_SOS_TRIGGERED' ||
+      type === 'CUSTOMER_EMERGENCY_SOS_TRIGGERED' ||
+      type === 'JOB_ESCALATED' ||
+      type === 'SLA_BREACH' ||
+      type === 'SLA_BREACH_TIMER' ||
+      type === 'JOB_CREATED' ||
+      type === 'TECH_DISPATCHED' ||
+      type === 'TECH_ACCEPTED' ||
+      type === 'JOB_STATUS_UPDATED' ||
+      type === 'JOB_COMPLETED'
+    ) {
+      fetchEscalations();
+    }
+  }, [lastEvent]);
 
   const handleConfirmReassign = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,6 +162,20 @@ export default function PartnerEscalationsPage() {
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold">
+            <span
+              className={`h-2 w-2 rounded-full ${
+                sseStatus === 'CONNECTED'
+                  ? 'bg-emerald-500 animate-pulse'
+                  : sseStatus === 'CONNECTING'
+                  ? 'bg-amber-500 animate-ping'
+                  : 'bg-rose-500'
+              }`}
+            />
+            <span className="text-[11px] font-bold text-slate-700">
+              {sseStatus === 'CONNECTED' ? 'Live Telemetry Active' : 'Connecting...'}
+            </span>
+          </div>
           <button
             onClick={fetchEscalations}
             className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 px-4 py-2.5 text-xs font-bold text-slate-700 transition shadow-2xs cursor-pointer"

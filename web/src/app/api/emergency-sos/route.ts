@@ -48,17 +48,47 @@ export async function POST(request: NextRequest) {
       commandCenterStatus: 'ACTIVE_INTERVENTION_DISPATCHED',
     };
 
+    // Resolve partnerId for regional franchise hub dispatch (Issue 9)
+    let resolvedPartnerId: string | undefined = undefined;
+    if (jobId || ticketNumber) {
+      try {
+        const foundJob = await db.findOrRecoverJob(jobId || ticketNumber);
+        if (foundJob) {
+          resolvedPartnerId = foundJob.partnerId;
+        }
+      } catch (_) {}
+    }
+
+    if (!resolvedPartnerId && technicianId) {
+      try {
+        const tech = await db.getTechnicianById(technicianId);
+        if (tech) {
+          resolvedPartnerId = (tech as any).partnerId;
+        }
+      } catch (_) {}
+    }
+
     console.error(
-      `🚨 [CRITICAL_SAFETY_SOS] ${alertPayload.callerRole}: ${alertPayload.callerName} (${alertPayload.phone}) at Coords (${alertPayload.latitude}, ${alertPayload.longitude}) for Ticket #${alertPayload.ticketNumber || 'N/A'}`
+      `🚨 [CRITICAL_SAFETY_SOS] ${alertPayload.callerRole}: ${alertPayload.callerName} (${alertPayload.phone}) at Coords (${alertPayload.latitude}, ${alertPayload.longitude}) for Ticket #${alertPayload.ticketNumber || 'N/A'} (Partner: ${resolvedPartnerId || 'Regional Hub'})`
     );
 
-    // Broadcast High Priority Alert to Safety Command Center
+    // Broadcast High Priority Alert to Safety Command Center and Regional Partner CRM (Issue 9)
     realtimeBus.publish({
       type: isCustomer ? 'CUSTOMER_EMERGENCY_SOS_TRIGGERED' : 'EMERGENCY_SOS_TRIGGERED',
       jobId: alertPayload.jobId,
       ticketNumber: alertPayload.ticketNumber,
+      partnerId: resolvedPartnerId,
       status: 'CRITICAL_SAFETY_ALERT',
-      details: alertPayload,
+      details: { ...alertPayload, partnerId: resolvedPartnerId },
+    });
+
+    realtimeBus.publish({
+      type: 'EMERGENCY_SOS',
+      jobId: alertPayload.jobId,
+      ticketNumber: alertPayload.ticketNumber,
+      partnerId: resolvedPartnerId,
+      status: 'CRITICAL_SAFETY_ALERT',
+      details: { ...alertPayload, partnerId: resolvedPartnerId },
     });
 
     // Record audit log
