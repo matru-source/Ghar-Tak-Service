@@ -467,9 +467,11 @@ export const db = {
         } catch (_) {}
 
 
-        const whereClause: Record<string, unknown> = {};
+        const conditions: any[] = [];
+        let resolvedPartner: string | undefined = undefined;
+
         if (filter?.partnerId && filter.partnerId !== 'ALL') {
-          const resolvedPartner = await resolvePartnerId(filter.partnerId);
+          resolvedPartner = await resolvePartnerId(filter.partnerId);
           // Territory Pincode Isolation: Restrict to partner's licensed pincodes
           try {
             const partnerPincodeRecords = await prisma.pincodeCoverage.findMany({
@@ -478,33 +480,54 @@ export const db = {
             });
             const partnerPincodes = partnerPincodeRecords.map((p) => p.pincode);
             if (partnerPincodes.length > 0) {
-              whereClause.OR = [
-                { partnerId: { in: [filter.partnerId, resolvedPartner] } },
-                { assignedPincode: { in: partnerPincodes } },
-              ];
+              conditions.push({
+                OR: [
+                  { partnerId: { in: [filter.partnerId, resolvedPartner] } },
+                  { assignedPincode: { in: partnerPincodes } },
+                ],
+              });
             } else {
-              whereClause.partnerId = { in: [filter.partnerId, resolvedPartner] };
+              conditions.push({ partnerId: { in: [filter.partnerId, resolvedPartner] } });
             }
           } catch (_) {
-            whereClause.partnerId = { in: [filter.partnerId, resolvedPartner] };
+            conditions.push({ partnerId: { in: [filter.partnerId, resolvedPartner] } });
           }
         }
-        if (filter?.pincode) whereClause.assignedPincode = filter.pincode;
-        if (filter?.isOnline !== undefined) whereClause.isOnline = filter.isOnline;
-        if (filter?.kycStatus) whereClause.kycStatus = filter.kycStatus;
+
+        if (filter?.pincode) conditions.push({ assignedPincode: filter.pincode });
+        if (filter?.isOnline !== undefined) conditions.push({ isOnline: filter.isOnline });
+        if (filter?.kycStatus) conditions.push({ kycStatus: filter.kycStatus });
         if (filter?.search) {
-          whereClause.OR = [
-            { badgeNumber: { contains: filter.search, mode: 'insensitive' } },
-            { electricalLicenseNumber: { contains: filter.search, mode: 'insensitive' } },
-            { user: { fullName: { contains: filter.search, mode: 'insensitive' } } },
-          ];
+          conditions.push({
+            OR: [
+              { badgeNumber: { contains: filter.search, mode: 'insensitive' } },
+              { electricalLicenseNumber: { contains: filter.search, mode: 'insensitive' } },
+              { user: { fullName: { contains: filter.search, mode: 'insensitive' } } },
+            ],
+          });
         }
+
+        const whereClause = conditions.length > 0 ? { AND: conditions } : {};
 
         const liveTechs = await prisma.technician.findMany({
           where: whereClause,
           include: { user: true, partner: true },
           orderBy: { rating: 'desc' },
         });
+
+        // Auto-heal orphan technician partnerIds operating in licensed territory (Issue 10)
+        if (filter?.partnerId && filter.partnerId !== 'ALL' && liveTechs.length > 0) {
+          const effectivePartnerId = resolvedPartner || filter.partnerId;
+          const orphanIds = liveTechs
+            .filter((t) => t.partnerId !== filter.partnerId && (!resolvedPartner || t.partnerId !== resolvedPartner))
+            .map((t) => t.id);
+          if (orphanIds.length > 0) {
+            prisma.technician.updateMany({
+              where: { id: { in: orphanIds } },
+              data: { partnerId: effectivePartnerId },
+            }).catch(() => {});
+          }
+        }
         return liveTechs.map((t) => ({
           id: t.id,
           userId: t.userId,
@@ -4553,6 +4576,13 @@ export const db = {
     };
     dbStore.pincodes.push(newPin);
 
+    // In-memory technician reassignment (Issue 10)
+    dbStore.technicians.forEach((t) => {
+      if (t.assignedPincode === data.pincode) {
+        t.partnerId = data.partnerId;
+      }
+    });
+
     if (await isDatabaseConnected()) {
       try {
         const { prisma } = await import('@/lib/prisma');
@@ -4580,8 +4610,14 @@ export const db = {
             activeCapacityCount: 0,
           },
         });
+
+        // Auto batch-update Technician.partnerId for all technicians operating in this territory (Issue 10)
+        await prisma.technician.updateMany({
+          where: { assignedPincode: data.pincode },
+          data: { partnerId: data.partnerId },
+        });
       } catch (err) {
-        console.warn('[DB] Failed to persist pincodeCoverage to PostgreSQL:', err);
+        console.warn('[DB] Failed to persist pincodeCoverage / batch reassign technicians in PostgreSQL:', err);
       }
     }
 
@@ -4592,6 +4628,48 @@ export const db = {
     const pin = dbStore.pincodes.find((p) => p.id === id || p.pincode === id);
     if (!pin) return null;
     Object.assign(pin, updates);
+
+    const targetPincode = pin.pincode;
+    const newPartnerId = updates.partnerId;
+
+    if (newPartnerId) {
+      // Reassign in-memory technicians (Issue 10)
+      dbStore.technicians.forEach((t) => {
+        if (t.assignedPincode === targetPincode) {
+          t.partnerId = newPartnerId;
+        }
+      });
+    }
+
+    if (await isDatabaseConnected()) {
+      try {
+        const { prisma } = await import('@/lib/prisma');
+        await prisma.pincodeCoverage.updateMany({
+          where: { pincode: targetPincode },
+          data: {
+            ...(updates.areaName && { areaName: updates.areaName }),
+            ...(updates.district && { district: updates.district }),
+            ...(updates.state && { state: updates.state }),
+            ...(updates.partnerId && { partnerId: updates.partnerId }),
+            ...(updates.isActive !== undefined && { isActive: updates.isActive }),
+            ...(updates.isExclusive !== undefined && { isExclusive: updates.isExclusive }),
+            ...(updates.targetEtaMinutes !== undefined && { targetEtaMinutes: updates.targetEtaMinutes }),
+            ...(updates.activeCapacityCount !== undefined && { activeCapacityCount: updates.activeCapacityCount }),
+          },
+        });
+
+        if (newPartnerId) {
+          // Batch reassign all technicians operating in this territory to the newly designated partner (Issue 10)
+          await prisma.technician.updateMany({
+            where: { assignedPincode: targetPincode },
+            data: { partnerId: newPartnerId },
+          });
+        }
+      } catch (err) {
+        console.warn('[DB] Failed to update pincodeCoverage / batch reassign technicians in PostgreSQL:', err);
+      }
+    }
+
     return pin;
   },
 

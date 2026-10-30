@@ -134,6 +134,16 @@ export async function POST(request: NextRequest) {
           isExclusive: true,
         });
       }
+      // Batch reassign all existing registered technicians in allocated territory to newly licensed partner (Issue 10)
+      if (await (await import('@/lib/db')).isDatabaseConnected()) {
+        try {
+          const { prisma } = await import('@/lib/prisma');
+          await prisma.technician.updateMany({
+            where: { assignedPincode: { in: requestedPincodes } },
+            data: { partnerId: partner.id },
+          });
+        } catch (_) {}
+      }
       await db.updatePartner(partner.id, {
         activePincodesCount: requestedPincodes.length,
         maxPincodeQuota: Math.max(Number(maxPincodeQuota) || 30, requestedPincodes.length + 10),
