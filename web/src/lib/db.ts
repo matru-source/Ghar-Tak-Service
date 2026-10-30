@@ -3473,6 +3473,201 @@ export const db = {
     return { job, invoice };
   },
 
+  async submitJobRating(
+    jobId: string,
+    data: {
+      rating: number;
+      feedback?: string;
+      feedbackTags?: string[];
+      signature?: string;
+      isSignatureAdopted?: boolean;
+      actorId?: string;
+      actorRole?: string;
+    }
+  ) {
+    const job = await this.findOrRecoverJob(jobId);
+    if (!job) throw new Error(`Work order '${jobId}' not found`);
+
+    const rawRating = Number(data.rating);
+    if (isNaN(rawRating) || rawRating < 1 || rawRating > 5) {
+      throw new Error("Rating must be a valid number between 1 and 5 stars");
+    }
+    const numRating = Math.max(1, Math.min(5, Math.round(rawRating)));
+
+    const tagList = Array.isArray(data.feedbackTags) ? data.feedbackTags.filter(Boolean) : [];
+    const textFeedback = typeof data.feedback === 'string' ? data.feedback.trim() : '';
+    let combinedFeedback = [
+      tagList.length > 0 ? tagList.join(', ') : '',
+      textFeedback,
+    ].filter(Boolean).join(' - ');
+
+    if (!combinedFeedback) {
+      combinedFeedback = `${numRating}-Star Customer Verification`;
+    }
+
+    job.customerRating = numRating;
+    job.customerFeedback = combinedFeedback;
+
+    // Update memory dbStore
+    const storeIdx = dbStore.jobs.findIndex(
+      (j) => j.id === job.id || j.jobTicketNumber === job.jobTicketNumber
+    );
+    if (storeIdx !== -1) {
+      dbStore.jobs[storeIdx].customerRating = numRating;
+      dbStore.jobs[storeIdx].customerFeedback = combinedFeedback;
+    }
+
+    let updatedTechRating = 4.9;
+
+    // Recalculate technician's live average rating across all jobs
+    if (job.technicianId) {
+      const tech = dbStore.technicians.find(
+        (t) => t.id === job.technicianId || t.badgeNumber === (job as any).technicianBadge
+      );
+      if (tech) {
+        const prevRating = tech.rating || 4.9;
+        const totalJobs = Math.max(1, tech.totalJobsCompleted || 1);
+        const calculated = ((prevRating * totalJobs) + numRating) / (totalJobs + 1);
+        tech.rating = Math.round(calculated * 10) / 10;
+        updatedTechRating = tech.rating;
+      }
+    }
+
+    // Persist to PostgreSQL if connected
+    if (await isDatabaseConnected()) {
+      try {
+        const { prisma } = await import('@/lib/prisma');
+        await prisma.job.updateMany({
+          where: { OR: [{ id: job.id }, { jobTicketNumber: job.jobTicketNumber }] },
+          data: {
+            customerRating: numRating,
+            customerFeedback: combinedFeedback,
+          },
+        });
+
+        if (job.technicianId) {
+          const ratedJobs = await prisma.job.findMany({
+            where: {
+              technicianId: job.technicianId,
+              customerRating: { not: null },
+            },
+            select: { customerRating: true },
+          });
+
+          const ratings = ratedJobs
+            .map((j) => j.customerRating!)
+            .filter((r) => typeof r === 'number' && r > 0);
+
+          if (!ratings.includes(numRating)) {
+            ratings.push(numRating);
+          }
+
+          if (ratings.length > 0) {
+            const sum = ratings.reduce((acc, curr) => acc + curr, 0);
+            updatedTechRating = Math.round((sum / ratings.length) * 10) / 10;
+          }
+
+          await prisma.technician.updateMany({
+            where: { id: job.technicianId },
+            data: { rating: updatedTechRating },
+          });
+        }
+      } catch (err) {
+        console.warn('[DB] Prisma submitJobRating error:', err);
+      }
+    }
+
+    // Automated Dispute Ticket Creation for low ratings (< 3 stars)
+    let disputeTicket: any = null;
+    if (numRating < 3) {
+      disputeTicket = await this.createSupportTicket({
+        subject: `🚨 Poor Rating Alert (${numRating}★): Job #${job.jobTicketNumber}`,
+        description: `Customer submitted a low rating (${numRating}★). Feedback: "${combinedFeedback}". Immediate franchise manager intervention and customer outreach required.`,
+        priority: 'CRITICAL_EMERGENCY',
+        category: 'POOR_RATING_DISPUTE',
+        assignedTo: 'Franchise Operations Manager',
+        jobId: job.id,
+        jobTicketNumber: job.jobTicketNumber,
+        customerId: job.customerId,
+        customerName: job.customerName,
+        customerPhone: job.customerPhone,
+        technicianId: job.technicianId,
+        technicianName: job.technicianName,
+      });
+
+      // Broadcast dispute ticket creation on realtime bus
+      const { realtimeBus } = await import('@/lib/realtime-bus');
+      realtimeBus.publish({
+        type: 'DISPUTE_TICKET_CREATED',
+        jobId: job.id,
+        ticketNumber: job.jobTicketNumber,
+        partnerId: job.partnerId,
+        technicianId: job.technicianId,
+        customerId: job.customerId,
+        status: job.status,
+        details: {
+          disputeTicketId: disputeTicket.id,
+          disputeTicketNumber: disputeTicket.ticketNumber,
+          customerRating: numRating,
+          customerFeedback: combinedFeedback,
+          assignedTo: disputeTicket.assignedTo,
+          priority: disputeTicket.priority,
+        },
+      });
+    }
+
+    // Record immutable audit log
+    await this.recordWormAuditLog({
+      actorId: data.actorId || job.customerId || 'usr_customer_web',
+      actorRole: (data.actorRole as any) || 'CUSTOMER',
+      action: 'JOB_RATING_SUBMITTED',
+      resourceType: 'JOB',
+      resourceId: job.id,
+      payloadSummary: `Customer rated Job #${job.jobTicketNumber} ${numRating}★ ("${combinedFeedback}"). Technician live rating updated to ${updatedTechRating}★. Signature: ${Boolean(data.signature || data.isSignatureAdopted)}.`,
+    });
+
+    // Broadcast realtime rating events
+    const { realtimeBus } = await import('@/lib/realtime-bus');
+    realtimeBus.publish({
+      type: 'JOB_RATED',
+      jobId: job.id,
+      ticketNumber: job.jobTicketNumber,
+      partnerId: job.partnerId,
+      technicianId: job.technicianId,
+      customerId: job.customerId,
+      status: job.status,
+      details: {
+        customerRating: numRating,
+        customerFeedback: combinedFeedback,
+        technicianRating: updatedTechRating,
+        isSignatureAdopted: Boolean(data.signature || data.isSignatureAdopted),
+      },
+    });
+
+    realtimeBus.publish({
+      type: 'JOB_FEEDBACK_SUBMITTED',
+      jobId: job.id,
+      ticketNumber: job.jobTicketNumber,
+      partnerId: job.partnerId,
+      technicianId: job.technicianId,
+      customerId: job.customerId,
+      status: job.status,
+      details: {
+        customerRating: numRating,
+        customerFeedback: combinedFeedback,
+        updatedTechnicianRating: updatedTechRating,
+      },
+    });
+
+    return {
+      job,
+      customerRating: numRating,
+      customerFeedback: combinedFeedback,
+      technicianRating: updatedTechRating,
+      disputeTicket,
+    };
+  },
+
   // Emergency SLA Escalation & Proximity Reassignment Logic (TASK-008)
   async getNearbyTechnicians(
     jobLat: number,

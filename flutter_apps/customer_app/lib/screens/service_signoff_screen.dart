@@ -3,6 +3,7 @@ import '../../core/session_manager.dart';
 import '../../core/theme.dart';
 import '../../models/job_model.dart';
 import '../../models/past_order_model.dart';
+import '../../services/job_service.dart';
 import 'home_screen.dart';
 
 class ServiceSignoffScreen extends StatefulWidget {
@@ -24,6 +25,7 @@ class _ServiceSignoffScreenState extends State<ServiceSignoffScreen> {
   bool _checkItem2 = true;
   final List<Offset?> _signaturePoints = [];
   bool _isSignatureAdopted = false;
+  bool _isSubmitting = false;
 
   late final List<String> _feedbackTags;
   late final String _checkItem1Text;
@@ -51,12 +53,32 @@ class _ServiceSignoffScreenState extends State<ServiceSignoffScreen> {
   }
 
   void _handleSubmitSignoff() async {
+    if (_isSubmitting) return;
+    setState(() => _isSubmitting = true);
+
     final invoiceNo = widget.job.invoiceNumber ?? 'INV-2026-${widget.job.jobTicketNumber.replaceAll(RegExp(r'[^0-9]'), '')}';
     final total = widget.job.totalAmountInr > 0 ? widget.job.totalAmountInr : 299.0;
     final taxable = (total / 1.18);
     final gst = total - taxable;
     final cgst = gst / 2;
     final sgst = gst / 2;
+
+    final feedbackStr = _selectedFeedbackTags.isNotEmpty
+        ? _selectedFeedbackTags.join(', ')
+        : 'Service Verified & Restored';
+
+    // Persist rating, review tags, and signature to backend database (Issue 6)
+    try {
+      await JobService.submitJobRating(
+        jobId: widget.job.id,
+        rating: _selectedRating,
+        feedback: feedbackStr,
+        feedbackTags: _selectedFeedbackTags.toList(),
+        isSignatureAdopted: _isSignatureAdopted,
+      );
+    } catch (_) {
+      // Graceful offline resilience
+    }
 
     // Add order to past orders
     final pastOrder = PastOrderItem(
@@ -76,6 +98,7 @@ class _ServiceSignoffScreenState extends State<ServiceSignoffScreen> {
     await SessionManager.clearActiveJob();
 
     if (mounted) {
+      setState(() => _isSubmitting = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('✓ Service signed off and certified! Thank you for choosing Ghar Tak.'),
@@ -392,9 +415,18 @@ class _ServiceSignoffScreenState extends State<ServiceSignoffScreen> {
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                icon: const Icon(Icons.check_circle_rounded),
-                label: const Text('SUBMIT SIGN-OFF & RETURN TO HOME', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                onPressed: _handleSubmitSignoff,
+                icon: _isSubmitting
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.check_circle_rounded),
+                label: Text(
+                  _isSubmitting ? 'CERTIFYING & SUBMITTING...' : 'SUBMIT SIGN-OFF & RETURN TO HOME',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                onPressed: _isSubmitting ? null : _handleSubmitSignoff,
               ),
             ),
 

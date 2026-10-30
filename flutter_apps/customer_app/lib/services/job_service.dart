@@ -92,5 +92,23 @@ class JobService {
     });
     return res.success;
   }
+
+  static Future<ApiResponse<dynamic>> submitJobRating({
+    required String jobId,
+    required int rating,
+    String? feedback,
+    List<String>? feedbackTags,
+    bool isSignatureAdopted = false,
+  }) async {
+    final user = SessionManager.getCurrentUser();
+    return await ApiClient.post('/jobs/$jobId/rating', {
+      'rating': rating,
+      'customerRating': rating,
+      if (feedback != null) 'feedback': feedback,
+      if (feedbackTags != null) 'feedbackTags': feedbackTags,
+      'isSignatureAdopted': isSignatureAdopted,
+      'customerId': user?.id,
+    });
+  }
 }
 
