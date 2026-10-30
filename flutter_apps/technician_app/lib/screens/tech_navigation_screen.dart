@@ -68,12 +68,19 @@ class _TechNavigationScreenState extends State<TechNavigationScreen> with Single
   Future<void> _handleArrivedAtDoorstep() async {
     setState(() => _isUpdating = true);
 
+    // 1. Post telemetry arrival with explicit ARRIVED status
     await TechJobService.updateCustomerTelemetry(
       jobId: _job.id,
       lat: 18.9220,
       lng: 72.8347,
       status: 'ARRIVED',
       etaMinutes: 0,
+    );
+
+    // 2. Dual-channel guarantee: also transition status via PATCH endpoint
+    await TechJobService.updateStatus(
+      jobId: _job.id,
+      status: 'ARRIVED',
     );
 
     setState(() {
@@ -96,9 +103,13 @@ class _TechNavigationScreenState extends State<TechNavigationScreen> with Single
               Text('Doorstep Arrival Logged', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             ],
           ),
-          content: const Text(
-            'Customer app has been notified of your arrival. Please verify your 1000V dielectric safety equipment before opening any circuit panel.',
-            style: TextStyle(fontSize: 13, height: 1.4),
+          content: Text(
+            _job.trade.toLowerCase().contains('carpenter') || _job.serviceTitle.toLowerCase().contains('carpenter')
+                ? 'Customer app has been notified of your arrival. Please verify eye goggles and PPE before commencing woodwork.'
+                : _job.trade.toLowerCase().contains('plumb') || _job.serviceTitle.toLowerCase().contains('plumb')
+                ? 'Customer app has been notified of your arrival. Please verify main stopcock shutoff and safety gear before servicing.'
+                : 'Customer app has been notified of your arrival. Please verify your 1000V dielectric safety equipment before opening any circuit panel.',
+            style: const TextStyle(fontSize: 13, height: 1.4),
           ),
           actions: [
             ElevatedButton(

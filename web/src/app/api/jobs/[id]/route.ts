@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
+import { realtimeBus } from '@/lib/realtime-bus';
 import { apiSuccess, apiError, corsOptionsResponse } from '@/lib/api-response';
 
 export async function OPTIONS() {
@@ -123,6 +124,24 @@ export async function PATCH(
 
     const updatedJob = await db.updateJobStatus(id, canonicalStatus, { actorId, reason });
     (updatedJob as any).version = currentVersion + 1;
+
+    // Broadcast status change across SSE and mobile subscribers
+    realtimeBus.publish({
+      type: canonicalStatus === 'ARRIVED' ? 'TECH_ARRIVED' : 'JOB_STATUS_UPDATED',
+      jobId: updatedJob.id,
+      ticketNumber: updatedJob.jobTicketNumber,
+      partnerId: updatedJob.partnerId,
+      technicianId: updatedJob.technicianId,
+      customerId: updatedJob.customerId,
+      status: canonicalStatus,
+      details: {
+        previousStatus: currentJob.status,
+        status: canonicalStatus,
+        reason,
+        actorId,
+        timestamp: new Date().toISOString(),
+      },
+    });
 
     return apiSuccess(
       updatedJob,

@@ -183,11 +183,11 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
 
   int _getCurrentStepIndex() {
     final status = _job.status.toUpperCase();
-    if (status == 'DISPATCHED' || status == 'PENDING' || status == 'ASSIGNED') return 0;
+    if (status == 'DISPATCHED' || status == 'PENDING' || status == 'ASSIGNED' || status == 'PENDING_DISPATCH') return 0;
     if (status == 'EN_ROUTE') return 1;
     if (status == 'ARRIVED' || status == 'DOORSTEP_ARRIVED') return 2;
-    if (status == 'IN_PROGRESS') return 3;
-    if (status == 'WORK_COMPLETED' || status == 'COMPLETED') return 4;
+    if (status == 'SAFETY_CHECKED' || status == 'IN_PROGRESS' || status == 'WAITING_CUSTOMER_APPROVAL') return 3;
+    if (status == 'WORK_COMPLETED' || status == 'COMPLETED' || status == 'PAYMENT_PENDING' || status == 'SETTLED') return 4;
     return 1;
   }
 

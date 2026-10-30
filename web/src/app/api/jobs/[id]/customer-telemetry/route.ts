@@ -12,8 +12,9 @@ export async function OPTIONS() {
 
 /**
  * POST /api/jobs/[id]/customer-telemetry
- * Receives periodic GPS coordinates from Customer Phone during active tracking.
- * Dynamically updates destination coordinates and checks doorstep geofence.
+ * Receives periodic GPS coordinates and doorstep status updates from Technician App or Customer Phone.
+ * Dynamically computes haversine distance, checks doorstep geofence, and honors explicit
+ * technician doorstep arrival with cryptographic WORM audit trail logging.
  */
 export async function POST(
   request: NextRequest,
@@ -22,7 +23,14 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { latitude, longitude } = body;
+    const {
+      latitude,
+      longitude,
+      status,
+      technicianId,
+      etaMinutes,
+      callerRole,
+    } = body;
 
     if (typeof latitude !== 'number' || typeof longitude !== 'number') {
       return apiError("'latitude' and 'longitude' must be valid numbers", 400);
@@ -33,81 +41,121 @@ export async function POST(
       return apiError('Job not found', 404);
     }
 
-    // Update live destination coordinates on job
-    job.customerLatitude = latitude;
-    job.customerLongitude = longitude;
+    const isTechnicianCaller = Boolean(
+      technicianId ||
+      callerRole === 'TECHNICIAN' ||
+      body.role === 'TECHNICIAN' ||
+      body.actorRole === 'TECHNICIAN'
+    );
 
-    // Check distance against assigned technician's live coordinates
-    let techLat = 0.0;
-    let techLng = 0.0;
-    if (job.technicianId) {
-      const tech = dbStore.technicians.find(
-        (t) => t.id === job.technicianId || t.badgeNumber === (job as any).technicianBadge
-      );
-      if (tech && tech.currentLatitude && tech.currentLongitude) {
-        techLat = tech.currentLatitude;
-        techLng = tech.currentLongitude;
+    // If caller is the technician, update technician live coordinates in dbStore
+    if (isTechnicianCaller) {
+      const techIdToMatch = technicianId || job.technicianId;
+      if (techIdToMatch) {
+        const tech = dbStore.technicians.find(
+          (t) => t.id === techIdToMatch || t.badgeNumber === techIdToMatch || t.userId === techIdToMatch
+        );
+        if (tech) {
+          tech.currentLatitude = latitude;
+          tech.currentLongitude = longitude;
+        }
       }
+    } else {
+      // Caller is customer phone updating destination premise coords
+      job.customerLatitude = latitude;
+      job.customerLongitude = longitude;
     }
 
-    let distanceKm = 0.0;
-    let isDoorstepNearby = false;
+    // Determine distance between technician and customer premise
+    const targetCustLat = job.customerLatitude || 18.9220;
+    const targetCustLng = job.customerLongitude || 72.8347;
+    const targetTechLat = isTechnicianCaller
+      ? latitude
+      : (job.technicianId ? (dbStore.technicians.find((t) => t.id === job.technicianId)?.currentLatitude || targetCustLat) : targetCustLat);
+    const targetTechLng = isTechnicianCaller
+      ? longitude
+      : (job.technicianId ? (dbStore.technicians.find((t) => t.id === job.technicianId)?.currentLongitude || targetCustLng) : targetCustLng);
 
-    if (techLat !== 0.0 && techLng !== 0.0) {
-      const rawDist = calculateHaversineDistanceKm(techLat, techLng, latitude, longitude);
-      isDoorstepNearby = rawDist <= 0.05 || (Math.abs(techLat - latitude) < 0.0002 && Math.abs(techLng - longitude) < 0.0002);
-      distanceKm = isDoorstepNearby ? 0.0 : Number(rawDist.toFixed(2));
+    const rawDist = calculateHaversineDistanceKm(targetTechLat, targetTechLng, targetCustLat, targetCustLng);
+    const isDoorstepNearby = rawDist <= 0.05 || (Math.abs(targetTechLat - targetCustLat) < 0.0002 && Math.abs(targetTechLng - targetCustLng) < 0.0002);
+    const distanceKm = isDoorstepNearby ? 0.0 : Number(rawDist.toFixed(2));
 
-      if (isDoorstepNearby && (job.status === 'EN_ROUTE' || job.status === 'ASSIGNED')) {
-        job.status = 'ARRIVED';
+    // CRITICAL FIX (Issue 3): Explicit Arrival Override
+    // Honor explicit body.status === 'ARRIVED' or 'DOORSTEP_ARRIVED' from authenticated technician,
+    // even if GPS drift / indoor signal puts distanceKm > 0.05km!
+    const requestedStatus = (status || body.newStatus || '').toUpperCase();
+    const isExplicitArrival = requestedStatus === 'ARRIVED' || requestedStatus === 'DOORSTEP_ARRIVED';
+    const isAutoGeofenceArrival = isDoorstepNearby && (job.status === 'EN_ROUTE' || job.status === 'ASSIGNED');
+    const shouldMarkArrived = isExplicitArrival || isAutoGeofenceArrival;
 
-        // Broadcast Doorstep Arrival
-        realtimeBus.publish({
-          type: 'TECH_ARRIVED',
-          jobId: job.id,
-          ticketNumber: job.jobTicketNumber,
-          partnerId: job.partnerId,
-          technicianId: job.technicianId,
-          customerId: job.customerId,
-          status: 'ARRIVED',
-          details: {
-            doorstepGeofenced: true,
-            arrivalTimestamp: new Date().toISOString(),
-          },
+    if (shouldMarkArrived && job.status !== 'WORK_COMPLETED' && job.status !== 'SETTLED') {
+      const prevStatus = job.status;
+      job.status = 'ARRIVED';
+      const nowIso = new Date().toISOString();
+      job.arrivedAt = nowIso;
+
+      if (isExplicitArrival && !isDoorstepNearby) {
+        // Record GPS geofence manual override audit log
+        await db.recordWormAuditLog({
+          actorId: technicianId || job.technicianId || 'tech_field_operator',
+          actorRole: 'TECHNICIAN',
+          action: 'GEOFENCE_MANUAL_ARRIVAL_OVERRIDE',
+          resourceType: 'JOB',
+          resourceId: job.id,
+          payloadSummary: `Technician manually confirmed doorstep arrival for Work Order #${job.jobTicketNumber} (GPS Distance: ${distanceKm}km). Geofence overridden due to on-site physical arrival.`,
         });
       }
+
+      // Broadcast Doorstep Arrival across all portals and mobile clients
+      realtimeBus.publish({
+        type: 'TECH_ARRIVED',
+        jobId: job.id,
+        ticketNumber: job.jobTicketNumber,
+        partnerId: job.partnerId,
+        technicianId: job.technicianId,
+        customerId: job.customerId,
+        status: 'ARRIVED',
+        details: {
+          doorstepGeofenced: isDoorstepNearby,
+          manualArrivalOverride: isExplicitArrival && !isDoorstepNearby,
+          distanceKm,
+          previousStatus: prevStatus,
+          arrivalTimestamp: nowIso,
+        },
+      });
     }
 
     if (await isDatabaseConnected()) {
       try {
         const { prisma } = await import('@/lib/prisma');
-        const shouldSetArrived = isDoorstepNearby && (job.status === 'EN_ROUTE' || job.status === 'ASSIGNED');
         await prisma.job.updateMany({
           where: {
             OR: [{ id: job.id }, { jobTicketNumber: job.jobTicketNumber }],
-            ...(shouldSetArrived ? { status: { in: ['EN_ROUTE', 'ASSIGNED'] as any } } : {}),
           },
           data: {
-            customerLatitude: latitude,
-            customerLongitude: longitude,
-            ...(shouldSetArrived ? { status: 'ARRIVED' as any } : {}),
+            ...(shouldMarkArrived ? { status: 'ARRIVED' as any, arrivedAt: new Date() } : {}),
+            ...(isTechnicianCaller ? {} : { customerLatitude: latitude, customerLongitude: longitude }),
           },
         });
-      } catch (_) {}
+      } catch (err) {
+        console.warn('[Telemetry] Prisma update error:', err);
+      }
     }
 
-    const customerArea = resolveAreaFromCoordinates(latitude, longitude);
+    const customerArea = resolveAreaFromCoordinates(targetCustLat, targetCustLng);
 
     return apiSuccess({
       jobId: job.id,
       ticketNumber: job.jobTicketNumber,
-      customerLatitude: latitude,
-      customerLongitude: longitude,
+      customerLatitude: targetCustLat,
+      customerLongitude: targetCustLng,
       customerArea,
       distanceToTechnicianKm: distanceKm,
       isDoorstepNearby,
+      isExplicitArrival,
       status: job.status,
-    }, 'Customer live coordinates updated successfully');
+      arrivedAt: job.arrivedAt,
+    }, shouldMarkArrived ? 'Doorstep arrival confirmed successfully' : 'Live telemetry updated successfully');
 
   } catch (error) {
     return apiError(

@@ -166,34 +166,41 @@ export async function POST(request: NextRequest) {
         const rawDist = calculateHaversineDistanceKm(latitude, longitude, destLat, destLng);
 
         // ----------------------------------------------------------------------
-        // Issue 19: Geofence Arrival Interlock (Haversine < 150m)
+        // Issue 19 & Fix 3: Geofence Arrival & Explicit Arrival Override
         // ----------------------------------------------------------------------
         const isWithin150mGeofence = rawDist <= 0.15; // 150 meters
         const isCoLocated = isGpsActive && (rawDist <= 0.05 || (Math.abs(latitude - destLat) < 0.0002 && Math.abs(longitude - destLng) < 0.0002));
-
-        if (body.status === 'ARRIVED' && !isWithin150mGeofence) {
-          return apiError(
-            `Arrival Geofence Interlock Active: Technician is ${Math.round(rawDist * 1000)}m away from customer destination. Proximity within 150m required.`,
-            400
-          );
-        }
+        const isExplicitArrival = body.status === 'ARRIVED' || body.newStatus === 'ARRIVED';
 
         if (isCoLocated || isWithin150mGeofence) {
           distanceRemainingKm = Number(rawDist.toFixed(2));
           etaMinutes = isCoLocated ? 0 : 1;
           isDoorstepNearby = true;
-          if (targetJob.status === 'EN_ROUTE' && isCoLocated) {
-            targetJob.status = 'ARRIVED';
-          }
         } else {
           distanceRemainingKm = Number(rawDist.toFixed(2));
           etaMinutes = calculateEtaMinutes(distanceRemainingKm, 25.0);
         }
 
-        // Geofence Doorstep Check (under 150 meters with explicit arrival or 50m auto-arrival)
+        // Geofence Doorstep Check (under 150 meters with explicit arrival or 50m auto-arrival,
+        // or explicit arrival override with WORM audit logging when GPS drifts)
         // ONLY transition to ARRIVED if technician is actively EN_ROUTE!
-        if (isDoorstepNearby && targetJob.status === 'EN_ROUTE' && (body.status === 'ARRIVED' || isCoLocated)) {
+        const isDoorstepAutoArrived = isDoorstepNearby && (body.status === 'ARRIVED' || isCoLocated);
+        if ((isExplicitArrival || isDoorstepAutoArrived) && targetJob.status === 'EN_ROUTE') {
           targetJob.status = 'ARRIVED';
+          const nowIso = new Date().toISOString();
+          targetJob.arrivedAt = nowIso;
+
+          if (isExplicitArrival && !isWithin150mGeofence) {
+            await db.recordWormAuditLog({
+              actorId: tech?.id || technicianId || 'tech_field_operator',
+              actorRole: 'TECHNICIAN',
+              action: 'GEOFENCE_MANUAL_ARRIVAL_OVERRIDE',
+              resourceType: 'JOB',
+              resourceId: targetJob.id,
+              payloadSummary: `Technician manually confirmed doorstep arrival for Work Order #${targetJob.jobTicketNumber} (GPS Distance: ${distanceRemainingKm}km). Geofence overridden due to on-site physical arrival.`,
+            });
+          }
+
           if (await isDatabaseConnected()) {
             try {
               const { prisma } = await import('@/lib/prisma');
@@ -202,7 +209,7 @@ export async function POST(request: NextRequest) {
                   OR: [{ id: targetJob.id }, { jobTicketNumber: targetJob.jobTicketNumber }],
                   status: 'EN_ROUTE' as any
                 },
-                data: { status: 'ARRIVED' as any },
+                data: { status: 'ARRIVED' as any, arrivedAt: new Date(nowIso) },
               });
             } catch (_) {}
           }
@@ -217,8 +224,10 @@ export async function POST(request: NextRequest) {
             customerId: targetJob.customerId,
             status: 'ARRIVED',
             details: {
-              doorstepGeofenced: true,
-              arrivalTimestamp: new Date().toISOString(),
+              doorstepGeofenced: isWithin150mGeofence,
+              manualArrivalOverride: isExplicitArrival && !isWithin150mGeofence,
+              distanceKm: distanceRemainingKm,
+              arrivalTimestamp: nowIso,
             },
           });
         }
