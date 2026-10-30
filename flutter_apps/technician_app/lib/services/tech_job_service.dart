@@ -140,4 +140,31 @@ class TechJobService {
     });
     return res.success;
   }
+
+  static Future<ApiResponse<dynamic>> proposeSparePart({
+    required String jobId,
+    required String sku,
+    required String damagedComponentPhotoUrl,
+    double? unitPriceInr,
+    int quantity = 1,
+  }) async {
+    final tech = SessionManager.getCurrentTechnician();
+    return await ApiClient.post('/jobs/$jobId/parts', {
+      'sku': sku,
+      'quantity': quantity,
+      if (unitPriceInr != null) 'unitPriceInr': unitPriceInr,
+      'damagedComponentPhotoUrl': damagedComponentPhotoUrl,
+      'technicianId': tech?.id ?? 'tech_rajesh_01',
+    });
+  }
+
+  static Future<Map<String, dynamic>?> getJobParts({
+    required String jobId,
+  }) async {
+    final res = await ApiClient.get('/jobs/$jobId/parts');
+    if (res.success && res.data != null && res.data is Map) {
+      return Map<String, dynamic>.from(res.data);
+    }
+    return null;
+  }
 }

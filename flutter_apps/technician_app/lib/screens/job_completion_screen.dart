@@ -3,6 +3,7 @@ import '../core/theme.dart';
 import '../models/tech_job_model.dart';
 import '../services/tech_job_service.dart';
 import '../services/upload_service.dart';
+import '../widgets/spare_parts_bottom_sheet.dart';
 import 'tech_dashboard_screen.dart';
 
 class JobCompletionScreen extends StatefulWidget {
@@ -145,6 +146,67 @@ class _JobCompletionScreenState extends State<JobCompletionScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Spare Parts & Materials Requisition Card
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: TechTheme.slateBorder),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: TechTheme.primaryAmberLight,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.build_circle_rounded, color: TechTheme.primaryAmberDark, size: 20),
+                  ),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Materials & Spare Parts',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: TechTheme.slateDark),
+                        ),
+                        Text(
+                          'Pre-negotiated verified catalog',
+                          style: TextStyle(fontSize: 11, color: TechTheme.slateMuted),
+                        ),
+                      ],
+                    ),
+                  ),
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: TechTheme.flameOrange,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    ),
+                    onPressed: () {
+                      SparePartsBottomSheet.show(
+                        context,
+                        job: widget.job,
+                        onQuoteSubmitted: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('✓ Spare part quote submitted to customer for in-app approval.'),
+                              backgroundColor: TechTheme.signalOnlineEmerald,
+                            ),
+                          );
+                        },
+                      );
+                    },
+                    icon: const Icon(Icons.add_circle_outline_rounded, size: 16),
+                    label: const Text('Add Part', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
             // Handover OTP Input Box
             Container(
               padding: const EdgeInsets.all(20),

@@ -12,6 +12,7 @@ import '../job_completion_screen.dart';
 import '../safety_checklist_screen.dart';
 import '../tech_dispatch_alert_screen.dart';
 import '../tech_navigation_screen.dart';
+import '../../widgets/spare_parts_bottom_sheet.dart';
 
 class TechHomeView extends StatefulWidget {
   final Function(int tabIndex) onSwitchTab;
@@ -127,7 +128,10 @@ class _TechHomeViewState extends State<TechHomeView> with WidgetsBindingObserver
       if (type == 'DISPATCH_BROADCAST' ||
           type == 'NEW_JOB' ||
           type == 'TECH_DISPATCHED' ||
-          type == 'EMERGENCY_SOS') {
+          type == 'EMERGENCY_SOS' ||
+          type == 'QUOTE_APPROVED' ||
+          type == 'QUOTE_REJECTED' ||
+          type == 'JOB_PRICE_UPDATED') {
         final jobs = await TechJobService.getAssignedJobs();
         if (!mounted) return;
         setState(() => _assignedJobs = jobs);
@@ -439,61 +443,118 @@ class _TechHomeViewState extends State<TechHomeView> with WidgetsBindingObserver
                     const Divider(height: 1),
                     const SizedBox(height: 12),
 
+                    // WAITING_CUSTOMER_APPROVAL Alert Banner
+                    if (active.status == 'WAITING_CUSTOMER_APPROVAL') ...[
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFFBEB),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFFF59E0B)),
+                        ),
+                        child: Row(
+                          children: const [
+                            Icon(Icons.hourglass_top_rounded, color: Color(0xFFD97706), size: 20),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Spare part estimate awaiting customer approval. Work is paused while customer reviews the estimate.',
+                                style: TextStyle(color: Color(0xFF92400E), fontSize: 11.5, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
                     // Action Grid
                     Builder(builder: (context) {
                       final isReadyForCompletion =
                           active.status == 'IN_PROGRESS' || active.status == 'SAFETY_CHECKED';
-                      return Row(
+                      return Column(
                         children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: TechTheme.signalCobalt,
-                                side: const BorderSide(color: TechTheme.signalCobalt),
-                                padding: const EdgeInsets.symmetric(vertical: 10),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: TechTheme.signalCobalt,
+                                    side: const BorderSide(color: TechTheme.signalCobalt),
+                                    padding: const EdgeInsets.symmetric(vertical: 10),
+                                  ),
+                                  onPressed: () {
+                                    Navigator.push(context, MaterialPageRoute(builder: (_) => TechNavigationScreen(job: active)));
+                                  },
+                                  icon: Icon(
+                                    active.status == 'EN_ROUTE' ? Icons.navigation_rounded : Icons.location_on_rounded,
+                                    size: 16,
+                                  ),
+                                  label: Text(
+                                    active.status == 'EN_ROUTE' ? 'NAVIGATE' : 'VIEW DETAILS',
+                                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
                               ),
-                              onPressed: () {
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => TechNavigationScreen(job: active)));
-                              },
-                              icon: Icon(
-                                active.status == 'EN_ROUTE' ? Icons.navigation_rounded : Icons.location_on_rounded,
-                                size: 16,
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: isReadyForCompletion ? TechTheme.signalOnlineEmerald : TechTheme.flameOrange,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 10),
+                                  ),
+                                  onPressed: () async {
+                                    if (isReadyForCompletion) {
+                                      await Navigator.push(context, MaterialPageRoute(builder: (_) => JobCompletionScreen(job: active)));
+                                      _loadData();
+                                    } else {
+                                      final passed = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => SafetyChecklistScreen(job: active)));
+                                      if (passed == true) {
+                                        _loadData();
+                                      }
+                                    }
+                                  },
+                                  icon: Icon(
+                                    isReadyForCompletion ? Icons.verified_rounded : Icons.bolt_rounded,
+                                    size: 16,
+                                  ),
+                                  label: Text(
+                                    isReadyForCompletion ? 'COMPLETE JOB' : 'SAFETY GATE',
+                                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
                               ),
-                              label: Text(
-                                active.status == 'EN_ROUTE' ? 'NAVIGATE' : 'VIEW DETAILS',
-                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                            ],
+                          ),
+                          if (active.status == 'IN_PROGRESS' || active.status == 'SAFETY_CHECKED' || active.status == 'ARRIVED' || active.status == 'DOORSTEP_ARRIVED') ...[
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: TechTheme.flameOrange,
+                                  side: const BorderSide(color: TechTheme.flameOrange),
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                                onPressed: () {
+                                  SparePartsBottomSheet.show(
+                                    context,
+                                    job: active,
+                                    onQuoteSubmitted: () {
+                                      _loadData();
+                                    },
+                                  );
+                                },
+                                icon: const Icon(Icons.build_circle_rounded, size: 16),
+                                label: const Text(
+                                  'REQUEST SPARE PART / QUOTE',
+                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: isReadyForCompletion ? TechTheme.signalOnlineEmerald : TechTheme.flameOrange,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 10),
-                              ),
-                              onPressed: () async {
-                                if (isReadyForCompletion) {
-                                  await Navigator.push(context, MaterialPageRoute(builder: (_) => JobCompletionScreen(job: active)));
-                                  _loadData();
-                                } else {
-                                  final passed = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => SafetyChecklistScreen(job: active)));
-                                  if (passed == true) {
-                                    _loadData();
-                                  }
-                                }
-                              },
-                              icon: Icon(
-                                isReadyForCompletion ? Icons.verified_rounded : Icons.bolt_rounded,
-                                size: 16,
-                              ),
-                              label: Text(
-                                isReadyForCompletion ? 'COMPLETE JOB' : 'SAFETY GATE',
-                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ),
+                          ],
                         ],
                       );
                     }),
