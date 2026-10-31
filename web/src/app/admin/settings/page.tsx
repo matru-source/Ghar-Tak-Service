@@ -132,6 +132,45 @@ export default function AdminSettingsPage() {
           </span>
         </div>
       </div>
+
+      {/* Clean Slate E2E Reset Utility Card */}
+      <div className="bg-white p-6 rounded-2xl border border-red-200 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 className="font-extrabold text-sm text-red-900 flex items-center gap-2">
+              <span>🧹</span>
+              <span>Clean-Slate Reset &amp; Fresh E2E Testing Engine</span>
+            </h3>
+            <p className="text-xs text-slate-500 mt-1 max-w-2xl">
+              Purges all historical test work orders, GST invoices, double-entry escrow ledgers, test customer accounts, and test technicians. 
+              Preserves the Super Admin access, core service catalog, and territory pincode boundaries so you can test complete end-to-end onboarding from scratch.
+            </p>
+          </div>
+
+          <button
+            onClick={async () => {
+              if (!confirm('⚠️ Are you sure you want to PURGE all test work orders, invoices, and test accounts to begin clean E2E testing from scratch?')) {
+                return;
+              }
+              try {
+                const res = await fetch('/api/admin/reset-test-data', { method: 'POST' });
+                const json = await res.json();
+                if (json.success) {
+                  showToast('✓ Clean slate activated! All test orders and accounts purged.');
+                } else {
+                  showToast(`Error: ${json.error || 'Failed to reset test data'}`);
+                }
+              } catch {
+                showToast('Reset request failed. Please check backend connection.');
+              }
+            }}
+            className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs cursor-pointer shrink-0"
+          >
+            <span>🗑️</span>
+            <span>Purge Test Data &amp; Reset to Clean State</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
