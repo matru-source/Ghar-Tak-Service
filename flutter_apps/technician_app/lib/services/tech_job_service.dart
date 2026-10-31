@@ -146,4 +146,21 @@ class TechJobService {
     }
     return null;
   }
+
+  static Future<ApiResponse<dynamic>> submitKycDocuments({
+    required String technicianId,
+    required String electricalLicenseNumber,
+    String? electricalLicenseDocUrl,
+    String? aadharDocUrl,
+    String? panDocUrl,
+    String? safetyKitSerial,
+  }) async {
+    return await ApiClient.post('/technicians/$technicianId/kyc', {
+      'electricalLicenseNumber': electricalLicenseNumber,
+      if (electricalLicenseDocUrl != null) 'electricalLicenseDocUrl': electricalLicenseDocUrl,
+      if (aadharDocUrl != null) 'aadharDocUrl': aadharDocUrl,
+      if (panDocUrl != null) 'panDocUrl': panDocUrl,
+      if (safetyKitSerial != null) 'safetyKitSerial': safetyKitSerial,
+    });
+  }
 }

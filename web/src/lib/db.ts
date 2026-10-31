@@ -546,6 +546,9 @@ export const db = {
           avatarUrl: t.user?.avatarUrl || (t as any).avatarUrl || null,
           trade: t.trade || (t as any).trade || 'ELECTRICAL',
           electricalLicenseNumber: t.electricalLicenseNumber || undefined,
+          electricalLicenseDocUrl: (t as any).electricalLicenseDocUrl || undefined,
+          aadharDocUrl: (t as any).aadharDocUrl || undefined,
+          panDocUrl: (t as any).panDocUrl || undefined,
           insulatedGlovesVerified: t.insulatedGlovesVerified ?? false,
           safetyKitSerial: t.safetyKitSerial || undefined,
         }));
@@ -981,10 +984,13 @@ export const db = {
       safetyKitSerial?: string;
     }
   ) {
+    const existing = await this.getTechnicianById(id);
+    const targetId = existing ? existing.id : id;
+
     if (await isDatabaseConnected()) {
       try {
         return await prisma.technician.update({
-          where: { id },
+          where: { id: targetId },
           data: {
             ...data,
             kycStatus: 'PENDING_REVIEW',
@@ -996,10 +1002,13 @@ export const db = {
       }
     }
 
-    const tech = dbStore.technicians.find((t) => t.id === id);
+    const tech = dbStore.technicians.find((t) => t.id === id || t.badgeNumber === id || t.id === targetId);
     if (!tech) return null;
     if (data.electricalLicenseNumber) tech.electricalLicenseNumber = data.electricalLicenseNumber;
     if (data.safetyKitSerial) tech.safetyKitSerial = data.safetyKitSerial;
+    if (data.aadharDocUrl) (tech as any).aadharDocUrl = data.aadharDocUrl;
+    if (data.panDocUrl) (tech as any).panDocUrl = data.panDocUrl;
+    if (data.electricalLicenseDocUrl) (tech as any).electricalLicenseDocUrl = data.electricalLicenseDocUrl;
     tech.kycStatus = 'PENDING_REVIEW';
     return tech;
   },

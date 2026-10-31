@@ -18,9 +18,12 @@ interface TechnicianRecord {
   assignedPincode: string;
   kycStatus: 'VERIFIED' | 'PENDING_REVIEW' | 'REJECTED';
   electricalLicenseNumber: string;
+  electricalLicenseDocUrl?: string;
   insulatedGlovesVerified: boolean;
   safetyKitSerial: string;
   aadharNumberMasked?: string;
+  aadharDocUrl?: string;
+  panDocUrl?: string;
   kycVerifiedAt?: string;
   kycRejectionReason?: string;
   kycNotes?: string;
@@ -394,10 +397,20 @@ export default function AdminTechniciansPage() {
                 <div className="text-[11px] text-slate-500">
                   Address Match: Mumbai Suburban District · Name Authenticated
                 </div>
-                <div className="pt-2">
+                <div className="pt-2 flex items-center justify-between">
                   <span className="px-2 py-1 rounded bg-white border border-slate-200 text-slate-700 text-[10px] font-medium inline-block shadow-2xs">
                     ✓ Biometric eKYC Verified
                   </span>
+                  {inspectingTech.aadharDocUrl && (
+                    <a
+                      href={inspectingTech.aadharDocUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] text-amber-700 hover:text-amber-800 font-bold underline flex items-center gap-1"
+                    >
+                      <span>📄</span> View Aadhaar Scan
+                    </a>
+                  )}
                 </div>
               </div>
 
@@ -420,12 +433,47 @@ export default function AdminTechniciansPage() {
                 <div className="text-[11px] text-slate-500">
                   Grade-A Domestic & Industrial High Voltage Qualified
                 </div>
-                <div className="pt-2">
+                <div className="pt-2 flex items-center justify-between">
                   <span className="px-2 py-1 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-medium inline-block">
                     ✓ Valid through 2028
                   </span>
+                  {inspectingTech.electricalLicenseDocUrl && (
+                    <a
+                      href={inspectingTech.electricalLicenseDocUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] text-amber-700 hover:text-amber-800 font-bold underline flex items-center gap-1"
+                    >
+                      <span>📜</span> View License Scan
+                    </a>
+                  )}
                 </div>
               </div>
+
+              {/* Income Tax PAN Card if present */}
+              {inspectingTech.panDocUrl && (
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2 col-span-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <span>📑</span> Income Tax Permanent Account Number (PAN)
+                    </span>
+                    <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                      Tax Compliant
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-xs text-slate-600">Field Technician Tax Deductions (TDS / GST Exempt) Proof Submitted</span>
+                    <a
+                      href={inspectingTech.panDocUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] text-amber-700 hover:text-amber-800 font-bold underline flex items-center gap-1"
+                    >
+                      <span>📄</span> View PAN Scan
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Safety Interlock Kit Audit */}

@@ -18,6 +18,11 @@ class TechnicianModel {
   final String experience;
   final String trade;
   final String? avatarUrl;
+  final String kycStatus;
+  final String? aadharDocUrl;
+  final String? panDocUrl;
+  final String? electricalLicenseDocUrl;
+  final String? safetyKitSerial;
 
   TechnicianModel({
     required this.id,
@@ -39,6 +44,11 @@ class TechnicianModel {
     this.experience = '6+ Years Field Experience',
     this.trade = 'ELECTRICAL',
     this.avatarUrl,
+    this.kycStatus = 'PENDING_REVIEW',
+    this.aadharDocUrl,
+    this.panDocUrl,
+    this.electricalLicenseDocUrl,
+    this.safetyKitSerial,
   });
 
   factory TechnicianModel.fromJson(Map<String, dynamic> json) {
@@ -73,6 +83,11 @@ class TechnicianModel {
       experience: tech['experience']?.toString() ?? '6+ Years Field Experience',
       trade: tech['trade']?.toString() ?? 'ELECTRICAL',
       avatarUrl: tech['avatarUrl']?.toString(),
+      kycStatus: tech['kycStatus']?.toString() ?? 'PENDING_REVIEW',
+      aadharDocUrl: tech['aadharDocUrl']?.toString(),
+      panDocUrl: tech['panDocUrl']?.toString(),
+      electricalLicenseDocUrl: tech['electricalLicenseDocUrl']?.toString(),
+      safetyKitSerial: tech['safetyKitSerial']?.toString(),
     );
   }
 
@@ -97,6 +112,11 @@ class TechnicianModel {
       'experience': experience,
       'trade': trade,
       'avatarUrl': avatarUrl,
+      'kycStatus': kycStatus,
+      'aadharDocUrl': aadharDocUrl,
+      'panDocUrl': panDocUrl,
+      'electricalLicenseDocUrl': electricalLicenseDocUrl,
+      'safetyKitSerial': safetyKitSerial,
     };
   }
 
@@ -120,6 +140,11 @@ class TechnicianModel {
     String? experience,
     String? trade,
     String? avatarUrl,
+    String? kycStatus,
+    String? aadharDocUrl,
+    String? panDocUrl,
+    String? electricalLicenseDocUrl,
+    String? safetyKitSerial,
   }) {
     return TechnicianModel(
       id: id ?? this.id,
@@ -141,6 +166,11 @@ class TechnicianModel {
       experience: experience ?? this.experience,
       trade: trade ?? this.trade,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      kycStatus: kycStatus ?? this.kycStatus,
+      aadharDocUrl: aadharDocUrl ?? this.aadharDocUrl,
+      panDocUrl: panDocUrl ?? this.panDocUrl,
+      electricalLicenseDocUrl: electricalLicenseDocUrl ?? this.electricalLicenseDocUrl,
+      safetyKitSerial: safetyKitSerial ?? this.safetyKitSerial,
     );
   }
 }
