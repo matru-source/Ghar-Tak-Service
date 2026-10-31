@@ -147,8 +147,7 @@ export default function AdminDispatchPage() {
       event.type === 'TECH_DISPATCHED' ||
       event.type === 'TECH_ACCEPTED' ||
       event.type === 'TECH_ARRIVED' ||
-      event.type === 'JOB_COMPLETED' ||
-      event.type === 'EMERGENCY_SOS'
+      event.type === 'JOB_COMPLETED'
     ) {
       // Refresh telemetry table and map
       fetchData();
@@ -251,7 +250,7 @@ export default function AdminDispatchPage() {
             className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-red-900/20"
           >
             <span>🚨</span>
-            <span>Escalation SOS</span>
+            <span>Escalations Desk</span>
           </Link>
         </div>
       </div>
@@ -400,7 +399,7 @@ export default function AdminDispatchPage() {
                           </span>
                           {job.priority === 'EMERGENCY' && (
                             <span className="text-[10px] font-black px-1.5 py-0.2 rounded bg-red-600 text-white animate-pulse">
-                              SOS
+                              URGENT
                             </span>
                           )}
                         </div>

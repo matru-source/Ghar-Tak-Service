@@ -116,7 +116,6 @@ interface ServiceItem {
   categoryId: string;
   basePriceInr: number;
   estimatedDurationMinutes: number;
-  isEmergencySosEligible: boolean;
   pricing: {
     totalPayableInr: number;
     formatted: string;
@@ -143,11 +142,6 @@ export default function CustomerDashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
 
   // Interactive Modals
-  const [showSosModal, setShowSosModal] = useState(false);
-  const [sosSubmitting, setSosSubmitting] = useState(false);
-  const [sosSuccess, setSosSuccess] = useState<string | null>(null);
-  const [selectedHazard, setSelectedHazard] = useState('MCB Tripping / Sparking in Switchboard');
-
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
   const [showSafetyChecklistModal, setShowSafetyChecklistModal] = useState(false);
@@ -165,7 +159,7 @@ export default function CustomerDashboardPage() {
   useEffect(() => {
     // Read local session if present
     if (typeof window !== 'undefined') {
-      const local = localStorage.getItem('electriCare_customer_session');
+      const local = localStorage.getItem('gts_customer_session');
       if (local) {
         try {
           const parsed = JSON.parse(local);
@@ -183,7 +177,7 @@ export default function CustomerDashboardPage() {
         // Read customer ID from session or query dynamically
         let activeCustId = session.id;
         if (typeof window !== 'undefined') {
-          const local = localStorage.getItem('electriCare_customer_session') || localStorage.getItem('gts_customer_session');
+          const local = localStorage.getItem('gts_customer_session');
           if (local) {
             try {
               const parsed = JSON.parse(local);
@@ -252,58 +246,6 @@ export default function CustomerDashboardPage() {
       sTitle.includes(catLower)
     );
   });
-
-  // Handle Instant SOS Dispatch Trigger
-  const handleTriggerEmergencySos = async () => {
-    setSosSubmitting(true);
-    setSosSuccess(null);
-    try {
-      const res = await fetch('/api/jobs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerId: session.id,
-          serviceId: 'srv_mcb_02', // Circuit Breaker Tripping & Short-Circuit Diagnostic
-          pincode: session.defaultPincode,
-          customerAddressText: `${session.defaultAddressLine} (${selectedHazard})`,
-          priority: 'EMERGENCY_SOS_247',
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to dispatch emergency technician');
-
-      const newJob = data.data;
-      setActiveJob({
-        id: newJob.id,
-        jobTicketNumber: newJob.jobTicketNumber,
-        serviceTitle: newJob.serviceTitle,
-        status: newJob.status,
-        priority: 'EMERGENCY_SOS_247',
-        handoverOtp: newJob.handoverOtp,
-        totalAmountInr: newJob.totalAmountInr,
-        scheduledAt: newJob.scheduledAt,
-        etaMinutes: 15,
-        routeOrigin: 'Colaba Rapid Standby Hub',
-        routeDestination: session.defaultAddressLine,
-        technician: {
-          fullName: newJob.technicianName || 'Assigned Lead Technician',
-          rating: 4.9,
-          phone: '+919876543212',
-          badgeNumber: 'TECH-DISPATCHED',
-        },
-      });
-
-      setSosSuccess(`Emergency Unit Dispatched! Job #${newJob.jobTicketNumber}. Electrician ETA: 15 Mins.`);
-      setTimeout(() => {
-        setShowSosModal(false);
-        setSosSuccess(null);
-      }, 2500);
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Emergency trigger failed');
-    } finally {
-      setSosSubmitting(false);
-    }
-  };
 
   // Change pincode / address
   const handleSelectPincode = (pincode: string, area: string) => {
@@ -431,17 +373,6 @@ export default function CustomerDashboardPage() {
               <p className="text-xs text-slate-500 truncate">{session.defaultPincode} • Colaba, Mumbai</p>
             </div>
           </div>
-
-          {/* 24/7 Rapid Help Emergency Chip (Figma Secondary-Container Pill) */}
-          <button
-            onClick={() => setShowSosModal(true)}
-            aria-label="24/7 Emergency Assistance"
-            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-600 text-white shadow-sm hover:bg-orange-700 active:scale-95 transition-all animate-pulse"
-            type="button"
-          >
-            <Zap className="w-3.5 h-3.5 fill-current text-amber-200" />
-            <span className="text-xs font-bold tracking-tight">24/7 SOS</span>
-          </button>
         </div>
 
         {/* Search & Filter Bar */}
@@ -908,95 +839,7 @@ export default function CustomerDashboardPage() {
           MODALS & OVERLAYS
           ========================================================================= */}
 
-      {/* 1. 24/7 RAPID SOS EMERGENCY MODAL */}
-      {showSosModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in">
-          <div className="w-full max-w-[430px] bg-white rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl animate-in slide-in-from-bottom duration-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-orange-600 text-white flex items-center justify-center">
-                  <Zap className="w-4 h-4 fill-current" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-sm text-slate-900">24/7 Rapid SOS Emergency</h3>
-                  <p className="text-[11px] text-orange-600 font-bold">⚡ 15-Minute Response Guaranteed</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowSosModal(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-200"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
 
-            {sosSuccess ? (
-              <div className="py-6 text-center">
-                <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto mb-2" />
-                <h4 className="font-bold text-base text-slate-900">Emergency Dispatched!</h4>
-                <p className="text-xs text-slate-600 mt-1">{sosSuccess}</p>
-              </div>
-            ) : (
-              <div className="pt-4 space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                    Select Electrical Hazard Type
-                  </label>
-                  <div className="space-y-2">
-                    {[
-                      'MCB Tripping / Sparking in Switchboard',
-                      'Burning Smell / Short Circuit in Meter',
-                      'Total Sudden Power Outage in Premises',
-                      'Exposed High-Voltage Live Wire',
-                    ].map((hazard) => (
-                      <div
-                        key={hazard}
-                        onClick={() => setSelectedHazard(hazard)}
-                        className={`p-3 rounded-xl border text-xs cursor-pointer flex items-center justify-between font-medium ${
-                          selectedHazard === hazard
-                            ? 'border-orange-600 bg-orange-50 text-orange-950 font-bold'
-                            : 'border-slate-200 hover:border-slate-300 text-slate-700'
-                        }`}
-                      >
-                        <span>{hazard}</span>
-                        {selectedHazard === hazard && (
-                          <span className="w-2 h-2 rounded-full bg-orange-600"></span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs">
-                  <div className="flex items-center gap-1.5 font-bold text-slate-800">
-                    <MapPin className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Destination: {session.defaultAddressLine}</span>
-                  </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    Lead Technician on standby in Colaba Pincode 400001
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  disabled={sosSubmitting}
-                  onClick={handleTriggerEmergencySos}
-                  className="w-full py-3.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm shadow-md shadow-orange-600/30 flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
-                >
-                  {sosSubmitting ? (
-                    <span>Allocating Standby Electrician...</span>
-                  ) : (
-                    <>
-                      <Zap className="w-4 h-4 fill-current" />
-                      <span>Confirm 15-Min Rapid Dispatch</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* 2. LOCATION SWITCHER MODAL */}
       {showLocationModal && (

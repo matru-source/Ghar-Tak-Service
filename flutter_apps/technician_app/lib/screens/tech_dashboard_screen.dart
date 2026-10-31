@@ -6,7 +6,6 @@ import 'views/tech_home_view.dart';
 import 'views/tech_jobs_view.dart';
 import 'views/tech_earnings_view.dart';
 import 'views/tech_profile_view.dart';
-import 'views/tech_sos_dialog.dart';
 
 class TechDashboardScreen extends StatefulWidget {
   const TechDashboardScreen({super.key});
@@ -74,12 +73,7 @@ class _TechDashboardScreenState extends State<TechDashboardScreen> {
   }
 
   void _onNavigationDestinationSelected(int index) {
-    if (index == 4) {
-      // SOS tab triggers emergency modal directly without changing bottom view
-      TechSosDialog.show(context);
-    } else {
-      setState(() => _currentTab = index);
-    }
+    setState(() => _currentTab = index);
   }
 
   @override
@@ -133,14 +127,6 @@ class _TechDashboardScreenState extends State<TechDashboardScreen> {
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.warning_amber_rounded, color: TechTheme.signalCrimson),
-            tooltip: 'Emergency SOS',
-            onPressed: () => TechSosDialog.show(context),
-          ),
-          const SizedBox(width: 4),
-        ],
       ),
       body: IndexedStack(
         index: _currentTab,
@@ -187,11 +173,6 @@ class _TechDashboardScreenState extends State<TechDashboardScreen> {
             icon: Icon(Icons.person_outline_rounded),
             selectedIcon: Icon(Icons.person_rounded, color: TechTheme.flameOrange),
             label: 'Profile',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.warning_amber_rounded, color: TechTheme.signalCrimson),
-            selectedIcon: Icon(Icons.warning_rounded, color: TechTheme.signalCrimson),
-            label: 'SOS Help',
           ),
         ],
       ),

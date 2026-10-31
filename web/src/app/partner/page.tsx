@@ -251,10 +251,6 @@ export default function PartnerDashboardPage() {
         playSyntheticAlert('chime');
         showToast(`✅ Order Completed & Reconciled: ${event.ticketNumber || event.jobId}`);
         syncBackendData();
-      } else if (event.type === 'EMERGENCY_SOS' || event.type === 'CUSTOMER_EMERGENCY_SOS_TRIGGERED') {
-        playSyntheticAlert('sos');
-        showToast(`🚨 URGENT: SOS Alert on Job ${event.ticketNumber || event.jobId}!`);
-        syncBackendData();
       } else if (
         event.type === 'TECH_ACCEPTED' ||
         event.type === 'TECH_ARRIVED' ||

@@ -128,7 +128,6 @@ class _TechHomeViewState extends State<TechHomeView> with WidgetsBindingObserver
       if (type == 'DISPATCH_BROADCAST' ||
           type == 'NEW_JOB' ||
           type == 'TECH_DISPATCHED' ||
-          type == 'EMERGENCY_SOS' ||
           type == 'QUOTE_APPROVED' ||
           type == 'QUOTE_REJECTED' ||
           type == 'JOB_PRICE_UPDATED') {

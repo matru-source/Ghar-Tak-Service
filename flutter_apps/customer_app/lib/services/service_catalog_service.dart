@@ -24,7 +24,6 @@ class ServiceCatalogService {
         basePriceInr: 499.0,
         imageAsset: 'assets/images/service_switchboard.png',
         description: 'Comprehensive high-voltage diagnostic, distribution board testing, and MCB isolation.',
-        isEmergencySosEligible: true,
       ),
       ServiceModel(
         id: 'SRV-FAN-01',
@@ -43,7 +42,6 @@ class ServiceCatalogService {
         basePriceInr: 799.0,
         imageAsset: 'assets/images/service_wiring.png',
         description: 'Insulation resistance megger test, phase load balancing, and neutral wire diagnosis.',
-        isEmergencySosEligible: true,
       ),
       ServiceModel(
         id: 'SRV-GEYSER-01',

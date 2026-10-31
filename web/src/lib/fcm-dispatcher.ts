@@ -245,15 +245,6 @@ export async function autoDispatchFcmFromRealtimeEvent(event: any) {
         customerAddress: event.details?.customerAddress || event.details?.customerAddressText,
         timerSeconds: event.details?.broadcastTimerSeconds || 60,
       });
-    } else if (event.type === 'EMERGENCY_SOS' && event.technicianId) {
-      await sendHighPriorityDispatchSiren({
-        technicianId: event.technicianId,
-        ticketNumber: event.ticketNumber || event.jobId || 'SOS-ALERT',
-        serviceTitle: '🚨 CRITICAL EMERGENCY SOS INTERVENTION',
-        payoutInr: 0,
-        jobId: event.jobId,
-        timerSeconds: 30,
-      });
     }
   } catch (err: any) {
     console.warn('[FCM AutoDispatch] Exception during background event processing:', err.message);

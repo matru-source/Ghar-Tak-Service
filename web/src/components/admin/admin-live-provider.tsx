@@ -53,20 +53,7 @@ export function AdminLiveProvider({ children }: { children: React.ReactNode }) {
       setLiveEvents((prev) => [event, ...prev.slice(0, 49)]);
 
       // Audio & Visual Alert Logic based on event severity
-      if (
-        event.type === 'EMERGENCY_SOS' ||
-        event.type === 'EMERGENCY_SOS_TRIGGERED' ||
-        event.type === 'CUSTOMER_EMERGENCY_SOS_TRIGGERED'
-      ) {
-        playSyntheticAlert('sos');
-        setActiveNotification({
-          title: '🚨 CRITICAL EMERGENCY SOS',
-          message: `SOS Triggered on Ticket ${event.ticketNumber || event.jobId || 'UNKNOWN'}. Immediate intervention required!`,
-          type: 'error',
-          ticket: event.ticketNumber || event.jobId,
-        });
-        triggerDebouncedRscRefresh();
-      } else if (event.type === 'JOB_CREATED') {
+      if (event.type === 'JOB_CREATED') {
         playSyntheticAlert('chime');
         setActiveNotification({
           title: '⚡ New Work Order Created',

@@ -140,8 +140,7 @@ export default function PartnerDispatchPage() {
       event.type === 'TECH_DISPATCHED' ||
       event.type === 'TECH_ACCEPTED' ||
       event.type === 'TECH_ARRIVED' ||
-      event.type === 'JOB_COMPLETED' ||
-      event.type === 'EMERGENCY_SOS'
+      event.type === 'JOB_COMPLETED'
     ) {
       fetchJobs();
     }
@@ -246,7 +245,7 @@ export default function PartnerDispatchPage() {
 
     if (priorityFilter !== 'ALL') {
       const p = (job.priority || '').toUpperCase();
-      if (priorityFilter === 'EMERGENCY_SOS' || priorityFilter === 'EMERGENCY') {
+      if (priorityFilter === 'EMERGENCY') {
         if (!p.includes('EMERGENCY')) return false;
       } else if (priorityFilter === 'URGENT_SLA' || priorityFilter === 'URGENT') {
         if (!p.includes('URGENT')) return false;
@@ -410,7 +409,7 @@ export default function PartnerDispatchPage() {
             <option value="ALL">All Priorities</option>
             <option value="STANDARD">Standard</option>
             <option value="URGENT_SLA">Urgent SLA</option>
-            <option value="EMERGENCY_SOS">Emergency SOS</option>
+            <option value="EMERGENCY">Emergency</option>
           </select>
         </div>
       </div>

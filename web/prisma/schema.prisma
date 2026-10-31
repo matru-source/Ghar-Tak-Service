@@ -249,7 +249,7 @@ model CustomerProfile {
 
 model ServiceCategory {
   id           String           @id @default(uuid())
-  name         String           // e.g. "Electrical Repairs", "Appliance Installations", "Emergency SOS"
+  name         String           // e.g. "Electrical Repairs", "Appliance Installations", "Emergency Priority"
   slug         String           @unique
   description  String?
   displayOrder Int              @default(0)

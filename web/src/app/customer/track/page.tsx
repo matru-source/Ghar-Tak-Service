@@ -135,7 +135,7 @@ export default function CustomerLiveTrackingPage() {
         if (typeof window !== 'undefined') {
           const params = new URLSearchParams(window.location.search);
           ticketOrId = params.get('ticket') || params.get('id') || params.get('jobId') || '';
-          const savedSession = localStorage.getItem('electriCare_customer_session') || localStorage.getItem('gts_customer_session');
+          const savedSession = localStorage.getItem('gts_customer_session');
           if (savedSession) {
             try {
               const parsed = JSON.parse(savedSession);

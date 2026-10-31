@@ -116,7 +116,7 @@ export default function TechnicianDashboardPage() {
 
   // Active Toolkit Modal / Drawer
   const [activeToolModal, setActiveToolModal] = useState<
-    'wire-calc' | 'load-chart' | 'spares-box' | 'emergency-sos' | null
+    'wire-calc' | 'load-chart' | 'spares-box' | 'support-desk' | null
   >(null);
 
   // Wire Calculator inputs
@@ -127,7 +127,7 @@ export default function TechnicianDashboardPage() {
   useEffect(() => {
     let activeId = 'f33b149d-1770-44f7-8b89-babb8873a562';
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('electriCare_tech_session') || localStorage.getItem('gts_tech_session');
+      const saved = localStorage.getItem('gts_tech_session');
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
@@ -987,13 +987,13 @@ export default function TechnicianDashboardPage() {
               <span className="text-[11px] font-bold text-slate-800">Spares Box</span>
             </button>
             <button
-              onClick={() => setActiveToolModal('emergency-sos')}
-              className="flex flex-col items-center justify-center p-2 rounded-xl bg-red-50 hover:bg-red-100 border border-red-200 transition-colors"
+              onClick={() => setActiveToolModal('support-desk')}
+              className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-100 hover:border-emerald-200 transition-colors"
             >
-              <div className="w-8 h-8 rounded-lg bg-red-600 text-white flex items-center justify-center mb-1">
-                <AlertCircle className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center mb-1">
+                <Phone className="w-4 h-4" />
               </div>
-              <span className="text-[11px] font-bold text-red-700">SOS Alert</span>
+              <span className="text-[11px] font-bold text-slate-800">Hub Help</span>
             </button>
           </div>
         </section>
@@ -1190,7 +1190,7 @@ export default function TechnicianDashboardPage() {
                 {activeToolModal === 'wire-calc' && '⚡ Wire Gauge & Current Calculator'}
                 {activeToolModal === 'load-chart' && '📊 Electrical Load Reference Table'}
                 {activeToolModal === 'spares-box' && '🧰 Van Spares Inventory & Stocks'}
-                {activeToolModal === 'emergency-sos' && '🚨 Emergency Dispatch Escalation'}
+                {activeToolModal === 'support-desk' && '📞 Partner Hub Helpline'}
               </h3>
               <button
                 onClick={() => setActiveToolModal(null)}
@@ -1305,24 +1305,20 @@ export default function TechnicianDashboardPage() {
                 </div>
               )}
 
-              {activeToolModal === 'emergency-sos' && (
+              {activeToolModal === 'support-desk' && (
                 <div className="space-y-3">
-                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-800 text-xs">
-                    <p className="font-bold">⚠️ High Voltage / Flash Hazard Protocol</p>
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 text-xs">
+                    <p className="font-bold">📞 Dedicated Franchise Operations Hotline</p>
                     <p className="mt-1">
-                      Pressing the button below dispatches urgent safety personnel and contacts
-                      MSEDCL grid disconnect emergency desk.
+                      Need dispatch assistance, customer address clarification, or technical escalation? Reach your local Hub Manager.
                     </p>
                   </div>
-                  <button
-                    onClick={() => {
-                      showToast('🚨 SOS Emergency broadcasted to Partner Hub & Safety Ops Desk');
-                      setActiveToolModal(null);
-                    }}
-                    className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-xl shadow-md transition-colors"
+                  <a
+                    href="tel:+919876543210"
+                    className="block text-center w-full py-3 bg-[#1B5E20] hover:bg-[#0D3B0D] text-white font-bold text-sm rounded-xl shadow-md transition-colors"
                   >
-                    Transmit Immediate SOS (Colaba 400001)
-                  </button>
+                    Call Partner Hub Manager (+91 98765 43210)
+                  </a>
                 </div>
               )}
             </div>

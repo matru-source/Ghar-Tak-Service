@@ -13,7 +13,6 @@ interface ServiceOffering {
   basePriceInr: number;
   gstRatePct: number;
   estimatedDurationMinutes: number;
-  isEmergencySosEligible: boolean;
   isPaused?: boolean;
   description?: string;
   pricing: {
@@ -50,7 +49,6 @@ export default function PartnerServicesPage() {
   const [newCategoryId, setNewCategoryId] = useState('');
   const [newPrice, setNewPrice] = useState('399');
   const [newDuration, setNewDuration] = useState('45');
-  const [newIsSos, setNewIsSos] = useState(false);
   const [newDescription, setNewDescription] = useState('');
   const [addError, setAddError] = useState<string | null>(null);
   const [isSubmittingService, setIsSubmittingService] = useState(false);
@@ -69,7 +67,6 @@ export default function PartnerServicesPage() {
   const [editCategoryId, setEditCategoryId] = useState('');
   const [editPrice, setEditPrice] = useState('');
   const [editDuration, setEditDuration] = useState('');
-  const [editIsSos, setEditIsSos] = useState(false);
   const [editDescription, setEditDescription] = useState('');
   const [editError, setEditError] = useState<string | null>(null);
 
@@ -209,7 +206,6 @@ export default function PartnerServicesPage() {
     setEditTitle(service.title);
     setEditPrice(String(service.basePriceInr));
     setEditDuration(String(service.estimatedDurationMinutes));
-    setEditIsSos(!!service.isEmergencySosEligible);
     setEditDescription(service.description || '');
 
     const matchingCat = categories.find(
@@ -246,7 +242,6 @@ export default function PartnerServicesPage() {
           categoryId: editCategoryId,
           basePriceInr: parsedPrice,
           estimatedDurationMinutes: parseInt(editDuration, 10) || 45,
-          isEmergencySosEligible: editIsSos,
           description: editDescription.trim() || undefined,
         }),
       });
@@ -294,7 +289,6 @@ export default function PartnerServicesPage() {
           categoryId: newCategoryId || categories[0]?.id,
           basePriceInr: parsedPrice,
           estimatedDurationMinutes: parseInt(newDuration, 10) || 45,
-          isEmergencySosEligible: newIsSos,
           description: newDescription.trim() || undefined,
         }),
       });
@@ -307,7 +301,6 @@ export default function PartnerServicesPage() {
         setNewTitle('');
         setNewPrice('399');
         setNewDuration('45');
-        setNewIsSos(false);
         setNewDescription('');
         loadCategories();
       } else {
@@ -658,12 +651,6 @@ export default function PartnerServicesPage() {
                               <span className="font-mono text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
                                 {service.code}
                               </span>
-                              {service.isEmergencySosEligible && (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
-                                  <span>🚨</span>
-                                  <span>15-min SOS</span>
-                                </span>
-                              )}
                             </div>
                             {service.description && (
                               <p className="text-[11px] text-slate-400 mt-1 line-clamp-1">
@@ -958,19 +945,6 @@ export default function PartnerServicesPage() {
                 />
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-                <div>
-                  <div className="text-xs font-bold text-slate-800">15-min Emergency SOS Eligible</div>
-                  <div className="text-[10px] text-slate-500">Allow customers to book as urgent SOS dispatch</div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={editIsSos}
-                  onChange={(e) => setEditIsSos(e.target.checked)}
-                  className="w-5 h-5 accent-emerald-600 rounded cursor-pointer"
-                />
-              </div>
-
               <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
                 <button
                   type="button"
@@ -1090,19 +1064,6 @@ export default function PartnerServicesPage() {
                   onChange={(e) => setNewDescription(e.target.value)}
                   placeholder="Detailed scope of labor included in this service..."
                   className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
-
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-                <div>
-                  <div className="text-xs font-bold text-slate-800">15-min Emergency SOS Eligible</div>
-                  <div className="text-[10px] text-slate-500">Allow customers to trigger priority dispatch</div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={newIsSos}
-                  onChange={(e) => setNewIsSos(e.target.checked)}
-                  className="w-5 h-5 accent-emerald-600 rounded cursor-pointer"
                 />
               </div>
 

@@ -795,7 +795,7 @@ export const initialStore: GharTakServiceStore = {
       insulatedGlovesVerified: true,
       safetyKitSerial: 'SK-1000V-889',
       trade: 'Electrical',
-      specialization: 'Emergency SOS & Heavy Load Balancing',
+      specialization: 'Emergency Power & Heavy Load Balancing',
       experience: '9 years',
       serviceArea: 'Marine Lines, Kalbadevi, Charni Road',
       aadharNumberMasked: 'XXXXXXXX7781',
@@ -1425,7 +1425,7 @@ export const initialStore: GharTakServiceStore = {
       applianceWarrantyIncluded: true,
       cyberShieldAuditIncluded: false,
       isActive: true,
-      description: 'Instant residential surge protection up to ₹25,000, 1 free quarterly earthing inspection, guaranteed 15-min priority SOS dispatch.',
+      description: 'Instant residential surge protection up to ₹25,000, 1 free quarterly earthing inspection, guaranteed 15-min priority dispatch.',
     },
     {
       id: 'tier_user_1yr',
@@ -1440,7 +1440,7 @@ export const initialStore: GharTakServiceStore = {
       applianceWarrantyIncluded: true,
       cyberShieldAuditIncluded: true,
       isActive: true,
-      description: 'Comprehensive annual household electrical immunity. ₹75,000 surge warranty, 4 seasonal safety audits, and unlimited zero-fee SOS callouts.',
+      description: 'Comprehensive annual household electrical immunity. ₹75,000 surge warranty, 4 seasonal safety audits, and unlimited zero-fee priority emergency callouts.',
     },
     {
       id: 'tier_partner_3mo',

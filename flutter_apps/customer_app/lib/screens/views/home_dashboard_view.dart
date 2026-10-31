@@ -46,7 +46,6 @@ class _HomeDashboardViewState extends State<HomeDashboardView> {
     {'name': 'Water Purifier', 'icon': Icons.filter_alt_rounded, 'color': Color(0xFF0284C7)},
     {'name': 'Smart Home', 'icon': Icons.videocam_rounded, 'color': Color(0xFF475569)},
     {'name': 'Inverter & Battery', 'icon': Icons.battery_charging_full_rounded, 'color': Color(0xFFE11D48)},
-    {'name': 'Emergency SOS', 'icon': Icons.emergency_rounded, 'color': Color(0xFFDC2626)},
   ];
 
   @override

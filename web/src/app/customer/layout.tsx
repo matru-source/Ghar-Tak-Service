@@ -45,7 +45,7 @@ export default function CustomerLayout({
   // Customer session initialization in localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const existing = localStorage.getItem('electriCare_customer_session') || localStorage.getItem('gts_customer_session');
+      const existing = localStorage.getItem('gts_customer_session');
       if (existing) {
         try {
           const parsed = JSON.parse(existing);

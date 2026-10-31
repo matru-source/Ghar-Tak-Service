@@ -27,7 +27,8 @@ interface SubscriptionTier {
   durationMonths: number;
   surgeProtectionCoverageInr: number;
   freeInspectionsCount: number;
-  isPrioritySosDispatch: boolean;
+  isPriorityDispatch?: boolean;
+  isPrioritySosDispatch?: boolean;
   applianceWarrantyIncluded: boolean;
   cyberShieldAuditIncluded: boolean;
   isActive: boolean;
@@ -153,7 +154,7 @@ export default function AdminSubscriptionsPage() {
             Subscription Modules &amp; Protection Plans
           </h1>
           <p className="text-sm text-slate-500">
-            Household electrical warranty, 15-min emergency SOS dispatch guarantee &amp; multi-tenant franchise liability coverage.
+            Household electrical warranty, 15-min priority dispatch guarantee &amp; multi-tenant franchise liability coverage.
           </p>
         </div>
 
@@ -363,8 +364,8 @@ export default function AdminSubscriptionsPage() {
                       <div className="flex items-center gap-2">
                         <Check className="h-4 w-4 text-emerald-600 shrink-0" />
                         <span>
-                          {tier.isPrioritySosDispatch ? (
-                            <span className="text-emerald-700 font-medium">15-Min Guaranteed SOS Dispatch</span>
+                          {tier.isPriorityDispatch || tier.isPrioritySosDispatch ? (
+                            <span className="text-emerald-700 font-medium">15-Min Guaranteed Priority Dispatch</span>
                           ) : (
                             <span className="text-slate-400">Standard Queue</span>
                           )}

@@ -7,7 +7,7 @@ export default function AdminCommissionsPage() {
   const [partnerPct, setPartnerPct] = useState(15.0);
   const [techPct, setTechPct] = useState(70.0);
   const [gstRate, setGstRate] = useState(18.0);
-  const [sosPremium, setSosPremium] = useState(20.0);
+  const [emergencyPremium, setEmergencyPremium] = useState(20.0);
   const [autoDisburse, setAutoDisburse] = useState(true);
   const [minThreshold, setMinThreshold] = useState(500);
   const [loading, setLoading] = useState(true);
@@ -31,7 +31,7 @@ export default function AdminCommissionsPage() {
         setPartnerPct(json.data.partnerDefaultSharePct);
         setTechPct(json.data.technicianNetSharePct);
         setGstRate(json.data.gstStatutoryRatePct);
-        setSosPremium(json.data.emergencySosPremiumPct);
+        setEmergencyPremium(json.data.emergencySosPremiumPct);
         setAutoDisburse(json.data.autoEscrowDisbursement);
         setMinThreshold(json.data.minWithdrawalThresholdInr);
       }
@@ -73,7 +73,7 @@ export default function AdminCommissionsPage() {
           partnerDefaultSharePct: partnerPct,
           technicianNetSharePct: techPct,
           gstStatutoryRatePct: gstRate,
-          emergencySosPremiumPct: sosPremium,
+          emergencySosPremiumPct: emergencyPremium,
           autoEscrowDisbursement: autoDisburse,
           minWithdrawalThresholdInr: minThreshold,
         }),
@@ -231,7 +231,7 @@ export default function AdminCommissionsPage() {
             </div>
           </div>
 
-          {/* Statutory Tax & Emergency SOS Settings */}
+          {/* Statutory Tax & Priority Emergency Settings */}
           <div className="grid grid-cols-2 gap-4 pt-2">
             <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
               <label className="block text-[11px] font-bold text-amber-700 mb-1">
@@ -248,12 +248,12 @@ export default function AdminCommissionsPage() {
 
             <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
               <label className="block text-[11px] font-bold text-red-700 mb-1">
-                24/7 Emergency SOS Surcharge (%)
+                24/7 Priority Emergency Surcharge (%)
               </label>
               <input
                 type="number"
-                value={sosPremium}
-                onChange={(e) => setSosPremium(Number(e.target.value))}
+                value={emergencyPremium}
+                onChange={(e) => setEmergencyPremium(Number(e.target.value))}
                 className="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 font-mono outline-none focus:border-red-500"
               />
               <span className="text-[10px] text-slate-500 block mt-1">Applied on urgent SLA requests</span>

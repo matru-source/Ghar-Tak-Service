@@ -78,21 +78,6 @@ class JobService {
     });
   }
 
-  static Future<bool> triggerEmergencySos(String jobId, String reason) async {
-    final user = SessionManager.getCurrentUser();
-    final res = await ApiClient.post('/emergency-sos', {
-      'jobId': jobId,
-      'reason': reason,
-      'role': 'CUSTOMER',
-      'triggeredBy': 'CUSTOMER',
-      'customerId': user?.id,
-      'customerName': user?.fullName,
-      'phone': user?.phone,
-      'ticketNumber': SessionManager.getActiveJobTicketNumber(),
-    });
-    return res.success;
-  }
-
   static Future<ApiResponse<dynamic>> submitJobRating({
     required String jobId,
     required int rating,

@@ -78,7 +78,7 @@ export default function AdminJobsQueuePage() {
     }
     if (priorityFilter !== 'ALL') {
       const p = (j.priority || '').toUpperCase();
-      if (priorityFilter === 'EMERGENCY' || priorityFilter === 'EMERGENCY_SOS') {
+      if (priorityFilter === 'EMERGENCY') {
         if (!p.includes('EMERGENCY')) return false;
       } else if (priorityFilter === 'HIGH' || priorityFilter === 'URGENT') {
         if (!p.includes('HIGH') && !p.includes('URGENT')) return false;
@@ -245,7 +245,7 @@ export default function AdminJobsQueuePage() {
             className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
             <option value="ALL">All Priorities</option>
-            <option value="EMERGENCY">Emergency (SOS)</option>
+            <option value="EMERGENCY">Emergency Priority</option>
             <option value="HIGH">High Priority</option>
             <option value="NORMAL">Standard / Normal</option>
           </select>

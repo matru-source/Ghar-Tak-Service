@@ -81,14 +81,11 @@ export default function PartnerEscalationsPage() {
     fetchEscalations();
   }, []);
 
-  // Real-Time SSE auto-refresh (Issue 9): Instantly refresh escalations on emergency SOS or SLA breach
+  // Real-Time SSE auto-refresh (Issue 9): Instantly refresh escalations on SLA breach
   useEffect(() => {
     if (!lastEvent) return;
     const type = lastEvent.type;
     if (
-      type === 'EMERGENCY_SOS' ||
-      type === 'EMERGENCY_SOS_TRIGGERED' ||
-      type === 'CUSTOMER_EMERGENCY_SOS_TRIGGERED' ||
       type === 'JOB_ESCALATED' ||
       type === 'SLA_BREACH' ||
       type === 'SLA_BREACH_TIMER' ||

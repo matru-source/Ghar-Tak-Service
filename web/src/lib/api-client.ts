@@ -28,7 +28,7 @@ export function getAuthToken(): string | null {
   }
 
   // 2. Check localStorage
-  const localKeys = ['gts_token', 'gts_auth_token', 'token', 'authToken', 'electriCare_token'];
+  const localKeys = ['gts_token', 'gts_auth_token', 'token', 'authToken'];
   for (const key of localKeys) {
     const val = localStorage.getItem(key);
     if (val && val.trim() && val !== 'null' && val !== 'undefined') {

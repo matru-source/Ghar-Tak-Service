@@ -476,11 +476,11 @@ export default function ClientUATWalkthroughPage() {
                 <span className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold font-mono">3 Screens</span>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Colaba 400001 Onboarding, 24/7 Rapid SOS Emergency Dispatch Chip, Service Category Hierarchy, Real-Time Live GPS Telemetry of Assigned Field Technician, 4-Digit Handover OTP &amp; Official GST Tax Invoice Receipt.
+                Colaba 400001 Onboarding, Rapid Emergency Priority Dispatch, Service Category Hierarchy, Real-Time Live GPS Telemetry of Assigned Field Technician, 4-Digit Handover OTP &amp; Official GST Tax Invoice Receipt.
               </p>
               <div className="pt-2 flex flex-wrap gap-2 text-xs font-bold">
                 <Link href="/customer" target="_blank" className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-800 hover:bg-blue-100 flex items-center gap-1 border border-blue-200">
-                  CUST-SCR-01 Home &amp; SOS <Smartphone className="w-3 h-3" />
+                  CUST-SCR-01 Home &amp; Booking <Smartphone className="w-3 h-3" />
                 </Link>
                 <Link href="/customer/track?id=J-1001" target="_blank" className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-800 hover:bg-blue-100 flex items-center gap-1 border border-blue-200">
                   CUST-SCR-02 Live GPS Tracking <Smartphone className="w-3 h-3" />

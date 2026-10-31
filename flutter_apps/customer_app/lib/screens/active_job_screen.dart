@@ -675,42 +675,6 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> with SingleTickerProv
     });
   }
 
-  void _showSosConfirmation() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: const [
-            Icon(Icons.emergency_rounded, color: Color(0xFFDC2626), size: 28),
-            SizedBox(width: 8),
-            Text('Trigger Emergency SOS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          ],
-        ),
-        content: const Text(
-          'This will immediately alert the GTS 24/7 Safety Command Center, dispatch our emergency response supervisor, and share your GPS telemetry.',
-          style: TextStyle(fontSize: 13, height: 1.4),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626), foregroundColor: Colors.white),
-            onPressed: () {
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('🚨 SOS Alert transmitted to GTS Security Operations!'),
-                  backgroundColor: Color(0xFFDC2626),
-                ),
-              );
-            },
-            child: const Text('TRANSMIT SOS'),
-          ),
-        ],
-      ),
-    );
-  }
-
   int _getCurrentStepIndex() {
     final status = _job.status.toUpperCase();
     if (_isUnassigned || status == 'PENDING_DISPATCH' || status == 'PENDING') return 0;
@@ -739,30 +703,6 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> with SingleTickerProv
             Text('Ticket: ${_job.jobTicketNumber} • Real-Time Telemetry', style: const TextStyle(fontSize: 11, color: AppTheme.sapphireBlue)),
           ],
         ),
-        actions: [
-          // Emergency SOS Action Button
-          Container(
-            margin: const EdgeInsets.only(right: 12),
-            child: InkWell(
-              onTap: _showSosConfirmation,
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFDC2626),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  children: const [
-                    Text('🚨', style: TextStyle(fontSize: 12)),
-                    SizedBox(width: 4),
-                    Text('Emergency SOS', style: TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

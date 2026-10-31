@@ -89,7 +89,7 @@ export default function AdminEscalationsPage() {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-              Critical SLA Escalations & SOS Desk
+              Critical SLA Escalations Desk
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-red-100 text-red-700 border border-red-200 animate-pulse">
               {escalatedJobs.length} ACTIVE BREACHES
@@ -207,7 +207,7 @@ export default function AdminEscalationsPage() {
                       </span>
                       {job.priority === 'EMERGENCY' && (
                         <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-red-600 text-white animate-pulse">
-                          HIGH-RISK SOS
+                          HIGH-PRIORITY SLA
                         </span>
                       )}
                     </div>

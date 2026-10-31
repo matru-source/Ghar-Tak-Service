@@ -206,7 +206,7 @@ export async function POST(request: NextRequest) {
 
 
     // Issue 8: Canonical Service Lookup from Database (Never trust client-supplied price)
-    let canonicalService: { id: string; title: string; basePriceInr: number; isEmergencySosEligible?: boolean } | null = null;
+    let canonicalService: { id: string; title: string; basePriceInr: number } | null = null;
     
     if (await (await import('@/lib/db')).isDatabaseConnected()) {
       try {
@@ -225,7 +225,6 @@ export async function POST(request: NextRequest) {
             id: dbService.id,
             title: dbService.title,
             basePriceInr: dbService.basePriceInr,
-            isEmergencySosEligible: dbService.isEmergencySosEligible,
           };
         }
       } catch (err) {
@@ -242,7 +241,6 @@ export async function POST(request: NextRequest) {
           id: memoryService.id,
           title: memoryService.title,
           basePriceInr: memoryService.basePriceInr,
-          isEmergencySosEligible: (memoryService as any).isEmergencySosEligible || false,
         };
       }
     }
@@ -252,11 +250,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Issue 12: Deterministic Statutory Emergency & Night Surge Calculation
-    // Statutory 20% multiplier (1 + 0.20 = 1.20) for EMERGENCY_SOS_247 or Night Hours (20:00 - 06:00 IST)
+    // Statutory 20% multiplier (1 + 0.20 = 1.20) for EMERGENCY or Night Hours (20:00 - 06:00 IST)
     const bookingTime = scheduledAt ? new Date(scheduledAt) : new Date();
     const istHours = new Date(bookingTime.getTime() + 5.5 * 3600 * 1000).getUTCHours();
     const isNightHours = istHours >= 20 || istHours < 6;
-    const isEmergencyPriority = priority === 'EMERGENCY_SOS_247';
+    const isEmergencyPriority = priority === 'EMERGENCY' || priority === 'EMERGENCY_SOS_247';
     const emergencyMultiplier = (isEmergencyPriority || isNightHours) ? 0.20 : 0.0;
     const surgeFactor = 1.0 + emergencyMultiplier;
 

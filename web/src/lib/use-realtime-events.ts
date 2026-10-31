@@ -19,7 +19,7 @@ export interface UseRealtimeEventsOptions {
  * Enterprise Web Audio Synthesizer
  * Generates clear, high-priority emergency sirens & chime alerts without external asset dependencies.
  */
-export function playSyntheticAlert(type: 'siren' | 'chime' | 'sos' = 'chime') {
+export function playSyntheticAlert(type: 'siren' | 'chime' = 'chime') {
   if (typeof window === 'undefined') return;
   try {
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
@@ -50,24 +50,6 @@ export function playSyntheticAlert(type: 'siren' | 'chime' | 'sos' = 'chime') {
       gain.connect(ctx.destination);
       osc.start(startTime);
       osc.stop(startTime + 1.8);
-    } else if (type === 'sos') {
-      // High-priority SOS Alert (Pulsed 880Hz warning)
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(880, ctx.currentTime);
-      gain.gain.setValueAtTime(0.2, ctx.currentTime);
-
-      gain.gain.setValueAtTime(0.2, ctx.currentTime);
-      gain.gain.setValueAtTime(0.01, ctx.currentTime + 0.15);
-      gain.gain.setValueAtTime(0.2, ctx.currentTime + 0.3);
-      gain.gain.setValueAtTime(0.01, ctx.currentTime + 0.45);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.8);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.8);
     } else {
       // Gentle notification chime (Arrived / Completed)
       const osc = ctx.createOscillator();

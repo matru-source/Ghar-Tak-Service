@@ -193,8 +193,7 @@ class RealtimeEventBus {
     try {
       if (
         fullEvent.type === 'TECH_DISPATCHED' ||
-        fullEvent.type === 'TECH_BROADCAST' ||
-        fullEvent.type === 'EMERGENCY_SOS'
+        fullEvent.type === 'TECH_BROADCAST'
       ) {
         import('./fcm-dispatcher').then(({ autoDispatchFcmFromRealtimeEvent }) => {
           autoDispatchFcmFromRealtimeEvent(fullEvent).catch((err) => {

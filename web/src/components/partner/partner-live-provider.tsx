@@ -73,25 +73,8 @@ export function PartnerLiveProvider({ children }: { children: React.ReactNode })
 
       const ticket = event.ticketNumber || event.jobId || 'UNKNOWN';
 
-      // 1. High-Priority Field Emergency SOS Alert
+      // 1. SLA Escalation & Breach Warning
       if (
-        event.type === 'EMERGENCY_SOS' ||
-        event.type === 'EMERGENCY_SOS_TRIGGERED' ||
-        event.type === 'CUSTOMER_EMERGENCY_SOS_TRIGGERED'
-      ) {
-        playSyntheticAlert('sos');
-        setActiveNotification({
-          title: '🚨 CRITICAL REGIONAL EMERGENCY SOS',
-          message: `Emergency SOS triggered on Work Order #${ticket}! Immediate intervention and dispatcher check required.`,
-          type: 'error',
-          ticket,
-          link: '/partner/escalations',
-          ctaText: 'DISPATCH INTERVENTION',
-        });
-        triggerDebouncedRscRefresh();
-      }
-      // 2. SLA Escalation & Breach Warning
-      else if (
         event.type === 'SLA_BREACH' ||
         event.type === 'SLA_BREACH_TIMER' ||
         event.type === 'JOB_ESCALATED' ||
@@ -168,7 +151,7 @@ export function PartnerLiveProvider({ children }: { children: React.ReactNode })
     onEvent: handleIncomingEvent,
   });
 
-  // Auto-dismiss standard notifications after 8 seconds (SOS notifications persist until dismissed)
+  // Auto-dismiss standard notifications after 8 seconds (Critical alerts persist until dismissed)
   useEffect(() => {
     if (activeNotification && activeNotification.type !== 'error') {
       const timer = setTimeout(() => setActiveNotification(null), 8000);

@@ -108,7 +108,6 @@ function PartnerJobDetailsContent() {
         event.type === 'TECH_DISPATCHED' ||
         event.type === 'SAFETY_INTERLOCK_VERIFIED' ||
         event.type === 'JOB_COMPLETED' ||
-        event.type === 'EMERGENCY_SOS' ||
         event.type === 'PAYMENT_RECEIVED' ||
         event.type === 'JOB_PRICE_UPDATED')
     ) {

@@ -120,27 +120,6 @@ class TechJobService {
     });
   }
 
-  static Future<bool> triggerEmergencySos({
-    required String jobId,
-    required String reason,
-    double? lat,
-    double? lng,
-  }) async {
-    final tech = SessionManager.getCurrentTechnician();
-    final res = await ApiClient.post('/emergency-sos', {
-      'jobId': jobId,
-      'role': 'TECHNICIAN',
-      'triggeredBy': 'TECHNICIAN',
-      'technicianId': tech?.id ?? 'tech_rajesh_01',
-      'technicianName': tech?.fullName ?? 'Field Technician',
-      'phone': tech?.phone ?? '+919999000000',
-      'reason': reason,
-      'latitude': lat ?? 18.9220,
-      'longitude': lng ?? 72.8347,
-    });
-    return res.success;
-  }
-
   static Future<ApiResponse<dynamic>> proposeSparePart({
     required String jobId,
     required String sku,

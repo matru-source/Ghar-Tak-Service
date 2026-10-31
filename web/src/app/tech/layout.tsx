@@ -37,8 +37,7 @@ export default function TechnicianLayout({
     try {
       const savedSession =
         localStorage.getItem('gts_tech_session') ||
-        localStorage.getItem('electriCare_tech_session') ||
-        localStorage.getItem('electriCare_technician_session');
+        localStorage.getItem('gts_technician_session');
       if (savedSession) {
         const parsed = JSON.parse(savedSession);
         if (parsed.fullName || parsed.name) {

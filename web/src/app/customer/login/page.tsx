@@ -143,7 +143,7 @@ export default function CustomerLoginPage() {
       };
 
       if (typeof window !== 'undefined') {
-        localStorage.setItem('electriCare_customer_session', JSON.stringify(customerData));
+        localStorage.setItem('gts_customer_session', JSON.stringify(customerData));
       }
 
       setSuccessMsg('Phone verified successfully!');
@@ -158,12 +158,12 @@ export default function CustomerLoginPage() {
   // Handle Complete Onboarding & Save Location
   const handleCompleteOnboarding = () => {
     if (typeof window !== 'undefined') {
-      const existing = localStorage.getItem('electriCare_customer_session');
+      const existing = localStorage.getItem('gts_customer_session');
       if (existing) {
         const parsed = JSON.parse(existing);
         parsed.defaultPincode = selectedPincode;
         parsed.defaultAddressLine = addressLine;
-        localStorage.setItem('electriCare_customer_session', JSON.stringify(parsed));
+        localStorage.setItem('gts_customer_session', JSON.stringify(parsed));
       }
     }
     router.push('/customer');

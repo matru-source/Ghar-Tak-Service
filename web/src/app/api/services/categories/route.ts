@@ -25,7 +25,7 @@ export function getCategoryEmoji(name: string = '', slug: string = ''): string {
   if (combined.includes('laund') || combined.includes('wash')) return '🧺';
   if (combined.includes('wall') || combined.includes('paper')) return '🖼️';
   if (combined.includes('generat')) return '⚡';
-  if (combined.includes('emerg') || combined.includes('sos')) return '🚨';
+  if (combined.includes('emerg')) return '🚨';
   if (combined.includes('garden') || combined.includes('lawn')) return '🌱';
   if (combined.includes('lock') || combined.includes('key')) return '🔑';
   if (combined.includes('welding') || combined.includes('iron')) return '⚙️';
@@ -110,7 +110,6 @@ export async function GET(request: NextRequest) {
                 code: true,
                 title: true,
                 basePriceInr: true,
-                isEmergencySosEligible: true,
               },
             },
           },
@@ -161,7 +160,6 @@ export async function GET(request: NextRequest) {
           code: s.code,
           title: s.title,
           basePriceInr: s.basePriceInr,
-          isEmergencySosEligible: s.isEmergencySosEligible,
         })),
       };
     });

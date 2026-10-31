@@ -99,7 +99,6 @@ export function AdminSidebar({
     try {
       const saved =
         localStorage.getItem('gts_admin_session') ||
-        localStorage.getItem('electriCare_admin_session') ||
         localStorage.getItem('admin_session');
       if (saved) {
         const parsed = JSON.parse(saved);

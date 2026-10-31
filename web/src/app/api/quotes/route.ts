@@ -111,9 +111,9 @@ export async function POST(request: NextRequest) {
     } else if (unassignedJobsInZone >= onlineTechsInZone * 2.0 && unassignedJobsInZone >= 2) {
       surgeMultiplier = 1.2;
       surgeReason = '200% Zone Overcapacity: Moderate demand surge applied';
-    } else if (priority === 'EMERGENCY_SOS_247') {
+    } else if (priority === 'EMERGENCY' || priority === 'EMERGENCY_SOS_247') {
       surgeMultiplier = 1.2;
-      surgeReason = '24/7 Midnight Emergency SLA Dispatch';
+      surgeReason = '24/7 Priority Emergency SLA Dispatch';
     }
 
     // 4. Calculate Final Authoritative Price

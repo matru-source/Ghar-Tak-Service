@@ -36,7 +36,6 @@ interface CatalogService {
   categoryName: string;
   basePriceInr: number;
   estimatedDurationMinutes: number;
-  isEmergencySosEligible: boolean;
   pricing: {
     baseAmount: number;
     cgstAmount: number;
@@ -86,7 +85,7 @@ export default function CustomerBookingsPage() {
   useEffect(() => {
     // Read session
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('electriCare_customer_session') || localStorage.getItem('gts_customer_session');
+      const saved = localStorage.getItem('gts_customer_session');
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
@@ -137,7 +136,6 @@ export default function CustomerBookingsPage() {
     categoryName: 'Electrician',
     basePriceInr: 1059.32,
     estimatedDurationMinutes: 45,
-    isEmergencySosEligible: false,
     pricing: {
       baseAmount: 1059.32,
       cgstAmount: 95.34,
@@ -196,7 +194,7 @@ export default function CustomerBookingsPage() {
           basePriceInr: selectedService.basePriceInr,
           pincode: pincode,
           customerAddressText: `${addressLine} (${customerNotes})`,
-          priority: isEmergency ? 'EMERGENCY_SOS_247' : 'STANDARD',
+          priority: isEmergency ? 'EMERGENCY' : 'STANDARD',
           scheduledAt: new Date().toISOString(),
         }),
       });
@@ -351,7 +349,7 @@ export default function CustomerBookingsPage() {
               <div className="flex items-center gap-2">
                 <Zap className="w-5 h-5 text-orange-600 fill-current" />
                 <div>
-                  <div className="font-bold text-xs text-orange-950">24/7 Rapid SOS Priority</div>
+                  <div className="font-bold text-xs text-orange-950">24/7 Rapid Emergency Priority</div>
                   <div className="text-[10px] text-orange-800">15-minute guaranteed SLA dispatch (+20%)</div>
                 </div>
               </div>
@@ -504,7 +502,7 @@ export default function CustomerBookingsPage() {
                 </div>
                 {isEmergency && (
                   <div className="flex justify-between text-orange-700 font-medium">
-                    <span>24/7 SOS Rapid Surcharge (20%):</span>
+                    <span>24/7 Rapid Emergency Surcharge (20%):</span>
                     <span className="font-mono">+₹{emergencyPremium.toFixed(2)}</span>
                   </div>
                 )}

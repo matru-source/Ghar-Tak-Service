@@ -376,7 +376,7 @@ export default function AdminCustomersPage() {
                   </div>
                 )}
                 <div className="text-[11px] text-emerald-600 font-semibold mt-1">
-                  ✓ Priority 15-Minute SOS Dispatch Eligible
+                  ✓ Priority 15-Minute Dispatch Eligible
                 </div>
               </div>
             </div>

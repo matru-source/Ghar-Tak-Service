@@ -8,7 +8,6 @@ class ServiceModel {
   final int estimatedDurationMinutes;
   final String? imageAsset;
   final String? description;
-  final bool isEmergencySosEligible;
 
   String get category {
     if (categoryId.toLowerCase().contains('fan')) return 'Fans & Fixtures';
@@ -34,7 +33,6 @@ class ServiceModel {
     int? durationMinutes,
     this.imageAsset,
     this.description,
-    this.isEmergencySosEligible = false,
   })  : categoryId = categoryId ?? category ?? 'Electrical',
         estimatedDurationMinutes = estimatedDurationMinutes ?? durationMinutes ?? 45;
 
@@ -68,7 +66,6 @@ class ServiceModel {
       estimatedDurationMinutes: json['estimatedDurationMinutes'] ?? json['durationMinutes'] ?? 45,
       imageAsset: resolvedImage ?? 'assets/images/service_switchboard.png',
       description: json['description']?.toString() ?? 'Complete diagnostic, repair, and safety verification by verified professional.',
-      isEmergencySosEligible: json['isEmergencySosEligible'] == true,
     );
   }
 }
