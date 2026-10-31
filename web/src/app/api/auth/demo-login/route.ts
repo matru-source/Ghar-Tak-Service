@@ -87,7 +87,11 @@ async function handleDemoAuth(req: NextRequest, method: 'GET' | 'POST') {
     const maxAge = 60 * 60 * 24 * 7; // 7 days
 
     if (method === 'GET') {
-      const redirectUrl = new URL(redirect, req.url);
+      const forwardedHost = req.headers.get('x-forwarded-host');
+      const host = forwardedHost ? forwardedHost.split(',')[0].trim() : (req.headers.get('host') || 'gts.saralgroups.com');
+      const proto = req.headers.get('x-forwarded-proto') || (host.startsWith('localhost') || host.startsWith('127.0.0.1') ? 'http' : 'https');
+      const baseUrl = `${proto}://${host}`;
+      const redirectUrl = new URL(redirect, baseUrl);
       const res = NextResponse.redirect(redirectUrl);
 
       res.cookies.set('gts_token', token, {

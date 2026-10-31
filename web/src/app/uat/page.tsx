@@ -102,6 +102,32 @@ export default function ClientUATWalkthroughPage() {
     setTimeout(() => setCopiedKey(null), 2500);
   };
 
+  const handleLaunchRole = async (e: React.MouseEvent, role: string, targetPath: string) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/auth/demo-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role, redirect: targetPath }),
+      });
+      const data = await res.json();
+      if (data.success && data.token) {
+        document.cookie = `gts_token=${data.token}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `gts_auth_token=${data.token}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `gts_user_role=${role}; path=/; max-age=604800; SameSite=Lax`;
+        localStorage.setItem('gts_token', data.token);
+        localStorage.setItem('gts_auth_token', data.token);
+        localStorage.setItem('gts_user_role', role);
+        if (data.user) {
+          localStorage.setItem('gts_user', JSON.stringify(data.user));
+        }
+      }
+    } catch (err) {
+      console.warn('Demo session auto-inject error:', err);
+    }
+    window.open(targetPath, '_blank');
+  };
+
   const fetchUatState = async () => {
     try {
       setLoading(true);
@@ -323,14 +349,13 @@ export default function ClientUATWalkthroughPage() {
               </div>
 
               <div className="space-y-2 pt-2">
-                <a
-                  href="/api/auth/demo-login?role=SUPER_ADMIN&redirect=/admin"
-                  target="_blank"
-                  className="w-full py-2.5 px-3 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all"
+                <button
+                  onClick={(e) => handleLaunchRole(e, 'SUPER_ADMIN', '/admin')}
+                  className="w-full py-2.5 px-3 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer"
                 >
                   <span>Launch Admin (1-Click)</span>
                   <ExternalLink className="w-3 h-3" />
-                </a>
+                </button>
                 <div className="flex items-center justify-between text-[10px] text-slate-500 bg-white/80 px-2.5 py-1.5 rounded-lg border border-purple-100 font-mono">
                   <span>admin@ghartak.in</span>
                   <button
@@ -358,14 +383,13 @@ export default function ClientUATWalkthroughPage() {
               </div>
 
               <div className="space-y-2 pt-2">
-                <a
-                  href="/api/auth/demo-login?role=PARTNER&redirect=/partner"
-                  target="_blank"
-                  className="w-full py-2.5 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all"
+                <button
+                  onClick={(e) => handleLaunchRole(e, 'PARTNER', '/partner')}
+                  className="w-full py-2.5 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer"
                 >
                   <span>Launch Partner (1-Click)</span>
                   <ExternalLink className="w-3 h-3" />
-                </a>
+                </button>
                 <div className="flex items-center justify-between text-[10px] text-slate-500 bg-white/80 px-2.5 py-1.5 rounded-lg border border-emerald-100 font-mono">
                   <span>operations@ghartak.in</span>
                   <button
@@ -393,14 +417,13 @@ export default function ClientUATWalkthroughPage() {
               </div>
 
               <div className="space-y-2 pt-2">
-                <a
-                  href="/api/auth/demo-login?role=TECHNICIAN&redirect=/tech"
-                  target="_blank"
-                  className="w-full py-2.5 px-3 rounded-xl bg-orange-700 hover:bg-orange-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all"
+                <button
+                  onClick={(e) => handleLaunchRole(e, 'TECHNICIAN', '/tech')}
+                  className="w-full py-2.5 px-3 rounded-xl bg-orange-700 hover:bg-orange-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer"
                 >
                   <span>Launch Tech View (1-Click)</span>
                   <Smartphone className="w-3 h-3" />
-                </a>
+                </button>
                 <div className="flex items-center justify-between text-[10px] text-slate-500 bg-white/80 px-2.5 py-1.5 rounded-lg border border-orange-100 font-mono">
                   <span>rajesh.kumar@ghartak.in</span>
                   <button
@@ -428,14 +451,13 @@ export default function ClientUATWalkthroughPage() {
               </div>
 
               <div className="space-y-2 pt-2">
-                <a
-                  href="/api/auth/demo-login?role=CUSTOMER&redirect=/customer"
-                  target="_blank"
-                  className="w-full py-2.5 px-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all"
+                <button
+                  onClick={(e) => handleLaunchRole(e, 'CUSTOMER', '/customer')}
+                  className="w-full py-2.5 px-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer"
                 >
                   <span>Launch Customer (1-Click)</span>
                   <Smartphone className="w-3 h-3" />
-                </a>
+                </button>
                 <div className="flex items-center justify-between text-[10px] text-slate-500 bg-white/80 px-2.5 py-1.5 rounded-lg border border-blue-100 font-mono">
                   <span>+91 98765 43220 (OTP: 1234)</span>
                   <button
@@ -472,7 +494,7 @@ export default function ClientUATWalkthroughPage() {
               <span className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-[11px]">1</span>
               <h4 className="font-bold text-white text-sm">Customer Order</h4>
               <p className="text-slate-300 text-[11px] leading-relaxed">
-                Open <a href="/api/auth/demo-login?role=CUSTOMER&redirect=/customer" target="_blank" className="text-blue-400 underline font-bold">Customer App</a>, select Colaba 400001, and book MCB diagnostic.
+                Open <button onClick={(e) => handleLaunchRole(e, 'CUSTOMER', '/customer')} className="text-blue-400 underline font-bold cursor-pointer">Customer App</button>, select Colaba 400001, and book MCB diagnostic.
               </p>
             </div>
 
@@ -480,7 +502,7 @@ export default function ClientUATWalkthroughPage() {
               <span className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[11px]">2</span>
               <h4 className="font-bold text-white text-sm">Partner Dispatch</h4>
               <p className="text-slate-300 text-[11px] leading-relaxed">
-                Open <a href="/api/auth/demo-login?role=PARTNER&redirect=/partner" target="_blank" className="text-emerald-400 underline font-bold">Partner Hub</a>, observe incoming job ticket, review wireman roster &amp; SLA radar.
+                Open <button onClick={(e) => handleLaunchRole(e, 'PARTNER', '/partner')} className="text-emerald-400 underline font-bold cursor-pointer">Partner Hub</button>, observe incoming job ticket, review wireman roster &amp; SLA radar.
               </p>
             </div>
 
@@ -488,7 +510,7 @@ export default function ClientUATWalkthroughPage() {
               <span className="w-6 h-6 rounded-full bg-orange-600 text-white flex items-center justify-center font-bold text-[11px]">3</span>
               <h4 className="font-bold text-white text-sm">Field Tech Action</h4>
               <p className="text-slate-300 text-[11px] leading-relaxed">
-                Open <a href="/api/auth/demo-login?role=TECHNICIAN&redirect=/tech" target="_blank" className="text-orange-400 underline font-bold">Tech App</a>, accept job within 60s, pass 1000V gloves checklist, and verify OTP.
+                Open <button onClick={(e) => handleLaunchRole(e, 'TECHNICIAN', '/tech')} className="text-orange-400 underline font-bold cursor-pointer">Tech App</button>, accept job within 60s, pass 1000V gloves checklist, and verify OTP.
               </p>
             </div>
 
@@ -496,7 +518,7 @@ export default function ClientUATWalkthroughPage() {
               <span className="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-[11px]">4</span>
               <h4 className="font-bold text-white text-sm">Admin Audit &amp; Escrow</h4>
               <p className="text-slate-300 text-[11px] leading-relaxed">
-                Open <a href="/api/auth/demo-login?role=SUPER_ADMIN&redirect=/admin/finance" target="_blank" className="text-purple-400 underline font-bold">Admin Escrow</a> to see 70/15/15 commission and SHA-256 audit block.
+                Open <button onClick={(e) => handleLaunchRole(e, 'SUPER_ADMIN', '/admin/finance')} className="text-purple-400 underline font-bold cursor-pointer">Admin Escrow</button> to see 70/15/15 commission and SHA-256 audit block.
               </p>
             </div>
 
@@ -639,18 +661,18 @@ export default function ClientUATWalkthroughPage() {
                 National Telemetry, 24 Franchise Partners, Pincode Perimeters, National Wireman KYC Screening, Central 70/15/15 Escrow Ledgers, Zex Cyber Security Protection Plans, Support Helpdesk &amp; SHA-256 WORM Audit Logs.
               </p>
               <div className="pt-2 flex flex-wrap gap-2 text-xs font-bold">
-                <a href="/api/auth/demo-login?role=SUPER_ADMIN&redirect=/admin" target="_blank" className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-800 hover:bg-purple-100 flex items-center gap-1 border border-purple-200">
+                <button onClick={(e) => handleLaunchRole(e, 'SUPER_ADMIN', '/admin')} className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-800 hover:bg-purple-100 flex items-center gap-1 border border-purple-200 cursor-pointer">
                   ADM-01 National Overview <ExternalLink className="w-3 h-3" />
-                </a>
-                <a href="/api/auth/demo-login?role=SUPER_ADMIN&redirect=/admin/finance" target="_blank" className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-800 hover:bg-purple-100 flex items-center gap-1 border border-purple-200">
+                </button>
+                <button onClick={(e) => handleLaunchRole(e, 'SUPER_ADMIN', '/admin/finance')} className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-800 hover:bg-purple-100 flex items-center gap-1 border border-purple-200 cursor-pointer">
                   ADM-12 Escrow Ledgers <ExternalLink className="w-3 h-3" />
-                </a>
-                <a href="/api/auth/demo-login?role=SUPER_ADMIN&redirect=/admin/audit" target="_blank" className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-800 hover:bg-purple-100 flex items-center gap-1 border border-purple-200">
+                </button>
+                <button onClick={(e) => handleLaunchRole(e, 'SUPER_ADMIN', '/admin/audit')} className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-800 hover:bg-purple-100 flex items-center gap-1 border border-purple-200 cursor-pointer">
                   ADM-22 WORM Audit Trail <ExternalLink className="w-3 h-3" />
-                </a>
-                <a href="/api/auth/demo-login?role=SUPER_ADMIN&redirect=/admin/partners" target="_blank" className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-800 hover:bg-purple-100 flex items-center gap-1 border border-purple-200">
+                </button>
+                <button onClick={(e) => handleLaunchRole(e, 'SUPER_ADMIN', '/admin/partners')} className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-800 hover:bg-purple-100 flex items-center gap-1 border border-purple-200 cursor-pointer">
                   ADM-02 Franchise Hubs <ExternalLink className="w-3 h-3" />
-                </a>
+                </button>
               </div>
             </div>
 
@@ -670,18 +692,18 @@ export default function ClientUATWalkthroughPage() {
                 Maharashtra Operations Hub MH-01, Dispatch Console, #J-1005 SLA Proximity Escalation, Fleet Wireman Roster &amp; Shift Scheduling, Pincode 400001 Capacity Heatmap, Tax Invoices &amp; Instant ₹63,000 Payout.
               </p>
               <div className="pt-2 flex flex-wrap gap-2 text-xs font-bold">
-                <a href="/api/auth/demo-login?role=PARTNER&redirect=/partner" target="_blank" className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 flex items-center gap-1 border border-emerald-200">
+                <button onClick={(e) => handleLaunchRole(e, 'PARTNER', '/partner')} className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 flex items-center gap-1 border border-emerald-200 cursor-pointer">
                   PTNR-SCR-01 Web Command Hub <ExternalLink className="w-3 h-3" />
-                </a>
-                <a href="/api/auth/demo-login?role=PARTNER&redirect=/partner-app" target="_blank" className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 flex items-center gap-1 border border-emerald-200">
+                </button>
+                <button onClick={(e) => handleLaunchRole(e, 'PARTNER', '/partner-app')} className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 flex items-center gap-1 border border-emerald-200 cursor-pointer">
                   PTNR-APP-01 Mobile Command <Smartphone className="w-3 h-3" />
-                </a>
-                <a href="/api/auth/demo-login?role=PARTNER&redirect=/partner/escalations" target="_blank" className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 flex items-center gap-1 border border-emerald-200">
+                </button>
+                <button onClick={(e) => handleLaunchRole(e, 'PARTNER', '/partner/escalations')} className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 flex items-center gap-1 border border-emerald-200 cursor-pointer">
                   PTNR-APP-02 SLA Reassign <Smartphone className="w-3 h-3" />
-                </a>
-                <a href="/api/auth/demo-login?role=PARTNER&redirect=/partner/invoices" target="_blank" className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 flex items-center gap-1 border border-emerald-200">
+                </button>
+                <button onClick={(e) => handleLaunchRole(e, 'PARTNER', '/partner/invoices')} className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 flex items-center gap-1 border border-emerald-200 cursor-pointer">
                   PTNR-APP-04 Fleet Finance <Smartphone className="w-3 h-3" />
-                </a>
+                </button>
               </div>
             </div>
 
@@ -701,18 +723,18 @@ export default function ClientUATWalkthroughPage() {
                 Duty Online/Offline Toggle, 60s Acceptance Push Modal, Turn-by-Turn GPS Navigation, 1000V Class 0 Gloves &amp; MCB Lockout Safety Interlocks, Work Proof Photo Capture, Customer Handover OTP &amp; Daily IMPS Wallet Ledger.
               </p>
               <div className="pt-2 flex flex-wrap gap-2 text-xs font-bold">
-                <a href="/api/auth/demo-login?role=TECHNICIAN&redirect=/tech" target="_blank" className="px-3 py-1.5 rounded-lg bg-orange-50 text-orange-800 hover:bg-orange-100 flex items-center gap-1 border border-orange-200">
+                <button onClick={(e) => handleLaunchRole(e, 'TECHNICIAN', '/tech')} className="px-3 py-1.5 rounded-lg bg-orange-50 text-orange-800 hover:bg-orange-100 flex items-center gap-1 border border-orange-200 cursor-pointer">
                   TECH-SCR-01 Duty Roster <Smartphone className="w-3 h-3" />
-                </a>
-                <a href="/api/auth/demo-login?role=TECHNICIAN&redirect=/tech/job?id=J-1001" target="_blank" className="px-3 py-1.5 rounded-lg bg-orange-50 text-orange-800 hover:bg-orange-100 flex items-center gap-1 border border-orange-200">
+                </button>
+                <button onClick={(e) => handleLaunchRole(e, 'TECHNICIAN', '/tech/job?id=J-1001')} className="px-3 py-1.5 rounded-lg bg-orange-50 text-orange-800 hover:bg-orange-100 flex items-center gap-1 border border-orange-200 cursor-pointer">
                   TECH-SCR-02 Navigation <Smartphone className="w-3 h-3" />
-                </a>
-                <a href="/api/auth/demo-login?role=TECHNICIAN&redirect=/tech/safety?id=J-1001" target="_blank" className="px-3 py-1.5 rounded-lg bg-orange-50 text-orange-800 hover:bg-orange-100 flex items-center gap-1 border border-orange-200">
+                </button>
+                <button onClick={(e) => handleLaunchRole(e, 'TECHNICIAN', '/tech/safety?id=J-1001')} className="px-3 py-1.5 rounded-lg bg-orange-50 text-orange-800 hover:bg-orange-100 flex items-center gap-1 border border-orange-200 cursor-pointer">
                   TECH-SCR-03 Safety Check <Smartphone className="w-3 h-3" />
-                </a>
-                <a href="/api/auth/demo-login?role=TECHNICIAN&redirect=/tech/earnings" target="_blank" className="px-3 py-1.5 rounded-lg bg-orange-50 text-orange-800 hover:bg-orange-100 flex items-center gap-1 border border-orange-200">
+                </button>
+                <button onClick={(e) => handleLaunchRole(e, 'TECHNICIAN', '/tech/earnings')} className="px-3 py-1.5 rounded-lg bg-orange-50 text-orange-800 hover:bg-orange-100 flex items-center gap-1 border border-orange-200 cursor-pointer">
                   TECH-SCR-05 Wallet Ledger <Smartphone className="w-3 h-3" />
-                </a>
+                </button>
               </div>
             </div>
 
@@ -732,15 +754,15 @@ export default function ClientUATWalkthroughPage() {
                 Colaba 400001 Onboarding, Rapid Emergency Priority Dispatch, Service Category Hierarchy, Real-Time Live GPS Telemetry of Assigned Field Technician, 4-Digit Handover OTP &amp; Official GST Tax Invoice Receipt.
               </p>
               <div className="pt-2 flex flex-wrap gap-2 text-xs font-bold">
-                <a href="/api/auth/demo-login?role=CUSTOMER&redirect=/customer" target="_blank" className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-800 hover:bg-blue-100 flex items-center gap-1 border border-blue-200">
+                <button onClick={(e) => handleLaunchRole(e, 'CUSTOMER', '/customer')} className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-800 hover:bg-blue-100 flex items-center gap-1 border border-blue-200 cursor-pointer">
                   CUST-SCR-01 Home &amp; Booking <Smartphone className="w-3 h-3" />
-                </a>
-                <a href="/api/auth/demo-login?role=CUSTOMER&redirect=/customer/track?id=J-1001" target="_blank" className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-800 hover:bg-blue-100 flex items-center gap-1 border border-blue-200">
+                </button>
+                <button onClick={(e) => handleLaunchRole(e, 'CUSTOMER', '/customer/track?id=J-1001')} className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-800 hover:bg-blue-100 flex items-center gap-1 border border-blue-200 cursor-pointer">
                   CUST-SCR-02 Live GPS Tracking <Smartphone className="w-3 h-3" />
-                </a>
-                <a href="/api/auth/demo-login?role=CUSTOMER&redirect=/customer/history" target="_blank" className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-800 hover:bg-blue-100 flex items-center gap-1 border border-blue-200">
+                </button>
+                <button onClick={(e) => handleLaunchRole(e, 'CUSTOMER', '/customer/history')} className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-800 hover:bg-blue-100 flex items-center gap-1 border border-blue-200 cursor-pointer">
                   CUST-SCR-03 Tax Receipt <Smartphone className="w-3 h-3" />
-                </a>
+                </button>
               </div>
             </div>
           </div>
