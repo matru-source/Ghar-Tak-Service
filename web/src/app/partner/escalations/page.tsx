@@ -119,6 +119,7 @@ export default function PartnerEscalationsPage() {
         headers,
         body: JSON.stringify({
           jobId: selectedJob.id,
+          reassignTechnicianId: chosenTech.id,
           newTechnicianId: chosenTech.id,
           reason,
         }),

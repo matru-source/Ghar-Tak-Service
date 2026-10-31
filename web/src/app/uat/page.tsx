@@ -27,6 +27,8 @@ import {
   ExternalLink,
   Smartphone,
   Laptop,
+  Building,
+  Copy,
 } from '@/components/ui/icons';
 
 interface SystemMetrics {
@@ -76,14 +78,29 @@ export default function ClientUATWalkthroughPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [signing, setSigning] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'ROLES' | 'LIFECYCLE' | 'SIGNOFF'>('OVERVIEW');
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   // Form inputs
   const [stakeholderName, setStakeholderName] = useState('Client Acceptance Board');
-  const [stakeholderOrg, setStakeholderOrg] = useState('STITCH Technologies');
+  const [stakeholderOrg, setStakeholderOrg] = useState('Saral Groups (GTS Platform)');
   const [stakeholderRole, setStakeholderRole] = useState('Principal Technical Stakeholder');
   const [signNotes, setSignNotes] = useState(
-    'All 53 screens, 4 multi-tenant role workspaces, and WORM SHA-256 audit ledger inspected and accepted with zero defects.'
+    'All 60 screens, 4 multi-tenant role workspaces, and WORM SHA-256 audit ledger inspected and accepted with zero defects.'
   );
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 5000);
+  };
+
+  const copyToClipboard = (text: string, key: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    showToast(`Copied "${text}" to clipboard`);
+    setTimeout(() => setCopiedKey(null), 2500);
+  };
 
   const fetchUatState = async () => {
     try {
@@ -109,11 +126,16 @@ export default function ClientUATWalkthroughPage() {
 
   const handleSignOff = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
     try {
       setSigning(true);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('gts_token') : null;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const res = await fetch('/api/uat/signoff', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           stakeholderName,
           stakeholderOrganization: stakeholderOrg,
@@ -124,10 +146,14 @@ export default function ClientUATWalkthroughPage() {
       const data = await res.json();
       if (data.success && data.certificate) {
         setCertificate(data.certificate);
+        showToast(`✓ Handover officially authorized! Sealed in WORM Block #${data.certificate.wormBlockSequence}`);
         await fetchUatState();
+      } else {
+        setErrorMessage(data.error || 'Failed to authorize sign-off. Please review details.');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Sign-off error:', err);
+      setErrorMessage(err.message || 'Network error executing UAT sign-off.');
     } finally {
       setSigning(false);
     }
@@ -135,6 +161,14 @@ export default function ClientUATWalkthroughPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-24 font-sans select-none">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 px-5 py-3.5 rounded-2xl bg-slate-900 text-white text-xs font-bold shadow-2xl border border-slate-700 flex items-center gap-2.5 animate-in fade-in slide-in-from-bottom-3">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       {/* Top Navigation & Status Bar */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-8 py-3.5 shadow-2xs">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -183,7 +217,7 @@ export default function ClientUATWalkthroughPage() {
         {/* Executive Banner */}
         <section className="rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 sm:p-10 shadow-xl border border-slate-800 relative overflow-hidden">
           <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-500/10 via-emerald-500/10 to-transparent pointer-events-none"></div>
-          
+
           <div className="relative z-10 max-w-3xl space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold text-emerald-300">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
@@ -195,8 +229,8 @@ export default function ClientUATWalkthroughPage() {
             </h1>
 
             <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
-              Ghar Tak Service has completed the proposed single-developer sequential development plan across all 45 master tasks. 
-              The platform encompasses 53 verified screens across Super Admin Web, Regional Partner Web/Mobile, Field Technician Mobile, and Customer Mobile apps.
+              Ghar Tak Service has completed the comprehensive multi-tenant engineering plan across all 45 master tasks. 
+              The platform encompasses 60 verified views across Super Admin Web, Regional Partner Web/Mobile, Field Technician Mobile, and Customer Mobile applications.
             </p>
 
             <div className="flex flex-wrap items-center gap-3 pt-2 text-xs font-bold">
@@ -232,8 +266,8 @@ export default function ClientUATWalkthroughPage() {
               <span>TOTAL SCREENS</span>
               <span className="text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-mono text-[10px]">Delivered</span>
             </div>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">53 Views</div>
-            <div className="text-xs text-slate-500 mt-1 font-medium">41 Web + 12 Mobile Screens</div>
+            <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">60 Views</div>
+            <div className="text-xs text-slate-500 mt-1 font-medium">41 Web + 19 Mobile &amp; Ops</div>
           </div>
 
           <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
@@ -242,7 +276,7 @@ export default function ClientUATWalkthroughPage() {
               <span className="text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full font-mono text-[10px]">SHA-256</span>
             </div>
             <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
-              #{metrics?.wormLedgerStatus?.totalBlocksSealed || 30} Blocks
+              #{metrics?.wormLedgerStatus?.totalBlocksSealed ?? 0} Blocks
             </div>
             <div className="text-xs text-slate-500 mt-1 font-medium">IT Act 65B &amp; RBI Compliant</div>
           </div>
@@ -257,11 +291,230 @@ export default function ClientUATWalkthroughPage() {
           </div>
         </section>
 
+        {/* 1-CLICK DEMO PERSONA QUICK-ACCESS BAR (ZERO LOGIN FRICTION) */}
+        <section className="rounded-3xl bg-white border-2 border-indigo-200/90 shadow-sm p-6 sm:p-8 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold font-mono">
+                <Zap className="w-3.5 h-3.5 text-indigo-600" />
+                ONE-CLICK DEMO PERSONA BAR (ZERO LOGIN FRICTION)
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-2">
+                Instant Multi-Tenant Role Switcher
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                Explore each workspace in a dedicated session. Clicking any button below authorizes the session and opens the portal directly.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* 1. Super Admin */}
+            <div className="p-5 rounded-2xl bg-purple-50/50 border border-purple-200 flex flex-col justify-between space-y-4">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="w-9 h-9 rounded-xl bg-[#4A148C] text-white flex items-center justify-center text-lg">👑</span>
+                  <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[10px] font-bold font-mono">41 Views</span>
+                </div>
+                <h3 className="font-bold text-sm text-slate-900 mt-3">Super Admin Command</h3>
+                <p className="text-[11px] text-slate-600 mt-1">
+                  National dispatch, WORM SHA-256 audit logs, double-entry escrow reconciliations &amp; partner network.
+                </p>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <a
+                  href="/api/auth/demo-login?role=SUPER_ADMIN&redirect=/admin"
+                  target="_blank"
+                  className="w-full py-2.5 px-3 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all"
+                >
+                  <span>Launch Admin (1-Click)</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+                <div className="flex items-center justify-between text-[10px] text-slate-500 bg-white/80 px-2.5 py-1.5 rounded-lg border border-purple-100 font-mono">
+                  <span>admin@ghartak.in</span>
+                  <button
+                    onClick={() => copyToClipboard('admin@ghartak.in', 'admin_email')}
+                    className="text-purple-700 hover:underline cursor-pointer"
+                    title="Copy demo login"
+                  >
+                    {copiedKey === 'admin_email' ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Regional Partner */}
+            <div className="p-5 rounded-2xl bg-emerald-50/50 border border-emerald-200 flex flex-col justify-between space-y-4">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="w-9 h-9 rounded-xl bg-[#1B5E20] text-white flex items-center justify-center text-lg">🏢</span>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold font-mono">11 Views</span>
+                </div>
+                <h3 className="font-bold text-sm text-slate-900 mt-3">Regional Partner Hub</h3>
+                <p className="text-[11px] text-slate-600 mt-1">
+                  Maharashtra Hub MH-01, Wireman fleet roster, SLA escalation radar &amp; 15% franchise payouts.
+                </p>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <a
+                  href="/api/auth/demo-login?role=PARTNER&redirect=/partner"
+                  target="_blank"
+                  className="w-full py-2.5 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all"
+                >
+                  <span>Launch Partner (1-Click)</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+                <div className="flex items-center justify-between text-[10px] text-slate-500 bg-white/80 px-2.5 py-1.5 rounded-lg border border-emerald-100 font-mono">
+                  <span>operations@ghartak.in</span>
+                  <button
+                    onClick={() => copyToClipboard('operations@ghartak.in', 'partner_email')}
+                    className="text-emerald-700 hover:underline cursor-pointer"
+                    title="Copy demo login"
+                  >
+                    {copiedKey === 'partner_email' ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Field Technician */}
+            <div className="p-5 rounded-2xl bg-orange-50/50 border border-orange-200 flex flex-col justify-between space-y-4">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="w-9 h-9 rounded-xl bg-[#E65100] text-white flex items-center justify-center text-lg">🔧</span>
+                  <span className="px-2 py-0.5 rounded-full bg-orange-100 text-orange-800 text-[10px] font-bold font-mono">5 Screens</span>
+                </div>
+                <h3 className="font-bold text-sm text-slate-900 mt-3">Field Technician Mobile</h3>
+                <p className="text-[11px] text-slate-600 mt-1">
+                  60s acceptance alert, GPS navigation, 1000V gloves checklist, customer OTP &amp; 70% daily wallet.
+                </p>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <a
+                  href="/api/auth/demo-login?role=TECHNICIAN&redirect=/tech"
+                  target="_blank"
+                  className="w-full py-2.5 px-3 rounded-xl bg-orange-700 hover:bg-orange-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all"
+                >
+                  <span>Launch Tech View (1-Click)</span>
+                  <Smartphone className="w-3 h-3" />
+                </a>
+                <div className="flex items-center justify-between text-[10px] text-slate-500 bg-white/80 px-2.5 py-1.5 rounded-lg border border-orange-100 font-mono">
+                  <span>rajesh.kumar@ghartak.in</span>
+                  <button
+                    onClick={() => copyToClipboard('+919876543210', 'tech_phone')}
+                    className="text-orange-700 hover:underline cursor-pointer"
+                    title="Copy phone"
+                  >
+                    {copiedKey === 'tech_phone' ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* 4. Customer Mobile */}
+            <div className="p-5 rounded-2xl bg-blue-50/50 border border-blue-200 flex flex-col justify-between space-y-4">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="w-9 h-9 rounded-xl bg-[#0D47A1] text-white flex items-center justify-center text-lg">👤</span>
+                  <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold font-mono">3 Screens</span>
+                </div>
+                <h3 className="font-bold text-sm text-slate-900 mt-3">Customer Mobile App</h3>
+                <p className="text-[11px] text-slate-600 mt-1">
+                  Colaba 400001 booking, live technician GPS radar, 4-digit handover OTP &amp; official GST receipt.
+                </p>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <a
+                  href="/api/auth/demo-login?role=CUSTOMER&redirect=/customer"
+                  target="_blank"
+                  className="w-full py-2.5 px-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all"
+                >
+                  <span>Launch Customer (1-Click)</span>
+                  <Smartphone className="w-3 h-3" />
+                </a>
+                <div className="flex items-center justify-between text-[10px] text-slate-500 bg-white/80 px-2.5 py-1.5 rounded-lg border border-blue-100 font-mono">
+                  <span>+91 98765 43220 (OTP: 1234)</span>
+                  <button
+                    onClick={() => copyToClipboard('9876543220', 'cust_phone')}
+                    className="text-blue-700 hover:underline cursor-pointer"
+                    title="Copy phone"
+                  >
+                    {copiedKey === 'cust_phone' ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 5-MINUTE GUIDED CLIENT WALKTHROUGH */}
+        <section className="rounded-3xl bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 text-white p-6 sm:p-8 shadow-xl border border-indigo-900/40 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-4">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400 font-mono">
+                Guided Acceptance Protocol
+              </span>
+              <h2 className="text-xl sm:text-2xl font-black text-white mt-1">
+                How to Test the Platform in 5 Minutes
+              </h2>
+            </div>
+            <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">
+              Zero Setup Needed
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2">
+              <span className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-[11px]">1</span>
+              <h4 className="font-bold text-white text-sm">Customer Order</h4>
+              <p className="text-slate-300 text-[11px] leading-relaxed">
+                Open <a href="/api/auth/demo-login?role=CUSTOMER&redirect=/customer" target="_blank" className="text-blue-400 underline font-bold">Customer App</a>, select Colaba 400001, and book MCB diagnostic.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2">
+              <span className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[11px]">2</span>
+              <h4 className="font-bold text-white text-sm">Partner Dispatch</h4>
+              <p className="text-slate-300 text-[11px] leading-relaxed">
+                Open <a href="/api/auth/demo-login?role=PARTNER&redirect=/partner" target="_blank" className="text-emerald-400 underline font-bold">Partner Hub</a>, observe incoming job ticket, review wireman roster &amp; SLA radar.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2">
+              <span className="w-6 h-6 rounded-full bg-orange-600 text-white flex items-center justify-center font-bold text-[11px]">3</span>
+              <h4 className="font-bold text-white text-sm">Field Tech Action</h4>
+              <p className="text-slate-300 text-[11px] leading-relaxed">
+                Open <a href="/api/auth/demo-login?role=TECHNICIAN&redirect=/tech" target="_blank" className="text-orange-400 underline font-bold">Tech App</a>, accept job within 60s, pass 1000V gloves checklist, and verify OTP.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2">
+              <span className="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-[11px]">4</span>
+              <h4 className="font-bold text-white text-sm">Admin Audit &amp; Escrow</h4>
+              <p className="text-slate-300 text-[11px] leading-relaxed">
+                Open <a href="/api/auth/demo-login?role=SUPER_ADMIN&redirect=/admin/finance" target="_blank" className="text-purple-400 underline font-bold">Admin Escrow</a> to see 70/15/15 commission and SHA-256 audit block.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2">
+              <span className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-[11px]">5</span>
+              <h4 className="font-bold text-white text-sm">Sign-off Certificate</h4>
+              <p className="text-slate-300 text-[11px] leading-relaxed">
+                Switch to Tab 4 below, input your name and entity, and seal the cryptographic handover certificate.
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* Tab Navigation */}
         <div className="flex border-b border-slate-200 text-sm font-bold gap-2">
           <button
             onClick={() => setActiveTab('OVERVIEW')}
-            className={`pb-3 px-4 transition-colors border-b-2 ${
+            className={`pb-3 px-4 transition-colors border-b-2 cursor-pointer ${
               activeTab === 'OVERVIEW'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -271,17 +524,17 @@ export default function ClientUATWalkthroughPage() {
           </button>
           <button
             onClick={() => setActiveTab('ROLES')}
-            className={`pb-3 px-4 transition-colors border-b-2 ${
+            className={`pb-3 px-4 transition-colors border-b-2 cursor-pointer ${
               activeTab === 'ROLES'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            2. 4 Role Workspaces (53 Screens)
+            2. 4 Role Workspaces (60 Screens)
           </button>
           <button
             onClick={() => setActiveTab('LIFECYCLE')}
-            className={`pb-3 px-4 transition-colors border-b-2 ${
+            className={`pb-3 px-4 transition-colors border-b-2 cursor-pointer ${
               activeTab === 'LIFECYCLE'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -291,7 +544,7 @@ export default function ClientUATWalkthroughPage() {
           </button>
           <button
             onClick={() => setActiveTab('SIGNOFF')}
-            className={`pb-3 px-4 transition-colors border-b-2 ${
+            className={`pb-3 px-4 transition-colors border-b-2 cursor-pointer ${
               activeTab === 'SIGNOFF'
                 ? 'border-emerald-600 text-emerald-700'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -367,7 +620,7 @@ export default function ClientUATWalkthroughPage() {
           </div>
         )}
 
-        {/* TAB 2: ROLES & 53 SCREENS */}
+        {/* TAB 2: ROLES & 60 SCREENS */}
         {activeTab === 'ROLES' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Super Admin */}
@@ -386,18 +639,18 @@ export default function ClientUATWalkthroughPage() {
                 National Telemetry, 24 Franchise Partners, Pincode Perimeters, National Wireman KYC Screening, Central 70/15/15 Escrow Ledgers, Zex Cyber Security Protection Plans, Support Helpdesk &amp; SHA-256 WORM Audit Logs.
               </p>
               <div className="pt-2 flex flex-wrap gap-2 text-xs font-bold">
-                <Link href="/admin" target="_blank" className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-800 hover:bg-purple-100 flex items-center gap-1 border border-purple-200">
+                <a href="/api/auth/demo-login?role=SUPER_ADMIN&redirect=/admin" target="_blank" className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-800 hover:bg-purple-100 flex items-center gap-1 border border-purple-200">
                   ADM-01 National Overview <ExternalLink className="w-3 h-3" />
-                </Link>
-                <Link href="/admin/finance" target="_blank" className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-800 hover:bg-purple-100 flex items-center gap-1 border border-purple-200">
+                </a>
+                <a href="/api/auth/demo-login?role=SUPER_ADMIN&redirect=/admin/finance" target="_blank" className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-800 hover:bg-purple-100 flex items-center gap-1 border border-purple-200">
                   ADM-12 Escrow Ledgers <ExternalLink className="w-3 h-3" />
-                </Link>
-                <Link href="/admin/audit" target="_blank" className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-800 hover:bg-purple-100 flex items-center gap-1 border border-purple-200">
+                </a>
+                <a href="/api/auth/demo-login?role=SUPER_ADMIN&redirect=/admin/audit" target="_blank" className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-800 hover:bg-purple-100 flex items-center gap-1 border border-purple-200">
                   ADM-22 WORM Audit Trail <ExternalLink className="w-3 h-3" />
-                </Link>
-                <Link href="/admin/partners" target="_blank" className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-800 hover:bg-purple-100 flex items-center gap-1 border border-purple-200">
+                </a>
+                <a href="/api/auth/demo-login?role=SUPER_ADMIN&redirect=/admin/partners" target="_blank" className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-800 hover:bg-purple-100 flex items-center gap-1 border border-purple-200">
                   ADM-02 Franchise Hubs <ExternalLink className="w-3 h-3" />
-                </Link>
+                </a>
               </div>
             </div>
 
@@ -417,18 +670,18 @@ export default function ClientUATWalkthroughPage() {
                 Maharashtra Operations Hub MH-01, Dispatch Console, #J-1005 SLA Proximity Escalation, Fleet Wireman Roster &amp; Shift Scheduling, Pincode 400001 Capacity Heatmap, Tax Invoices &amp; Instant ₹63,000 Payout.
               </p>
               <div className="pt-2 flex flex-wrap gap-2 text-xs font-bold">
-                <Link href="/partner" target="_blank" className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 flex items-center gap-1 border border-emerald-200">
+                <a href="/api/auth/demo-login?role=PARTNER&redirect=/partner" target="_blank" className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 flex items-center gap-1 border border-emerald-200">
                   PTNR-SCR-01 Web Command Hub <ExternalLink className="w-3 h-3" />
-                </Link>
-                <Link href="/partner-app" target="_blank" className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 flex items-center gap-1 border border-emerald-200">
+                </a>
+                <a href="/api/auth/demo-login?role=PARTNER&redirect=/partner-app" target="_blank" className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 flex items-center gap-1 border border-emerald-200">
                   PTNR-APP-01 Mobile Command <Smartphone className="w-3 h-3" />
-                </Link>
-                <Link href="/partner-app/escalations?id=J-1005" target="_blank" className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 flex items-center gap-1 border border-emerald-200">
+                </a>
+                <a href="/api/auth/demo-login?role=PARTNER&redirect=/partner/escalations" target="_blank" className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 flex items-center gap-1 border border-emerald-200">
                   PTNR-APP-02 SLA Reassign <Smartphone className="w-3 h-3" />
-                </Link>
-                <Link href="/partner-app/finance" target="_blank" className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 flex items-center gap-1 border border-emerald-200">
+                </a>
+                <a href="/api/auth/demo-login?role=PARTNER&redirect=/partner/invoices" target="_blank" className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 flex items-center gap-1 border border-emerald-200">
                   PTNR-APP-04 Fleet Finance <Smartphone className="w-3 h-3" />
-                </Link>
+                </a>
               </div>
             </div>
 
@@ -448,18 +701,18 @@ export default function ClientUATWalkthroughPage() {
                 Duty Online/Offline Toggle, 60s Acceptance Push Modal, Turn-by-Turn GPS Navigation, 1000V Class 0 Gloves &amp; MCB Lockout Safety Interlocks, Work Proof Photo Capture, Customer Handover OTP &amp; Daily IMPS Wallet Ledger.
               </p>
               <div className="pt-2 flex flex-wrap gap-2 text-xs font-bold">
-                <Link href="/tech" target="_blank" className="px-3 py-1.5 rounded-lg bg-orange-50 text-orange-800 hover:bg-orange-100 flex items-center gap-1 border border-orange-200">
+                <a href="/api/auth/demo-login?role=TECHNICIAN&redirect=/tech" target="_blank" className="px-3 py-1.5 rounded-lg bg-orange-50 text-orange-800 hover:bg-orange-100 flex items-center gap-1 border border-orange-200">
                   TECH-SCR-01 Duty Roster <Smartphone className="w-3 h-3" />
-                </Link>
-                <Link href="/tech/job?id=J-1001" target="_blank" className="px-3 py-1.5 rounded-lg bg-orange-50 text-orange-800 hover:bg-orange-100 flex items-center gap-1 border border-orange-200">
+                </a>
+                <a href="/api/auth/demo-login?role=TECHNICIAN&redirect=/tech/job?id=J-1001" target="_blank" className="px-3 py-1.5 rounded-lg bg-orange-50 text-orange-800 hover:bg-orange-100 flex items-center gap-1 border border-orange-200">
                   TECH-SCR-02 Navigation <Smartphone className="w-3 h-3" />
-                </Link>
-                <Link href="/tech/safety?id=J-1001" target="_blank" className="px-3 py-1.5 rounded-lg bg-orange-50 text-orange-800 hover:bg-orange-100 flex items-center gap-1 border border-orange-200">
+                </a>
+                <a href="/api/auth/demo-login?role=TECHNICIAN&redirect=/tech/safety?id=J-1001" target="_blank" className="px-3 py-1.5 rounded-lg bg-orange-50 text-orange-800 hover:bg-orange-100 flex items-center gap-1 border border-orange-200">
                   TECH-SCR-03 Safety Check <Smartphone className="w-3 h-3" />
-                </Link>
-                <Link href="/tech/earnings" target="_blank" className="px-3 py-1.5 rounded-lg bg-orange-50 text-orange-800 hover:bg-orange-100 flex items-center gap-1 border border-orange-200">
+                </a>
+                <a href="/api/auth/demo-login?role=TECHNICIAN&redirect=/tech/earnings" target="_blank" className="px-3 py-1.5 rounded-lg bg-orange-50 text-orange-800 hover:bg-orange-100 flex items-center gap-1 border border-orange-200">
                   TECH-SCR-05 Wallet Ledger <Smartphone className="w-3 h-3" />
-                </Link>
+                </a>
               </div>
             </div>
 
@@ -479,15 +732,15 @@ export default function ClientUATWalkthroughPage() {
                 Colaba 400001 Onboarding, Rapid Emergency Priority Dispatch, Service Category Hierarchy, Real-Time Live GPS Telemetry of Assigned Field Technician, 4-Digit Handover OTP &amp; Official GST Tax Invoice Receipt.
               </p>
               <div className="pt-2 flex flex-wrap gap-2 text-xs font-bold">
-                <Link href="/customer" target="_blank" className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-800 hover:bg-blue-100 flex items-center gap-1 border border-blue-200">
+                <a href="/api/auth/demo-login?role=CUSTOMER&redirect=/customer" target="_blank" className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-800 hover:bg-blue-100 flex items-center gap-1 border border-blue-200">
                   CUST-SCR-01 Home &amp; Booking <Smartphone className="w-3 h-3" />
-                </Link>
-                <Link href="/customer/track?id=J-1001" target="_blank" className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-800 hover:bg-blue-100 flex items-center gap-1 border border-blue-200">
+                </a>
+                <a href="/api/auth/demo-login?role=CUSTOMER&redirect=/customer/track?id=J-1001" target="_blank" className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-800 hover:bg-blue-100 flex items-center gap-1 border border-blue-200">
                   CUST-SCR-02 Live GPS Tracking <Smartphone className="w-3 h-3" />
-                </Link>
-                <Link href="/customer/history" target="_blank" className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-800 hover:bg-blue-100 flex items-center gap-1 border border-blue-200">
+                </a>
+                <a href="/api/auth/demo-login?role=CUSTOMER&redirect=/customer/history" target="_blank" className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-800 hover:bg-blue-100 flex items-center gap-1 border border-blue-200">
                   CUST-SCR-03 Tax Receipt <Smartphone className="w-3 h-3" />
-                </Link>
+                </a>
               </div>
             </div>
           </div>
@@ -503,13 +756,13 @@ export default function ClientUATWalkthroughPage() {
 
             <div className="space-y-4 text-xs font-medium">
               {[
-                { step: '1', title: 'Customer Booking Creation', desc: 'Customer creates booking for MCB Diagnostic at Colaba 400001. System matches Maharashtra Hub and assigns top-rated verified proximity technician.' },
+                { step: '1', title: 'Customer Booking Creation', desc: 'Customer creates booking for MCB Diagnostic at Colaba 400001 (initial ₹299 inspection quote). System matches Maharashtra Hub and assigns top-rated verified proximity technician.' },
                 { step: '2', title: 'Technician Push Dispatch Acceptance', desc: 'Inbound 60s alert modal accepted by technician. Work order transitions to EN_ROUTE with live GPS turn-by-turn navigation.' },
                 { step: '3', title: 'Doorstep Arrival Telemetry', desc: 'Technician reaches customer residence at Sea Green Apartments, Colaba. Geofence timestamp logged as ARRIVED.' },
                 { step: '4', title: 'Mandatory 1000V Gloves & MCB Safety Interlock', desc: 'Strict electrical safety protocol enforces physical 1000V Class 0 gloves confirmation and MCB lockout before work can commence.' },
                 { step: '5', title: 'Work Completion & 4-Digit Handover OTP', desc: 'After photo proof captured. Customer provides physical 4-digit OTP. Tamper-evident match transitions job to WORK_COMPLETED.' },
-                { step: '6', title: 'Automated 18% GST Invoicing', desc: 'Official Indian GST Tax Invoice (INV-2026-xxx) generated with statutory 9% CGST + 9% SGST breakdown.' },
-                { step: '7', title: '3-Way Double-Entry Commission Distribution', desc: 'Settlement posts 5 balanced double-entry transactions: 70% Tech (₹741.52), 15% Partner (₹158.90), 15% Platform (₹158.90), and 18% GST Reserve (₹190.68). Discrepancy: ₹0.00.' },
+                { step: '6', title: 'Work Scope Expansion & 18% GST Dual-Tax Invoicing', desc: 'Technician diagnoses sub-panel degradation. Customer approves ₹1,250 heavy breaker installation via mobile. Official Indian GST Tax Invoice generated with statutory 9% CGST (₹95.34) + 9% SGST (₹95.34).' },
+                { step: '7', title: '3-Way Double-Entry Commission Distribution', desc: 'Settlement automatically posts 5 balanced double-entry transactions from the ₹1,250 invoice: 70% Tech (₹741.52), 15% Partner (₹158.90), 15% Platform (₹158.90), and 18% GST Reserve (₹190.68). Discrepancy: ₹0.00.' },
                 { step: '8', title: 'Cryptographic SHA-256 WORM Sealing', desc: 'Every lifecycle transition is chained into the immutable WORM ledger in compliance with Indian IT Act 65B.' },
               ].map((item) => (
                 <div key={item.step} className="flex items-start gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200/80">
@@ -572,7 +825,7 @@ export default function ClientUATWalkthroughPage() {
                   <div className="p-3.5 rounded-xl bg-white/5 border border-white/10">
                     <span className="text-slate-400 block text-[10px] uppercase">Execution Scope</span>
                     <span className="font-bold text-white text-sm">45 / 45 Tasks (100%)</span>
-                    <span className="text-slate-400 block text-[11px]">53 Screens Delivered</span>
+                    <span className="text-slate-400 block text-[11px]">60 Screens Delivered</span>
                   </div>
                 </div>
 
@@ -600,6 +853,13 @@ export default function ClientUATWalkthroughPage() {
                     Executing this authorization permanently registers Milestone Gateway 2 into the immutable WORM ledger.
                   </p>
                 </div>
+
+                {errorMessage && (
+                  <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-bold">
                   <div>

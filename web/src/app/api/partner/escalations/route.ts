@@ -66,9 +66,10 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { jobId, reassignTechnicianId, reason, slaExtensionMinutes } = body;
+    const { jobId, reassignTechnicianId, newTechnicianId, targetTechnicianId, reason, slaExtensionMinutes } = body;
+    const targetTech = reassignTechnicianId || newTechnicianId || targetTechnicianId;
 
-    if (!jobId || !reassignTechnicianId) {
+    if (!jobId || !targetTech) {
       return NextResponse.json(
         { success: false, error: 'jobId and reassignTechnicianId are required' },
         { status: 400 }
@@ -76,7 +77,7 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await db.reassignJobProximity(jobId, {
-      targetTechnicianId: reassignTechnicianId,
+      targetTechnicianId: targetTech,
       reason: reason || 'Urgent 30-min SLA breach proximity reassignment by Regional Dispatcher',
       slaExtensionMinutes: slaExtensionMinutes || 20,
     });
