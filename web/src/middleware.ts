@@ -82,16 +82,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 4. Super Admin Subdomain Routing (admin.localhost:3000, admin.*, or Port 3001)
-  const isAdminHost = host.startsWith('admin.') || host.includes(':3001');
+  // 4. Super Admin Subdomain Routing (admin.* or admin.localhost)
+  const isAdminHost = host.startsWith('admin.');
   if (isAdminHost) {
-    // Prevent admin from viewing partner or customer pages
-    if (pathname.startsWith('/partner') || pathname.startsWith('/customer') || pathname.startsWith('/tech')) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/admin';
-      return NextResponse.redirect(url);
-    }
-
     // Root routing: If not authenticated, present the dedicated Admin Login portal; if authenticated, present /admin
     const authToken =
       request.cookies.get('gts_token')?.value ||
@@ -146,16 +139,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  // 3. Regional Partner Portal Routing (partner.localhost:3000, partner.*, or Port 3002)
-  const isPartnerHost = host.startsWith('partner.') || host.includes(':3002');
+  // 3. Regional Partner Portal Routing (partner.* or partner.localhost)
+  const isPartnerHost = host.startsWith('partner.');
   if (isPartnerHost) {
-    // Prevent partner from viewing super admin or customer pages
-    if (pathname.startsWith('/admin') || pathname.startsWith('/customer') || pathname.startsWith('/tech')) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/partner';
-      return NextResponse.redirect(url);
-    }
-
     // Root routing: If not authenticated, present the dedicated Partner Login portal; if authenticated, present /partner
     const authToken =
       request.cookies.get('gts_token')?.value ||
