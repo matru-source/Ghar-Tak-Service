@@ -17,15 +17,18 @@ async function resetTestData() {
     await prisma.partnerInventory.deleteMany({}).catch((e) => console.log('Notice inventories:', e.message));
     await prisma.job.deleteMany({}).catch((e) => console.log('Notice jobs:', e.message));
 
-    // 2. Purge Technicians (leaves users or deletes tech users)
-    console.log('🧹 Purging Test Technicians & Customer Profiles...');
+    // 2. Purge Technicians, Customer Profiles, Pincode Coverages & Partners
+    console.log('🧹 Purging Technicians, Customers, Pincodes & Partners...');
     await prisma.technician.deleteMany({}).catch((e) => console.log('Notice technicians:', e.message));
     await prisma.customerProfile.deleteMany({}).catch((e) => console.log('Notice customerProfiles:', e.message));
+    await prisma.pincodeCoverage.deleteMany({}).catch((e) => console.log('Notice pincodes:', e.message));
+    await prisma.partner.deleteMany({}).catch((e) => console.log('Notice partners:', e.message));
 
-    // 3. Purge non-admin Users (Customer & Technician users)
+    // 3. Purge all non-admin Users (Customer, Technician & Partner users - keeping ONLY SUPER_ADMIN)
+    console.log('🧹 Purging all users except Super Admin...');
     await prisma.user.deleteMany({
       where: {
-        role: { in: ['CUSTOMER', 'TECHNICIAN'] }
+        role: { not: 'SUPER_ADMIN' }
       }
     }).catch((e) => console.log('Notice users:', e.message));
 

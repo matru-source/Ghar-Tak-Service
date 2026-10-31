@@ -24,8 +24,10 @@ export async function POST(request: NextRequest) {
       await prisma.job.deleteMany({}).catch(() => {});
       await prisma.technician.deleteMany({}).catch(() => {});
       await prisma.customerProfile.deleteMany({}).catch(() => {});
+      await prisma.pincodeCoverage.deleteMany({}).catch(() => {});
+      await prisma.partner.deleteMany({}).catch(() => {});
       await prisma.user.deleteMany({
-        where: { role: { in: ['CUSTOMER', 'TECHNICIAN'] } }
+        where: { role: { not: 'SUPER_ADMIN' } }
       }).catch(() => {});
     }
 
@@ -37,7 +39,9 @@ export async function POST(request: NextRequest) {
     dbStore.supportTickets = [];
     dbStore.technicians = [];
     dbStore.customers = [];
-    dbStore.users = dbStore.users.filter((u) => u.role === 'SUPER_ADMIN' || u.role === 'PARTNER');
+    dbStore.partners = [];
+    dbStore.pincodes = [];
+    dbStore.users = dbStore.users.filter((u) => u.role === 'SUPER_ADMIN');
 
     // Reset disk files
     try {
