@@ -59,6 +59,21 @@ export default function Home() {
             </div>
             <span className="text-emerald-400 text-lg group-hover:translate-x-1.5 transition-transform">→</span>
           </Link>
+
+          {/* Card 3: Client UAT & Handover Portal */}
+          <Link
+            href="/uat"
+            className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-900/50 to-indigo-950/50 hover:from-blue-800/60 hover:to-indigo-900/60 border border-blue-500/30 text-slate-100 font-bold text-xs transition shadow-lg shadow-blue-950/40 flex items-center justify-between group"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">📋</span>
+              <div className="text-left">
+                <div className="font-black text-blue-300 text-sm">Client UAT &amp; Handover Portal</div>
+                <div className="text-[11px] text-blue-200/80 font-normal">All 60 Screens, 1-Click Role Switcher &amp; WORM Sign-Off Seal</div>
+              </div>
+            </div>
+            <span className="text-blue-400 text-lg group-hover:translate-x-1.5 transition-transform">→</span>
+          </Link>
         </div>
 
         {/* Footer */}
