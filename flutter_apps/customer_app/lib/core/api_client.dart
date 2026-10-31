@@ -8,6 +8,8 @@ class ApiResponse<T> {
   final T? data;
   final int statusCode;
 
+  String? get error => message;
+
   ApiResponse({
     required this.success,
     this.message,

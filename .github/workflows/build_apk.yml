@@ -2,7 +2,7 @@ name: Build Ghar Tak Android APKs
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, flutter-cross-platform ]
   pull_request:
     branches: [ main, master ]
   workflow_dispatch:
@@ -85,12 +85,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: customer-app-debug-apk
-          path: android/customer-app/build/outputs/apk/debug/*.apk
+          path: android/customer-app/build/outputs/apk/**/*.apk
           if-no-files-found: error
 
       - name: Upload Technician App Debug APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: technician-app-debug-apk
-          path: android/technician-app/build/outputs/apk/debug/*.apk
+          path: android/technician-app/build/outputs/apk/**/*.apk
           if-no-files-found: error

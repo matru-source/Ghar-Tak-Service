@@ -160,7 +160,7 @@ class _TechProfileViewState extends State<TechProfileView> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(res.error ?? 'Failed to submit KYC documents'),
+              content: Text(res.message ?? 'Failed to submit KYC documents'),
               backgroundColor: TechTheme.signalCrimson,
             ),
           );
