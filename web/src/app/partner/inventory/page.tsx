@@ -17,6 +17,7 @@ import {
   Check,
 } from '@/components/ui/icons';
 import { getActivePartnerId } from '@/lib/partner-session';
+import { useRealtimeEvents } from '@/lib/use-realtime-events';
 
 interface PartnerInventoryItem {
   id: string;
@@ -87,8 +88,25 @@ export default function PartnerWarehouseInventoryPage() {
     }
   };
 
+  useRealtimeEvents({
+    role: 'PARTNER',
+    partnerId: getActivePartnerId(),
+    onEvent: (event) => {
+      if (
+        event.type === 'PART_ADDED' ||
+        event.type === 'MATERIAL_ADDED' ||
+        event.type === 'JOB_PRICE_UPDATED' ||
+        event.type === 'JOB_COMPLETED'
+      ) {
+        fetchInventory();
+      }
+    },
+  });
+
   useEffect(() => {
     fetchInventory();
+    const interval = setInterval(fetchInventory, 20000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleRestock = async () => {

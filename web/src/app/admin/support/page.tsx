@@ -18,6 +18,7 @@ import {
   X,
   Sparkles,
 } from '@/components/ui/icons';
+import { useAdminLive } from '@/components/admin/admin-live-provider';
 
 interface SupportTicket {
   id: string;
@@ -51,6 +52,7 @@ interface Telemetry {
 }
 
 export default function AdminSupportPage() {
+  const { refreshKey, lastEvent } = useAdminLive();
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [telemetry, setTelemetry] = useState<Telemetry | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,7 +84,9 @@ export default function AdminSupportPage() {
 
   useEffect(() => {
     fetchTickets();
-  }, []);
+    const interval = setInterval(fetchTickets, 20000);
+    return () => clearInterval(interval);
+  }, [refreshKey]);
 
   const handleResolveTicket = async (e: React.FormEvent) => {
     e.preventDefault();

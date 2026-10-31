@@ -349,13 +349,15 @@ export default function ClientUATWalkthroughPage() {
               </div>
 
               <div className="space-y-2 pt-2">
-                <button
-                  onClick={(e) => handleLaunchRole(e, 'SUPER_ADMIN', '/admin')}
-                  className="w-full py-2.5 px-3 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                <a
+                  href="/api/auth/demo-login?role=SUPER_ADMIN&redirect=%2Fadmin"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-2.5 px-3 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer text-center"
                 >
                   <span>Launch Admin (1-Click)</span>
                   <ExternalLink className="w-3 h-3" />
-                </button>
+                </a>
                 <div className="flex items-center justify-between text-[10px] text-slate-500 bg-white/80 px-2.5 py-1.5 rounded-lg border border-purple-100 font-mono">
                   <span>admin@ghartak.in</span>
                   <button
@@ -383,13 +385,15 @@ export default function ClientUATWalkthroughPage() {
               </div>
 
               <div className="space-y-2 pt-2">
-                <button
-                  onClick={(e) => handleLaunchRole(e, 'PARTNER', '/partner')}
-                  className="w-full py-2.5 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                <a
+                  href="/api/auth/demo-login?role=PARTNER&redirect=%2Fpartner"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-2.5 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer text-center"
                 >
                   <span>Launch Partner (1-Click)</span>
                   <ExternalLink className="w-3 h-3" />
-                </button>
+                </a>
                 <div className="flex items-center justify-between text-[10px] text-slate-500 bg-white/80 px-2.5 py-1.5 rounded-lg border border-emerald-100 font-mono">
                   <span>operations@ghartak.in</span>
                   <button
@@ -417,13 +421,15 @@ export default function ClientUATWalkthroughPage() {
               </div>
 
               <div className="space-y-2 pt-2">
-                <button
-                  onClick={(e) => handleLaunchRole(e, 'TECHNICIAN', '/tech')}
-                  className="w-full py-2.5 px-3 rounded-xl bg-orange-700 hover:bg-orange-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                <a
+                  href="/api/auth/demo-login?role=TECHNICIAN&redirect=%2Ftech"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-2.5 px-3 rounded-xl bg-orange-700 hover:bg-orange-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer text-center"
                 >
                   <span>Launch Tech View (1-Click)</span>
                   <Smartphone className="w-3 h-3" />
-                </button>
+                </a>
                 <div className="flex items-center justify-between text-[10px] text-slate-500 bg-white/80 px-2.5 py-1.5 rounded-lg border border-orange-100 font-mono">
                   <span>rajesh.kumar@ghartak.in</span>
                   <button
@@ -451,13 +457,15 @@ export default function ClientUATWalkthroughPage() {
               </div>
 
               <div className="space-y-2 pt-2">
-                <button
-                  onClick={(e) => handleLaunchRole(e, 'CUSTOMER', '/customer')}
-                  className="w-full py-2.5 px-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                <a
+                  href="/api/auth/demo-login?role=CUSTOMER&redirect=%2Fcustomer"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-2.5 px-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer text-center"
                 >
                   <span>Launch Customer (1-Click)</span>
                   <Smartphone className="w-3 h-3" />
-                </button>
+                </a>
                 <div className="flex items-center justify-between text-[10px] text-slate-500 bg-white/80 px-2.5 py-1.5 rounded-lg border border-blue-100 font-mono">
                   <span>+91 98765 43220 (OTP: 1234)</span>
                   <button

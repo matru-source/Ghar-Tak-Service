@@ -18,6 +18,7 @@ import {
   History,
   ShieldAlert,
 } from '@/components/ui/icons';
+import { useAdminLive } from '@/components/admin/admin-live-provider';
 
 interface WormAuditLog {
   id: string;
@@ -45,6 +46,7 @@ interface ChainIntegrity {
 }
 
 export default function AdminAuditPage() {
+  const { refreshKey, lastEvent } = useAdminLive();
   const [logs, setLogs] = useState<WormAuditLog[]>([]);
   const [chainIntegrity, setChainIntegrity] = useState<ChainIntegrity | null>(null);
   const [loading, setLoading] = useState(true);
@@ -72,7 +74,15 @@ export default function AdminAuditPage() {
 
   useEffect(() => {
     fetchLogs();
+    const interval = setInterval(fetchLogs, 15000);
+    return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (refreshKey > 0) {
+      fetchLogs();
+    }
+  }, [refreshKey, lastEvent]);
 
   const handleVerifyChain = async () => {
     try {

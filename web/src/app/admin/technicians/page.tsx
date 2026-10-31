@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { BrandMark } from '@/components/ui/brand-logo';
+import { useAdminLive } from '@/components/admin/admin-live-provider';
 
 interface TechnicianRecord {
   id: string;
@@ -30,6 +31,7 @@ interface TechnicianRecord {
 }
 
 export default function AdminTechniciansPage() {
+  const { refreshKey, lastEvent } = useAdminLive();
   const [technicians, setTechnicians] = useState<TechnicianRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -74,7 +76,15 @@ export default function AdminTechniciansPage() {
 
   useEffect(() => {
     fetchTechnicians();
+    const interval = setInterval(fetchTechnicians, 20000);
+    return () => clearInterval(interval);
   }, [kycFilter, onlineFilter]);
+
+  useEffect(() => {
+    if (refreshKey > 0) {
+      fetchTechnicians();
+    }
+  }, [refreshKey, lastEvent]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();

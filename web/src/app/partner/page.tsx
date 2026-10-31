@@ -238,6 +238,8 @@ export default function PartnerDashboardPage() {
       new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
     );
     syncBackendData();
+    const interval = setInterval(syncBackendData, 25000);
+    return () => clearInterval(interval);
   }, [syncBackendData]);
 
   // Real-time Event Subscription for Regional Partner CRM

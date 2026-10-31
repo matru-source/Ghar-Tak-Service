@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BrandLogo, BrandMark } from '@/components/ui/brand-logo';
+import { useAdminLive } from '@/components/admin/admin-live-provider';
 
 interface EscalatedJob {
   id: string;
@@ -22,6 +23,7 @@ interface EscalatedJob {
 }
 
 export default function AdminEscalationsPage() {
+  const { refreshKey, lastEvent } = useAdminLive();
   const [escalatedJobs, setEscalatedJobs] = useState<EscalatedJob[]>([]);
   const [atRiskJobs, setAtRiskJobs] = useState<EscalatedJob[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +72,15 @@ export default function AdminEscalationsPage() {
 
   useEffect(() => {
     fetchEscalations();
+    const interval = setInterval(fetchEscalations, 15000);
+    return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (refreshKey > 0) {
+      fetchEscalations();
+    }
+  }, [refreshKey, lastEvent]);
 
   const displayedJobs = activeTab === 'ESCALATED' ? escalatedJobs : atRiskJobs;
 

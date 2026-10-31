@@ -81,6 +81,8 @@ export default function PartnerSupportPage() {
 
   useEffect(() => {
     fetchTickets();
+    const interval = setInterval(fetchTickets, 20000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleCreateTicket = async (e: React.FormEvent) => {

@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useAdminLive } from '@/components/admin/admin-live-provider';
 
 export default function AdminCommissionsPage() {
+  const { refreshKey } = useAdminLive();
   const [platformPct, setPlatformPct] = useState(15.0);
   const [partnerPct, setPartnerPct] = useState(15.0);
   const [techPct, setTechPct] = useState(70.0);
@@ -44,7 +46,7 @@ export default function AdminCommissionsPage() {
 
   useEffect(() => {
     fetchConfig();
-  }, []);
+  }, [refreshKey]);
 
   const totalBaseShare = Math.round((platformPct + partnerPct + techPct) * 10) / 10;
   const isBalanced = Math.abs(totalBaseShare - 100.0) < 0.05;

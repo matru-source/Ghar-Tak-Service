@@ -79,6 +79,8 @@ export default function PartnerEscalationsPage() {
 
   useEffect(() => {
     fetchEscalations();
+    const interval = setInterval(fetchEscalations, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   // Real-Time SSE auto-refresh (Issue 9): Instantly refresh escalations on SLA breach
@@ -89,11 +91,14 @@ export default function PartnerEscalationsPage() {
       type === 'JOB_ESCALATED' ||
       type === 'SLA_BREACH' ||
       type === 'SLA_BREACH_TIMER' ||
+      type === 'SLA_BREACH_WARNING' ||
       type === 'JOB_CREATED' ||
       type === 'TECH_DISPATCHED' ||
       type === 'TECH_ACCEPTED' ||
+      type === 'JOB_STATUS_UPDATE' ||
       type === 'JOB_STATUS_UPDATED' ||
-      type === 'JOB_COMPLETED'
+      type === 'JOB_COMPLETED' ||
+      type === 'JOB_REASSIGNED'
     ) {
       fetchEscalations();
     }

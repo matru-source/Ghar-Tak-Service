@@ -157,6 +157,9 @@ export function useRealtimeEvents({
       resetHeartbeatWatchdog();
       try {
         const payload: RealtimeEventPayload = JSON.parse(messageEvent.data);
+        if (payload.type === 'HEARTBEAT') {
+          return; // Keep-alive only; resets watchdog without state thrashing
+        }
         setLastEvent(payload);
         if (onEventRef.current) {
           onEventRef.current(payload);

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useAdminLive } from '@/components/admin/admin-live-provider';
 
 interface FinanceData {
   totalGmvInr: number;
@@ -26,6 +27,7 @@ interface FinanceData {
 }
 
 export default function AdminFinancePage() {
+  const { refreshKey, lastEvent } = useAdminLive();
   const [finance, setFinance] = useState<FinanceData | null>(null);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,7 +65,15 @@ export default function AdminFinancePage() {
 
   useEffect(() => {
     fetchFinanceData();
+    const interval = setInterval(fetchFinanceData, 20000);
+    return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (refreshKey > 0) {
+      fetchFinanceData();
+    }
+  }, [refreshKey, lastEvent]);
 
   return (
     <div className="space-y-6">

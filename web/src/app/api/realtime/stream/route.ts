@@ -135,7 +135,9 @@ export async function GET(request: NextRequest) {
             }
           }
 
-          const payloadStr = `event: ${safeEvent.type}\ndata: ${JSON.stringify(safeEvent)}\n\n`;
+          // Dual emit: named event for addEventListener() subscribers AND standard message event for onmessage handlers
+          const eventJson = JSON.stringify(safeEvent);
+          const payloadStr = `event: ${safeEvent.type}\ndata: ${eventJson}\n\nevent: message\ndata: ${eventJson}\n\n`;
           controller.enqueue(encoder.encode(payloadStr));
         } catch {
           // Stream controller closed
@@ -157,7 +159,9 @@ export async function GET(request: NextRequest) {
       // 3. Keep-alive heartbeat ping every 15 seconds
       const heartbeatInterval = setInterval(() => {
         try {
-          controller.enqueue(encoder.encode(': ping\n\n'));
+          controller.enqueue(
+            encoder.encode(`: ping\nevent: message\ndata: ${JSON.stringify({ type: 'HEARTBEAT', timestamp: new Date().toISOString() })}\n\n`)
+          );
         } catch {
           clearInterval(heartbeatInterval);
           unsubscribe();

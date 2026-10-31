@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useAdminLive } from '@/components/admin/admin-live-provider';
 import {
   ShieldCheck,
   Zap,
@@ -62,6 +63,7 @@ interface Telemetry {
 }
 
 export default function AdminSubscriptionsPage() {
+  const { refreshKey } = useAdminLive();
   const [activeTab, setActiveTab] = useState<'TIERS' | 'SUBSCRIBERS'>('TIERS');
   const [tiers, setTiers] = useState<SubscriptionTier[]>([]);
   const [subscriptions, setSubscriptions] = useState<SubscriptionRecord[]>([]);
@@ -97,7 +99,9 @@ export default function AdminSubscriptionsPage() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+    const interval = setInterval(fetchData, 20000);
+    return () => clearInterval(interval);
+  }, [refreshKey]);
 
   const handleUpdateTier = async (e: React.FormEvent) => {
     e.preventDefault();

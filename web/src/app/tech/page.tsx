@@ -300,6 +300,13 @@ export default function TechnicianDashboardPage() {
         if (prev <= 1) {
           clearInterval(timer);
           setIsDispatchModalOpen(false);
+          if (urgentJob?.id) {
+            fetch(`/api/jobs/${encodeURIComponent(urgentJob.id)}/dispatch-response`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'REJECT', reason: 'TIMEOUT_60S', technicianId }),
+            }).catch(() => {});
+          }
           showToast('⚠️ Priority Job acceptance window expired. Reassigned to standby fleet.');
           return 0;
         }

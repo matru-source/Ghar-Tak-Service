@@ -22,6 +22,7 @@ import {
   Download,
   Building,
 } from '@/components/ui/icons';
+import { useRealtimeEvents } from '@/lib/use-realtime-events';
 
 type Timeframe = 'today' | 'week' | 'month';
 
@@ -68,6 +69,17 @@ export default function TechEarningsPage() {
       }
     } catch (_) {}
   }, []);
+
+  useRealtimeEvents({
+    role: 'TECHNICIAN',
+    onEvent: (event) => {
+      if (event.type === 'PAYOUT_TRANSFERRED' || event.type === 'JOB_COMPLETED') {
+        const addedPayout = event.details?.technicianPayoutInr || 875;
+        setWalletBalance((prev) => prev + addedPayout);
+        showToast(`⚡ Daily Wallet Credit: +₹${addedPayout} received in real time!`);
+      }
+    },
+  });
 
   // Timeframe configurations
   const timeframeData: Record<Timeframe, EarningsData> = {

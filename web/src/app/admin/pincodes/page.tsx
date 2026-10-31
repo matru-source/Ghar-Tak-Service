@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useAdminLive } from '@/components/admin/admin-live-provider';
 
 interface PincodeTerritory {
   id: string;
@@ -28,6 +29,7 @@ interface PincodeTerritory {
 }
 
 export default function AdminPincodesPage() {
+  const { refreshKey } = useAdminLive();
   const [pincodes, setPincodes] = useState<PincodeTerritory[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -143,7 +145,9 @@ export default function AdminPincodesPage() {
 
   useEffect(() => {
     fetchPincodes();
-  }, [stateFilter, densityFilter]);
+    const interval = setInterval(fetchPincodes, 25000);
+    return () => clearInterval(interval);
+  }, [stateFilter, densityFilter, refreshKey]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();

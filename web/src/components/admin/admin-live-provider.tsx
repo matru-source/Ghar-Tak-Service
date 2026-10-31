@@ -9,6 +9,7 @@ interface AdminLiveContextType {
   status: RealtimeConnectionStatus;
   lastEvent: RealtimeEventPayload | null;
   liveEvents: RealtimeEventPayload[];
+  refreshKey: number;
   activeNotification: { title: string; message: string; type?: string; ticket?: string } | null;
   clearNotification: () => void;
 }
@@ -17,6 +18,7 @@ const AdminLiveContext = createContext<AdminLiveContextType>({
   status: 'DISCONNECTED',
   lastEvent: null,
   liveEvents: [],
+  refreshKey: 0,
   activeNotification: null,
   clearNotification: () => {},
 });
@@ -28,6 +30,7 @@ export function useAdminLive() {
 export function AdminLiveProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [liveEvents, setLiveEvents] = useState<RealtimeEventPayload[]>([]);
+  const [refreshKey, setRefreshKey] = useState<number>(0);
   const [activeNotification, setActiveNotification] = useState<{
     title: string;
     message: string;
@@ -38,6 +41,7 @@ export function AdminLiveProvider({ children }: { children: React.ReactNode }) {
   const refreshDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const triggerDebouncedRscRefresh = useCallback(() => {
+    setRefreshKey((prev) => prev + 1);
     if (refreshDebounceRef.current) {
       clearTimeout(refreshDebounceRef.current);
     }
@@ -105,6 +109,7 @@ export function AdminLiveProvider({ children }: { children: React.ReactNode }) {
         status,
         lastEvent,
         liveEvents,
+        refreshKey,
         activeNotification,
         clearNotification: () => setActiveNotification(null),
       }}

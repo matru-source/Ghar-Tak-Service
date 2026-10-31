@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BrandLogo, BrandMark } from '@/components/ui/brand-logo';
+import { useAdminLive } from '@/components/admin/admin-live-provider';
 
 interface AdminInvoice {
   id: string;
@@ -27,6 +28,7 @@ interface AdminInvoice {
 }
 
 export default function AdminInvoicesPage() {
+  const { refreshKey, lastEvent } = useAdminLive();
   const [invoices, setInvoices] = useState<AdminInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -56,7 +58,15 @@ export default function AdminInvoicesPage() {
 
   useEffect(() => {
     fetchInvoices();
+    const interval = setInterval(fetchInvoices, 20000);
+    return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (refreshKey > 0) {
+      fetchInvoices();
+    }
+  }, [refreshKey, lastEvent]);
 
   const filteredInvoices = invoices.filter((inv) => {
     if (statusFilter !== 'ALL' && inv.paymentStatus !== statusFilter) return false;

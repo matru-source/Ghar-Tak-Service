@@ -134,7 +134,13 @@ export default function CustomerLiveTrackingPage() {
 
         if (typeof window !== 'undefined') {
           const params = new URLSearchParams(window.location.search);
-          ticketOrId = params.get('ticket') || params.get('id') || params.get('jobId') || '';
+          ticketOrId =
+            params.get('ticket') ||
+            params.get('id') ||
+            params.get('jobId') ||
+            localStorage.getItem('gts_active_job_id') ||
+            localStorage.getItem('gts_active_job_ticket') ||
+            '';
           const savedSession = localStorage.getItem('gts_customer_session');
           if (savedSession) {
             try {
@@ -294,8 +300,31 @@ export default function CustomerLiveTrackingPage() {
               message: 'Service successfully completed! Tap below to view your invoice & rate.',
               type: 'success',
             });
+          } else if (payload.type === 'TECH_DISPATCHED' || payload.type === 'TECH_ACCEPTED') {
+            setJob((prev) => ({
+              ...prev,
+              status: 'EN_ROUTE',
+              technician: {
+                ...prev.technician,
+                fullName: payload.details?.technicianName || prev.technician.fullName,
+                phone: payload.details?.technicianPhone || prev.technician.phone,
+                badgeNumber: payload.details?.badgeNumber || prev.technician.badgeNumber,
+              },
+            }));
+            setQuoteNotification({
+              message: `Specialist assigned: ${payload.details?.technicianName || 'Field Technician'}. En route!`,
+              type: 'info',
+            });
+          } else if (payload.type === 'TECH_LOCATION_UPDATE' && payload.location) {
+            if (typeof payload.location.etaMinutes === 'number') {
+              setEtaMinutes(payload.location.etaMinutes);
+            }
           } else if (payload.type === 'TECH_ARRIVED') {
             setJob((prev) => ({ ...prev, status: 'ARRIVED' }));
+            setQuoteNotification({
+              message: 'Technician is at your doorstep. Please share the 4-digit handover OTP.',
+              type: 'info',
+            });
           }
         } catch (_) {}
       };

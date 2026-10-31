@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useAdminLive } from '@/components/admin/admin-live-provider';
 
 interface CustomerRecord {
   id: string;
@@ -23,6 +24,7 @@ interface CustomerRecord {
 }
 
 export default function AdminCustomersPage() {
+  const { refreshKey } = useAdminLive();
   const [customers, setCustomers] = useState<CustomerRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -68,7 +70,9 @@ export default function AdminCustomersPage() {
 
   useEffect(() => {
     fetchCustomers();
-  }, [planFilter]);
+    const interval = setInterval(fetchCustomers, 20000);
+    return () => clearInterval(interval);
+  }, [planFilter, refreshKey]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();

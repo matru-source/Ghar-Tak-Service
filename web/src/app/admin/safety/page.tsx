@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useAdminLive } from '@/components/admin/admin-live-provider';
 import {
   ShieldCheck,
   Zap,
@@ -49,6 +50,7 @@ interface InspectionTelemetry {
 }
 
 export default function AdminSafetyQueuePage() {
+  const { refreshKey } = useAdminLive();
   const [items, setItems] = useState<SafetyInspectionItem[]>([]);
   const [telemetry, setTelemetry] = useState<InspectionTelemetry>({
     totalCount: 0,
@@ -107,7 +109,7 @@ export default function AdminSafetyQueuePage() {
     fetchQueue();
     const interval = setInterval(fetchQueue, 15000);
     return () => clearInterval(interval);
-  }, [statusFilter, voltageFilter]);
+  }, [statusFilter, voltageFilter, refreshKey]);
 
   const handleReviewAction = async (
     jobId: string,

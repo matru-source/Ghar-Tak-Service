@@ -213,6 +213,14 @@ export default function CustomerBookingsPage() {
         pincode: pincode,
       });
 
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('gts_active_job_id', data.data.id);
+          localStorage.setItem('gts_active_job_ticket', data.data.jobTicketNumber);
+          localStorage.setItem('gts_active_job', JSON.stringify(data.data));
+        } catch {}
+      }
+
       setCurrentStep(4);
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Booking failed');
@@ -657,7 +665,7 @@ export default function CustomerBookingsPage() {
 
             <div className="space-y-2 pt-2">
               <Link
-                href="/customer/track"
+                href={`/customer/track?id=${createdJob.id}&ticket=${createdJob.jobTicketNumber}`}
                 className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md shadow-blue-600/30 flex items-center justify-center gap-2 transition-all block"
               >
                 <Navigation className="w-4 h-4" />

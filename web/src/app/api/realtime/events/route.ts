@@ -70,10 +70,14 @@ export async function GET(request: NextRequest) {
         { role, partnerId, technicianId, customerId, jobId }
       );
 
-      // 3. Heartbeat Keep-Alive every 15 seconds
+      // 3. Heartbeat Keep-Alive every 15 seconds (Sends both SSE comment and valid HEARTBEAT data frame to prevent client watchdog timeout)
       keepAliveInterval = setInterval(() => {
         try {
-          controller.enqueue(encoder.encode(`:heartbeat\n\n`));
+          controller.enqueue(
+            encoder.encode(
+              `:heartbeat\nevent: message\ndata: ${JSON.stringify({ type: 'HEARTBEAT', timestamp: new Date().toISOString() })}\n\n`
+            )
+          );
         } catch {
           if (keepAliveInterval) clearInterval(keepAliveInterval);
         }

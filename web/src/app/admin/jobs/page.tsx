@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BrandLogo, BrandMark } from '@/components/ui/brand-logo';
+import { useAdminLive } from '@/components/admin/admin-live-provider';
 
 interface AdminJob {
   id: string;
@@ -27,6 +28,7 @@ interface AdminJob {
 }
 
 export default function AdminJobsQueuePage() {
+  const { refreshKey, lastEvent } = useAdminLive();
   const [jobs, setJobs] = useState<AdminJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -57,7 +59,15 @@ export default function AdminJobsQueuePage() {
 
   useEffect(() => {
     fetchJobs();
+    const interval = setInterval(fetchJobs, 20000);
+    return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (refreshKey > 0) {
+      fetchJobs();
+    }
+  }, [refreshKey, lastEvent]);
 
   const filteredJobs = jobs.filter((j) => {
     if (statusFilter !== 'ALL') {

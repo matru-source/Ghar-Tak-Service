@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useAdminLive } from '@/components/admin/admin-live-provider';
 import {
   AlertTriangle,
   Clock,
@@ -53,6 +54,7 @@ interface Telemetry {
 }
 
 export default function AdminDisputesPage() {
+  const { refreshKey, lastEvent } = useAdminLive();
   const [disputes, setDisputes] = useState<DisputeTicket[]>([]);
   const [telemetry, setTelemetry] = useState<Telemetry | null>(null);
   const [loading, setLoading] = useState(true);
@@ -85,7 +87,15 @@ export default function AdminDisputesPage() {
 
   useEffect(() => {
     fetchDisputes();
+    const interval = setInterval(fetchDisputes, 20000);
+    return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (refreshKey > 0) {
+      fetchDisputes();
+    }
+  }, [refreshKey, lastEvent]);
 
   const openResolutionModal = (ticket: DisputeTicket) => {
     setSelectedDispute(ticket);

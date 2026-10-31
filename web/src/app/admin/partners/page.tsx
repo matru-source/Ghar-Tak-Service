@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { BrandMark } from '@/components/ui/brand-logo';
+import { useAdminLive } from '@/components/admin/admin-live-provider';
 
 interface Partner {
   id: string;
@@ -28,6 +29,7 @@ interface Partner {
 }
 
 export default function AdminPartnersPage() {
+  const { refreshKey } = useAdminLive();
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -138,7 +140,9 @@ export default function AdminPartnersPage() {
         }
       })
       .catch(() => {});
-  }, [stateFilter, statusFilter]);
+    const interval = setInterval(fetchPartners, 20000);
+    return () => clearInterval(interval);
+  }, [stateFilter, statusFilter, refreshKey]);
 
   // Load available pincodes whenever the onboarding modal opens
   useEffect(() => {
