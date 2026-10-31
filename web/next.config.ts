@@ -16,26 +16,6 @@ const nextConfig: NextConfig = {
         destination: '/partner',
         permanent: false,
       },
-      {
-        source: '/customer',
-        destination: '/admin',
-        permanent: false,
-      },
-      {
-        source: '/customer/:path*',
-        destination: '/admin',
-        permanent: false,
-      },
-      {
-        source: '/tech',
-        destination: '/admin',
-        permanent: false,
-      },
-      {
-        source: '/tech/:path*',
-        destination: '/admin',
-        permanent: false,
-      },
     ];
   },
 };
