@@ -4482,7 +4482,7 @@ export const db = {
             totalLifetimeEarnedInr = completedJobs.reduce((sum: number, j: any) => sum + (Number(j.totalAmountInr) || 0) * 0.7, 0);
           }
 
-          const allWithdrawals = loadWithdrawalsDisk();
+          const allWithdrawals = await this.getWithdrawals({ technicianId: liveTech.id });
           const pendingOrPaidWithdrawals = allWithdrawals.filter(
             (w) =>
               (w.technicianId === liveTech.id ||
@@ -4614,20 +4614,41 @@ export const db = {
     let techBadge = walletData.technician?.badgeNumber || input.technicianId;
     let techPhone = '';
     let partnerId = 'part_odisha_01';
+    let resolvedTechId = input.technicianId;
+    let resolvedPartnerId = partnerId;
+    let dbCreated: any = null;
 
     if (await isDatabaseConnected()) {
       try {
         const liveTech = await prisma.technician.findFirst({
           where: { OR: [{ id: input.technicianId }, { badgeNumber: input.technicianId }, { userId: input.technicianId }] },
-          include: { user: true },
+          include: { user: true, partner: true },
         });
         if (liveTech) {
-          techName = liveTech.user?.fullName || 'Certified Technician';
+          resolvedTechId = liveTech.id;
+          resolvedPartnerId = liveTech.partnerId;
+          techName = liveTech.user?.fullName || techName;
           techBadge = liveTech.badgeNumber;
           techPhone = liveTech.user?.phone || '';
-          partnerId = liveTech.partnerId;
         }
-      } catch (_) {}
+
+        dbCreated = await prisma.withdrawalRequest.create({
+          data: {
+            technicianId: resolvedTechId,
+            partnerId: resolvedPartnerId,
+            amountInr: input.amountInr,
+            payoutMethod: input.payoutMethod,
+            upiId: input.upiId,
+            accountHolderName: input.accountHolderName,
+            accountNumber: input.accountNumber,
+            ifscCode: input.ifscCode,
+            bankName: input.bankName,
+            status: 'PENDING',
+          },
+        });
+      } catch (err) {
+        console.warn('Prisma withdrawalRequest create fallback:', err);
+      }
     } else {
       const tech = dbStore.technicians.find((t) => t.id === input.technicianId || t.badgeNumber === input.technicianId);
       if (tech) {
@@ -4635,17 +4656,18 @@ export const db = {
         techBadge = tech.badgeNumber;
         techPhone = tech.phone || '';
         partnerId = tech.partnerId;
+        resolvedPartnerId = tech.partnerId;
       }
     }
 
     const currentList = loadWithdrawalsDisk();
     const newWithdrawal: WithdrawalRecord = {
-      id: `wth_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-      technicianId: input.technicianId,
+      id: dbCreated ? dbCreated.id : `wth_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      technicianId: resolvedTechId,
       technicianName: techName,
       technicianBadge: techBadge,
       technicianPhone: techPhone,
-      partnerId,
+      partnerId: resolvedPartnerId,
       amountInr: input.amountInr,
       payoutMethod: input.payoutMethod,
       upiId: input.upiId,
@@ -4654,7 +4676,7 @@ export const db = {
       ifscCode: input.ifscCode,
       bankName: input.bankName,
       status: 'PENDING',
-      requestedAt: new Date().toISOString(),
+      requestedAt: dbCreated?.requestedAt ? dbCreated.requestedAt.toISOString() : new Date().toISOString(),
     };
 
     currentList.unshift(newWithdrawal);
@@ -4673,6 +4695,61 @@ export const db = {
   },
 
   async getWithdrawals(filter?: { technicianId?: string; partnerId?: string; status?: string }) {
+    if (await isDatabaseConnected()) {
+      try {
+        const where: any = {};
+        if (filter?.status && filter.status !== 'ALL') {
+          where.status = filter.status;
+        }
+        if (filter?.partnerId && filter.partnerId !== 'ALL') {
+          where.partnerId = filter.partnerId;
+        }
+        if (filter?.technicianId) {
+          where.OR = [
+            { technicianId: filter.technicianId },
+            { technician: { badgeNumber: filter.technicianId } },
+            { technician: { userId: filter.technicianId } },
+          ];
+        }
+
+        const liveList = await prisma.withdrawalRequest.findMany({
+          where,
+          include: {
+            technician: { include: { user: true } },
+            partner: true,
+            ledgerEntries: true,
+          },
+          orderBy: { requestedAt: 'desc' },
+        });
+
+        if (liveList && liveList.length > 0) {
+          return liveList.map((w) => ({
+            id: w.id,
+            technicianId: w.technicianId,
+            technicianName: w.technician?.user?.fullName || 'Certified Technician',
+            technicianBadge: w.technician?.badgeNumber || w.technicianId,
+            technicianPhone: w.technician?.user?.phone || '',
+            partnerId: w.partnerId || undefined,
+            amountInr: w.amountInr,
+            payoutMethod: w.payoutMethod as any,
+            upiId: w.upiId || undefined,
+            accountHolderName: w.accountHolderName || undefined,
+            accountNumber: w.accountNumber || undefined,
+            ifscCode: w.ifscCode || undefined,
+            bankName: w.bankName || undefined,
+            status: w.status as any,
+            utrNumber: w.utrNumber || undefined,
+            partnerMessage: w.partnerMessage || undefined,
+            rejectionReason: w.rejectionReason || undefined,
+            requestedAt: w.requestedAt.toISOString(),
+            processedAt: w.processedAt ? w.processedAt.toISOString() : undefined,
+          }));
+        }
+      } catch (err) {
+        console.warn('Prisma getWithdrawals fallback:', err);
+      }
+    }
+
     let list = loadWithdrawalsDisk();
     if (list.length === 0 && dbStore.withdrawals && dbStore.withdrawals.length > 0) {
       list = [...dbStore.withdrawals];
@@ -4698,20 +4775,147 @@ export const db = {
     payload: { utrNumber?: string; message?: string; rejectionReason?: string }
   ) {
     const list = loadWithdrawalsDisk();
-    const withdrawal = list.find(w => w.id === withdrawalId) || (dbStore.withdrawals || []).find(w => w.id === withdrawalId);
+    let withdrawal = list.find(w => w.id === withdrawalId) || (dbStore.withdrawals || []).find(w => w.id === withdrawalId);
+
+    // If not found in memory/disk cache, check PostgreSQL
+    if (!withdrawal && (await isDatabaseConnected())) {
+      try {
+        const dbW = await prisma.withdrawalRequest.findUnique({
+          where: { id: withdrawalId },
+          include: { technician: { include: { user: true } }, partner: true },
+        });
+        if (dbW) {
+          withdrawal = {
+            id: dbW.id,
+            technicianId: dbW.technicianId,
+            technicianName: dbW.technician?.user?.fullName || 'Certified Technician',
+            technicianBadge: dbW.technician?.badgeNumber || dbW.technicianId,
+            technicianPhone: dbW.technician?.user?.phone || '',
+            partnerId: dbW.partnerId || undefined,
+            amountInr: dbW.amountInr,
+            payoutMethod: dbW.payoutMethod as any,
+            upiId: dbW.upiId || undefined,
+            accountHolderName: dbW.accountHolderName || undefined,
+            accountNumber: dbW.accountNumber || undefined,
+            ifscCode: dbW.ifscCode || undefined,
+            bankName: dbW.bankName || undefined,
+            status: dbW.status as any,
+            utrNumber: dbW.utrNumber || undefined,
+            partnerMessage: dbW.partnerMessage || undefined,
+            rejectionReason: dbW.rejectionReason || undefined,
+            requestedAt: dbW.requestedAt.toISOString(),
+            processedAt: dbW.processedAt ? dbW.processedAt.toISOString() : undefined,
+          };
+        }
+      } catch (_) {}
+    }
+
     if (!withdrawal) {
       throw new Error(`Withdrawal request '${withdrawalId}' not found`);
     }
 
+    const processedAt = new Date();
+    const processedAtIso = processedAt.toISOString();
+
     if (action === 'APPROVE') {
       withdrawal.status = 'PAID';
       withdrawal.utrNumber = payload.utrNumber || `UTR${Date.now().toString().slice(-8)}`;
-      withdrawal.partnerMessage = payload.message || `Payout settled to account via NEFT/UPI. UTR: ${withdrawal.utrNumber}`;
-      withdrawal.processedAt = new Date().toISOString();
+      withdrawal.partnerMessage = payload.message || `Payout settled to account via ${withdrawal.payoutMethod || 'UPI'}. UTR: ${withdrawal.utrNumber}`;
+      withdrawal.processedAt = processedAtIso;
+
+      // Double-Entry Ledger Persistence in PostgreSQL (Prisma)
+      if (await isDatabaseConnected()) {
+        try {
+          const seq = Math.floor(1000 + Math.random() * 9000);
+          const txnRef = `TXN-WTH-${Date.now().toString(36).toUpperCase()}-${seq}`;
+
+          // Create immutable double-entry LedgerEntry debiting technician payout balance
+          await prisma.ledgerEntry.create({
+            data: {
+              transactionReference: txnRef,
+              technicianId: withdrawal.technicianId,
+              partnerId: withdrawal.partnerId,
+              withdrawalRequestId: withdrawal.id,
+              ledgerType: 'TECHNICIAN_PAYOUT',
+              entryDirection: 'DEBIT',
+              amountInr: withdrawal.amountInr,
+              runningBalanceInr: withdrawal.amountInr,
+              narrative: `Technician payout disbursed via ${withdrawal.payoutMethod || 'UPI'} (UTR: ${withdrawal.utrNumber})`,
+            },
+          });
+
+          await prisma.withdrawalRequest.update({
+            where: { id: withdrawal.id },
+            data: {
+              status: 'PAID',
+              utrNumber: withdrawal.utrNumber,
+              partnerMessage: withdrawal.partnerMessage,
+              processedAt,
+            },
+          });
+        } catch (err) {
+          console.warn('Prisma double-entry ledger creation fallback:', err);
+        }
+      }
+
+      // Sync into in-memory ledger entries for immediate reflection
+      dbStore.ledgerEntries.push({
+        id: `led_${Date.now().toString(36)}_wth`,
+        transactionReference: `TXN-WTH-${Date.now()}`,
+        technicianId: withdrawal.technicianId,
+        partnerId: withdrawal.partnerId,
+        ledgerType: 'TECHNICIAN_PAYOUT',
+        entryDirection: 'DEBIT',
+        amountInr: withdrawal.amountInr,
+        runningBalanceInr: withdrawal.amountInr,
+        narrative: `Technician payout disbursed via ${withdrawal.payoutMethod || 'UPI'} (UTR: ${withdrawal.utrNumber})`,
+        createdAt: processedAtIso,
+      });
+
+      await this.recordWormAuditLog({
+        actorId: 'usr_partner_01',
+        actorRole: 'PARTNER_ADMIN',
+        action: 'WITHDRAWAL_APPROVED_PAYOUT_SETTLED',
+        resourceType: 'WITHDRAWAL_REQUEST',
+        resourceId: withdrawal.id,
+        metadata: {
+          amountInr: withdrawal.amountInr,
+          utrNumber: withdrawal.utrNumber,
+          technicianId: withdrawal.technicianId,
+        },
+      });
     } else {
       withdrawal.status = 'REJECTED';
       withdrawal.rejectionReason = payload.rejectionReason || payload.message || 'Declined by franchise partner.';
-      withdrawal.processedAt = new Date().toISOString();
+      withdrawal.processedAt = processedAtIso;
+
+      if (await isDatabaseConnected()) {
+        try {
+          await prisma.withdrawalRequest.update({
+            where: { id: withdrawal.id },
+            data: {
+              status: 'REJECTED',
+              rejectionReason: withdrawal.rejectionReason,
+              processedAt,
+            },
+          });
+        } catch (err) {
+          console.warn('Prisma withdrawalRequest reject fallback:', err);
+        }
+      }
+
+      await this.recordWormAuditLog({
+        actorId: 'usr_partner_01',
+        actorRole: 'PARTNER_ADMIN',
+        action: 'WITHDRAWAL_REJECTED',
+        resourceType: 'WITHDRAWAL_REQUEST',
+        resourceId: withdrawal.id,
+        metadata: {
+          amountInr: withdrawal.amountInr,
+          rejectionReason: withdrawal.rejectionReason,
+          technicianId: withdrawal.technicianId,
+        },
+      });
     }
 
     const existingIdx = list.findIndex(w => w.id === withdrawalId);

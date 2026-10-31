@@ -154,9 +154,10 @@ model Partner {
   pincodeCoverage PincodeCoverage[]
   jobs            Job[]
   invoices        Invoice[]
-  ledgerEntries   LedgerEntry[]
-  supportTickets  SupportTicket[]
-  inventories     PartnerInventory[]
+  ledgerEntries      LedgerEntry[]
+  supportTickets     SupportTicket[]
+  inventories        PartnerInventory[]
+  withdrawalRequests WithdrawalRequest[]
 
   @@index([stateLicensed])
   @@index([status])
@@ -212,8 +213,9 @@ model Technician {
   createdAt                 DateTime  @default(now())
   updatedAt                 DateTime  @updatedAt
 
-  jobs          Job[]
-  ledgerEntries LedgerEntry[]
+  jobs               Job[]
+  ledgerEntries      LedgerEntry[]
+  withdrawalRequests WithdrawalRequest[]
 
   @@index([partnerId])
   @@index([isOnline])
@@ -367,25 +369,58 @@ model Invoice {
 }
 
 model LedgerEntry {
-  id                   String      @id @default(uuid())
-  transactionReference String      @unique // e.g. "TXN-2026-88129"
+  id                   String             @id @default(uuid())
+  transactionReference String             @unique // e.g. "TXN-2026-88129"
   invoiceId            String?
-  invoice              Invoice?    @relation(fields: [invoiceId], references: [id])
+  invoice              Invoice?           @relation(fields: [invoiceId], references: [id])
   partnerId            String?
-  partner              Partner?    @relation(fields: [partnerId], references: [id])
+  partner              Partner?           @relation(fields: [partnerId], references: [id])
   technicianId         String?
-  technician           Technician? @relation(fields: [technicianId], references: [id])
+  technician           Technician?        @relation(fields: [technicianId], references: [id])
+  withdrawalRequestId  String?
+  withdrawalRequest    WithdrawalRequest? @relation(fields: [withdrawalRequestId], references: [id])
   ledgerType           LedgerType
   entryDirection       DebitCredit
   amountInr            Float
   runningBalanceInr    Float
   narrative            String
-  createdAt            DateTime    @default(now())
+  createdAt            DateTime           @default(now())
 
   @@index([transactionReference])
   @@index([partnerId])
   @@index([technicianId])
+  @@index([withdrawalRequestId])
   @@index([ledgerType])
+}
+
+model WithdrawalRequest {
+  id                String        @id @default(uuid())
+  technicianId      String
+  technician        Technician    @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+  partnerId         String?
+  partner           Partner?      @relation(fields: [partnerId], references: [id])
+  amountInr         Float
+  payoutMethod      String        @default("UPI") // "UPI" | "BANK_ACCOUNT"
+  upiId             String?
+  accountHolderName String?
+  accountNumber     String?
+  ifscCode          String?
+  bankName          String?
+  status            String        @default("PENDING") // "PENDING" | "PAID" | "REJECTED"
+  utrNumber         String?
+  partnerMessage    String?
+  rejectionReason   String?
+  requestedAt       DateTime      @default(now())
+  processedAt       DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  ledgerEntries     LedgerEntry[]
+
+  @@index([technicianId])
+  @@index([partnerId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 // ------------------------------------------------------------------------------
