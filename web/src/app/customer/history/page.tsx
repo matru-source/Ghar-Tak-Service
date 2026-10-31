@@ -169,8 +169,10 @@ export default function CustomerHistoryPage() {
     }
 
     loadCustomerJobs();
+    const interval = setInterval(loadCustomerJobs, 20000);
     return () => {
       isCancelled = true;
+      clearInterval(interval);
     };
   }, []);
 

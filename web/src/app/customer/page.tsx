@@ -223,6 +223,8 @@ export default function CustomerDashboardPage() {
     };
 
     loadData();
+    const interval = setInterval(loadData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   // Filtered services
